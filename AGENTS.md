@@ -33,7 +33,7 @@ calibrated threshold · Unix-first human output, one machine envelope · safe by
 
 ## Toolchain (Rust & Cargo)
 
-- Cargo only. Edition 2024, stable toolchain (rustc ≥ 1.85; local 1.93). (asupersync)
+- Cargo only. Edition 2024, stable toolchain (rustc ≥ 1.87 for `std::io::pipe`; local 1.93). (asupersync)
 - `#![deny(unsafe_code)]` in `src/lib.rs`. Tests may use `unsafe { std::env::set_var(..) }`
   only inside `tests/` (edition 2024 marks it unsafe) and must run single-threaded.
 - Dependencies: explicit versions, minimal set, prefer std. Adding a crate needs a one-line
