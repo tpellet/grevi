@@ -1,0 +1,2082 @@
+[
+ {
+  "request": "compress this folder into a zip archive",
+  "decision": "zip",
+  "choice": "zip",
+  "conf": 0.99,
+  "any": 0.97,
+  "fits": [
+   [
+    "zip",
+    0.93
+   ],
+   [
+    "tar",
+    0.58
+   ],
+   [
+    "archiveutil",
+    0.43
+   ],
+   [
+    "ditto",
+    0.38
+   ],
+   [
+    "pax",
+    0.29
+   ]
+  ],
+  "latency": 1.9349058749940014,
+  "round1_top": [
+   "zip",
+   "ditto",
+   "archiveutil",
+   "tar",
+   "streamzip"
+  ],
+  "bm25": "zip",
+  "ok": [
+   "zip",
+   "ditto"
+  ],
+  "abstain_expected": false
+ },
+ {
+  "request": "which process is listening on port 8080",
+  "decision": "lsof",
+  "choice": "lsof",
+  "conf": 0.36,
+  "any": 0.83,
+  "fits": [
+   [
+    "lsof",
+    0.73
+   ],
+   [
+    "netstat",
+    0.73
+   ],
+   [
+    "nettop",
+    0.61
+   ],
+   [
+    "fuser",
+    0.46
+   ],
+   [
+    "nc",
+    0.31
+   ]
+  ],
+  "latency": 1.9206492909943336,
+  "round1_top": [
+   "lsof",
+   "netstat",
+   "ps",
+   "fuser",
+   "nettop"
+  ],
+  "bm25": "cpuwalk.d",
+  "ok": [
+   "lsof",
+   "netstat"
+  ],
+  "abstain_expected": false
+ },
+ {
+  "request": "show my local ip address",
+  "decision": "ifconfig",
+  "choice": "ifconfig",
+  "conf": 0.8,
+  "any": 0.92,
+  "fits": [
+   [
+    "ifconfig",
+    0.68
+   ],
+   [
+    "ipconfig",
+    0.55
+   ],
+   [
+    "networksetup",
+    0.39
+   ],
+   [
+    "scutil",
+    0.32
+   ],
+   [
+    "netstat",
+    0.3
+   ]
+  ],
+  "latency": 1.761157250002725,
+  "round1_top": [
+   "ifconfig",
+   "netstat",
+   "ipconfig",
+   "system_profiler",
+   "scutil"
+  ],
+  "bm25": "ip2cc",
+  "ok": [
+   "ifconfig",
+   "ipconfig",
+   "networksetup"
+  ],
+  "abstain_expected": false
+ },
+ {
+  "request": "find files bigger than 1 gigabyte",
+  "decision": "find",
+  "choice": "find",
+  "conf": 0.99,
+  "any": 0.92,
+  "fits": [
+   [
+    "find",
+    0.78
+   ],
+   [
+    "fd",
+    0.45
+   ],
+   [
+    "mdfind",
+    0.34
+   ],
+   [
+    "rmlint",
+    0.17
+   ],
+   [
+    "ls",
+    0.08
+   ]
+  ],
+  "latency": 1.9637980830011657,
+  "round1_top": [
+   "find",
+   "mdfind",
+   "tree",
+   "stat",
+   "rg"
+  ],
+  "bm25": "tiffutil",
+  "ok": [
+   "find",
+   "fd",
+   "mdfind"
+  ],
+  "abstain_expected": false
+ },
+ {
+  "request": "count the lines in a file",
+  "decision": "wc",
+  "choice": "wc",
+  "conf": 1.0,
+  "any": 0.97,
+  "fits": [
+   [
+    "wc",
+    0.96
+   ],
+   [
+    "perl",
+    0.43
+   ],
+   [
+    "sort",
+    0.37
+   ],
+   [
+    "nl",
+    0.23
+   ],
+   [
+    "awk",
+    0.2
+   ]
+  ],
+  "latency": 1.5503423749978538,
+  "round1_top": [
+   "wc",
+   "nl",
+   "sh",
+   "awk",
+   "grep"
+  ],
+  "bm25": "uniq",
+  "ok": [
+   "wc"
+  ],
+  "abstain_expected": false
+ },
+ {
+  "request": "convert an image from png to jpeg",
+  "decision": "cjpeg",
+  "choice": "cjpeg",
+  "conf": 0.53,
+  "any": 0.8,
+  "fits": [
+   [
+    "sips",
+    0.87
+   ],
+   [
+    "cjpeg",
+    0.86
+   ],
+   [
+    "ffmpeg",
+    0.85
+   ],
+   [
+    "opj_compress",
+    0.22
+   ],
+   [
+    "pandoc",
+    0.2
+   ]
+  ],
+  "latency": 1.8284523749971413,
+  "round1_top": [
+   "sips",
+   "ffmpeg",
+   "textutil",
+   "opj_compress",
+   "cjpeg"
+  ],
+  "bm25": "cjpeg",
+  "ok": [
+   "sips",
+   "ffmpeg"
+  ],
+  "abstain_expected": false
+ },
+ {
+  "request": "download a file from a url",
+  "decision": "lwp-download",
+  "choice": "lwp-download",
+  "conf": 0.86,
+  "any": 0.97,
+  "fits": [
+   [
+    "lwp-download",
+    0.96
+   ],
+   [
+    "curl",
+    0.93
+   ],
+   [
+    "scp",
+    0.39
+   ],
+   [
+    "rsync",
+    0.35
+   ],
+   [
+    "tftp",
+    0.28
+   ]
+  ],
+  "latency": 1.5819454170050449,
+  "round1_top": [
+   "lwp-download",
+   "curl",
+   "tftp",
+   "rsync",
+   "nc"
+  ],
+  "bm25": "curl",
+  "ok": [
+   "curl",
+   "wget"
+  ],
+  "abstain_expected": false
+ },
+ {
+  "request": "search for a word in all files under this directory",
+  "decision": "rg",
+  "choice": "rg",
+  "conf": 0.83,
+  "any": 0.97,
+  "fits": [
+   [
+    "rg",
+    0.87
+   ],
+   [
+    "ugrep",
+    0.67
+   ],
+   [
+    "grep",
+    0.55
+   ],
+   [
+    "pcre2grep",
+    0.48
+   ],
+   [
+    "zegrep",
+    0.43
+   ]
+  ],
+  "latency": 1.4624979170039296,
+  "round1_top": [
+   "rg",
+   "ugrep",
+   "grep",
+   "pcre2grep",
+   "zgrep"
+  ],
+  "bm25": "zipgrep",
+  "ok": [
+   "grep",
+   "rg",
+   "mdfind"
+  ],
+  "abstain_expected": false
+ },
+ {
+  "request": "how much free space is left on my disk",
+  "decision": "df",
+  "choice": "df",
+  "conf": 1.0,
+  "any": 0.99,
+  "fits": [
+   [
+    "df",
+    0.97
+   ],
+   [
+    "snmpdf",
+    0.19
+   ],
+   [
+    "quota",
+    0.08
+   ],
+   [
+    "systemstats",
+    0.05
+   ],
+   [
+    "hdiutil",
+    0.05
+   ]
+  ],
+  "latency": 1.594889707994298,
+  "round1_top": [
+   "df",
+   "quota",
+   "snmpdf",
+   "systemstats",
+   "system_profiler"
+  ],
+  "bm25": "df",
+  "ok": [
+   "df",
+   "diskutil"
+  ],
+  "abstain_expected": false
+ },
+ {
+  "request": "kill a process by its name",
+  "decision": "killall",
+  "choice": "killall",
+  "conf": 0.82,
+  "any": 0.99,
+  "fits": [
+   [
+    "killall",
+    0.96
+   ],
+   [
+    "pkill",
+    0.91
+   ],
+   [
+    "fixproc",
+    0.75
+   ],
+   [
+    "sudo",
+    0.1
+   ],
+   [
+    "taskpolicy",
+    0.06
+   ]
+  ],
+  "latency": 1.2838439589977497,
+  "round1_top": [
+   "pkill",
+   "killall",
+   "fixproc",
+   "fuser",
+   "sudo"
+  ],
+  "bm25": "killall",
+  "ok": [
+   "pkill",
+   "killall"
+  ],
+  "abstain_expected": false
+ },
+ {
+  "request": "extract a tar.gz archive",
+  "decision": "tar",
+  "choice": "tar",
+  "conf": 0.91,
+  "any": 0.9,
+  "fits": [
+   [
+    "tar",
+    0.65
+   ],
+   [
+    "archiveutil",
+    0.53
+   ],
+   [
+    "ditto",
+    0.51
+   ],
+   [
+    "pax",
+    0.32
+   ],
+   [
+    "jar",
+    0.3
+   ]
+  ],
+  "latency": 1.2898873749945778,
+  "round1_top": [
+   "tar",
+   "pax",
+   "ptar",
+   "ditto",
+   "gzip"
+  ],
+  "bm25": "ptargrep",
+  "ok": [
+   "tar"
+  ],
+  "abstain_expected": false
+ },
+ {
+  "request": "show the differences between two text files",
+  "decision": "diff",
+  "choice": "diff",
+  "conf": 1.0,
+  "any": 0.99,
+  "fits": [
+   [
+    "diff",
+    0.96
+   ],
+   [
+    "sdiff",
+    0.9
+   ],
+   [
+    "vimdiff",
+    0.85
+   ],
+   [
+    "opendiff",
+    0.73
+   ],
+   [
+    "xzdiff",
+    0.64
+   ]
+  ],
+  "latency": 1.8122754170035478,
+  "round1_top": [
+   "diff",
+   "sdiff",
+   "vimdiff",
+   "opendiff",
+   "cmp"
+  ],
+  "bm25": "vimdiff",
+  "ok": [
+   "diff",
+   "sdiff",
+   "cmp",
+   "git"
+  ],
+  "abstain_expected": false
+ },
+ {
+  "request": "generate a random password",
+  "decision": "slappasswd",
+  "choice": "slappasswd",
+  "conf": 0.39,
+  "any": 0.33,
+  "fits": [
+   [
+    "slappasswd",
+    0.6
+   ],
+   [
+    "openssl",
+    0.38
+   ],
+   [
+    "htpasswd",
+    0.32
+   ],
+   [
+    "jot",
+    0.28
+   ],
+   [
+    "passwd",
+    0.21
+   ]
+  ],
+  "latency": 1.8344075420027366,
+  "round1_top": [
+   "slappasswd",
+   "openssl",
+   "uuidgen",
+   "jot",
+   "htpasswd"
+  ],
+  "bm25": "pwd_mkdb",
+  "ok": [
+   "openssl",
+   "pwgen",
+   "uuidgen"
+  ],
+  "abstain_expected": false
+ },
+ {
+  "request": "pretty print a json file",
+  "decision": "json_pp",
+  "choice": "json_pp",
+  "conf": 0.48,
+  "any": 0.96,
+  "fits": [
+   [
+    "json_pp",
+    0.87
+   ],
+   [
+    "json-glib-format",
+    0.82
+   ],
+   [
+    "jq",
+    0.73
+   ],
+   [
+    "python3",
+    0.59
+   ],
+   [
+    "awk",
+    0.41
+   ]
+  ],
+  "latency": 2.6188301670044893,
+  "round1_top": [
+   "yq",
+   "jq",
+   "textutil",
+   "plutil",
+   "pl"
+  ],
+  "bm25": "tidy",
+  "ok": [
+   "jq",
+   "python3",
+   "plutil"
+  ],
+  "abstain_expected": false
+ },
+ {
+  "request": "check when a website's ssl certificate expires",
+  "decision": "openssl",
+  "choice": "openssl",
+  "conf": 0.75,
+  "any": 0.57,
+  "fits": [
+   [
+    "openssl",
+    0.75
+   ],
+   [
+    "curl",
+    0.67
+   ],
+   [
+    "gnutls-cli",
+    0.49
+   ],
+   [
+    "keytool",
+    0.34
+   ],
+   [
+    "lwp-dump",
+    0.22
+   ]
+  ],
+  "latency": 1.3970890839991625,
+  "round1_top": [
+   "openssl",
+   "curl",
+   "gnutls-cli",
+   "gnutls-certtool",
+   "lwp-dump"
+  ],
+  "bm25": "rsync-ssl",
+  "ok": [
+   "openssl",
+   "curl"
+  ],
+  "abstain_expected": false
+ },
+ {
+  "request": "look up the ip address of a domain name",
+  "decision": "host",
+  "choice": "host",
+  "conf": 0.82,
+  "any": 0.98,
+  "fits": [
+   [
+    "host",
+    0.95
+   ],
+   [
+    "dig",
+    0.94
+   ],
+   [
+    "nslookup",
+    0.92
+   ],
+   [
+    "ahost",
+    0.92
+   ],
+   [
+    "split",
+    0.69
+   ]
+  ],
+  "latency": 1.7685463750021881,
+  "round1_top": [
+   "nslookup",
+   "host",
+   "dig",
+   "ahost",
+   "adig"
+  ],
+  "bm25": "ahost",
+  "ok": [
+   "dig",
+   "nslookup",
+   "host",
+   "dscacheutil"
+  ],
+  "abstain_expected": false
+ },
+ {
+  "request": "make a script executable",
+  "decision": "chmod",
+  "choice": "chmod",
+  "conf": 1.0,
+  "any": 0.9,
+  "fits": [
+   [
+    "chmod",
+    0.94
+   ],
+   [
+    "sudo",
+    0.12
+   ],
+   [
+    "install",
+    0.12
+   ],
+   [
+    "touch",
+    0.05
+   ],
+   [
+    "gzexe",
+    0.05
+   ]
+  ],
+  "latency": 1.7845459589952952,
+  "round1_top": [
+   "chmod",
+   "dash",
+   "touch",
+   "sudo",
+   "sh"
+  ],
+  "bm25": "script",
+  "ok": [
+   "chmod"
+  ],
+  "abstain_expected": false
+ },
+ {
+  "request": "see who is logged in to this machine",
+  "decision": "who",
+  "choice": "who",
+  "conf": 0.93,
+  "any": 0.99,
+  "fits": [
+   [
+    "who",
+    0.97
+   ],
+   [
+    "users",
+    0.95
+   ],
+   [
+    "w",
+    0.94
+   ],
+   [
+    "finger",
+    0.46
+   ],
+   [
+    "last",
+    0.2
+   ]
+  ],
+  "latency": 1.5077919160030433,
+  "round1_top": [
+   "last",
+   "finger",
+   "who",
+   "ps",
+   "w"
+  ],
+  "bm25": "w",
+  "ok": [
+   "who",
+   "w",
+   "users",
+   "finger"
+  ],
+  "abstain_expected": false
+ },
+ {
+  "request": "print all environment variables",
+  "decision": "printenv",
+  "choice": "printenv",
+  "conf": 0.94,
+  "any": 0.98,
+  "fits": [
+   [
+    "printenv",
+    0.96
+   ],
+   [
+    "env",
+    0.87
+   ],
+   [
+    "command",
+    0.19
+   ],
+   [
+    "bash",
+    0.08
+   ],
+   [
+    "type",
+    0.07
+   ]
+  ],
+  "latency": 1.4388352919995668,
+  "round1_top": [
+   "printenv",
+   "env",
+   "bash",
+   "zsh",
+   "alias"
+  ],
+  "bm25": "envsubst",
+  "ok": [
+   "env",
+   "printenv",
+   "set"
+  ],
+  "abstain_expected": false
+ },
+ {
+  "request": "open a web page in my default browser",
+  "decision": "open",
+  "choice": "open",
+  "conf": 0.98,
+  "any": 0.58,
+  "fits": [
+   [
+    "open",
+    0.53
+   ],
+   [
+    "osascript",
+    0.31
+   ],
+   [
+    "curl",
+    0.09
+   ],
+   [
+    "lwp-request",
+    0.09
+   ],
+   [
+    "automator",
+    0.09
+   ]
+  ],
+  "latency": 1.3100878749974072,
+  "round1_top": [
+   "open",
+   "safaridriver",
+   "curl",
+   "dash",
+   "shortcuts"
+  ],
+  "bm25": "open",
+  "ok": [
+   "open"
+  ],
+  "abstain_expected": false
+ },
+ {
+  "request": "read this sentence out loud",
+  "decision": "say",
+  "choice": "say",
+  "conf": 0.99,
+  "any": 0.94,
+  "fits": [
+   [
+    "say",
+    0.87
+   ],
+   [
+    "osascript",
+    0.45
+   ],
+   [
+    "out123",
+    0.07
+   ],
+   [
+    "automator",
+    0.07
+   ],
+   [
+    "bash",
+    0.05
+   ]
+  ],
+  "latency": 1.4879774169967277,
+  "round1_top": [
+   "say",
+   "osascript",
+   "echo",
+   "afplay",
+   "out123"
+  ],
+  "bm25": "infocmp",
+  "ok": [
+   "say"
+  ],
+  "abstain_expected": false
+ },
+ {
+  "request": "copy the output of a command to the clipboard",
+  "decision": "pbcopy",
+  "choice": "pbcopy",
+  "conf": 1.0,
+  "any": 0.98,
+  "fits": [
+   [
+    "pbcopy",
+    0.9
+   ],
+   [
+    "screencapture",
+    0.25
+   ],
+   [
+    "write",
+    0.09
+   ],
+   [
+    "echo",
+    0.07
+   ],
+   [
+    "tee",
+    0.06
+   ]
+  ],
+  "latency": 1.5211157919984544,
+  "round1_top": [
+   "pbcopy",
+   "tee",
+   "screencapture",
+   "shortcuts",
+   "qlmanage"
+  ],
+  "bm25": "pbcopy",
+  "ok": [
+   "pbcopy"
+  ],
+  "abstain_expected": false
+ },
+ {
+  "request": "run a command every day at 3am",
+  "decision": "crontab",
+  "choice": "crontab",
+  "conf": 0.96,
+  "any": 0.92,
+  "fits": [
+   [
+    "crontab",
+    0.71
+   ],
+   [
+    "launchctl",
+    0.37
+   ],
+   [
+    "launchd",
+    0.3
+   ],
+   [
+    "cron",
+    0.08
+   ],
+   [
+    "newsyslog",
+    0.06
+   ]
+  ],
+  "latency": 1.1582152500050142,
+  "round1_top": [
+   "crontab",
+   "launchctl",
+   "cron",
+   "launchd",
+   "uusched"
+  ],
+  "bm25": "npx",
+  "ok": [
+   "crontab",
+   "launchctl",
+   "at"
+  ],
+  "abstain_expected": false
+ },
+ {
+  "request": "take a screenshot",
+  "decision": "screencapture",
+  "choice": "screencapture",
+  "conf": 1.0,
+  "any": 0.98,
+  "fits": [
+   [
+    "screencapture",
+    0.93
+   ],
+   [
+    "osascript",
+    0.3
+   ],
+   [
+    "sysdiagnose",
+    0.03
+   ],
+   [
+    "automator",
+    0.03
+   ],
+   [
+    "diskutil",
+    0.02
+   ]
+  ],
+  "latency": 1.2451467079954455,
+  "round1_top": [
+   "screencapture",
+   "osascript",
+   "diskutil",
+   "usdrecord",
+   "sysdiagnose"
+  ],
+  "bm25": "traceroute6",
+  "ok": [
+   "screencapture"
+  ],
+  "abstain_expected": false
+ },
+ {
+  "request": "keep my mac from going to sleep while a job runs",
+  "decision": "caffeinate",
+  "choice": "caffeinate",
+  "conf": 1.0,
+  "any": 0.99,
+  "fits": [
+   [
+    "caffeinate",
+    0.94
+   ],
+   [
+    "pmset",
+    0.21
+   ],
+   [
+    "launchd",
+    0.11
+   ],
+   [
+    "shortcuts",
+    0.1
+   ],
+   [
+    "systemsetup",
+    0.08
+   ]
+  ],
+  "latency": 1.3249312499974621,
+  "round1_top": [
+   "caffeinate",
+   "pmset",
+   "systemsetup",
+   "launchctl",
+   "defaults"
+  ],
+  "bm25": "lpmove",
+  "ok": [
+   "caffeinate",
+   "pmset"
+  ],
+  "abstain_expected": false
+ },
+ {
+  "request": "extract the text from a scanned image",
+  "decision": "tesseract",
+  "choice": "tesseract",
+  "conf": 1.0,
+  "any": 0.97,
+  "fits": [
+   [
+    "tesseract",
+    0.96
+   ],
+   [
+    "ffmpeg",
+    0.11
+   ],
+   [
+    "pdftotext",
+    0.09
+   ],
+   [
+    "pandoc",
+    0.06
+   ],
+   [
+    "exiftool",
+    0.05
+   ]
+  ],
+  "latency": 1.0917228329999489,
+  "round1_top": [
+   "tesseract",
+   "pdftotext",
+   "exiftool",
+   "sips",
+   "pandoc"
+  ],
+  "bm25": "xgettext",
+  "ok": [
+   "tesseract"
+  ],
+  "abstain_expected": false
+ },
+ {
+  "request": "convert a markdown document to a word document",
+  "decision": "pandoc",
+  "choice": "pandoc",
+  "conf": 1.0,
+  "any": 0.25,
+  "fits": [
+   [
+    "pandoc",
+    0.93
+   ],
+   [
+    "textutil",
+    0.23
+   ],
+   [
+    "automator",
+    0.06
+   ],
+   [
+    "xsltproc",
+    0.05
+   ],
+   [
+    "zstdless",
+    0.04
+   ]
+  ],
+  "latency": 1.0239699169978849,
+  "round1_top": [
+   "pandoc",
+   "textutil",
+   "automator",
+   "xsltproc",
+   "write"
+  ],
+  "bm25": "tiff2pdf",
+  "ok": [
+   "pandoc",
+   "textutil"
+  ],
+  "abstain_expected": false
+ },
+ {
+  "request": "cut the first 10 seconds out of a video",
+  "decision": "ffmpeg",
+  "choice": "ffmpeg",
+  "conf": 0.98,
+  "any": 0.72,
+  "fits": [
+   [
+    "ffmpeg",
+    0.81
+   ],
+   [
+    "osascript",
+    0.11
+   ],
+   [
+    "avconvert",
+    0.09
+   ],
+   [
+    "automator",
+    0.09
+   ],
+   [
+    "shortcuts",
+    0.05
+   ]
+  ],
+  "latency": 0.9986979999957839,
+  "round1_top": [
+   "ffmpeg",
+   "avconvert",
+   "sips",
+   "cut",
+   "shortcuts"
+  ],
+  "bm25": "cut",
+  "ok": [
+   "ffmpeg"
+  ],
+  "abstain_expected": false
+ },
+ {
+  "request": "show the exif metadata of a photo",
+  "decision": "exiftool",
+  "choice": "exiftool",
+  "conf": 1.0,
+  "any": 0.99,
+  "fits": [
+   [
+    "exiftool",
+    0.96
+   ],
+   [
+    "mdls",
+    0.45
+   ],
+   [
+    "avmediainfo",
+    0.44
+   ],
+   [
+    "sips",
+    0.38
+   ],
+   [
+    "webpmux",
+    0.27
+   ]
+  ],
+  "latency": 1.5238684579962865,
+  "round1_top": [
+   "exiftool",
+   "webpmux",
+   "img_stat",
+   "mdls",
+   "sips"
+  ],
+  "bm25": "jcat",
+  "ok": [
+   "exiftool",
+   "mdls",
+   "sips"
+  ],
+  "abstain_expected": false
+ },
+ {
+  "request": "list what's inside a directory as a tree",
+  "decision": "tree",
+  "choice": "tree",
+  "conf": 1.0,
+  "any": 0.99,
+  "fits": [
+   [
+    "tree",
+    0.98
+   ],
+   [
+    "mtree",
+    0.25
+   ],
+   [
+    "fd",
+    0.23
+   ],
+   [
+    "find",
+    0.22
+   ],
+   [
+    "ls",
+    0.16
+   ]
+  ],
+  "latency": 1.1929069999969215,
+  "round1_top": [
+   "tree",
+   "mtree",
+   "ls",
+   "find",
+   "fd"
+  ],
+  "bm25": "tree",
+  "ok": [
+   "tree",
+   "find"
+  ],
+  "abstain_expected": false
+ },
+ {
+  "request": "compute the sha256 checksum of a file",
+  "decision": "sha256sum",
+  "choice": "sha256sum",
+  "conf": 0.92,
+  "any": 0.99,
+  "fits": [
+   [
+    "sha256sum",
+    0.96
+   ],
+   [
+    "shasum",
+    0.81
+   ],
+   [
+    "sha256",
+    0.8
+   ],
+   [
+    "openssl",
+    0.43
+   ],
+   [
+    "hmac256",
+    0.12
+   ]
+  ],
+  "latency": 1.5869151250008144,
+  "round1_top": [
+   "sha256",
+   "sum",
+   "cksum",
+   "openssl",
+   "afhash"
+  ],
+  "bm25": "sha256",
+  "ok": [
+   "shasum",
+   "sha256sum",
+   "openssl"
+  ],
+  "abstain_expected": false
+ },
+ {
+  "request": "sync a folder to a remote server",
+  "decision": "rsync",
+  "choice": "rsync",
+  "conf": 0.99,
+  "any": 0.96,
+  "fits": [
+   [
+    "rsync",
+    0.91
+   ],
+   [
+    "mount_webdav",
+    0.82
+   ],
+   [
+    "scp",
+    0.81
+   ],
+   [
+    "uucp",
+    0.49
+   ],
+   [
+    "ditto",
+    0.35
+   ]
+  ],
+  "latency": 1.18846241600113,
+  "round1_top": [
+   "rsync",
+   "pax",
+   "curl",
+   "ssh",
+   "lwp-mirror"
+  ],
+  "bm25": "uuto",
+  "ok": [
+   "rsync",
+   "scp"
+  ],
+  "abstain_expected": false
+ },
+ {
+  "request": "rerun a command whenever a file changes",
+  "decision": "entr",
+  "choice": "entr",
+  "conf": 1.0,
+  "any": 0.99,
+  "fits": [
+   [
+    "entr",
+    0.97
+   ],
+   [
+    "make",
+    0.14
+   ],
+   [
+    "xargs",
+    0.05
+   ],
+   [
+    "automator",
+    0.05
+   ],
+   [
+    "hugo",
+    0.04
+   ]
+  ],
+  "latency": 1.4425680830026977,
+  "round1_top": [
+   "entr",
+   "make",
+   "xargs",
+   "wait4path",
+   "hugo"
+  ],
+  "bm25": "tidy_changelog",
+  "ok": [
+   "entr",
+   "fswatch"
+  ],
+  "abstain_expected": false
+ },
+ {
+  "request": "encrypt a file with a passphrase",
+  "decision": "gpg",
+  "choice": "gpg",
+  "conf": 0.76,
+  "any": 0.88,
+  "fits": [
+   [
+    "gpg",
+    0.87
+   ],
+   [
+    "openssl",
+    0.77
+   ],
+   [
+    "gpgtar",
+    0.48
+   ],
+   [
+    "aea",
+    0.24
+   ],
+   [
+    "zipcloak",
+    0.23
+   ]
+  ],
+  "latency": 1.3623706250000396,
+  "round1_top": [
+   "gpg",
+   "openssl",
+   "zipcloak",
+   "aea",
+   "hdiutil"
+  ],
+  "bm25": "zipcloak",
+  "ok": [
+   "gpg",
+   "openssl"
+  ],
+  "abstain_expected": false
+ },
+ {
+  "request": "run a query against a sqlite database",
+  "decision": "sqlite3",
+  "choice": "sqlite3",
+  "conf": 1.0,
+  "any": 0.98,
+  "fits": [
+   [
+    "sqlite3",
+    0.9
+   ],
+   [
+    "python",
+    0.09
+   ],
+   [
+    "dbicadmin",
+    0.07
+   ],
+   [
+    "python3",
+    0.07
+   ],
+   [
+    "dash",
+    0.07
+   ]
+  ],
+  "latency": 0.994931583001744,
+  "round1_top": [
+   "sqlite3",
+   "perl",
+   "dbicadmin",
+   "python3",
+   "python"
+  ],
+  "bm25": "tsk_loaddb",
+  "ok": [
+   "sqlite3"
+  ],
+  "abstain_expected": false
+ },
+ {
+  "request": "install a package with homebrew",
+  "decision": "brew",
+  "choice": "brew",
+  "conf": 1.0,
+  "any": 0.97,
+  "fits": [
+   [
+    "brew",
+    0.69
+   ],
+   [
+    "installer",
+    0.09
+   ],
+   [
+    "npm",
+    0.06
+   ],
+   [
+    "npx",
+    0.06
+   ],
+   [
+    "softwareupdate",
+    0.05
+   ]
+  ],
+  "latency": 1.280162292001478,
+  "round1_top": [
+   "brew",
+   "installer",
+   "softwareupdate",
+   "npm",
+   "install"
+  ],
+  "bm25": "install",
+  "ok": [
+   "brew"
+  ],
+  "abstain_expected": false
+ },
+ {
+  "request": "how long has this computer been running",
+  "decision": "uptime",
+  "choice": "uptime",
+  "conf": 1.0,
+  "any": 0.99,
+  "fits": [
+   [
+    "uptime",
+    0.98
+   ],
+   [
+    "hostinfo",
+    0.12
+   ],
+   [
+    "ps",
+    0.09
+   ],
+   [
+    "dmesg",
+    0.07
+   ],
+   [
+    "date",
+    0.07
+   ]
+  ],
+  "latency": 1.3788520419984707,
+  "round1_top": [
+   "uptime",
+   "hostinfo",
+   "dmesg",
+   "ps",
+   "netstat"
+  ],
+  "bm25": "uptime",
+  "ok": [
+   "uptime"
+  ],
+  "abstain_expected": false
+ },
+ {
+  "request": "what version of macos is this",
+  "decision": "sw_vers",
+  "choice": "sw_vers",
+  "conf": 1.0,
+  "any": 0.99,
+  "fits": [
+   [
+    "sw_vers",
+    0.97
+   ],
+   [
+    "hostinfo",
+    0.2
+   ],
+   [
+    "osascript",
+    0.16
+   ],
+   [
+    "softwareupdate",
+    0.09
+   ],
+   [
+    "dmesg",
+    0.07
+   ]
+  ],
+  "latency": 1.0994315829957486,
+  "round1_top": [
+   "sw_vers",
+   "hostinfo",
+   "diskutil",
+   "scutil",
+   "softwareupdate"
+  ],
+  "bm25": "sw_vers",
+  "ok": [
+   "sw_vers",
+   "system_profiler"
+  ],
+  "abstain_expected": false
+ },
+ {
+  "request": "burn a DVD from an iso image",
+  "decision": "drutil",
+  "choice": "drutil",
+  "conf": 0.97,
+  "any": 0.71,
+  "fits": [
+   [
+    "drutil",
+    0.89
+   ],
+   [
+    "hdiutil",
+    0.62
+   ],
+   [
+    "diskutil",
+    0.31
+   ],
+   [
+    "dd",
+    0.07
+   ],
+   [
+    "write",
+    0.07
+   ]
+  ],
+  "latency": 1.2170862079947256,
+  "round1_top": [
+   "drutil",
+   "hdiutil",
+   "mount_cd9660",
+   "diskutil",
+   "asr"
+  ],
+  "bm25": "mount_cd9660",
+  "ok": [
+   "drutil",
+   "hdiutil"
+  ],
+  "abstain_expected": false
+ },
+ {
+  "request": "generate a QR code",
+  "decision": "abstain",
+  "choice": "NONE",
+  "conf": 0.5,
+  "any": 0.06,
+  "fits": [
+   [
+    "npx",
+    0.22
+   ],
+   [
+    "sips",
+    0.22
+   ],
+   [
+    "npm",
+    0.08
+   ],
+   [
+    "zstdless",
+    0.03
+   ],
+   [
+    "zstd",
+    0.03
+   ]
+  ],
+  "latency": 0.9034170409940998,
+  "round1_top": [
+   "npx",
+   "sips",
+   "npm",
+   "write",
+   "spray"
+  ],
+  "bm25": "genstrings",
+  "ok": [],
+  "abstain_expected": true
+ },
+ {
+  "request": "run a windows .exe program",
+  "decision": "abstain",
+  "choice": "NONE",
+  "conf": 0.83,
+  "any": 0.11,
+  "fits": [
+   [
+    "expect",
+    0.12
+   ],
+   [
+    "open",
+    0.06
+   ],
+   [
+    "hdiutil",
+    0.06
+   ],
+   [
+    "sudo",
+    0.04
+   ],
+   [
+    "launchctl",
+    0.04
+   ]
+  ],
+  "latency": 1.0315986249988782,
+  "round1_top": [
+   "xcrun",
+   "open",
+   "dash",
+   "sh",
+   "sudo"
+  ],
+  "bm25": "prove",
+  "ok": [],
+  "abstain_expected": true
+ },
+ {
+  "request": "download a youtube video",
+  "decision": "abstain",
+  "choice": "ffmpeg",
+  "conf": 0.74,
+  "any": 0.09,
+  "fits": [
+   [
+    "ffmpeg",
+    0.45
+   ],
+   [
+    "npx",
+    0.3
+   ],
+   [
+    "curl",
+    0.1
+   ],
+   [
+    "lwp-download",
+    0.08
+   ],
+   [
+    "spray",
+    0.08
+   ]
+  ],
+  "latency": 0.9570454999993672,
+  "round1_top": [
+   "ffmpeg",
+   "lwp-download",
+   "curl",
+   "npx",
+   "npm"
+  ],
+  "bm25": "avbanalyse",
+  "ok": [],
+  "abstain_expected": true
+ },
+ {
+  "request": "start a docker container",
+  "decision": "abstain",
+  "choice": "NONE",
+  "conf": 0.98,
+  "any": 0.04,
+  "fits": [
+   [
+    "npx",
+    0.16
+   ],
+   [
+    "brew",
+    0.03
+   ],
+   [
+    "write",
+    0.02
+   ],
+   [
+    "wish",
+    0.02
+   ],
+   [
+    "zstdless",
+    0.01
+   ]
+  ],
+  "latency": 0.9940571249971981,
+  "round1_top": [
+   "npx",
+   "brew",
+   "zstdless",
+   "zstdgrep",
+   "zstd"
+  ],
+  "bm25": "fcgistarter",
+  "ok": [],
+  "abstain_expected": true
+ },
+ {
+  "request": "mine bitcoin",
+  "decision": "abstain",
+  "choice": "NONE",
+  "conf": 1.0,
+  "any": 0.04,
+  "fits": [
+   [
+    "pod2html",
+    0.01
+   ],
+   [
+    "lz4",
+    0.01
+   ],
+   [
+    "dappprof",
+    0.01
+   ],
+   [
+    "zstdless",
+    0.01
+   ],
+   [
+    "zstdgrep",
+    0.01
+   ]
+  ],
+  "latency": 0.690170207999472,
+  "round1_top": [
+   "pod2html",
+   "lz4",
+   "dappprof",
+   "zstdless",
+   "zstdgrep"
+  ],
+  "bm25": null,
+  "ok": [],
+  "abstain_expected": true
+ },
+ {
+  "request": "translate this english text to french",
+  "decision": "spit",
+  "choice": "spit",
+  "conf": 0.97,
+  "any": 0.7,
+  "fits": [
+   [
+    "spit",
+    0.81
+   ],
+   [
+    "gettext",
+    0.15
+   ],
+   [
+    "printf_ngettext",
+    0.1
+   ],
+   [
+    "ngettext",
+    0.09
+   ],
+   [
+    "osascript",
+    0.08
+   ]
+  ],
+  "latency": 1.3514594580046833,
+  "round1_top": [
+   "spit",
+   "gettext",
+   "pandoc",
+   "iconv",
+   "textutil"
+  ],
+  "bm25": "spit",
+  "ok": [],
+  "abstain_expected": true
+ },
+ {
+  "request": "book a flight to paris",
+  "decision": "abstain",
+  "choice": "NONE",
+  "conf": 0.82,
+  "any": 0.02,
+  "fits": [
+   [
+    "curl",
+    0.07
+   ],
+   [
+    "spray",
+    0.01
+   ],
+   [
+    "zstdless",
+    0.01
+   ],
+   [
+    "zstdgrep",
+    0.01
+   ],
+   [
+    "zstd",
+    0.01
+   ]
+  ],
+  "latency": 0.7140770830010297,
+  "round1_top": [
+   "spray",
+   "curl",
+   "zstdless",
+   "zstdgrep",
+   "zstd"
+  ],
+  "bm25": "jfr",
+  "ok": [],
+  "abstain_expected": true
+ },
+ {
+  "request": "dim the smart lights in my living room",
+  "decision": "abstain",
+  "choice": "shortcuts",
+  "conf": 0.68,
+  "any": 0.04,
+  "fits": [
+   [
+    "osascript",
+    0.26
+   ],
+   [
+    "shortcuts",
+    0.18
+   ],
+   [
+    "automator",
+    0.17
+   ],
+   [
+    "wish",
+    0.05
+   ],
+   [
+    "write",
+    0.02
+   ]
+  ],
+  "latency": 0.767633499999647,
+  "round1_top": [
+   "shortcuts",
+   "osascript",
+   "spray",
+   "split",
+   "pod2html"
+  ],
+  "bm25": "gpg-card",
+  "ok": [],
+  "abstain_expected": true
+ },
+ {
+  "request": "order a pizza",
+  "decision": "abstain",
+  "choice": "NONE",
+  "conf": 0.98,
+  "any": 0.03,
+  "fits": [
+   [
+    "write",
+    0.03
+   ],
+   [
+    "spit",
+    0.02
+   ],
+   [
+    "pod2html",
+    0.01
+   ],
+   [
+    "dappprof",
+    0.01
+   ],
+   [
+    "zstdless",
+    0.01
+   ]
+  ],
+  "latency": 0.8433184590030578,
+  "round1_top": [
+   "spit",
+   "pod2html",
+   "dappprof",
+   "zstdless",
+   "zstdgrep"
+  ],
+  "bm25": "lastcomm",
+  "ok": [],
+  "abstain_expected": true
+ },
+ {
+  "request": "resize the browser window to 800x600",
+  "decision": "abstain",
+  "choice": "safaridriver",
+  "conf": 0.47,
+  "any": 0.09,
+  "fits": [
+   [
+    "osascript",
+    0.32
+   ],
+   [
+    "safaridriver",
+    0.11
+   ],
+   [
+    "automator",
+    0.08
+   ],
+   [
+    "wish",
+    0.05
+   ],
+   [
+    "shortcuts",
+    0.03
+   ]
+  ],
+  "latency": 0.881427291998989,
+  "round1_top": [
+   "safaridriver",
+   "osascript",
+   "shortcuts",
+   "write",
+   "wish"
+  ],
+  "bm25": "tkmib",
+  "ok": [],
+  "abstain_expected": true
+ }
+]
