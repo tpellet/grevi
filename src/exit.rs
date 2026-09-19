@@ -94,6 +94,9 @@ impl HunchError {
             Self::Protocol(_) => {
                 "the TypeSafe API may have changed, or HUNCH_BASE_URL points at the wrong server; run `hunch health` and report the issue with `hunch --version`"
             }
+            Self::EmptyInput(msg) if msg.starts_with("no unstaged changes") => {
+                "nothing to stage: `git diff` is empty (untracked files are never staged by add)"
+            }
             Self::EmptyInput(_) => "pipe text into hunch",
             Self::InputTooLarge(_) => "filter the input first, e.g. with rg or tail",
             Self::RejectedRequest(..) => {
@@ -107,6 +110,9 @@ impl HunchError {
     pub fn example(&self) -> &'static str {
         match self {
             Self::MissingKey => "export TYPESAFE_API_KEY=...; hunch health",
+            Self::EmptyInput(msg) if msg.starts_with("no unstaged changes") => {
+                "hunch add \"finish the login flow\""
+            }
             Self::EmptyInput(_) => "ls | hunch pick \"the invoice from March\"",
             Self::InputTooLarge(_) | Self::RejectedRequest(..) => {
                 "tail -n 20000 build.log | hunch why"

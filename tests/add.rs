@@ -135,3 +135,37 @@ async fn stages_from_a_subdirectory() {
     .unwrap();
     assert_eq!(staged.trim(), "top.txt");
 }
+
+// A clean tree has nothing for `add` to stage: it must exit 6 (input) with a hint specific to
+// `add`, not the generic stdin hint ("pipe text into hunch") that fits `pick`/`why`/`sort` but
+// not `add` (which reads `git diff`, not stdin).
+#[tokio::test(flavor = "multi_thread")]
+async fn clean_tree_exits_with_an_add_specific_hint() {
+    let server = common::mock(FakeJev {
+        choose: |_, _, o| o[0].clone(),
+        noul: |_, _| 0.05,
+    })
+    .await;
+    let d = tempfile::tempdir().unwrap();
+    git(d.path(), &["init", "-q"]);
+    git(d.path(), &["config", "user.email", "t@t"]);
+    git(d.path(), &["config", "user.name", "t"]);
+    git(d.path(), &["config", "commit.gpgsign", "false"]);
+    std::fs::write(d.path().join("f.txt"), "a\n").unwrap();
+    git(d.path(), &["add", "."]);
+    git(d.path(), &["commit", "-qm", "init"]);
+    let mut c = common::hunch(&server);
+    c.current_dir(d.path());
+    let out = tokio::task::spawn_blocking(move || {
+        c.args(["--json", "add", "anything"]).output().unwrap()
+    })
+    .await
+    .unwrap();
+    assert_eq!(out.status.code(), Some(6));
+    let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+    assert_eq!(v["error"]["kind"], "empty_input");
+    let hint = v["error"]["hint"].as_str().unwrap();
+    assert!(hint.contains("git diff"), "{hint}");
+    assert!(!hint.contains("pipe text into hunch"), "{hint}");
+    assert_eq!(v["error"]["example"], "hunch add \"finish the login flow\"");
+}
