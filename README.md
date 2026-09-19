@@ -1,5 +1,7 @@
 # hunch
 
+**Point at the right line, file or tool from your shell, and hear "nothing fits" when nothing does.**
+
 hunch is the semantic toolkit for your shell: small, composable commands that bring judgment to ordinary Unix pipelines. Pick a filename from a description, find the error that broke a build, check whether an email asks for a refund, or match a request to an installed tool. Powered by TypeSafe’s Jev, hunch selects from your actual input, tools, and man pages rather than generating free-form answers. Pipes and exit codes make it fit into the scripts you already write; structured JSON makes the same commands usable by agents. Uncertainty has its own exit code, so your workflow can handle “unsure” explicitly.
 
 [![CI](https://github.com/tpellet/hunch/actions/workflows/ci.yml/badge.svg)](https://github.com/tpellet/hunch/actions/workflows/ci.yml)
