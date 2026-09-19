@@ -149,7 +149,46 @@ Latency, end to end, per verb. Measured 2026-09-19 on a typical macOS dev machin
 
 Cost is computed from the request's input tokens at `HUNCH_PRICE_PER_MTOK` (default 0.042 $/Mtok) and reported in `meta.cost_usd`. Three calls from the session that produced the excerpts above: `why` on the 12-line build log, 2 requests, 1,436 tokens, $0.00006; `is` on a 6-line mail, 1 request, 346 tokens, $0.000015; `pick` over 5 file names, 1 request, 487 tokens, $0.00002.
 
-Accuracy: pending. The eval set is committed (`evals/`: 49 routing requests, 120 held-out NL2Bash requests, 20 real failing CI logs with hand-labelled root-cause lines, and a 20-request argument-pointing spot check); the live run and its tables, with a BM25 baseline for routing and two regex baselines for `why`, are the next step. Until then no accuracy claim is made here.
+Accuracy, measured 2026-09-19 on `jev-1.13.0` with the release build, an empty cache and the default threshold 0.5: `scripts/eval_run.py` and `scripts/eval_why.py` over the data in [evals/](evals/). The two scripts cost $0.43 in API requests together (`run`: $0.42, `why`: $0.01); errors 0 on every set. Every `run` request routes over the frozen inventory `evals/inventory.json` instead of the machine's PATH, so hunch and BM25 rank the same 1,693 tools. Of those, 1,261 have a man page; 432 undocumented names were kept because they live in a system-wide prefix, and 179 were dropped at freeze time because they came from personal directories.
+
+### run: routing
+
+`--no-args`; top-1 is the routed tool. BM25 ranks the same names and man-page summaries with the request as the query: a free baseline, not a rival.
+
+| Set | n | hunch top-1 | BM25 top-1 | abstained | errors |
+|:---|---:|---:|---:|---:|---:|
+| hand-written, routable (by the author) | 39 | 36 | 9 | 0 | 0 |
+| NL2Bash held-out (not by the author) | 120 | 36 | 4 | 66 | 0 |
+
+The 10 hand-written requests that no installed tool answers ("order a pizza", "mine bitcoin"): 9 abstentions out of 10, errors 0. The tenth, "translate this english text to french", went to `spit` at fit 0.90; its man page reads "translate some text through a Large Language Model", the label says abstain, so it counts as a miss.
+
+NL2Bash requests describe one-line pipelines, mostly around `find`: 54 of the 66 abstentions and 12 of the 18 wrong routes have `find` as the gold utility. 40 of the 120 requests name the utility in their text; 16 of the 36 hits are among those 40, the other 20 hits are not. The prototype scored 35 of 120 on the same requests, with 73 abstentions.
+
+Reliability of the routes hunch acted on, both sets: 93 routes with exit 0. Abstentions and error rows are left out, so the table says nothing about fits below the threshold. The bins are the ones `eval_run.py` prints; the lowest holds fits from 0.5 up.
+
+| fit | routes | correct | accuracy |
+|:---|---:|---:|---:|
+| 0.4–0.6 | 17 | 12 | 0.71 |
+| 0.6–0.8 | 34 | 23 | 0.68 |
+| 0.8–1.0 | 42 | 37 | 0.88 |
+
+`fit` is an absolute yes/no answer, "is this command a correct, direct way to do the request", and the threshold gates those answers only. This table is the evidence for the 0.5 default. "Calibrated" means one thing here: a route reported at fit 0.8 or above was right 37 times in 42. The data does not single out 0.5. Accuracy is 0.71 just above the threshold and 0.68 in the next bin; a threshold of 0.6 would have refused 17 routes, 12 of them right, to avoid 5 wrong ones. Fits below 0.5 were not scored, so this run says nothing about lowering it. 20 of the 169 routing decisions are one `--no-cache` re-run from flipping: their fit sits within 0.06 of the threshold, the measured run-to-run jitter of identical requests.
+
+### run: arguments
+
+The 20-request spot check (`evals/run_args.json`), run without `--no-args`: tool right 12/20, all required flags present 5/20, any extra flag 0/20, errors 0. Under half, so read `data.argv` as a proposal and prefer `--no-args`. The failure is a flag left out (`tar -x` without `-f`, `head` without `-n`, `sort` without `-n`, `ls` and `grep` bare), never a flag the request did not ask for.
+
+### why
+
+20 real failing CI logs (`evals/why/`, 136 to 300 lines each, 4 per ecosystem, root-cause ranges labelled by hand), `hunch why -n 3`; abstained 3, errors 0. The baselines take the first and the last line matching the regex hunch's own prefilter uses (`error`, `failed`, `panic`, `not found`, ...).
+
+| method | hit@1 | hit@3 |
+|:---|---:|---:|
+| hunch | 15/20 | 16/20 |
+| first `SIGNAL` match | 4/20 | 10/20 |
+| last `SIGNAL` match | 1/20 | 3/20 |
+
+`data.any`, the absolute "does this log hold a failure" answer that the threshold gates, was 0.17 at the minimum and 0.77 at the median over the 20 cases; the 3 abstentions sat at 0.17, 0.43 and 0.46. Every case holds a failure, so all three are misses.
 
 ## For agents
 
@@ -199,7 +238,13 @@ Some tools are never executed, whatever the confidence or the flags: `rm`, `rmdi
 
 ## What it is bad at
 
-pending: the failure tables come from the eval run above.
+Every item below is a failure row of the eval run above (`evals/out/*.json` after a run).
+
+- Picking the tool people use over the tool whose man page matches. The inventory is flat and the one-line summary decides: "download a file from a url" went to `lwp-download` ("Fetch large files from the web") instead of `curl`, in both sets that asked. Likewise `ahost` over `hostname`, `cjpeg` over `sips`, `sdiff` over `diff`, `nl` over `cat`, `ditto` over `cp`, and `fd` over `find` in 5 of the 18 wrong NL2Bash routes. Several of those commands work; a reader who expects `curl` gets a tool they have never heard of. "generate a random password" went to `slappasswd`, the OpenLDAP password hasher, at fit 0.63.
+- Pipelines. A request that needs two tools ("find the .sql files and run a script on each") gets one tool or an abstention: 66 of the 120 NL2Bash requests abstained, and `find` was the gold utility for 54 of them.
+- Argument pointing drops flags: all required flags present in 5 of 20, an extra flag in 0 of 20. `tar -x` without `-f foo.tar.gz` never names the archive. Use `--no-args` and write the flags yourself.
+- `why` treats some failures as not failures: a Go `--- FAIL` block whose message is "still exists" (`any` 0.43), a `WARNING: DATA RACE` from `go test -race` (0.46) and a ruff `D200` docstring finding under pre-commit (0.17) all exited 3. In a Python traceback it pointed at a library frame 27 lines above the exception line. When a log quotes another failure, as vitest's snapshot diff of the runner's own output does, the quoted failure was pointed at first (a hit@3, not a hit@1).
+- Anything within 0.06 of the threshold: 20 of the 169 routing decisions above sit there, and a `--no-cache` re-run can flip them.
 
 ## License
 
