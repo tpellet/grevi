@@ -66,8 +66,12 @@ them as NOT RUN, never as passed.
 
 ## hunch — This Project
 
-**`main` only.** No branches, no worktrees, no scratch clones, no PRs. One shared checkout,
-strictly serial execution: one agent, one task at a time. Commits are SSH-signed; never bypass
+**`main` only.** No branches, no worktrees, no scratch clones, no PRs. One shared checkout.
+Parallel agents all work in it and coordinate through Agent Mail: each registers, reserves its
+exact write paths before its first edit, and posts in the bead's thread (global rule:
+`~/.claude/AGENTS.md` RULE NUMBER 2). Tasks with a real dependency stay
+serial. If Agent Mail is down, run serially; never fall back to a worktree. Stage and commit only
+your own paths (`git commit -- <paths>`); the index is shared. Commits are SSH-signed; never bypass
 signing. Commit subject: semantic prefix + bead ID, e.g. `feat: add hunch pick (hunch-abc)`.
 
 **Unattended runs: never trigger a confirmation prompt.** Agents run while Thomas is away; a
