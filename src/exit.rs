@@ -41,7 +41,7 @@ pub enum HunchError {
     Unavailable(String),
     #[error("unexpected response from TypeSafe: {0}")]
     Protocol(String),
-    #[error("no input on stdin: {0}")]
+    #[error("no input: {0}")]
     EmptyInput(&'static str),
     #[error("input too large: {0}")]
     InputTooLarge(String),
