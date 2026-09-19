@@ -1,0 +1,15 @@
+{
+  "name": "hunch",
+  "description": "The hunch agent skill for Claude Code.",
+  "owner": {
+    "name": "tpellet",
+    "url": "https://github.com/tpellet"
+  },
+  "plugins": [
+    {
+      "name": "hunch",
+      "description": "Teaches agents to use the hunch CLI: pick, why, is, run, add, sort.",
+      "source": "./"
+    }
+  ]
+}

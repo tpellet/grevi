@@ -1,0 +1,10 @@
+{
+  "name": "hunch",
+  "description": "Agent skill for the hunch CLI: point at the right line, tool, hunk or file with calibrated confidence.",
+  "author": {
+    "name": "tpellet",
+    "url": "https://github.com/tpellet"
+  },
+  "homepage": "https://github.com/tpellet/hunch",
+  "license": "MIT"
+}

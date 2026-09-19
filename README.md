@@ -256,6 +256,15 @@ Branch on `exit_code`: 0 ok, 1 no, 2 usage, 3 abstain, 4 unavailable, 5 auth, 6 
 
 The per-verb `data` fields and the workflows are in [docs/guide/agents.md](docs/guide/agents.md).
 
+A short agent skill, [skills/hunch/SKILL.md](skills/hunch/SKILL.md), teaches Claude Code and Codex when and how to call hunch. In Claude Code:
+
+```
+/plugin marketplace add tpellet/hunch
+/plugin install hunch@hunch
+```
+
+For Codex, copy or symlink `skills/hunch` into `~/.agents/skills/` (or `.agents/skills/` in a repository).
+
 ## Privacy and safety
 
 What leaves your machine, verb by verb: [PRIVACY.md](PRIVACY.md). Requests go only to the TypeSafe API. Before sending, hunch masks obvious secrets (`token=…`, `Bearer …`, `sk-…`, `ghp_…`, `AKIA…`, JWTs) as `[REDACTED]`. That is best effort, not a guarantee: do not pipe secrets into hunch.
