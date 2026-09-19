@@ -1,0 +1,300 @@
+ Runtimes: io.containerd.runc.v2 runc
+ Default Runtime: runc
+ Init Binary: docker-init
+ containerd version: db8809540e1a7a9da5d518876894933ff55692ab
+ runc version: v1.5.1-0-g8f2685a4
+ init version: de40ad0
+ Security Options:
+  apparmor
+  seccomp
+   Profile: builtin
+  cgroupns
+ Kernel Version: 6.17.0-1022-azure
+ Operating System: Ubuntu 24.04.5 LTS
+ OSType: linux
+ Architecture: x86_64
+ CPUs: 4
+ Total Memory: 15.61GiB
+ Name: runnervmlun5p
+ ID: a4efb8b6-20f9-46f4-b827-91ac0547be3a
+ Docker Root Dir: /var/lib/docker
+ Debug Mode: false
+ Username: githubactions
+ Experimental: false
+ Insecure Registries:
+  ::1/128
+  127.0.0.0/8
+ Live Restore Enabled: false
+
+No proxy configuration found
+github.com/docker/buildx v0.37.0 ac30b249211430b85fb8f37b6e7154b5c47ba0b6
+{
+  "nodes": [
+    {
+      "name": "builder-f3def977-c4ed-45e9-838e-3b8bf3de777d0",
+      "endpoint": "unix:///var/run/docker.sock",
+      "status": "running",
+      "buildkitd-flags": "--allow-insecure-entitlement security.insecure --allow-insecure-entitlement network.host",
+      "buildkit": "v0.32.2",
+      "platforms": "linux/amd64,linux/amd64/v2,linux/amd64/v3,linux/386",
+      "features": {
+        "Automatically load images to the Docker Engine image store": true,
+        "Cache export": true,
+        "Direct push": true,
+        "Docker exporter": true,
+        "Multi-platform build": true,
+        "OCI exporter": true
+      },
+      "labels": {
+        "org.mobyproject.buildkit.worker.executor": "oci",
+        "org.mobyproject.buildkit.worker.hostname": "0c98ea6df1b7",
+        "org.mobyproject.buildkit.worker.network": "host",
+        "org.mobyproject.buildkit.worker.oci.process-mode": "sandbox",
+        "org.mobyproject.buildkit.worker.selinux.enabled": "false",
+        "org.mobyproject.buildkit.worker.snapshotter": "overlayfs"
+      },
+      "gcPolicy": [
+        {
+          "all": false,
+          "filter": [
+            "type==source.local type==exec.cachemount type==source.git.checkout"
+          ],
+          "keepDuration": "48h0m0s",
+          "maxUsedSpace": "488.3MiB"
+        },
+        {
+          "all": false,
+          "keepDuration": "1440h0m0s",
+          "reservedSpace": "9.313GiB",
+          "maxUsedSpace": "93.13GiB",
+          "minFreeSpace": "27.01GiB"
+        },
+        {
+          "all": false,
+          "reservedSpace": "9.313GiB",
+          "maxUsedSpace": "93.13GiB",
+          "minFreeSpace": "27.01GiB"
+        },
+        {
+          "all": true,
+          "reservedSpace": "9.313GiB",
+          "maxUsedSpace": "93.13GiB",
+          "minFreeSpace": "27.01GiB"
+        }
+      ]
+    }
+  ],
+  "name": "builder-f3def977-c4ed-45e9-838e-3b8bf3de777d",
+  "driver": "docker-container",
+  "lastActivity": "2026-09-10T06:39:49.000Z"
+}
+#1 [internal] load local bake definitions
+#1 reading ./docker-bake.hcl 2.37kB / 2.37kB done
+#1 reading /home/runner/work/_temp/docker-actions-toolkit-4HlWVd/docker-metadata-action-bake.json 995B / 995B done
+#1 DONE 0.0s
+{
+  "group": {
+    "default": {
+      "targets": [
+        "image-all"
+      ]
+    }
+  },
+  "target": {
+    "image-all": {
+      "context": ".",
+      "dockerfile": "Dockerfile",
+      "args": {
+        "DOCKER_META_IMAGES": "distribution/distribution,ghcr.io/distribution/distribution",
+        "DOCKER_META_VERSION": "pr-4953"
+      },
+      "labels": {
+        "org.opencontainers.image.created": "2026-09-10T06:39:43.956Z",
+        "org.opencontainers.image.description": "The toolkit to pack, ship, store, and distribute container content",
+        "org.opencontainers.image.licenses": "Apache-2.0",
+        "org.opencontainers.image.revision": "2dc24f58f6778968f149ae8c1345fc046a58a2a5",
+        "org.opencontainers.image.source": "https://github.com/distribution/distribution",
+        "org.opencontainers.image.title": "Distribution",
+        "org.opencontainers.image.url": "https://github.com/distribution/distribution",
+        "org.opencontainers.image.version": "pr-4953"
+      },
+      "tags": [
+        "distribution/distribution:pr-4953",
+        "ghcr.io/distribution/distribution:pr-4953"
+      ],
+      "platforms": [
+        "linux/amd64",
+        "linux/arm/v6",
+        "linux/arm/v7",
+        "linux/arm64",
+        "linux/ppc64le",
+        "linux/s390x",
+        "linux/riscv64"
+      ]
+    }
+  }
+}
+#1 [internal] load local bake definitions
+#1 reading ./docker-bake.hcl 2.37kB / 2.37kB done
+#1 reading /home/runner/work/_temp/docker-actions-toolkit-4HlWVd/docker-metadata-action-bake.json 995B / 995B done
+#1 DONE 0.0s
+{
+  "group": {
+    "default": {
+      "targets": [
+        "image-all"
+      ]
+    }
+  },
+  "target": {
+    "image-all": {
+      "attest": [
+        {
+          "builder-id": "https://github.com/distribution/distribution/actions/runs/34444127685/attempts/1",
+          "mode": "max",
+          "type": "provenance"
+        }
+      ],
+      "context": ".",
+      "dockerfile": "Dockerfile",
+      "args": {
+        "DOCKER_META_IMAGES": "distribution/distribution,ghcr.io/distribution/distribution",
+        "DOCKER_META_VERSION": "pr-4953"
+      },
+      "labels": {
+        "org.opencontainers.image.created": "2026-09-10T06:39:43.956Z",
+        "org.opencontainers.image.description": "The toolkit to pack, ship, store, and distribute container content",
+        "org.opencontainers.image.licenses": "Apache-2.0",
+        "org.opencontainers.image.revision": "2dc24f58f6778968f149ae8c1345fc046a58a2a5",
+        "org.opencontainers.image.source": "https://github.com/distribution/distribution",
+        "org.opencontainers.image.title": "Distribution",
+        "org.opencontainers.image.url": "https://github.com/distribution/distribution",
+        "org.opencontainers.image.version": "pr-4953"
+      },
+      "tags": [
+        "distribution/distribution:pr-4953",
+        "ghcr.io/distribution/distribution:pr-4953"
+      ],
+      "platforms": [
+        "linux/amd64",
+        "linux/arm/v6",
+        "linux/arm/v7",
+        "linux/arm64",
+        "linux/ppc64le",
+        "linux/s390x",
+        "linux/riscv64"
+      ]
+    }
+  }
+}
+#0 building with "builder-f3def977-c4ed-45e9-838e-3b8bf3de777d" instance using docker-container driver
+
+#1 [internal] load local bake definitions
+#1 reading ./docker-bake.hcl 2.37kB / 2.37kB done
+#1 reading /home/runner/work/_temp/docker-actions-toolkit-4HlWVd/docker-metadata-action-bake.json 995B / 995B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 3.07kB done
+#2 DONE 0.0s
+
+#3 [auth] docker/dockerfile:pull token for registry-1.docker.io
+#3 DONE 0.0s
+
+#4 resolve image config for docker-image://docker.io/docker/dockerfile:1
+#4 DONE 0.2s
+
+#5 docker-image://docker.io/docker/dockerfile:1@sha256:ecfaec9ed6d810b56388c508f4121597bfbba70d41a6dfeee4d8cad5f295fc32
+#5 resolve docker.io/docker/dockerfile:1@sha256:ecfaec9ed6d810b56388c508f4121597bfbba70d41a6dfeee4d8cad5f295fc32 done
+#5 CACHED
+
+#6 [auth] library/golang:pull token for registry-1.docker.io
+#6 DONE 0.0s
+
+#7 [auth] tonistiigi/xx:pull token for registry-1.docker.io
+#7 DONE 0.0s
+
+#8 [auth] library/alpine:pull token for registry-1.docker.io
+#8 DONE 0.0s
+
+#9 [auth] upx/upx:pull token for registry-1.docker.io
+#9 DONE 0.0s
+
+#10 [linux/amd64 internal] load metadata for docker.io/upx/upx:latest
+#10 ERROR: pull access denied, repository does not exist or may require authorization: server message: insufficient_scope: authorization failed
+
+#11 [linux/arm64 internal] load metadata for docker.io/upx/upx:latest
+#11 CANCELED
+
+#12 [linux/amd64 internal] load metadata for docker.io/library/golang:1.25.9-alpine3.23
+#12 CANCELED
+
+#13 [linux/amd64 internal] load metadata for docker.io/library/alpine:3.23
+#13 CANCELED
+
+#14 [linux/s390x internal] load metadata for docker.io/upx/upx:latest
+#14 CANCELED
+
+#15 [linux/riscv64 internal] load metadata for docker.io/upx/upx:latest
+#15 CANCELED
+
+#16 [linux/s390x internal] load metadata for docker.io/library/alpine:3.23
+#16 CANCELED
+
+#17 [linux/arm64 internal] load metadata for docker.io/library/alpine:3.23
+#17 CANCELED
+
+#18 [linux/ppc64le internal] load metadata for docker.io/library/alpine:3.23
+#18 CANCELED
+
+#19 [linux/amd64 internal] load metadata for docker.io/tonistiigi/xx:1.9.0
+#19 CANCELED
+
+#20 [linux/riscv64 internal] load metadata for docker.io/library/alpine:3.23
+#20 CANCELED
+
+#21 [linux/arm/v6 internal] load metadata for docker.io/library/alpine:3.23
+#21 CANCELED
+
+#22 [linux/arm/v7 internal] load metadata for docker.io/library/alpine:3.23
+#22 CANCELED
+
+#23 [linux/arm/v6 internal] load metadata for docker.io/upx/upx:latest
+#23 CANCELED
+
+#24 [linux/ppc64le internal] load metadata for docker.io/upx/upx:latest
+#24 CANCELED
+
+#25 [linux/arm/v7 internal] load metadata for docker.io/upx/upx:latest
+#25 CANCELED
+------
+ > [linux/amd64 internal] load metadata for docker.io/upx/upx:latest:
+------
+WARNING: No output specified for image-all target(s) with docker-container driver. Build result will only remain in the build cache. To push result image into registry use --push or to load image into docker use --load
+Dockerfile:62
+--------------------
+  60 |     COPY --from=releaser /out /
+  61 |
+  62 | >>> FROM upx/upx:latest AS packer
+  63 |     COPY --from=binary /registry /registry
+  64 |     RUN upx --best /registry
+--------------------
+Dockerfile:17
+--------------------
+  15 |
+  16 |     FROM --platform=$BUILDPLATFORM tonistiigi/xx:${XX_VERSION} AS xx
+  17 | >>> FROM --platform=$BUILDPLATFORM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS base
+  18 |     COPY --from=xx / /
+  19 |     RUN apk add --no-cache bash coreutils file git
+--------------------
+Dockerfile:16
+--------------------
+  14 |     ARG XX_VERSION=1.9.0
+  15 |
+  16 | >>> FROM --platform=$BUILDPLATFORM tonistiigi/xx:${XX_VERSION} AS xx
+  17 |     FROM --platform=$BUILDPLATFORM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS base
+  18 |     COPY --from=xx / /
+--------------------
+ERROR: failed to solve: pull access denied, repository does not exist or may require authorization: server message: insufficient_scope: authorization failed
+builder-f3def977-c4ed-45e9-838e-3b8bf3de777d/builder-f3def977-c4ed-45e9-838e-3b8bf3de777d0/3rou9mccpq9m4q65nn69s6xq9
+Build summary supported!

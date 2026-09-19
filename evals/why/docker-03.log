@@ -1,0 +1,249 @@
+  UV_SYSTEM_PYTHON: true
+  BASE_IMAGE_VERSION: 2026.07.0
+  ARCHITECTURES: ["amd64", "aarch64"]
+  MACHINES: ["generic-x86-64", "khadas-vim3", "odroid-c2", "odroid-c4", "odroid-m1", "odroid-n2", "qemuarm-64", "qemux86-64", "raspberrypi3-64", "raspberrypi4-64", "raspberrypi5-64", "yellow", "green"]
+  HASSFEST_IMAGE_NAME: ghcr.io/home-assistant/hassfest
+  HASSFEST_IMAGE_TAG: ghcr.io/home-assistant/hassfest:2026.10.0.dev202609190225
+refs/heads/dev: read/write
+Client: Docker Engine - Community
+ Version:           28.0.4
+ API version:       1.48
+ Go version:        go1.23.7
+ Git commit:        b8034c0
+ Built:             Tue Mar 25 15:07:16 2025
+ OS/Arch:           linux/amd64
+ Context:           default
+
+Server: Docker Engine - Community
+ Engine:
+  Version:          28.0.4
+  API version:      1.48 (minimum version 1.24)
+  Go version:       go1.23.7
+  Git commit:       6430e49
+  Built:            Tue Mar 25 15:07:16 2025
+  OS/Arch:          linux/amd64
+  Experimental:     false
+ containerd:
+  Version:          v2.3.4
+  GitCommit:        db8809540e1a7a9da5d518876894933ff55692ab
+ runc:
+  Version:          1.5.1
+  GitCommit:        v1.5.1-0-g8f2685a4
+ docker-init:
+  Version:          0.19.0
+  GitCommit:        de40ad0
+Client: Docker Engine - Community
+ Version:    28.0.4
+ Context:    default
+ Debug Mode: false
+ Plugins:
+  buildx: Docker Buildx (Docker Inc.)
+    Version:  v0.37.0
+    Path:     /usr/libexec/docker/cli-plugins/docker-buildx
+  compose: Docker Compose (Docker Inc.)
+    Version:  v2.38.2
+    Path:     /usr/libexec/docker/cli-plugins/docker-compose
+
+Server:
+ Containers: 0
+  Running: 0
+  Paused: 0
+  Stopped: 0
+ Images: 6
+ Server Version: 28.0.4
+ Storage Driver: overlay2
+  Backing Filesystem: extfs
+  Supports d_type: true
+  Using metacopy: false
+  Native Overlay Diff: false
+  userxattr: false
+ Logging Driver: json-file
+ Cgroup Driver: systemd
+ Cgroup Version: 2
+ Plugins:
+  Volume: local
+  Network: bridge host ipvlan macvlan null overlay
+  Log: awslogs fluentd gcplogs gelf journald json-file local splunk syslog
+ Swarm: inactive
+ Runtimes: io.containerd.runc.v2 runc
+ Default Runtime: runc
+ Init Binary: docker-init
+ containerd version: db8809540e1a7a9da5d518876894933ff55692ab
+ runc version: v1.5.1-0-g8f2685a4
+ init version: de40ad0
+ Security Options:
+  apparmor
+  seccomp
+   Profile: builtin
+  cgroupns
+ Kernel Version: 6.17.0-1022-azure
+ Operating System: Ubuntu 24.04.5 LTS
+ OSType: linux
+ Architecture: x86_64
+ CPUs: 4
+ Total Memory: 15.61GiB
+ Name: runnervmlun5p
+ ID: a4efb8b6-20f9-46f4-b827-91ac0547be3a
+ Docker Root Dir: /var/lib/docker
+ Debug Mode: false
+ Username: githubactions
+ Experimental: false
+ Insecure Registries:
+  ::1/128
+  127.0.0.0/8
+ Live Restore Enabled: false
+
+No proxy configuration found
+github.com/docker/buildx v0.37.0 ac30b249211430b85fb8f37b6e7154b5c47ba0b6
+{
+  "nodes": [
+    {
+      "name": "default",
+      "endpoint": "default",
+      "status": "running",
+      "buildkit": "v0.20.2",
+      "platforms": "linux/amd64,linux/amd64/v2,linux/amd64/v3,linux/amd64/v4,linux/386",
+      "features": {
+        "Automatically load images to the Docker Engine image store": true,
+        "Cache export": true,
+        "Direct push": true,
+        "Docker exporter": true,
+        "Multi-platform build": true,
+        "OCI exporter": true,
+        "Prefer image digest": true
+      },
+      "labels": {
+        "org.mobyproject.buildkit.worker.moby.host-gateway-ip": "172.17.0.1"
+      }
+    }
+  ],
+  "name": "default",
+  "driver": "docker"
+}
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 2.08kB done
+#1 DONE 0.0s
+
+#2 [auth] docker/dockerfile:pull token for registry-1.docker.io
+#2 DONE 0.0s
+
+#3 resolve image config for docker-image://docker.io/docker/dockerfile@sha256:2780b5c3bab67f1f76c781860de469442999ed1a0d7992a5efdf2cffc0e3d769
+#3 DONE 0.6s
+
+#4 docker-image://docker.io/docker/dockerfile@sha256:2780b5c3bab67f1f76c781860de469442999ed1a0d7992a5efdf2cffc0e3d769
+#4 resolve docker.io/docker/dockerfile@sha256:2780b5c3bab67f1f76c781860de469442999ed1a0d7992a5efdf2cffc0e3d769 done
+#4 sha256:2780b5c3bab67f1f76c781860de469442999ed1a0d7992a5efdf2cffc0e3d769 8.43kB / 8.43kB done
+#4 sha256:369c4e6584693f8e13d7a27755a6b10201798e229cdfad5eae04ea5f15a76412 1.13kB / 1.13kB done
+#4 sha256:14cdce40ae0e938cf7d2d7fe6aa3dec2beb66aa066d6a54356c64fd8af6323c2 1.33kB / 1.33kB done
+#4 sha256:bcb5d2ab7af67a669c932851c8bb8a26895dda6258900edfd7429d57bfd3592f 0B / 14.11MB 0.1s
+#4 sha256:bcb5d2ab7af67a669c932851c8bb8a26895dda6258900edfd7429d57bfd3592f 14.11MB / 14.11MB 0.2s
+#4 sha256:bcb5d2ab7af67a669c932851c8bb8a26895dda6258900edfd7429d57bfd3592f 14.11MB / 14.11MB 0.2s done
+#4 extracting sha256:bcb5d2ab7af67a669c932851c8bb8a26895dda6258900edfd7429d57bfd3592f 0.1s done
+#4 DONE 0.4s
+
+#5 [auth] library/python:pull token for registry-1.docker.io
+#5 DONE 0.0s
+
+#6 [internal] load metadata for docker.io/library/python:3.14.5-alpine
+#6 DONE 0.5s
+
+#7 [stage-0 1/4] FROM docker.io/library/python:3.14.5-alpine@sha256:5a824eb82cc75361f98611f3cfc5091ea33f10a6ccea4d4ebdabbc523b9a1614
+#7 resolve docker.io/library/python:3.14.5-alpine@sha256:5a824eb82cc75361f98611f3cfc5091ea33f10a6ccea4d4ebdabbc523b9a1614 done
+#7 sha256:5a824eb82cc75361f98611f3cfc5091ea33f10a6ccea4d4ebdabbc523b9a1614 10.29kB / 10.29kB done
+#7 sha256:1aba322febb2d47185eb4db4934a1d7ce942cf3a469be8908dbce95aa513419b 1.73kB / 1.73kB done
+#7 sha256:c3e9c8eaf03737ce78f0e860d4bbf142e6eebebd56244d01b276aebf50d059fe 4.70kB / 4.70kB done
+#7 sha256:6a0ac1617861a677b045b7ff88545213ec31c0ff08763195a70a4a5adda577bb 0B / 3.86MB 0.1s
+#7 sha256:bafef4f1a46c8f17ca44cfb33ae79bb07d54ce7abeba8618466a8144cea386c3 0B / 455.50kB 0.1s
+#7 sha256:97f1e103f334e724ec9e5cdfa0eb63e35df78ba9c7d642ea67d973671c010416 0B / 13.45MB 0.1s
+#7 sha256:6a0ac1617861a677b045b7ff88545213ec31c0ff08763195a70a4a5adda577bb 3.86MB / 3.86MB 0.2s
+#7 sha256:bafef4f1a46c8f17ca44cfb33ae79bb07d54ce7abeba8618466a8144cea386c3 455.50kB / 455.50kB 0.2s done
+#7 sha256:ffe5e153acbf7f2a9712301e26d1a8e48447530facbe8b525fe380cb3c948ec9 0B / 247B 0.2s
+#7 extracting sha256:6a0ac1617861a677b045b7ff88545213ec31c0ff08763195a70a4a5adda577bb
+#7 sha256:6a0ac1617861a677b045b7ff88545213ec31c0ff08763195a70a4a5adda577bb 3.86MB / 3.86MB 0.2s done
+#7 sha256:97f1e103f334e724ec9e5cdfa0eb63e35df78ba9c7d642ea67d973671c010416 13.45MB / 13.45MB 0.4s
+#7 sha256:ffe5e153acbf7f2a9712301e26d1a8e48447530facbe8b525fe380cb3c948ec9 247B / 247B 0.2s done
+#7 extracting sha256:6a0ac1617861a677b045b7ff88545213ec31c0ff08763195a70a4a5adda577bb 0.1s done
+#7 sha256:97f1e103f334e724ec9e5cdfa0eb63e35df78ba9c7d642ea67d973671c010416 13.45MB / 13.45MB 0.5s done
+#7 extracting sha256:bafef4f1a46c8f17ca44cfb33ae79bb07d54ce7abeba8618466a8144cea386c3 0.1s
+#7 extracting sha256:bafef4f1a46c8f17ca44cfb33ae79bb07d54ce7abeba8618466a8144cea386c3 0.1s done
+#7 extracting sha256:97f1e103f334e724ec9e5cdfa0eb63e35df78ba9c7d642ea67d973671c010416
+#7 extracting sha256:97f1e103f334e724ec9e5cdfa0eb63e35df78ba9c7d642ea67d973671c010416 1.0s done
+#7 ...
+
+#8 [internal] load build context
+#8 transferring context: 240.23MB 2.4s done
+#8 DONE 2.5s
+
+#7 [stage-0 1/4] FROM docker.io/library/python:3.14.5-alpine@sha256:5a824eb82cc75361f98611f3cfc5091ea33f10a6ccea4d4ebdabbc523b9a1614
+#7 extracting sha256:ffe5e153acbf7f2a9712301e26d1a8e48447530facbe8b525fe380cb3c948ec9
+#7 extracting sha256:ffe5e153acbf7f2a9712301e26d1a8e48447530facbe8b525fe380cb3c948ec9 done
+#7 DONE 3.2s
+
+#9 [stage-0 2/4] WORKDIR /github/workspace
+#9 DONE 0.0s
+
+#10 [stage-0 3/4] COPY --parents requirements.txt requirements_all.txt homeassistant/ script /usr/src/homeassistant/
+#10 DONE 2.2s
+
+#11 [stage-0 4/4] RUN --mount=type=tmpfs,target=/tmp     --mount=type=bind,source=requirements_test.txt,target=/tmp/requirements_test.txt,readonly     --mount=type=bind,source=requirements_test_pre_commit.txt,target=/tmp/requirements_test_pre_commit.txt,readonly     apk add --no-cache libturbojpeg     && pip install --no-cache-dir "uv==$(awk -F'==' '/^uv==/{print $2}' /usr/src/homeassistant/requirements.txt)"     && uv pip install         --no-build         --no-cache         -c /usr/src/homeassistant/homeassistant/package_constraints.txt         -r /usr/src/homeassistant/requirements.txt         "pipdeptree==$(awk -F'==' '/^pipdeptree==/{print $2}' /tmp/requirements_test.txt)"         "tqdm==$(awk -F'==' '/^tqdm==/{print $2}' /tmp/requirements_test.txt)"         "ruff==$(awk -F'==' '/^ruff==/{print $2}' /tmp/requirements_test_pre_commit.txt)"
+#11 0.673 (1/1) Installing libturbojpeg (3.1.2-r0)
+#11 0.696 OK: 12.8 MiB in 31 packages
+#11 3.294 Collecting uv==0.12.13
+#11 3.374   Downloading uv-0.12.13-py3-none-musllinux_1_1_x86_64.whl.metadata (11 kB)
+#11 3.399 Downloading uv-0.12.13-py3-none-musllinux_1_1_x86_64.whl (22.9 MB)
+#11 3.652    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 22.9/22.9 MB 108.8 MB/s  0:00:00
+#11 3.692 Installing collected packages: uv
+#11 4.339 Successfully installed uv-0.12.13
+#11 4.339 WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+#11 4.340
+#11 4.340 [notice] A new release of pip is available: 26.1.1 -> 26.2.1
+#11 4.340 [notice] To update, run: pip install --upgrade pip
+#11 4.474 Using Python 3.14.5 environment at: /usr/local
+#11 8.528   × No solution found when resolving dependencies:
+#11 8.528   ╰─▶ Because only installer==0.7.0 is available and nab-project>=0.0.14
+#11 8.528       depends on installer>=1.0, we can conclude that nab-project>=0.0.14
+#11 8.528       cannot be used.
+#11 8.528       And because pipdeptree==4.2.2 depends on nab-project>=0.0.14 and you
+#11 8.528       require pipdeptree==4.2.2, we can conclude that your requirements are
+#11 8.528       unsatisfiable.
+#11 8.528
+#11 8.528 hint: `installer` was found on https://wheels.home-assistant.io/musllinux-index/, but not at the requested version (installer>=1.0). A compatible version may be available on a subsequent index (e.g., https://pypi.org/simple). By default, uv will only consider versions that are published on the first index that contains a given package, to avoid dependency confusion attacks. If all indexes are equally trusted, use `--index-strategy unsafe-best-match` to consider all versions from all indexes, regardless of the order in which they were defined.
+#11 ERROR: process "/bin/sh -o pipefail -c apk add --no-cache libturbojpeg     && pip install --no-cache-dir \"uv==$(awk -F'==' '/^uv==/{print $2}' /usr/src/homeassistant/requirements.txt)\"     && uv pip install         --no-build         --no-cache         -c /usr/src/homeassistant/homeassistant/package_constraints.txt         -r /usr/src/homeassistant/requirements.txt         \"pipdeptree==$(awk -F'==' '/^pipdeptree==/{print $2}' /tmp/requirements_test.txt)\"         \"tqdm==$(awk -F'==' '/^tqdm==/{print $2}' /tmp/requirements_test.txt)\"         \"ruff==$(awk -F'==' '/^ruff==/{print $2}' /tmp/requirements_test_pre_commit.txt)\"" did not complete successfully: exit code: 1
+------
+ > [stage-0 4/4] RUN --mount=type=tmpfs,target=/tmp     --mount=type=bind,source=requirements_test.txt,target=/tmp/requirements_test.txt,readonly     --mount=type=bind,source=requirements_test_pre_commit.txt,target=/tmp/requirements_test_pre_commit.txt,readonly     apk add --no-cache libturbojpeg     && pip install --no-cache-dir "uv==$(awk -F'==' '/^uv==/{print $2}' /usr/src/homeassistant/requirements.txt)"     && uv pip install         --no-build         --no-cache         -c /usr/src/homeassistant/homeassistant/package_constraints.txt         -r /usr/src/homeassistant/requirements.txt         "pipdeptree==$(awk -F'==' '/^pipdeptree==/{print $2}' /tmp/requirements_test.txt)"         "tqdm==$(awk -F'==' '/^tqdm==/{print $2}' /tmp/requirements_test.txt)"         "ruff==$(awk -F'==' '/^ruff==/{print $2}' /tmp/requirements_test_pre_commit.txt)":
+4.474 Using Python 3.14.5 environment at: /usr/local
+8.528   × No solution found when resolving dependencies:
+8.528   ╰─▶ Because only installer==0.7.0 is available and nab-project>=0.0.14
+8.528       depends on installer>=1.0, we can conclude that nab-project>=0.0.14
+8.528       cannot be used.
+8.528       And because pipdeptree==4.2.2 depends on nab-project>=0.0.14 and you
+8.528       require pipdeptree==4.2.2, we can conclude that your requirements are
+8.528       unsatisfiable.
+8.528
+8.528 hint: `installer` was found on https://wheels.home-assistant.io/musllinux-index/, but not at the requested version (installer>=1.0). A compatible version may be available on a subsequent index (e.g., https://pypi.org/simple). By default, uv will only consider versions that are published on the first index that contains a given package, to avoid dependency confusion attacks. If all indexes are equally trusted, use `--index-strategy unsafe-best-match` to consider all versions from all indexes, regardless of the order in which they were defined.
+------
+Dockerfile:18
+--------------------
+  17 |     # Uv creates a lock file in /tmp
+  18 | >>> RUN --mount=type=tmpfs,target=/tmp \
+  19 | >>>     --mount=type=bind,source=requirements_test.txt,target=/tmp/requirements_test.txt,readonly \
+  20 | >>>     --mount=type=bind,source=requirements_test_pre_commit.txt,target=/tmp/requirements_test_pre_commit.txt,readonly \
+  21 | >>>     # Required for PyTurboJPEG
+  22 | >>>     apk add --no-cache libturbojpeg \
+  23 | >>>     # Install uv at the version pinned in the requirements file
+  24 | >>>     && pip install --no-cache-dir "uv==$(awk -F'==' '/^uv==/{print $2}' /usr/src/homeassistant/requirements.txt)" \
+  25 | >>>     && uv pip install \
+  26 | >>>         --no-build \
+  27 | >>>         --no-cache \
+  28 | >>>         -c /usr/src/homeassistant/homeassistant/package_constraints.txt \
+  29 | >>>         -r /usr/src/homeassistant/requirements.txt \
+  30 | >>>         "pipdeptree==$(awk -F'==' '/^pipdeptree==/{print $2}' /tmp/requirements_test.txt)" \
+  31 | >>>         "tqdm==$(awk -F'==' '/^tqdm==/{print $2}' /tmp/requirements_test.txt)" \
+  32 | >>>         "ruff==$(awk -F'==' '/^ruff==/{print $2}' /tmp/requirements_test_pre_commit.txt)"
+  33 |
+--------------------
+ERROR: failed to build: failed to solve: process "/bin/sh -o pipefail -c apk add --no-cache libturbojpeg     && pip install --no-cache-dir \"uv==$(awk -F'==' '/^uv==/{print $2}' /usr/src/homeassistant/requirements.txt)\"     && uv pip install         --no-build         --no-cache         -c /usr/src/homeassistant/homeassistant/package_constraints.txt         -r /usr/src/homeassistant/requirements.txt         \"pipdeptree==$(awk -F'==' '/^pipdeptree==/{print $2}' /tmp/requirements_test.txt)\"         \"tqdm==$(awk -F'==' '/^tqdm==/{print $2}' /tmp/requirements_test.txt)\"         \"ruff==$(awk -F'==' '/^ruff==/{print $2}' /tmp/requirements_test_pre_commit.txt)\"" did not complete successfully: exit code: 1
+default/default/yw741bf19jf1kfunfg7qg0i3x
+Build summary supported!

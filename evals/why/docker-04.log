@@ -1,0 +1,300 @@
+#29 DONE 0.1s
+
+#30 [containerd-src 1/3] WORKDIR /usr/src/containerd
+#30 DONE 0.1s
+
+#31 [runc-src 2/3] RUN git init . && git remote add origin "https://github.com/opencontainers/runc.git"
+#31 0.142 hint: Using 'master' as the name for the initial branch. This default branch name
+#31 0.142 hint: is subject to change. To configure the initial branch name to use in all
+#31 0.142 hint: of your new repositories, which will suppress this warning, call:
+#31 0.142 hint:
+2026-09-18T20:43:25.0037579Z #31 0.142 hint: 	git config --global init.defaultBranch <name>
+#31 0.142 hint:
+#31 0.142 hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+#31 0.142 hint: 'development'. The just-created branch can be renamed via this command:
+#31 0.142 hint:
+2026-09-18T20:43:25.0042562Z #31 0.142 hint: 	git branch -m <name>
+#31 0.144 Initialized empty Git repository in /usr/src/runc/.git/
+#31 DONE 0.2s
+
+#32 [containerd-src 2/3] RUN git init . && git remote add origin "https://github.com/containerd/containerd.git"
+#32 0.172 hint: Using 'master' as the name for the initial branch. This default branch name
+#32 0.172 hint: is subject to change. To configure the initial branch name to use in all
+#32 0.172 hint: of your new repositories, which will suppress this warning, call:
+#32 0.172 hint:
+2026-09-18T20:43:25.0052270Z #32 0.172 hint: 	git config --global init.defaultBranch <name>
+#32 0.172 hint:
+#32 0.172 hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+#32 0.172 hint: 'development'. The just-created branch can be renamed via this command:
+#32 0.172 hint:
+2026-09-18T20:43:25.0057381Z #32 0.172 hint: 	git branch -m <name>
+#32 0.172 Initialized empty Git repository in /usr/src/containerd/.git/
+#32 DONE 0.2s
+
+#33 [rootlesskit-src 2/3] RUN git init . && git remote add origin "https://github.com/rootless-containers/rootlesskit.git"
+#33 0.212 hint: Using 'master' as the name for the initial branch. This default branch name
+#33 0.212 hint: is subject to change. To configure the initial branch name to use in all
+#33 0.212 hint: of your new repositories, which will suppress this warning, call:
+#33 0.212 hint:
+2026-09-18T20:43:25.0066793Z #33 0.212 hint: 	git config --global init.defaultBranch <name>
+#33 0.212 hint:
+#33 0.212 hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+#33 0.212 hint: 'development'. The just-created branch can be renamed via this command:
+#33 0.212 hint:
+2026-09-18T20:43:25.0071690Z #33 0.212 hint: 	git branch -m <name>
+#33 0.213 Initialized empty Git repository in /usr/src/rootlesskit/.git/
+#33 DONE 0.2s
+
+#34 [tini-src 2/3] RUN git init . && git remote add origin "https://github.com/krallin/tini.git"
+#34 0.261 hint: Using 'master' as the name for the initial branch. This default branch name
+#34 0.262 hint: is subject to change. To configure the initial branch name to use in all
+#34 0.262 hint: of your new repositories, which will suppress this warning, call:
+#34 0.262 hint:
+2026-09-18T20:43:25.0080454Z #34 0.262 hint: 	git config --global init.defaultBranch <name>
+#34 0.262 hint:
+#34 0.262 hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+#34 0.262 hint: 'development'. The just-created branch can be renamed via this command:
+#34 0.262 hint:
+2026-09-18T20:43:25.0085058Z #34 0.263 hint: 	git branch -m <name>
+#34 0.265 Initialized empty Git repository in /usr/src/tini/.git/
+#34 DONE 0.3s
+
+#35 [tini-src 3/3] RUN git fetch -q --depth 1 origin "v0.19.0" +refs/tags/*:refs/tags/* && git checkout -q FETCH_HEAD
+#35 DONE 1.2s
+
+#36 [gowinres 1/1] RUN --mount=type=cache,target=/root/.cache/go-build     --mount=type=cache,target=/go/pkg/mod         GOBIN=/build/ GO111MODULE=on go install "github.com/tc-hib/go-winres@v0.3.1"      && /build/go-winres --help
+#36 0.305 go: downloading github.com/tc-hib/go-winres v0.3.1
+#36 0.785 go: downloading github.com/tc-hib/winres v0.1.6
+#36 0.798 go: downloading github.com/urfave/cli/v2 v2.3.0
+#36 1.383 go: downloading github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
+#36 1.385 go: downloading golang.org/x/image v0.0.0-20210220032944-ac19c3e999fb
+#36 1.445 go: downloading github.com/cpuguy83/go-md2man/v2 v2.0.0
+#36 1.525 go: downloading github.com/russross/blackfriday/v2 v2.1.0
+#36 ...
+
+#37 [rootlesskit-src 3/3] RUN git fetch -q --depth 1 origin "v2.0.2" +refs/tags/*:refs/tags/* && git checkout -q FETCH_HEAD
+#37 DONE 2.2s
+
+#38 [rootlesskit-build 2/5] RUN --mount=type=cache,sharing=locked,id=moby-rootlesskit-aptlib,target=/var/lib/apt     --mount=type=cache,sharing=locked,id=moby-rootlesskit-aptcache,target=/var/cache/apt         apt-get update && xx-apt-get install -y --no-install-recommends             gcc             libc6-dev             pkg-config
+#38 0.266 Get:1 http://deb.debian.org/debian bookworm InRelease [151 kB]
+#38 0.291 Get:2 http://deb.debian.org/debian bookworm-updates InRelease [55.4 kB]
+#38 0.291 Get:3 http://deb.debian.org/debian-security bookworm-security InRelease [34.8 kB]
+#38 0.446 Get:4 http://deb.debian.org/debian bookworm/main amd64 Packages [8790 kB]
+#38 0.655 Get:5 http://deb.debian.org/debian bookworm-updates/main amd64 Packages [6924 B]
+#38 0.883 Get:6 http://deb.debian.org/debian-security bookworm-security/main amd64 Packages [340 kB]
+#38 2.267 Fetched 9379 kB in 2s (4667 kB/s)
+#38 2.267 Reading package lists...
+#38 3.304 Hit:1 http://deb.debian.org/debian bookworm InRelease
+#38 3.305 Hit:2 http://deb.debian.org/debian bookworm-updates InRelease
+#38 3.305 Hit:3 http://deb.debian.org/debian-security bookworm-security InRelease
+#38 3.521 Get:4 http://deb.debian.org/debian bookworm/main armel Packages [8450 kB]
+#38 3.785 Get:5 http://deb.debian.org/debian bookworm-updates/main armel Packages [6928 B]
+#38 ...
+
+#39 [runc-src 3/3] RUN git fetch -q --depth 1 origin "v1.2.5" +refs/tags/*:refs/tags/* && git checkout -q FETCH_HEAD
+#39 DONE 3.7s
+
+#40 [runc-build 2/3] RUN --mount=type=cache,sharing=locked,id=moby-runc-aptlib,target=/var/lib/apt     --mount=type=cache,sharing=locked,id=moby-runc-aptcache,target=/var/cache/apt         apt-get update && xx-apt-get install -y --no-install-recommends             dpkg-dev             gcc             libc6-dev             libseccomp-dev             pkg-config
+#40 0.291 Get:1 http://deb.debian.org/debian bookworm InRelease [151 kB]
+#40 0.315 Get:2 http://deb.debian.org/debian bookworm-updates InRelease [55.4 kB]
+#40 0.316 Get:3 http://deb.debian.org/debian-security bookworm-security InRelease [34.8 kB]
+#40 0.510 Get:4 http://deb.debian.org/debian bookworm/main amd64 Packages [8790 kB]
+#40 0.732 Get:5 http://deb.debian.org/debian bookworm-updates/main amd64 Packages [6924 B]
+#40 0.886 Get:6 http://deb.debian.org/debian-security bookworm-security/main amd64 Packages [340 kB]
+#40 2.285 Fetched 9379 kB in 2s (4612 kB/s)
+#40 2.285 Reading package lists...
+#40 3.679 Hit:1 http://deb.debian.org/debian bookworm InRelease
+#40 3.679 Hit:2 http://deb.debian.org/debian bookworm-updates InRelease
+#40 3.680 Hit:3 http://deb.debian.org/debian-security bookworm-security InRelease
+#40 4.049 Get:4 http://deb.debian.org/debian bookworm/main armel Packages [8450 kB]
+#40 4.418 Get:5 http://deb.debian.org/debian bookworm-updates/main armel Packages [6928 B]
+#40 ...
+
+#38 [rootlesskit-build 2/5] RUN --mount=type=cache,sharing=locked,id=moby-rootlesskit-aptlib,target=/var/lib/apt     --mount=type=cache,sharing=locked,id=moby-rootlesskit-aptcache,target=/var/cache/apt         apt-get update && xx-apt-get install -y --no-install-recommends             gcc             libc6-dev             pkg-config
+#38 5.114 Fetched 8457 kB in 2s (4578 kB/s)
+#38 5.114 Reading package lists...
+#38 ...
+
+#41 [containerd-build 2/3] RUN --mount=type=cache,sharing=locked,id=moby-containerd-aptlib,target=/var/lib/apt     --mount=type=cache,sharing=locked,id=moby-containerd-aptcache,target=/var/cache/apt         apt-get update && xx-apt-get install -y --no-install-recommends             gcc             libbtrfs-dev             libsecret-1-dev             pkg-config
+#41 0.292 Get:1 http://deb.debian.org/debian bookworm InRelease [151 kB]
+#41 0.316 Get:2 http://deb.debian.org/debian bookworm-updates InRelease [55.4 kB]
+#41 0.317 Get:3 http://deb.debian.org/debian-security bookworm-security InRelease [34.8 kB]
+#41 0.578 Get:4 http://deb.debian.org/debian bookworm/main amd64 Packages [8790 kB]
+#41 0.762 Get:5 http://deb.debian.org/debian bookworm-updates/main amd64 Packages [6924 B]
+#41 0.940 Get:6 http://deb.debian.org/debian-security bookworm-security/main amd64 Packages [340 kB]
+#41 2.819 Fetched 9379 kB in 3s (3675 kB/s)
+#41 2.819 Reading package lists...
+#41 4.109 Hit:1 http://deb.debian.org/debian bookworm InRelease
+#41 4.110 Hit:2 http://deb.debian.org/debian bookworm-updates InRelease
+#41 4.110 Hit:3 http://deb.debian.org/debian-security bookworm-security InRelease
+#41 4.264 Get:4 http://deb.debian.org/debian bookworm/main armel Packages [8450 kB]
+#41 4.481 Get:5 http://deb.debian.org/debian bookworm-updates/main armel Packages [6928 B]
+#41 6.290 Fetched 8457 kB in 2s (3906 kB/s)
+#41 6.290 Reading package lists...
+#41 ...
+
+#26 [tini-build 2/4] RUN --mount=type=cache,sharing=locked,id=moby-tini-aptlib,target=/var/lib/apt     --mount=type=cache,sharing=locked,id=moby-tini-aptcache,target=/var/cache/apt         apt-get update && apt-get install -y --no-install-recommends cmake
+#26 0.309 Get:1 http://deb.debian.org/debian bookworm InRelease [151 kB]
+#26 0.323 Get:2 http://deb.debian.org/debian bookworm-updates InRelease [55.4 kB]
+#26 0.323 Get:3 http://deb.debian.org/debian-security bookworm-security InRelease [34.8 kB]
+#26 0.507 Get:4 http://deb.debian.org/debian bookworm/main amd64 Packages [8790 kB]
+#26 0.686 Get:5 http://deb.debian.org/debian bookworm-updates/main amd64 Packages [6924 B]
+#26 1.338 Get:6 http://deb.debian.org/debian-security bookworm-security/main amd64 Packages [340 kB]
+#26 3.195 Fetched 9379 kB in 3s (3705 kB/s)
+#26 3.195 Reading package lists...
+#26 4.199 Reading package lists...
+#26 5.234 Building dependency tree...
+#26 5.694 The following additional packages will be installed:
+#26 5.696   cmake-data libarchive13 libicu72 libjsoncpp25 librhash0 libuv1 libxml2
+#26 5.698 Suggested packages:
+#26 5.698   cmake-doc cmake-format elpa-cmake-mode ninja-build lrzip
+#26 5.771 The following NEW packages will be installed:
+#26 5.773   cmake cmake-data libarchive13 libicu72 libjsoncpp25 librhash0 libuv1 libxml2
+#26 5.808 0 upgraded, 8 newly installed, 0 to remove and 7 not upgraded.
+#26 5.808 Need to get 21.5 MB of archives.
+#26 5.808 After this operation, 80.9 MB of additional disk space will be used.
+#26 5.808 Get:1 http://deb.debian.org/debian bookworm/main amd64 libicu72 amd64 72.1-3+deb12u1 [9376 kB]
+#26 5.969 Get:2 http://deb.debian.org/debian bookworm/main amd64 libxml2 amd64 2.9.14+dfsg-1.3~deb12u6 [689 kB]
+#26 5.977 Get:3 http://deb.debian.org/debian-security bookworm-security/main amd64 libarchive13 amd64 3.6.2-1+deb12u5 [345 kB]
+#26 5.983 Get:4 http://deb.debian.org/debian bookworm/main amd64 libjsoncpp25 amd64 1.9.5-4 [78.6 kB]
+#26 6.018 Get:5 http://deb.debian.org/debian bookworm/main amd64 librhash0 amd64 1.4.3-3 [134 kB]
+#26 6.019 Get:6 http://deb.debian.org/debian bookworm/main amd64 libuv1 amd64 1.44.2-1+deb12u1 [136 kB]
+#26 6.020 Get:7 http://deb.debian.org/debian bookworm/main amd64 cmake-data all 3.25.1-1 [2026 kB]
+#26 6.040 Get:8 http://deb.debian.org/debian bookworm/main amd64 cmake amd64 3.25.1-1 [8692 kB]
+#26 6.609 debconf: delaying package configuration, since apt-utils is not installed
+#26 6.689 Fetched 21.5 MB in 0s (63.9 MB/s)
+#26 6.732 Selecting previously unselected package libicu72:amd64.
+#26 6.734 (Reading database ...
+(Reading database ... 5%
+(Reading database ... 10%
+(Reading database ... 15%
+(Reading database ... 20%
+(Reading database ... 25%
+(Reading database ... 30%
+(Reading database ... 35%
+(Reading database ... 40%
+(Reading database ... 45%
+(Reading database ... 50%
+(Reading database ... 55%
+(Reading database ... 60%
+(Reading database ... 65%
+(Reading database ... 70%
+(Reading database ... 75%
+(Reading database ... 80%
+(Reading database ... 85%
+(Reading database ... 90%
+(Reading database ... 95%
+(Reading database ... 100%
+(Reading database ... 15652 files and directories currently installed.)
+#26 6.802 Preparing to unpack .../0-libicu72_72.1-3+deb12u1_amd64.deb ...
+#26 6.808 Unpacking libicu72:amd64 (72.1-3+deb12u1) ...
+#26 8.012 Selecting previously unselected package libxml2:amd64.
+#26 8.015 Preparing to unpack .../1-libxml2_2.9.14+dfsg-1.3~deb12u6_amd64.deb ...
+#26 8.017 Unpacking libxml2:amd64 (2.9.14+dfsg-1.3~deb12u6) ...
+#26 8.110 Selecting previously unselected package libarchive13:amd64.
+#26 8.119 Preparing to unpack .../2-libarchive13_3.6.2-1+deb12u5_amd64.deb ...
+#26 8.122 Unpacking libarchive13:amd64 (3.6.2-1+deb12u5) ...
+#26 8.199 Selecting previously unselected package libjsoncpp25:amd64.
+#26 8.202 Preparing to unpack .../3-libjsoncpp25_1.9.5-4_amd64.deb ...
+#26 8.204 Unpacking libjsoncpp25:amd64 (1.9.5-4) ...
+#26 8.258 Selecting previously unselected package librhash0:amd64.
+#26 8.263 Preparing to unpack .../4-librhash0_1.4.3-3_amd64.deb ...
+#26 8.266 Unpacking librhash0:amd64 (1.4.3-3) ...
+#26 8.353 Selecting previously unselected package libuv1:amd64.
+#26 8.356 Preparing to unpack .../5-libuv1_1.44.2-1+deb12u1_amd64.deb ...
+#26 8.363 Unpacking libuv1:amd64 (1.44.2-1+deb12u1) ...
+#26 8.458 Selecting previously unselected package cmake-data.
+#26 8.468 Preparing to unpack .../6-cmake-data_3.25.1-1_all.deb ...
+#26 8.490 Unpacking cmake-data (3.25.1-1) ...
+#26 9.239 Selecting previously unselected package cmake.
+#26 9.244 Preparing to unpack .../7-cmake_3.25.1-1_amd64.deb ...
+#26 9.247 Unpacking cmake (3.25.1-1) ...
+#26 10.02 Setting up libicu72:amd64 (72.1-3+deb12u1) ...
+#26 10.03 Setting up libuv1:amd64 (1.44.2-1+deb12u1) ...
+#26 10.03 Setting up libjsoncpp25:amd64 (1.9.5-4) ...
+#26 10.04 Setting up librhash0:amd64 (1.4.3-3) ...
+#26 10.04 Setting up cmake-data (3.25.1-1) ...
+#26 10.06 Setting up libxml2:amd64 (2.9.14+dfsg-1.3~deb12u6) ...
+#26 10.06 Setting up libarchive13:amd64 (3.6.2-1+deb12u5) ...
+#26 10.07 Setting up cmake (3.25.1-1) ...
+#26 10.07 Processing triggers for libc-bin (2.36-9+deb12u14) ...
+#26 ...
+
+#42 [containerd-src 3/3] RUN git fetch -q --depth 1 origin "v1.7.27" +refs/tags/*:refs/tags/* && git checkout -q FETCH_HEAD
+#42 ...
+
+#26 [tini-build 2/4] RUN --mount=type=cache,sharing=locked,id=moby-tini-aptlib,target=/var/lib/apt     --mount=type=cache,sharing=locked,id=moby-tini-aptcache,target=/var/cache/apt         apt-get update && apt-get install -y --no-install-recommends cmake
+#26 DONE 10.4s
+
+#40 [runc-build 2/3] RUN --mount=type=cache,sharing=locked,id=moby-runc-aptlib,target=/var/lib/apt     --mount=type=cache,sharing=locked,id=moby-runc-aptcache,target=/var/cache/apt         apt-get update && xx-apt-get install -y --no-install-recommends             dpkg-dev             gcc             libc6-dev             libseccomp-dev             pkg-config
+#40 6.004 Fetched 8457 kB in 2s (3575 kB/s)
+#40 6.004 Reading package lists...
+#40 ...
+
+#43 [tini-build 3/4] RUN --mount=type=cache,sharing=locked,id=moby-tini-aptlib,target=/var/lib/apt     --mount=type=cache,sharing=locked,id=moby-tini-aptcache,target=/var/cache/apt         xx-apt-get install -y --no-install-recommends             gcc             libc6-dev             pkg-config
+#43 0.204 Hit:1 http://deb.debian.org/debian bookworm InRelease
+#43 0.204 Hit:2 http://deb.debian.org/debian bookworm-updates InRelease
+#43 0.205 Hit:3 http://deb.debian.org/debian-security bookworm-security InRelease
+#43 0.418 Get:4 http://deb.debian.org/debian bookworm/main armel Packages [8450 kB]
+#43 0.628 Get:5 http://deb.debian.org/debian bookworm-updates/main armel Packages [6928 B]
+#43 2.163 Fetched 8457 kB in 2s (4294 kB/s)
+#43 2.163 Reading package lists...
+#43 ...
+
+#42 [containerd-src 3/3] RUN git fetch -q --depth 1 origin "v1.7.27" +refs/tags/*:refs/tags/* && git checkout -q FETCH_HEAD
+#42 DONE 16.0s
+
+#38 [rootlesskit-build 2/5] RUN --mount=type=cache,sharing=locked,id=moby-rootlesskit-aptlib,target=/var/lib/apt     --mount=type=cache,sharing=locked,id=moby-rootlesskit-aptcache,target=/var/cache/apt         apt-get update && xx-apt-get install -y --no-install-recommends             gcc             libc6-dev             pkg-config
+#38 13.69 + apt-get  install -y --no-install-recommends gcc-arm-linux-gnueabi libc6-dev:armel pkg-config:armel
+#38 13.72 Reading package lists...
+#38 15.79 Building dependency tree...
+#38 17.08 Some packages could not be installed. This may mean that you have
+#38 17.08 requested an impossible situation or if you are using the unstable
+#38 17.08 distribution that some required packages have not yet been created
+#38 17.08 or been moved out of Incoming.
+#38 17.08 The following information may help to resolve the situation:
+#38 17.08
+#38 17.08 The following packages have unmet dependencies:
+#38 17.27  libc6-dev:armel : Depends: linux-libc-dev:armel but it is not going to be installed
+#38 17.29 E: Unable to correct problems, you have held broken packages.
+#38 ERROR: process "/bin/sh -c apt-get update && xx-apt-get install -y --no-install-recommends             gcc             libc6-dev             pkg-config" did not complete successfully: exit code: 100
+
+#41 [containerd-build 2/3] RUN --mount=type=cache,sharing=locked,id=moby-containerd-aptlib,target=/var/lib/apt     --mount=type=cache,sharing=locked,id=moby-containerd-aptcache,target=/var/cache/apt         apt-get update && xx-apt-get install -y --no-install-recommends             gcc             libbtrfs-dev             libsecret-1-dev             pkg-config
+#41 CANCELED
+
+#43 [tini-build 3/4] RUN --mount=type=cache,sharing=locked,id=moby-tini-aptlib,target=/var/lib/apt     --mount=type=cache,sharing=locked,id=moby-tini-aptcache,target=/var/cache/apt         xx-apt-get install -y --no-install-recommends             gcc             libc6-dev             pkg-config
+#43 CANCELED
+
+#40 [runc-build 2/3] RUN --mount=type=cache,sharing=locked,id=moby-runc-aptlib,target=/var/lib/apt     --mount=type=cache,sharing=locked,id=moby-runc-aptcache,target=/var/cache/apt         apt-get update && xx-apt-get install -y --no-install-recommends             dpkg-dev             gcc             libc6-dev             libseccomp-dev             pkg-config
+#40 CANCELED
+
+#36 [gowinres 1/1] RUN --mount=type=cache,target=/root/.cache/go-build     --mount=type=cache,target=/go/pkg/mod         GOBIN=/build/ GO111MODULE=on go install "github.com/tc-hib/go-winres@v0.3.1"      && /build/go-winres --help
+#36 CANCELED
+------
+ > [rootlesskit-build 2/5] RUN --mount=type=cache,sharing=locked,id=moby-rootlesskit-aptlib,target=/var/lib/apt     --mount=type=cache,sharing=locked,id=moby-rootlesskit-aptcache,target=/var/cache/apt         apt-get update && xx-apt-get install -y --no-install-recommends             gcc             libc6-dev             pkg-config:
+
+17.08 Some packages could not be installed. This may mean that you have
+17.08 requested an impossible situation or if you are using the unstable
+17.08 distribution that some required packages have not yet been created
+17.08 or been moved out of Incoming.
+17.08 The following information may help to resolve the situation:
+17.08
+17.08 The following packages have unmet dependencies:
+17.27  libc6-dev:armel : Depends: linux-libc-dev:armel but it is not going to be installed
+17.29 E: Unable to correct problems, you have held broken packages.
+------
+Dockerfile:363
+--------------------
+ 362 |     ARG TARGETPLATFORM
+ 363 | >>> RUN --mount=type=cache,sharing=locked,id=moby-rootlesskit-aptlib,target=/var/lib/apt \
+ 364 | >>>     --mount=type=cache,sharing=locked,id=moby-rootlesskit-aptcache,target=/var/cache/apt \
+ 365 | >>>         apt-get update && xx-apt-get install -y --no-install-recommends \
+ 366 | >>>             gcc \
+ 367 | >>>             libc6-dev \
+ 368 | >>>             pkg-config
+ 369 |     ENV GO111MODULE=on
+--------------------
+ERROR: failed to solve: process "/bin/sh -c apt-get update && xx-apt-get install -y --no-install-recommends             gcc             libc6-dev             pkg-config" did not complete successfully: exit code: 100
+builder-1e79694d-ca3e-4dec-b6fe-64397b532e79/builder-1e79694d-ca3e-4dec-b6fe-64397b532e790/63i3czkl03udjx6v0pak65woy
+Build summary supported!
+Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

@@ -1,0 +1,300 @@
+╰───┴───╯
+test completions::command_open_with_filecompletion ... ok
+test completions::a_cancelled_interactive_completer_offers_nothing::case_2_returned_null ... ok
+test completions::custom_completer_triggers_at_the_cursor::case_1_cursor_before_word ... ok
+╭───────────┬───────────╮
+│           │ ╭───┬───╮ │
+│ last      │ │ 0 │ 1 │ │
+│           │ │ 1 │ 2 │ │
+│           │ │ 2 │ 3 │ │
+│           │ ╰───┴───╯ │
+│ exit_code │ 0         │
+│ duration  │ 0sec      │
+│ command   │           │
+╰───────────┴───────────╯
+test completions::the_interactive_attribute_decides_inline_or_worker::case_1_carries_the_attribute ... ok
+test completions::custom_completion_for_list_typed_argument::case_1_list_flag_value1 ... ok
+test completions::percent_completion_includes_shadowed_builtin ... ok
+test completions::exportable_completions_use_fallback_matching ... ok
+test completions::file_completion_quoted_match_indices::case_4_within_dir ... ok
+test completions::parameter_completion_overrides_command_wide_completion ... ok
+test completions::interactive_command_wide_completer_runs_inline_at_a_flag_name ... ok
+test completions::the_text_after_the_cursor_never_reaches_the_completer ... ok
+test completions::dotnu_completions_const_nu_lib_dirs ... ok
+test commands::nu_highlight::nu_highlight_aliased_external_unresolved ... ok
+test completions::folder_with_directorycompletions_with_three_trailing_dots ... ok
+test completions::exact_match ... ok
+test completions::flag_completions ... ok
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+test completions::dotnu_completions ... ok
+test completions::attributable_completions ... ok
+test completions::extern_custom_completion::case_07_long_flag_short ... ok
+test completions::extern_custom_completion::case_14_options_with_quotes3 ... ok
+test completions::extern_custom_completion::case_13_options_with_quotes2 ... ok
+test completions::extern_custom_completion::case_10_short_flag_name_not_value ... ok
+test completions::suggestion_match_indices::case_3_substring_unicode_with_quotes ... ok
+╭───┬─────────╮
+│ # │  name   │
+├───┼─────────┤
+│ 0 │ bar.txt │
+╰───┴─────────╯
+test completions::customcompletions_no_filter ... ok
+test completions::custom_completions_override_span::case_05_bad_end ... ok
+test completions::misc_command_argument_completions::case_12_dynamic_2nd_positional ... ok
+╭───┬───╮
+│ 0 │ 1 │
+│ 1 │ 2 │
+│ 2 │ 3 │
+╰───┴───╯
+test completions::customcompletions_inherit_options ... ok
+test completions::custom_completions_filter_by_description ... ok
+test completions::misc_command_argument_completions::case_09_dynamic_long_flag_value ... ok
+test completions::folder_with_directorycompletions ... ok
+test last_result::command_updates_on_runtime_error_without_clobbering_last ... ok
+test last_result::oversized_result_is_truncated_under_budget ... ok
+test last_result::preserves_pipeline_metadata_for_ls_path_columns ... ok
+test completions::a_malformed_options_keeps_the_completions_beside_it::case_2_unknown_key ... ok
+test completions::unlet_variable_grandparent_stack_not_in_completions ... ok
+test completions::a_malformed_options_keeps_the_completions_beside_it::case_1_not_a_record ... ok
+test last_result::snapshot_always_sets_metadata_without_prior_store ... ok
+test completions::a_completer_inside_a_closure_receives_the_whole_line ... ok
+test commands::nu_highlight::nu_highlight_color_detection::case_13_leading_pipe ... ok
+╭───────────┬───────────╮
+│           │ ╭───┬───╮ │
+│ last      │ │ 0 │ 1 │ │
+│           │ │ 1 │ 2 │ │
+│           │ │ 2 │ 3 │ │
+│           │ ╰───┴───╯ │
+│ exit_code │ 0         │
+│ duration  │ 1ms       │
+│ command   │ [1 2 3]   │
+╰───────────┴───────────╯
+test completions::command_wide_completion_wrapped_untyped_equals_flag_value ... ok
+test commands::history_import::history_import_pipe_string ... ok
+test commands::history_import::history_import_pipe_record ... ok
+test completions::legacy_fzf_style_external_completer_receives_spans ... ok
+7
+test completions::folder_with_directorycompletions_do_not_collapse_dots ... ok
+0
+test completions::operator_completions ... ok
+test completions::fallback_path_completion_uses_fuzzy_paths_without_prefix_paths ... FAILED
+test last_result::mixed_str_length_result_does_replace_last ... ok
+test completions::extern_custom_completion::case_01_positional ... ok
+test completions::extern_custom_completion::case_06_long_flag1 ... ok
+test completions::extern_custom_completion::case_08_short_flag ... ok
+test completions::alias_offset_bug_7648 ... ok
+test completions::extern_custom_completion::case_04_rest2 ... ok
+test completions::suggestion_match_indices::case_4_prefix_unicode_with_quotes ... ok
+test completions::custom_completions_override_span::case_01_happy ... ok
+test completions::command_save_with_filecompletion ... ok
+42
+╭───┬────────┬──────┬────────┬───────────────╮
+│ # │  name  │ type │  size  │   modified    │
+├───┼────────┼──────┼────────┼───────────────┤
+│ 0 │ runner │ dir  │    0 B │ 5 minutes ago │
+│ 1 │ temp   │ dir  │ 4.0 kB │ now           │
+╰───┴────────┴──────┴────────┴───────────────╯
+test completions::a_cancelled_interactive_completer_offers_nothing::case_1_block_failed ... ok
+╭───┬────────┬──────┬────────┬───────────────╮
+│ # │  name  │ type │  size  │   modified    │
+├───┼────────┼──────┼────────┼───────────────┤
+│ 0 │ runner │ dir  │    0 B │ 5 minutes ago │
+│ 1 │ temp   │ dir  │ 4.0 kB │ now           │
+╰───┴────────┴──────┴────────┴───────────────╯
+5
+test completions::misc_command_argument_completions::case_10_dynamic_short_flag_value123
+╭───┬───╮
+│ # │ a │
+├───┼───┤
+│ 0 │ 1 │
+│ 1 │ 2 │
+╰───┴───╯
+╭───────────┬────────────────────────╮
+│           │ ╭───┬──────╮           │
+│ last      │ │ # │ name │           │
+│           │ ├───┼──────┤           │
+│           │ │ 0 │ a    │           │
+│           │ ╰───┴──────╯           │
+│ exit_code │ 1                      │
+│ duration  │ 1ms                    │
+│ command   │ $ans.last | str length │
+╰───────────┴────────────────────────╯
+ ... ok
+test completions::custom_completions_override_span::case_08_misspelled_key ... ok
+test completions::misc_command_argument_completions::case_03_flags_after_cursor ... ok
+test last_result::bare_ans_does_not_clobber ... ok
+test last_result::command_updates_on_bare_ans_without_clobbering_last ... ok
+test completions::external_completer_is_interactive_through_the_command_it_calls ... ok
+test completions::unlet_variable_parent_stack_not_in_completions ... ok
+test completions::fallback_command_completion_prefers_prefix_matches ... ok
+test completions::command_wide_completion_flag_completion ... ok
+test completions::a_returned_span_is_clamped_to_the_buffer ... ok
+test completions::empty_directory_arg_slot_completes_directories_only ... ok
+test last_result::non_interactive_does_not_capture ... ok
+test highlight_use::skip_module_load_does_not_parse_std ... ok
+test last_result::default_zero_budget_means_no_last_field ... ok
+test commands::nu_highlight::nu_highlight_color_detection::case_01_out_pipe_as_garbage ... ok
+test commands::nu_highlight::nu_highlight_removes_content_type_metadata ... ok
+test commands::nu_highlight::nu_highlight_color_detection::case_12_separate_redirection_pipe_garbage_with_a_redirection_part ... ok
+╭───────────┬────────────────────────────────────────────────╮
+│           │ ╭───┬────────┬──────┬────────┬───────────────╮ │
+│ last      │ │ # │  name  │ type │  size  │   modified    │ │
+│           │ ├───┼────────┼──────┼────────┼───────────────┤ │
+│           │ │ 0 │ runner │ dir  │    0 B │ 5 minutes ago │ │
+│           │ │ 1 │ temp   │ dir  │ 4.0 kB │ now           │ │
+│           │ ╰───┴────────┴──────┴────────┴───────────────╯ │
+│ exit_code │ 0                                              │
+│ duration  │ 0sec                                           │
+│ command   │                                                │
+╰───────────┴────────────────────────────────────────────────╯
+test commands::nu_highlight::nu_highlight_color_detection::case_05_number_redirection_as_garbage ... ok
+test commands::nu_highlight::nu_highlight_color_detection::case_09_separate_redirection_pipe_has_a_redirection_part ... ok
+test completions::attribute_completions ... ok
+test completions::extern_custom_completion::case_05_long_flag1 ... ok
+test commands::nu_highlight::nu_highlight_use_std_is_not_garbage ... ok
+test last_result::internal_structured_last_is_not_stringified ... ok
+test completions::table_cell_path_completions::case_2 ... ok
+test completions::table_cell_path_completions::case_6 ... ok
+2
+╭───┬──────╮
+│ # │ name │
+├───┼──────┤
+│ 0 │ a    │
+╰───┴──────╯
+test last_result::zero_budget_disables_last_payload_only ... ok
+test completions::dont_use_dotnu_completions ... ok
+test completions::command_wide_completion_external ... ok
+test completions::command_argument_completions::case_06_flag_value_respect_to_type ... ok
+test completions::custom_completions_override_span::case_02_no_start ... ok
+test completions::record_cell_path_completions::case_6 ... ok
+test last_result::error_values_from_str_length_do_not_clobber_last ... ok
+test completions::custom_completions_override_span::case_07_not_an_int ... ok
+test completions::custom_completions_override_span::case_10_negative_end ... ok
+test completions::external_completer_override_span::case_4_bad_start ... ok
+test completions::custom_completions_override_span::case_04_bad_start ... ok
+Backed history to D:\incredibuild\temp\.tmpEKBqx6\history_import_to_existing\nushell\history.txt.bak
+╭───┬────────┬──────┬────────┬───────────────╮
+│ # │  name  │ type │  size  │   modified    │
+├───┼────────┼──────┼────────┼───────────────┤
+│ 0 │ runner │ dir  │    0 B │ 5 minutes ago │
+│ 1 │ temp   │ dir  │ 4.0 kB │ now           │
+╰───┴────────┴──────┴────────┴───────────────╯
+test completions::command_touch_with_filecompletion ... ok
+test completions::custom_completion_for_list_typed_argument::case_2_list_flag_value2 ... ok
+test completions::file_completion_quoted_match_indices::case_2_quoted_needle ... ok
+test completions::dotnu_stdlib_completions ... ok
+test completions::custom_completions_strip_ansi_from_values ... ok
+test last_result::ans_is_not_listed_in_closure_captures ... ok
+test completions::legacy_command_wide_completer_receives_spans ... ok
+test commands::nu_highlight::nu_highlight_color_detection::case_11_separate_redirection_pipe_garbage ... ok
+test completions::partial_completions ... ok
+test commands::nu_highlight::nu_highlight_color_detection::case_03_out_pipe_as_garbage_without_following_elements ... ok
+test last_result::underscore_is_not_reserved ... ok
+test completions::interactive_completer_through_an_alias_runs_inline ... ok
+test last_result::empty_success_overwrites ... ok
+test completions::custom_completions_strip_ansi_from_record_values ... ok
+test completions::non_interactive_completer_calling_a_picker_yields_no_suggestions::case_5_term_query ... ok
+test commands::history_import::to_existing::case_1_plaintext ... ok
+╭───────────┬──────╮
+│ last      │ 5    │
+│ exit_code │ 0    │
+│ duration  │ 0sec │
+│ command   │      │
+╰───────────┴──────╯
+test completions::misc_custom_completions::case_1_command_name ... ok
+test completions::suggestion_match_indices::case_1_substring ... ok
+test completions::customcompletions_no_sort ... ok
+test last_result::ans_via_source_after_ls ... ok
+test completions::which_command_completions ... ok
+test completions::table_cell_path_completions::case_4 ... ok
+test completions::record_cell_path_completions::case_3 ... ok
+test completions::unknown_command_completion ... ok
+test completions::command_wide_completion_custom::case_1_explicit_return ... ok
+test completions::command_argument_completions::case_08_mixed_positional_and_flag1 ... ok
+test completions::custom_completions_override_span::case_06_not_a_record ... ok
+test completions::command_wide_completion_custom::case_2_implicit_return ... ok
+test completions::misc_command_argument_completions::case_04_flags_after_cursor_piped ... ok
+╭───┬──────╮
+│ # │ name │
+├───┼──────┤
+│ 0 │ a    │
+╰───┴──────╯
+test completions::a_malformed_part_costs_only_that_part::case_2_coerced_extra ... ok
+test completions::a_malformed_part_costs_only_that_part::case_4_carapace_display ... ok
+test completions::file_completion_quoted_match_indices::case_1_no_needle ... ok
+test completions::percent_completion_only_shows_builtins ... ok
+test completions::custom_completions_override_display_value ... ok
+test completions::command_argument_completions::case_01_fallback ... ok
+99
+test completions::parameter_completer_receives_the_unified_input ... ok
+test commands::history_output::sqlite_history_last_returns_date_for_start_timestamp ... ok
+test completions::dotnu_fallback_prefers_prefix_across_sources ... ok
+test completions::list_completions_from_constant_and_allows_record ... ok
+test last_result::last_result_var_name_constant_is_used ... ok
+test completions::a_malformed_options_keeps_the_completions_beside_it::case_3_bad_value ... ok
+test completions::non_interactive_completer_calling_a_picker_yields_no_suggestions::case_4_input_listen ... ok
+test completions::unlet_variable_current_stack_not_in_completions ... ok
+test completions::custom_command_rest_any_args_file_completions ... ok
+test completions::custom_completions_wraps_builtin_commandline_complete ... ok
+test last_result::error_does_not_overwrite ... ok
+test last_result::error_only_list_stream_does_not_clobber_last ... ok
+╭───┬────────┬──────┬────────┬───────────────╮
+│ # │  name  │ type │  size  │   modified    │
+├───┼────────┼──────┼────────┼───────────────┤
+│ 0 │ runner │ dir  │    0 B │ 5 minutes ago │
+│ 1 │ temp   │ dir  │ 4.0 kB │ now           │
+╰───┴────────┴──────┴────────┴───────────────╯
+test last_result::ls_then_ans_with_config_env ... ok
+╭───────────┬──────────────╮
+│           │ ╭───┬──────╮ │
+│ last      │ │ # │ name │ │
+│           │ ├───┼──────┤ │
+│           │ │ 0 │ a    │ │
+│           │ ╰───┴──────╯ │
+│ exit_code │ 0            │
+│ duration  │ 0sec         │
+│ command   │              │
+╰───────────┴──────────────╯
+test last_result::error_values_do_not_clobber_last_with_table_expand_hook ... ok
+test completions::exportable_completions ... ok
+
+group deps[nu], running 1 tests
+test commands::nu_highlight::nu_highlight_aliased_external_resolved ... ok
+
+group deps[cococo], running 1 tests
+trim_me
+test last_result::external_command_trailing_newline_is_trimmed_in_last ... ok
+
+group deps[nonu], running 3 tests
+42
+should_not_storeshould_not_overwrite_lastlast_external_marker_xyz
+test last_result::bare_external_with_inherited_stdout_does_not_capture ... ok
+test last_result::zero_budget_does_not_force_external_capture ... ok
+test last_result::external_command_stdout_is_stored_when_piped ... ok
+
+failures:
+
+---- completions::fallback_path_completion_prefers_prefix_paths stdout ----
+
+thread 'kitest-worker-7' (10) panicked at crates\nu-cli\tests\completions\mod.rs:956:5:
+assertion `left == right` failed
+  left: ["parent-one/child\\"]
+ right: ["parent-one/child/"]
+
+---- completions::fallback_path_completion_uses_fuzzy_paths_without_prefix_paths stdout ----
+
+thread 'kitest-worker-5' (8) panicked at crates\nu-cli\tests\completions\mod.rs:979:5:
+assertion `left == right` failed
+  left: ["xparent/child\\"]
+ right: ["xparent/child/"]
+
+failures:
+    completions::fallback_path_completion_prefers_prefix_paths
+    completions::fallback_path_completion_uses_fuzzy_paths_without_prefix_paths
+
+test result: FAILED. 291 passed; 2 failed; 2 ignored; 0 filtered out; across 4 groups, finished in 0.62s
+
+error: test failed, to rerun pass `-p nu-cli --test tests`
+
+Caused by:
+  process didn't exit successfully: `D:\a\nushell\nushell\target\ci\deps\tests-f715dc71377b1fff.exe` (exit code: 1)

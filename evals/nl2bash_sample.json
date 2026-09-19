@@ -1,0 +1,602 @@
+[
+  {
+    "request": "Print IP addresses of the host name",
+    "head": "hostname",
+    "leaks_name": false
+  },
+  {
+    "request": "Find all files in the current directory tree ignoring the \".git\" directory",
+    "head": "find",
+    "leaks_name": true
+  },
+  {
+    "request": "Recursively counts non-blank lines in all files in a current folder, that match regex '\\.php|\\.as|\\.sql|\\.css|\\.js', but skip folders './pma', './blog', './punbb', './js/3rdparty' and files like '*.svn'.",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "print top 10 largest files and directories",
+    "head": "du",
+    "leaks_name": false
+  },
+  {
+    "request": "Count files accessed more than a month ago",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "Delete all files in the current directory tree whose names end with ~",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "create a gzip of all the files in the current folder excluding the already gzipped files",
+    "head": "gzip",
+    "leaks_name": true
+  },
+  {
+    "request": "Execute awk script \"script.awk\" with 2 arguments both \"file.txt\" and format the output as a table",
+    "head": "awk",
+    "leaks_name": true
+  },
+  {
+    "request": "Print the list of the current directory's subdirectories",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "find CSS files, omitting results containing \"CVS\"",
+    "head": "find",
+    "leaks_name": true
+  },
+  {
+    "request": "Create a bzip2 archive `dir_txt.tar.bz2' of all .txt files in the dir/ directory tree",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "Split \"$1\" into files of at most \"$2\" or default 10000 using a numeric suffix of length 6 and suffix \"${tdir}/x\"",
+    "head": "split",
+    "leaks_name": true
+  },
+  {
+    "request": "Find broken symlinks in current directory",
+    "head": "find",
+    "leaks_name": true
+  },
+  {
+    "request": "Convert Unix `cal` output to latex table code.",
+    "head": "cal",
+    "leaks_name": true
+  },
+  {
+    "request": "Display operating system type, ie. GNU/Linux",
+    "head": "uname",
+    "leaks_name": false
+  },
+  {
+    "request": "Replace the text 'Windows' with 'Linux' in all text files in the current directory and below",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "Remove leading and trailing spaces or tabs from \"   wordA wordB wordC   \"",
+    "head": "echo",
+    "leaks_name": false
+  },
+  {
+    "request": "Delete all contents form the files that contain the case insensitive regex 'stringtofind' in maximum 1 level down the / directory excluding other partitions",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "Find root's Ruby files accessed in the last two minutes",
+    "head": "find",
+    "leaks_name": true
+  },
+  {
+    "request": "Dump \"/dev/ttySomething\" in both hex and text",
+    "head": "od",
+    "leaks_name": false
+  },
+  {
+    "request": "display all files in the current folder while discarding the errors save the output to a file",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "Removes files 'junk1', 'junk2', 'junk3'.",
+    "head": "rm",
+    "leaks_name": false
+  },
+  {
+    "request": "Create a named screen session",
+    "head": "screen",
+    "leaks_name": true
+  },
+  {
+    "request": "display all the files in the home folder that have been modified in the last 7*24 hours",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "Find all .sql files in the current directory recursively and apply script \"scriptname\" to them",
+    "head": "find",
+    "leaks_name": true
+  },
+  {
+    "request": "Find files modified at least 5 days in the future",
+    "head": "find",
+    "leaks_name": true
+  },
+  {
+    "request": "find all the xml files in a directory and pass it as an argument to a jar (parallel is used to achieve parallel processing)",
+    "head": "find",
+    "leaks_name": true
+  },
+  {
+    "request": "find all the regular/normal files in the current folder and replace everything expect the extension of the file and display unique file extensions",
+    "head": "find",
+    "leaks_name": true
+  },
+  {
+    "request": "find Texinfo source files in /usr/local/doc",
+    "head": "find",
+    "leaks_name": true
+  },
+  {
+    "request": "Create a symbolic link to \"$file\" named \"/tmp/allfiles\"",
+    "head": "ln",
+    "leaks_name": false
+  },
+  {
+    "request": "display the directory name along with the modified time for all the files /var",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "find all directories that names are 'apt' and display details",
+    "head": "find",
+    "leaks_name": true
+  },
+  {
+    "request": "Recursively finds all files and prints only names of files that contain \"word\" and suppressing error messages .",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "Count the number of all directories under directory '/mount/point' non-recursively",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "Find files in the current directory and its sub-directories that begin with 'f'.",
+    "head": "find",
+    "leaks_name": true
+  },
+  {
+    "request": "Copy the current directory tree to \"newdirpathname\" preserving directory hierarchy",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "display all the directories in specific path ( saved in $x ) excluding those that are present in a path and save the ouput to a file",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "Find all directories in current directory without going into sub-directories",
+    "head": "find",
+    "leaks_name": true
+  },
+  {
+    "request": "List regular files in current directory with read, write and execute permission for all users and also show the permissions",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "Remove the \"123_\" prefix from all filenames of .txt files in current directory.",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "Find all executable files under {} and take their names only and reverse sort them",
+    "head": "find",
+    "leaks_name": true
+  },
+  {
+    "request": "delete all the empty files in the current directory",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "Find all *.txt files/directories under current directory and execute process once with all of them as arguments",
+    "head": "find",
+    "leaks_name": true
+  },
+  {
+    "request": "display all the statistics of the files in the current folder and discard the errors. ( + symbol at the end is used to give stat bulk input than a single file )",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "Move all *.data files/directories in $S directory to $S/data/ directory",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "display all the files in the current folder along with the hidden files with the depth",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "set alias \"histgrep\" for command \"history | grep\"",
+    "head": "alias",
+    "leaks_name": true
+  },
+  {
+    "request": "Find all files/directories that were modified after February 1st under '/usr' directory tree",
+    "head": "find",
+    "leaks_name": true
+  },
+  {
+    "request": "Find UTF-8 files with BOM",
+    "head": "find",
+    "leaks_name": true
+  },
+  {
+    "request": "file1.txt and file2.txt both contain a name and a number on each line. For each name whose corresponding number does not match in both files, display the \"Age of ... is different\" message.",
+    "head": "join",
+    "leaks_name": false
+  },
+  {
+    "request": "display all the text and pdf files in the current folder",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "find the file \"httpd.log\" in the entire file system",
+    "head": "find",
+    "leaks_name": true
+  },
+  {
+    "request": "Find all files/directories under current directory tree with '.old' extension",
+    "head": "find",
+    "leaks_name": true
+  },
+  {
+    "request": "Print what year it was 222 days ago",
+    "head": "date",
+    "leaks_name": false
+  },
+  {
+    "request": "File 'mydatafile' has a number on each line, display the sum of these numbers.",
+    "head": "awk",
+    "leaks_name": false
+  },
+  {
+    "request": "display all directories in the entire file system",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "Create an empty file \"foo\" in each directory under the current directory containing a file named \"bar\".",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "display all the files in the file system which have been modified in the last 10 minutes",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "Create a sorted unique list of new or modified files comparing \"old/\" and \"new/\"",
+    "head": "rsync",
+    "leaks_name": false
+  },
+  {
+    "request": "find all the files that have been modified today",
+    "head": "find",
+    "leaks_name": true
+  },
+  {
+    "request": "Find all the .mp3 files in the music folder and pass to the ls command, -print0 is required if any filenames contain whitespace",
+    "head": "find",
+    "leaks_name": true
+  },
+  {
+    "request": "Serach  in root directory all files which  have more than 2 links.",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "set a crontab to create or update the timestamp of \"washere2\" in the current directory every 30 minutes.",
+    "head": "echo",
+    "leaks_name": false
+  },
+  {
+    "request": "change the permissions of all the files ending with \"fits\" in the folder \"/store/01\" and save the output file names to a log file",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "Rename all files matching \"access.log.<number>.gz\" incrementing <number>.",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "On host \"server_b\", connect as ssh user \"user\" and copy \"/my_folder/my_file.xml\" to directory \"/my_new_folder/\", with all transfer data relayed through local host.",
+    "head": "scp",
+    "leaks_name": false
+  },
+  {
+    "request": "Search for the case insensitive regex 'STRING_TO_SEARCH_FOR' in all files under current directory",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "Search directory tree `MyApp.app' for directories whose name is 'Headers' and delete them suppressing error messages",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "Print the git log in a tabular form",
+    "head": "git",
+    "leaks_name": true
+  },
+  {
+    "request": "Make DNS lookup requests for domain list in file '/path/to/host-list.txt'",
+    "head": "dig",
+    "leaks_name": false
+  },
+  {
+    "request": "Finds more than 5 days old files in two directories  and compresses them.",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "Find all files/directories that belong to the group 'accts' under '/apps' directory tree",
+    "head": "find",
+    "leaks_name": true
+  },
+  {
+    "request": "Find the passwd file under root and two levels down",
+    "head": "find",
+    "leaks_name": true
+  },
+  {
+    "request": "Display a long listing of the oldest file under '/hom/backups' directory tree",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "display long listing of all the text files in the current folder (plus at the end executes quickly by sending bulk data as input to the command in exec)",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "Make a list of all files in the current directory tree, except *.png and *.class, and view it in the vim editor",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "Write summary of files present only in dir1, and which files differ between dir1 and dir2 to file 'difference1.txt'",
+    "head": "diff",
+    "leaks_name": false
+  },
+  {
+    "request": "Send contents of \"input.txt.gz\" to \"command\" on stdin",
+    "head": "zcat",
+    "leaks_name": false
+  },
+  {
+    "request": "Print lines 10000 to 10010 from input \"seq 1 100000\"",
+    "head": "seq",
+    "leaks_name": true
+  },
+  {
+    "request": "Search all .c and .h files in the current directory tree for string \"e\"",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "List files larger than 10MB under /var/log /tmp that haven't changed in a month",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "find all the files in the current directory which have the size 40 bytes in the current disk partition.",
+    "head": "find",
+    "leaks_name": true
+  },
+  {
+    "request": "Delete all files under $INTRANETDESTINATION/monthly directory tree that were modified more than 366 days ago",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "Find all *.txt files/directories under current directory and execute the python script hello.py for each of them with the file path as an argument to the script",
+    "head": "find",
+    "leaks_name": true
+  },
+  {
+    "request": "Starts new window named 'win0' in detached tmux session 'vims', opens file 'foo' within.",
+    "head": "tmux",
+    "leaks_name": true
+  },
+  {
+    "request": "Remove leading and trailing space from lines in file 'in.txt', interactively page through a hexdump of the result.",
+    "head": "awk",
+    "leaks_name": false
+  },
+  {
+    "request": "Find all files under current directory and run the command fromdos for each of them with the file path as argument",
+    "head": "find",
+    "leaks_name": true
+  },
+  {
+    "request": "Print git branch currently checked out in a working directory.",
+    "head": "git",
+    "leaks_name": true
+  },
+  {
+    "request": "Find all files in the current directory tree whose size is greater than 1MB, and move them to the \"files\" folder",
+    "head": "find",
+    "leaks_name": true
+  },
+  {
+    "request": "Search the home directory for filenames starting with \"xx\" except for \"xxx\" files",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "Remove trailing white spaces from all files under dir directory",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "Copies all files like \"*FooBar*\" under the current directory to the '~/foo/bar' directory.",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "search for all the log files in the folder \"/var/log\" and create a tar ball and compress it to bz2.",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "Delete empty lines from standard input",
+    "head": "sed",
+    "leaks_name": false
+  },
+  {
+    "request": "display all the file in the folder /home/david/ which start with the word \"index\"",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "display list of all the files in the current folder which are empty.",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "Numerically sort each line of standard input",
+    "head": "sort",
+    "leaks_name": true
+  },
+  {
+    "request": "Print file system disk space usage and grand total for the root file system with sizes in powers of 1000",
+    "head": "df",
+    "leaks_name": false
+  },
+  {
+    "request": "Print position number of day '9' in fourth line of calendar output for September, 2009.",
+    "head": "cal",
+    "leaks_name": false
+  },
+  {
+    "request": "find all hidden files in the current folder which have been modified after profile file",
+    "head": "find",
+    "leaks_name": true
+  },
+  {
+    "request": "Set 444 permission to all regular files under current directory",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "download content from \"http://search.twitter.com/search.json?q=node.js\" and format it as json",
+    "head": "curl",
+    "leaks_name": false
+  },
+  {
+    "request": "Search for 'example' in all regular files from the current directory tree",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "Delete all .svn files/directories under current directory",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "Execute COMMAND on all files and directories in the current directory tree",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "List .html files in the current directory tree that contain string \"base\\-maps\" but do NOT contain string \"base\\-maps\\-bot\"",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "Search the `images' directory tree for regular files",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "search for all html files in current folder folder and create a zip file of all these files",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "Create script filesPermissions.sh that restores the original permissions of the regular files in the current directory tree",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "Create a symbolic link in the current directory to \"$file\"",
+    "head": "ln",
+    "leaks_name": false
+  },
+  {
+    "request": "Move all directories from the `sourceDir' directory tree to the `destDir' directory",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "list in long format all files from / whose filename ends in \"jbd\", not descending into directories that are not readable while searching, and not descending into directories on other filesystems",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "display the long listing of all files in /var/log which were modified 60 days or more ago.",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "set alias \"devn\" for command \"cat > /dev/null\"",
+    "head": "alias",
+    "leaks_name": true
+  },
+  {
+    "request": "Save the list of files modified within a fortnight ago to `deploy.txt' removing the leading ./ from the file names",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "List and see contents of all abc.def files under the directories /ghi and /jkl",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "Read a line of standard input into variable \"_command\" with the prompt as the current working directory followed by \"$\"",
+    "head": "read",
+    "leaks_name": true
+  },
+  {
+    "request": "search for all the php files in the folder \"/home/mywebsite\" which have been changed in the last 30*24 hours",
+    "head": "find",
+    "leaks_name": false
+  },
+  {
+    "request": "Print numbers from 1 to 10 with 2 values per line",
+    "head": "seq",
+    "leaks_name": false
+  },
+  {
+    "request": "Change permissions to 644 for all regular files under the /path/to/dir/ tree",
+    "head": "find",
+    "leaks_name": false
+  }
+]

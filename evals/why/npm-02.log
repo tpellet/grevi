@@ -1,0 +1,300 @@
+.../node_modules/unrs-resolver postinstall: - D:\a\vite\vite\node_modules\.pnpm\napi-postinstall@0.3.4\node_modules\napi-postinstall\lib\index.js
+.../node_modules/unrs-resolver postinstall: - D:\a\vite\vite\node_modules\.pnpm\napi-postinstall@0.3.4\node_modules\napi-postinstall\lib\cli.js
+.../node_modules/unrs-resolver postinstall: [napi-postinstall@0.3.4] Trying to download "https://registry.npmjs.org/@unrs/resolver-binding-win32-x64-msvc/-/resolver-binding-win32-x64-msvc-1.11.1.tgz"
+.../node_modules/unrs-resolver postinstall: Done
+. postinstall$ simple-git-hooks
+. postinstall: [INFO] Successfully set the pre-commit with command: pnpm exec lint-staged --concurrent false
+. postinstall: [INFO] Successfully set all git hooks
+. postinstall: Done
+
+devDependencies:
++ @e18e/eslint-plugin 0.8.0
++ @eslint/js 9.39.5
++ @type-challenges/utils 0.1.1
++ @types/babel__core 7.20.5
++ @types/babel__preset-env 7.10.0
++ @types/convert-source-map 2.0.3
++ @types/cross-spawn 6.0.6
++ @types/etag 1.8.4
++ @types/less 3.0.8
++ @types/node 24.13.3
++ @types/picomatch 4.0.3
++ @types/stylus 0.48.43
++ @types/ws 8.18.1
++ @vitejs/release-scripts 1.10.0
++ eslint 9.39.5
++ eslint-plugin-import-x 4.17.1
++ eslint-plugin-n 18.3.0
++ eslint-plugin-regexp 3.3.0
++ execa 9.6.1
++ globals 17.12.0
++ lint-staged 17.5.0
++ oxfmt 0.66.0
++ picocolors 1.1.1
++ playwright-chromium 1.63.0
++ rolldown 1.2.6
++ rollup 4.59.0
++ simple-git-hooks 2.14.0
++ tsx 4.23.13
++ typescript 6.0.3
++ typescript-eslint 8.69.0
++ vite link:packages/vite
++ vitest 4.1.11
+
+Done in 22s using pnpm v12.4.1
+echo "PLAYWRIGHT_BROWSERS_PATH=$HOME\.cache\playwright-bin" >> $env:GITHUB_ENV
+$env:PLAYWRIGHT_VERSION="$(pnpm ls --depth 0 --json -w playwright-chromium | jq --raw-output '.[0].devDependencies["playwright-chromium"].version')"
+echo "PLAYWRIGHT_VERSION=$env:PLAYWRIGHT_VERSION" >> $env:GITHUB_ENV
+shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+env:
+  NODE_OPTIONS: --max-old-space-size=6144
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+  VITEST_SEGFAULT_RETRY: 3
+  PNPM_HOME: C:\Users\runneradmin\setup-pnpm\node_modules\.bin
+with:
+  key: Windows-playwright-bin-v1-1.63.0
+  path: C:\Users\runneradmin\.cache\playwright-bin
+  restore-keys: Windows-playwright-bin-v1-
+
+  enableCrossOsArchive: false
+  fail-on-cache-miss: false
+  lookup-only: false
+  save-always: false
+env:
+  NODE_OPTIONS: --max-old-space-size=6144
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+  VITEST_SEGFAULT_RETRY: 3
+  PNPM_HOME: C:\Users\runneradmin\setup-pnpm\node_modules\.bin
+  PLAYWRIGHT_BROWSERS_PATH: C:\Users\runneradmin\.cache\playwright-bin
+  PLAYWRIGHT_VERSION: 1.63.0
+Cache hit for: Windows-playwright-bin-v1-1.63.0
+Received 167772160 of 318930089 (52.6%), 153.4 MBs/sec
+Received 318930089 of 318930089 (100.0%), 163.0 MBs/sec
+Cache Size: ~304 MB (318930089 B)
+Cache restored successfully
+Cache restored from key: Windows-playwright-bin-v1-1.63.0
+pnpm playwright install chromium
+shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+env:
+  NODE_OPTIONS: --max-old-space-size=6144
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+  VITEST_SEGFAULT_RETRY: 3
+  PNPM_HOME: C:\Users\runneradmin\setup-pnpm\node_modules\.bin
+  PLAYWRIGHT_BROWSERS_PATH: C:\Users\runneradmin\.cache\playwright-bin
+  PLAYWRIGHT_VERSION: 1.63.0
+pnpm run build
+shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+env:
+  NODE_OPTIONS: --max-old-space-size=6144
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+  VITEST_SEGFAULT_RETRY: 3
+  PNPM_HOME: C:\Users\runneradmin\setup-pnpm\node_modules\.bin
+  PLAYWRIGHT_BROWSERS_PATH: C:\Users\runneradmin\.cache\playwright-bin
+  PLAYWRIGHT_VERSION: 1.63.0
+$ pnpm -r --filter='./packages/*' run build
+Scope: 3 of 283 workspace projects
+packages/create-vite build$ tsdown
+packages/vite build$ premove dist && pnpm build-bundle && pnpm build-types
+packages/vite build: $ rolldown --config rolldown.config.ts
+packages/create-vite build: ℹ tsdown v0.22.14 powered by rolldown v1.2.6
+packages/create-vite build: ℹ config file: D:\a\vite\vite\packages\create-vite\tsdown.config.ts
+packages/create-vite build: ℹ entry: src/index.ts
+packages/create-vite build: ℹ target: node20
+packages/create-vite build: ℹ tsconfig: tsconfig.json
+packages/create-vite build: ℹ Build start
+packages/vite build: shimmed: postcss-import/index.js
+packages/vite build: shimmed: postcss-load-config/src/req.js
+packages/vite build: shimmed: postcss-import/lib/parse-styles.js
+packages/create-vite build: ℹ dist\index.js  46.37 kB │ gzip: 16.57 kB
+packages/create-vite build: ℹ 1 files, total: 46.37 kB
+packages/create-vite build: ✔ Build complete in 186ms
+packages/create-vite build: Done
+packages/vite build: [log] <DIR>/client/env.mjs  chunk │ size: 0.61 kB
+packages/vite build: [log] <DIR>/client/client.mjs  chunk │ size: 39.81 kB
+packages/vite build: [log] <DIR>/client/bundledDevClient.mjs  chunk │ size: 58.55 kB
+packages/vite build: [log] <DIR>/node/internal.js               chunk │ size:     0.14 kB
+packages/vite build: [log] <DIR>/node/index.js                  chunk │ size:     2.67 kB
+packages/vite build: [log] <DIR>/node/chunks/lib.js             chunk │ size:    11.71 kB
+packages/vite build: [log] <DIR>/node/chunks/postcss-import.js  chunk │ size:    18.32 kB
+packages/vite build: [log] <DIR>/node/cli.js                    chunk │ size:    30.10 kB
+packages/vite build: [log] <DIR>/node/chunks/build.js           chunk │ size:   205.75 kB
+packages/vite build: [log] <DIR>/node/chunks/dist.js            chunk │ size:   246.66 kB
+packages/vite build: [log] <DIR>/node/chunks/node.js            chunk │ size: 1,369.56 kB
+packages/vite build: [log] <DIR>/node/module-runner.js  chunk │ size: 54.64 kB
+packages/vite build: [log]
+packages/vite build: [success] rolldown v1.2.6 Finished in 386.01 ms
+packages/vite build: $ pnpm build-types-roll && pnpm build-types-check
+packages/vite build: $ rolldown --config rolldown.dts.config.ts
+packages/vite build: [log] <DIR>/internal.d.ts                      chunk │ size:   0.14 kB
+packages/vite build: [log] <DIR>/chunks/moduleRunnerTransport.d.ts  chunk │ size:   3.09 kB
+packages/vite build: [log] <DIR>/module-runner.d.ts                 chunk │ size:  11.36 kB
+packages/vite build: [log] <DIR>/index.d.ts                         chunk │ size: 165.09 kB
+packages/vite build: [log]
+packages/vite build: [success] rolldown v1.2.6 Finished in 544.96 ms
+packages/vite build: $ tsc --project tsconfig.check.json
+packages/vite build: Done
+packages/plugin-legacy build$ tsdown
+packages/plugin-legacy build: ℹ tsdown v0.22.14 powered by rolldown v1.2.6
+packages/plugin-legacy build: ℹ config file: D:\a\vite\vite\packages\plugin-legacy\tsdown.config.ts
+packages/plugin-legacy build: ℹ entry: src/index.ts
+packages/plugin-legacy build: ℹ target: node20
+packages/plugin-legacy build: ℹ Build start
+packages/plugin-legacy build: ℹ dist\index.js    30.32 kB │ gzip: 8.60 kB
+packages/plugin-legacy build: ℹ dist\index.d.ts   1.39 kB │ gzip: 0.55 kB
+packages/plugin-legacy build: ℹ 2 files, total: 31.70 kB
+packages/plugin-legacy build: ✔ Build complete in 1736ms
+packages/plugin-legacy build: Done
+pnpm run test-unit
+shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+env:
+  NODE_OPTIONS: --max-old-space-size=6144
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+  VITEST_SEGFAULT_RETRY: 3
+  PNPM_HOME: C:\Users\runneradmin\setup-pnpm\node_modules\.bin
+  PLAYWRIGHT_BROWSERS_PATH: C:\Users\runneradmin\.cache\playwright-bin
+  PLAYWRIGHT_VERSION: 1.63.0
+$ vitest run
+
+ RUN  v4.1.11 D:/a/vite/vite
+
+ ✓ packages/vite/src/node/__tests__/utils.spec.ts (131 tests) 93ms
+stderr | packages/vite/src/node/__tests__/config.spec.ts > mergeConfig > syncs `build.rollupOptions` and `build.rolldownOptions`
+`optimizeDeps.rollupOptions` / `ssr.optimizeDeps.rollupOptions` is deprecated. Use `optimizeDeps.rolldownOptions` instead. Note that this option may be set by a plugin. Set VITE_DEPRECATION_TRACE=1 to see where it is called.
+
+stderr | packages/vite/src/node/__tests__/config.spec.ts > mergeConfig > syncs `server.hmr.*` to `server.ws.*`
+`server.hmr.protocol/host/port/path/clientPort/timeout/server` is deprecated. Use `server.ws.*` instead. Note that this option may be set by a plugin. Set VITE_DEPRECATION_TRACE=1 to see where it is called.
+
+ ✓ packages/vite/src/node/ssr/__tests__/ssrTransform.spec.ts (78 tests) 1113ms
+   ✓ combine mappings  906ms
+ ✓ packages/vite/src/node/__tests__/config.spec.ts (118 tests) 1688ms
+transforming...
+✓ 4 modules transformed.
+rendering chunks...
+stderr | packages/vite/src/node/__tests__/plugins/css.spec.ts > css modules > css module compose/from path resolutions
+
+A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+transforming...
+
+✓ 4 modules transformed.
+rendering chunks...
+transforming...
+✓ 4 modules transformed.
+rendering chunks...
+transforming...
+✓ 4 modules transformed.
+rendering chunks...
+ ✓ packages/vite/src/node/__tests__/plugins/css.spec.ts (50 tests) 1432ms
+     ✓ css module compose/from path resolutions  1205ms
+ ✓ packages/vite/src/node/__tests__/build.spec.ts (68 tests) 3701ms
+     ✓ file hash should change when css changes for dynamic entries  321ms
+     ✓ ssrEmitAssets  458ms
+ ✓ packages/vite/src/node/ssr/runtime/__tests__/server-runtime.spec.ts (41 tests) 2137ms
+ ✓ packages/vite/src/node/server/__tests__/pluginContainer.spec.ts (20 tests) 345ms
+stderr | packages/vite/src/node/__tests__/plugins/esbuild.spec.ts
+`transformWithEsbuild` is deprecated and will be removed in the future. Please migrate to `transformWithOxc`.
+
+ ✓ packages/vite/src/node/__tests__/plugins/esbuild.spec.ts (22 tests) 32ms
+ ✓ packages/vite/src/node/ssr/runtime/__tests__/server-source-maps.spec.ts (11 tests) 465ms
+ ✓ packages/vite/src/node/ssr/__tests__/ssrLoadModule.spec.ts (15 tests | 1 skipped) 1051ms
+ ✓ packages/vite/src/node/__tests__/plugins/hooks.spec.ts (24 tests) 1544ms
+ ✓ packages/vite/src/node/__tests__/http.spec.ts (11 tests) 410ms
+ ✓ packages/vite/src/node/__tests__/plugins/importGlob/parse.spec.ts (24 tests) 70ms
+ ✓ packages/vite/src/node/__tests__/plugins/pluginFilter.spec.ts (35 tests) 13ms
+ ✓ packages/vite/src/node/__tests__/plugins/workerImportMetaUrl.spec.ts (20 tests) 31ms
+ ✓ packages/vite/src/node/__tests__/scan.spec.ts (13 tests) 2045ms
+   ✓ scan jsx-runtime  1803ms
+ ✓ packages/vite/src/node/__tests__/html.spec.ts (12 tests) 5ms
+ ✓ packages/vite/src/node/__tests__/assetSource.spec.ts (16 tests) 19ms
+ ✓ packages/vite/src/node/__tests__/plugins/import.spec.ts (6 tests) 15ms
+ ✓ packages/vite/src/node/__tests__/resolve.spec.ts (14 tests) 1039ms
+ ✓ packages/vite/src/node/__tests__/plugins/define.spec.ts (13 tests) 271ms
+ ✓ packages/vite/src/node/__tests__/dev.spec.ts (6 tests) 117ms
+ ✓ packages/vite/src/node/ssr/runtime/__tests__/server-hmr.spec.ts (4 tests) 587ms
+ ✓ packages/vite/src/node/__tests__/plugins/oxc.spec.ts (11 tests) 19ms
+stdout | packages/vite/src/node/__tests__/shortcuts.spec.ts > bindCLIShortcuts > rebinds shortcuts after server restart
+7:15:18 PM [vite] server restarted.
+
+ ✓ packages/vite/src/node/__tests__/shortcuts.spec.ts (3 tests) 261ms
+ ✓ packages/vite/src/node/ssr/runtime/__tests__/server-worker-runner.spec.ts (2 tests) 347ms
+ ✓ packages/create-vite/__tests__/cli.spec.ts (23 tests) 3604ms
+ ✓ packages/vite/src/node/__tests__/optimizer/rolldownDepPlugin.spec.ts (8 tests) 10ms
+ ✓ packages/vite/src/node/server/middlewares/__tests__/indexHtml.spec.ts (3 tests) 162ms
+ ✓ packages/vite/src/node/server/__tests__/moduleGraph.spec.ts (3 tests) 3ms
+ ✓ packages/vite/src/node/__tests__/packages.spec.ts (4 tests) 49ms
+ ✓ packages/vite/src/node/ssr/runtime/__tests__/server-worker-runner.invoke.spec.ts (5 tests) 215ms
+ ✓ packages/vite/src/node/__tests__/environment.spec.ts (4 tests) 1971ms
+     ✓ dev noExternal  528ms
+     ✓ dev external  531ms
+     ✓ css  671ms
+ ✓ packages/vite/src/node/__tests__/plugins/index.spec.ts (6 tests) 271ms
+ ✓ packages/vite/src/shared/__tests__/forwardConsole.spec.ts (4 tests) 107ms
+ ✓ packages/vite/src/node/__tests__/optimizer/discoverBeforeListen.spec.ts (1 test) 393ms
+   ✓ does not crash when a dep is discovered before the server starts listening  393ms
+ ✓ packages/vite/src/node/__tests__/plugins/importAnalysisBuild.spec.ts (5 tests) 2ms
+ ✓ packages/vite/src/node/__tests__/plugins/importGlob/fixture.spec.ts (4 tests) 76ms
+ ✓ packages/vite/src/node/__tests__/runnerImport.spec.ts (5 tests) 81ms
+ ✓ packages/vite/src/node/__tests__/plugins/assetImportMetaUrl.spec.ts (5 tests) 5ms
+ ✓ packages/vite/src/node/__tests__/env.spec.ts (8 tests) 27ms
+ ✓ packages/vite/src/node/__tests__/plugins/dynamicImportVar/parse.spec.ts (11 tests | 2 skipped) 6ms
+ ✓ packages/vite/src/node/__tests__/optimizer/customExtensionBundleClose.spec.ts (1 test) 650ms
+   ✓ closes temporary Rolldown bundles used to analyze custom optimizeDeps extensions  649ms
+ ✓ packages/vite/src/node/server/__tests__/sourcemap.spec.ts (11 tests) 2ms
+ ✓ packages/vite/src/node/__tests__/logger.spec.ts (6 tests) 2ms
+ ✓ packages/plugin-legacy/src/__tests__/snippets.spec.ts (16 tests) 20ms
+ ✓ packages/vite/src/node/server/middlewares/__tests__/static.spec.ts (20 tests) 4ms
+ ✓ packages/vite/src/node/__tests__/plugins/worker.spec.ts (14 tests) 160ms
+ ❯ packages/vite/src/node/ssr/__tests__/ssrStacktrace.spec.ts (3 tests | 1 failed) 96ms
+   ✓ call rewriteStacktrace twice 27ms
+   × rewrites stacktrace when the module path contains a space 28ms
+   ✓ outputs message when stacktrace appears to be already rewritten 40ms
+ ✓ packages/vite/src/node/server/__tests__/watcher.spec.ts (3 tests) 129ms
+ ✓ packages/plugin-legacy/src/__tests__/index.spec.ts (14 tests) 2ms
+ ✓ packages/vite/src/node/server/__tests__/search-root.spec.ts (7 tests) 6ms
+ ✓ packages/vite/src/node/server/__tests__/hmr.spec.ts (2 tests) 148ms
+ ✓ packages/vite/src/node/__tests__/plugins/modulePreloadPolyfill/modulePreloadPolyfill.spec.ts (2 tests) 73ms
+ ✓ packages/vite/src/node/__tests__/filterRegex.spec.ts (4 tests) 5ms
+ ✓ packages/vite/src/node/__tests__/plugins/importGlob/utils.spec.ts (7 tests) 5ms
+ ✓ packages/vite/src/node/__tests__/plugins/terser.spec.ts (3 tests) 672ms
+     ✓ basic  340ms
+ ✓ packages/vite/src/node/__tests__/optimizer/pluginConverter.spec.ts (1 test) 2ms
+ ✓ packages/vite/src/node/__tests__/plugins/cssPreprocessorTeardown.spec.ts (1 test) 582ms
+     ✓ awaits sass-embedded worker disposal on server.close()  581ms
+ ✓ packages/vite/src/node/__tests__/optimizer/resolve.spec.ts (1 test) 2ms
+ ✓ packages/vite/src/node/__tests__/external.spec.ts (2 tests) 25ms
+ ✓ packages/vite/src/node/__tests__/constants.spec.ts (1 test) 1ms
+ ✓ packages/vite/src/node/__tests__/plugins/license.spec.ts (2 tests) 75ms
+ ✓ packages/vite/src/node/server/middlewares/__tests__/hostCheck.spec.ts (1 test) 1ms
+ ✓ packages/vite/src/node/__tests__/oxc.spec.ts (1 test) 1ms
+ ✓ packages/vite/src/node/server/__tests__/transformRequest.spec.ts (4 tests) 1ms
+ ✓ packages/vite/src/node/ssr/runtime/__tests__/server-no-hmr.spec.ts (1 test) 35ms
+ ✓ packages/plugin-legacy/src/__tests__/readme.spec.ts (1 test) 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ Test Files  1 failed | 67 passed (68)
+ FAIL  packages/vite/src/node/ssr/__tests__/ssrStacktrace.spec.ts > rewrites stacktrace when the module path contains a space
+      Tests  1 failed | 992 passed | 3 skipped (996)
+AssertionError: expected '    at Module.main (<root>fixtures\mo…' to be '    at Module.main (<root>fixtures/mo…' // Object.is equality
+
+   Start at  19:15:07
+   Duration  14.83s (transform 9.16s, setup 0ms, import 13.57s, tests 28.53s, environment 11ms)
+Expected: "    at Module.main (<root>fixtures/modules/with space/has-error.js:2:9)"
+
+Expected: "    at Module.main (<root>fixtures/modules/with space/has-error.js:2:9)"
+Received: "    at Module.main (<root>fixtures\modules\with space\has-error.js:2:9)"
+
+ ❯ packages/vite/src/node/ssr/__tests__/ssrStacktrace.spec.ts:41:60
+
+Received: "    at Module.main (<root>fixtures\modules\with space\has-error.js:2:9)"
+
+ ❯ packages/vite/src/node/ssr/__tests__/ssrStacktrace.spec.ts:41:60
+     39|   } catch (e: any) {
+     40|     server.ssrFixStacktrace(e)
+     41|     expect(e.stack.split('\n')[1].replace(root, '<root>')).toBe(
+       |                                                            ^
+     42|       '    at Module.main (<root>fixtures/modules/with space/has-error…
+     43|     )
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+[ELIFECYCLE] Command failed with exit code 1.

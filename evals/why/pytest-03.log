@@ -1,0 +1,300 @@
+tests/test_format.py::test_simple_format[remove_except_types_parens]
+[gw0] [ 77%] PASSED tests/test_format.py::test_simple_format[preview_hug_parens_with_braces_and_square_brackets]
+tests/test_format.py::test_simple_format[preview_hug_parens_with_braces_and_square_brackets_no_ll1]
+[gw0] [ 77%] PASSED tests/test_format.py::test_simple_format[preview_hug_parens_with_braces_and_square_brackets_no_ll1]
+tests/test_format.py::test_simple_format[preview_hug_parens_with_type_ignore]
+[gw3] [ 77%] PASSED tests/test_format.py::test_simple_format[remove_except_types_parens]
+tests/test_format.py::test_simple_format[remove_except_types_parens_pre_py314]
+[gw0] [ 77%] PASSED tests/test_format.py::test_simple_format[preview_hug_parens_with_type_ignore]
+tests/test_format.py::test_simple_format[preview_long_dict_values]
+[gw3] [ 77%] PASSED tests/test_format.py::test_simple_format[remove_except_types_parens_pre_py314]
+tests/test_format.py::test_simple_format[remove_for_brackets]
+[gw3] [ 78%] PASSED tests/test_format.py::test_simple_format[remove_for_brackets]
+tests/test_format.py::test_simple_format[remove_lone_list_item_parens]
+[gw0] [ 78%] PASSED tests/test_format.py::test_simple_format[preview_long_dict_values]
+tests/test_format.py::test_simple_format[preview_long_strings]
+[gw2] [ 78%] PASSED tests/test_format.py::test_simple_format[pyi_overload_groups]
+tests/test_format.py::test_simple_format[python315]
+[gw2] [ 78%] PASSED tests/test_format.py::test_simple_format[python315]
+tests/test_format.py::test_simple_format[python37]
+[gw1] [ 78%] PASSED tests/test_format.py::test_simple_format[preview_long_strings__regression]
+tests/test_format.py::test_simple_format[preview_prefer_rhs_split_indexed_assignment]
+[gw2] [ 79%] PASSED tests/test_format.py::test_simple_format[python37]
+tests/test_format.py::test_simple_format[python38]
+[gw2] [ 79%] PASSED tests/test_format.py::test_simple_format[python38]
+tests/test_format.py::test_simple_format[python39]
+[gw2] [ 79%] PASSED tests/test_format.py::test_simple_format[python39]
+tests/test_format.py::test_simple_format[raw_docstring]
+[gw2] [ 79%] PASSED tests/test_format.py::test_simple_format[raw_docstring]
+tests/test_format.py::test_simple_format[raw_docstring_no_string_normalization]
+[gw1] [ 79%] PASSED tests/test_format.py::test_simple_format[preview_prefer_rhs_split_indexed_assignment]
+tests/test_format.py::test_simple_format[preview_redundant_generator_parentheses]
+[gw2] [ 80%] PASSED tests/test_format.py::test_simple_format[raw_docstring_no_string_normalization]
+tests/test_format.py::test_simple_format[remove_await_parens]
+[gw3] [ 80%] PASSED tests/test_format.py::test_simple_format[remove_lone_list_item_parens]
+tests/test_format.py::test_simple_format[remove_newline_after_code_block_open]
+[gw3] [ 80%] PASSED tests/test_format.py::test_simple_format[remove_newline_after_code_block_open]
+tests/test_format.py::test_simple_format[remove_parens]
+[gw2] [ 80%] PASSED tests/test_format.py::test_simple_format[remove_await_parens]
+[gw1] [ 80%] PASSED tests/test_format.py::test_simple_format[preview_redundant_generator_parentheses]
+tests/test_format.py::test_simple_format[remove_except_parens]
+tests/test_format.py::test_simple_format[preview_remove_multiline_lone_list_item_parens]
+[gw2] [ 81%] PASSED tests/test_format.py::test_simple_format[remove_except_parens]
+tests/test_format.py::test_simple_format[string_quotes_escaped_trailing_quote]
+[gw2] [ 81%] PASSED tests/test_format.py::test_simple_format[string_quotes_escaped_trailing_quote]
+tests/test_format.py::test_simple_format[stub]
+[gw3] [ 81%] PASSED tests/test_format.py::test_simple_format[remove_parens]
+tests/test_format.py::test_simple_format[remove_parens_from_lhs]
+[gw3] [ 81%] PASSED tests/test_format.py::test_simple_format[remove_parens_from_lhs]
+tests/test_format.py::test_simple_format[remove_redundant_parens_in_case_guard]
+[gw2] [ 82%] PASSED tests/test_format.py::test_simple_format[stub]
+tests/test_format.py::test_simple_format[target_version_flag]
+[gw2] [ 82%] PASSED tests/test_format.py::test_simple_format[target_version_flag]
+tests/test_format.py::test_simple_format[torture]
+[gw3] [ 82%] PASSED tests/test_format.py::test_simple_format[remove_redundant_parens_in_case_guard]
+tests/test_format.py::test_simple_format[remove_with_brackets]
+[gw1] [ 82%] PASSED tests/test_format.py::test_simple_format[preview_remove_multiline_lone_list_item_parens]
+tests/test_format.py::test_simple_format[preview_return_annotation_brackets_string]
+[gw1] [ 82%] PASSED tests/test_format.py::test_simple_format[preview_return_annotation_brackets_string]
+tests/test_format.py::test_simple_format[preview_simplify_power_operator_hugging]
+[gw2] [ 83%] PASSED tests/test_format.py::test_simple_format[torture]
+tests/test_format.py::test_simple_format[trailing_comma]
+[gw2] [ 83%] PASSED tests/test_format.py::test_simple_format[trailing_comma]
+tests/test_format.py::test_simple_format[trailing_commas_in_leading_parts]
+[gw3] [ 83%] PASSED tests/test_format.py::test_simple_format[remove_with_brackets]
+tests/test_format.py::test_simple_format[return_annotation_brackets]
+[gw0] [ 83%] PASSED tests/test_format.py::test_simple_format[preview_long_strings]
+tests/test_format.py::test_simple_format[single_line_format_skip_with_multiple_comments]
+[gw2] [ 83%] PASSED tests/test_format.py::test_simple_format[trailing_commas_in_leading_parts]
+tests/test_format.py::test_simple_format[type_params]
+[gw0] [ 84%] PASSED tests/test_format.py::test_simple_format[single_line_format_skip_with_multiple_comments]
+tests/test_format.py::test_simple_format[skip_magic_trailing_comma]
+[gw3] [ 84%] PASSED tests/test_format.py::test_simple_format[return_annotation_brackets]
+tests/test_format.py::test_simple_format[trailing_comma_optional_parens1]
+[gw0] [ 84%] PASSED tests/test_format.py::test_simple_format[skip_magic_trailing_comma]
+tests/test_format.py::test_simple_format[skip_magic_trailing_comma_generic_wrap]
+[gw1] [ 84%] PASSED tests/test_format.py::test_simple_format[preview_simplify_power_operator_hugging]
+tests/test_format.py::test_simple_format[tuple_with_stmt]
+[gw2] [ 84%] PASSED tests/test_format.py::test_simple_format[type_params]
+tests/test_format.py::test_simple_format[type_param_defaults]
+[gw3] [ 85%] PASSED tests/test_format.py::test_simple_format[trailing_comma_optional_parens1]
+tests/test_format.py::test_simple_format[trailing_comma_optional_parens2]
+[gw1] [ 85%] PASSED tests/test_format.py::test_simple_format[tuple_with_stmt]
+tests/test_format.py::test_simple_format[typed_params_trailing_comma]
+[gw3] [ 85%] PASSED tests/test_format.py::test_simple_format[trailing_comma_optional_parens2]
+tests/test_format.py::test_simple_format[trailing_comma_optional_parens3]
+[gw3] [ 85%] PASSED tests/test_format.py::test_simple_format[trailing_comma_optional_parens3]
+tests/test_format.py::test_simple_format[tricky_unicode_symbols]
+[gw3] [ 85%] PASSED tests/test_format.py::test_simple_format[tricky_unicode_symbols]
+tests/test_format.py::test_simple_format[tupleassign]
+[gw1] [ 86%] PASSED tests/test_format.py::test_simple_format[typed_params_trailing_comma]
+tests/test_format.py::test_simple_format[type_aliases]
+[gw3] [ 86%] PASSED tests/test_format.py::test_simple_format[tupleassign]
+tests/test_format.py::test_simple_format[yield_singleton_tuple]
+[gw3] [ 86%] PASSED tests/test_format.py::test_simple_format[yield_singleton_tuple]
+tests/test_format.py::test_simple_format[yield_singleton_tuple_stable]
+[gw3] [ 86%] PASSED tests/test_format.py::test_simple_format[yield_singleton_tuple_stable]
+tests/test_format.py::test_line_ranges_line_by_line[basic]
+[gw2] [ 86%] PASSED tests/test_format.py::test_simple_format[type_param_defaults]
+tests/test_format.py::test_simple_format[t_docstring]
+[gw1] [ 87%] PASSED tests/test_format.py::test_simple_format[type_aliases]
+tests/test_format.py::test_simple_format[type_comment_syntax_error]
+[gw1] [ 87%] PASSED tests/test_format.py::test_simple_format[type_comment_syntax_error]
+tests/test_format.py::test_simple_format[type_expansion]
+[gw2] [ 87%] PASSED tests/test_format.py::test_simple_format[t_docstring]
+tests/test_format.py::test_simple_format[unstable_comment_on_optional_parens]
+[gw2] [ 87%] PASSED tests/test_format.py::test_simple_format[unstable_comment_on_optional_parens]
+tests/test_format.py::test_simple_format[walrus_in_dict]
+[gw2] [ 88%] PASSED tests/test_format.py::test_simple_format[walrus_in_dict]
+tests/test_format.py::test_simple_format[whitespace]
+[gw2] [ 88%] PASSED tests/test_format.py::test_simple_format[whitespace]
+tests/test_format.py::test_line_ranges_line_by_line[pattern_matching]
+[gw0] [ 88%] PASSED tests/test_format.py::test_simple_format[skip_magic_trailing_comma_generic_wrap]
+tests/test_format.py::test_simple_format[slices]
+[gw1] [ 88%] PASSED tests/test_format.py::test_simple_format[type_expansion]
+tests/test_format.py::test_simple_format[type_ignore_with_other_comment]
+[gw1] [ 88%] PASSED tests/test_format.py::test_simple_format[type_ignore_with_other_comment]
+tests/test_no_ipynb.py::test_ipynb_diff_with_no_change_dir
+[gw1] [ 89%] PASSED tests/test_no_ipynb.py::test_ipynb_diff_with_no_change_dir
+tests/test_ranges.py::test_parse_line_ranges_valid[lines_str0-expected0]
+[gw1] [ 89%] PASSED tests/test_ranges.py::test_parse_line_ranges_valid[lines_str0-expected0]
+tests/test_ranges.py::test_parse_line_ranges_valid[lines_str1-expected1]
+[gw1] [ 89%] PASSED tests/test_ranges.py::test_parse_line_ranges_valid[lines_str1-expected1]
+tests/test_ranges.py::test_parse_line_ranges_valid[lines_str2-expected2]
+[gw1] [ 89%] PASSED tests/test_ranges.py::test_parse_line_ranges_valid[lines_str2-expected2]
+tests/test_ranges.py::test_parse_line_ranges_invalid[lines_str0]
+[gw1] [ 89%] PASSED tests/test_ranges.py::test_parse_line_ranges_invalid[lines_str0]
+tests/test_ranges.py::test_parse_line_ranges_invalid[lines_str1]
+[gw1] [ 90%] PASSED tests/test_ranges.py::test_parse_line_ranges_invalid[lines_str1]
+tests/test_ranges.py::test_parse_line_ranges_invalid[lines_str2]
+[gw1] [ 90%] PASSED tests/test_ranges.py::test_parse_line_ranges_invalid[lines_str2]
+tests/test_ranges.py::test_parse_line_ranges_invalid[lines_str3]
+[gw1] [ 90%] PASSED tests/test_ranges.py::test_parse_line_ranges_invalid[lines_str3]
+tests/test_ranges.py::test_no_diff[lines0]
+[gw1] [ 90%] PASSED tests/test_ranges.py::test_no_diff[lines0]
+tests/test_ranges.py::test_no_diff[lines1]
+[gw1] [ 90%] PASSED tests/test_ranges.py::test_no_diff[lines1]
+tests/test_ranges.py::test_no_diff[lines2]
+[gw1] [ 91%] PASSED tests/test_ranges.py::test_no_diff[lines2]
+tests/test_ranges.py::test_invalid_lines[lines0]
+[gw1] [ 91%] PASSED tests/test_ranges.py::test_invalid_lines[lines0]
+tests/test_ranges.py::test_invalid_lines[lines1]
+[gw1] [ 91%] PASSED tests/test_ranges.py::test_invalid_lines[lines1]
+tests/test_ranges.py::test_invalid_lines[lines2]
+[gw1] [ 91%] PASSED tests/test_ranges.py::test_invalid_lines[lines2]
+tests/test_ranges.py::test_invalid_lines[lines3]
+[gw1] [ 91%] PASSED tests/test_ranges.py::test_invalid_lines[lines3]
+tests/test_ranges.py::test_invalid_lines[lines4]
+[gw1] [ 92%] PASSED tests/test_ranges.py::test_invalid_lines[lines4]
+tests/test_ranges.py::test_invalid_lines[lines5]
+[gw1] [ 92%] PASSED tests/test_ranges.py::test_invalid_lines[lines5]
+tests/test_ranges.py::test_removals[lines0-adjusted0]
+[gw1] [ 92%] PASSED tests/test_ranges.py::test_removals[lines0-adjusted0]
+tests/test_ranges.py::test_removals[lines1-adjusted1]
+[gw1] [ 92%] PASSED tests/test_ranges.py::test_removals[lines1-adjusted1]
+tests/test_ranges.py::test_removals[lines2-adjusted2]
+[gw1] [ 92%] PASSED tests/test_ranges.py::test_removals[lines2-adjusted2]
+tests/test_ranges.py::test_removals[lines3-adjusted3]
+[gw1] [ 93%] PASSED tests/test_ranges.py::test_removals[lines3-adjusted3]
+tests/test_ranges.py::test_additions[lines0-adjusted0]
+[gw1] [ 93%] PASSED tests/test_ranges.py::test_additions[lines0-adjusted0]
+tests/test_ranges.py::test_additions[lines1-adjusted1]
+[gw1] [ 93%] PASSED tests/test_ranges.py::test_additions[lines1-adjusted1]
+tests/test_ranges.py::test_additions[lines2-adjusted2]
+[gw1] [ 93%] PASSED tests/test_ranges.py::test_additions[lines2-adjusted2]
+tests/test_ranges.py::test_diffs[lines0-adjusted0]
+[gw1] [ 94%] PASSED tests/test_ranges.py::test_diffs[lines0-adjusted0]
+tests/test_ranges.py::test_diffs[lines1-adjusted1]
+[gw1] [ 94%] PASSED tests/test_ranges.py::test_diffs[lines1-adjusted1]
+tests/test_ranges.py::test_diffs[lines2-adjusted2]
+[gw1] [ 94%] PASSED tests/test_ranges.py::test_diffs[lines2-adjusted2]
+tests/test_ranges.py::test_diffs[lines3-adjusted3]
+[gw1] [ 94%] PASSED tests/test_ranges.py::test_diffs[lines3-adjusted3]
+tests/test_ranges.py::test_diffs[lines4-adjusted4]
+[gw1] [ 94%] PASSED tests/test_ranges.py::test_diffs[lines4-adjusted4]
+tests/test_ranges.py::test_sanitize[lines0-sanitized0]
+[gw1] [ 95%] PASSED tests/test_ranges.py::test_sanitize[lines0-sanitized0]
+tests/test_ranges.py::test_sanitize[lines1-sanitized1]
+[gw1] [ 95%] PASSED tests/test_ranges.py::test_sanitize[lines1-sanitized1]
+tests/test_ranges.py::test_sanitize[lines2-sanitized2]
+[gw1] [ 95%] PASSED tests/test_ranges.py::test_sanitize[lines2-sanitized2]
+tests/test_ranges.py::test_sanitize[lines3-sanitized3]
+[gw1] [ 95%] PASSED tests/test_ranges.py::test_sanitize[lines3-sanitized3]
+tests/test_ranges.py::test_sanitize[lines4-sanitized4]
+[gw1] [ 95%] PASSED tests/test_ranges.py::test_sanitize[lines4-sanitized4]
+tests/test_ranges.py::test_sanitize[lines5-sanitized5]
+[gw1] [ 96%] PASSED tests/test_ranges.py::test_sanitize[lines5-sanitized5]
+tests/test_ranges.py::test_sanitize[lines6-sanitized6]
+[gw1] [ 96%] PASSED tests/test_ranges.py::test_sanitize[lines6-sanitized6]
+tests/test_ranges.py::test_sanitize[lines7-sanitized7]
+[gw1] [ 96%] PASSED tests/test_ranges.py::test_sanitize[lines7-sanitized7]
+tests/test_ranges.py::test_sanitize[lines8-sanitized8]
+[gw1] [ 96%] PASSED tests/test_ranges.py::test_sanitize[lines8-sanitized8]
+tests/test_ranges.py::test_sanitize[lines9-sanitized9]
+[gw1] [ 96%] PASSED tests/test_ranges.py::test_sanitize[lines9-sanitized9]
+tests/test_schema.py::test_schema_entrypoint
+[gw0] [ 97%] PASSED tests/test_format.py::test_simple_format[slices]
+tests/test_format.py::test_simple_format[split_delimiter_comments]
+[gw1] [ 97%] PASSED tests/test_schema.py::test_schema_entrypoint
+tests/test_token[REDACTED]
+[gw1] [ 97%] PASSED tests/test_token[REDACTED]
+tests/test_token[REDACTED]
+[gw1] [ 97%] PASSED tests/test_token[REDACTED]
+tests/test_trans.py::test_fexpr_spans
+[gw1] [ 97%] PASSED tests/test_trans.py::test_fexpr_spans
+[gw0] [ 98%] PASSED tests/test_format.py::test_simple_format[split_delimiter_comments]
+tests/test_format.py::test_simple_format[standardize_type_comments]
+[gw0] [ 98%] PASSED tests/test_format.py::test_simple_format[standardize_type_comments]
+tests/test_format.py::test_simple_format[starred_for_target]
+[gw2] [ 98%] PASSED tests/test_format.py::test_line_ranges_line_by_line[pattern_matching]
+tests/test_format.py::test_empty
+[gw2] [ 98%] PASSED tests/test_format.py::test_empty
+tests/test_format.py::test_patma_invalid
+[gw2] [ 98%] PASSED tests/test_format.py::test_patma_invalid
+tests/test_no_ipynb.py::test_ipynb_diff_with_no_change_single
+[gw2] [ 99%] PASSED tests/test_no_ipynb.py::test_ipynb_diff_with_no_change_single
+[gw0] [ 99%] PASSED tests/test_format.py::test_simple_format[starred_for_target]
+tests/test_format.py::test_simple_format[string_prefixes]
+[gw0] [ 99%] PASSED tests/test_format.py::test_simple_format[string_prefixes]
+[gw3] [ 99%] PASSED tests/test_format.py::test_line_ranges_line_by_line[basic]
+tests/test_format.py::test_line_ranges_line_by_line[function_docstring]
+[gw3] [100%] PASSED tests/test_format.py::test_line_ranges_line_by_line[function_docstring]
+
+================================== FAILURES ===================================
+_____________________ BlackTestCase.test_expression_diff ______________________
+[gw0] win32 -- Python 3.15.0 C:\a\black\black\.tox\ci-py315\Scripts\python.EXE
+
+self = <tests.test_black.BlackTestCase testMethod=test_expression_diff>
+
+    def test_expression_diff(self) -> None:
+        source, _ = read_data("cases", "expression.py")
+        expected, _ = read_data("cases", "expression.diff")
+        tmp_file = Path(black.dump_to_file(source))
+        diff_header = re.compile(
+            rf"{re.escape(str(tmp_file))}\t\d\d\d\d-\d\d-\d\d "
+            r"\d\d:\d\d:\d\d\.\d\d\d\d\d\d\+\d\d:\d\d"
+        )
+        try:
+            result = BlackRunner().invoke(
+                black.main, ["--diff", str(tmp_file), f"--config={EMPTY_CONFIG}"]
+            )
+>           self.assertEqual(result.exit_code, 0)
+E           AssertionError: 123 != 0
+
+tests\test_black.py:358: AssertionError
+=============================== tests coverage ================================
+_____________ coverage: platform win32, python 3.15.0-candidate-2 _____________
+
+Name                                         Stmts   Miss Branch BrPart  Cover
+------------------------------------------------------------------------------
+src\_black_version.py                            1      0      0      0   100%
+src\black\__init__.py                          659     84    338     27    87%
+src\black\_width_table.py                        2      0      0      0   100%
+src\black\brackets.py                          183      3     86      1    99%
+src\black\cache.py                              85      6     16      1    93%
+src\black\comments.py                          407     17    250     24    93%
+src\black\concurrency.py                       119     17     50     12    80%
+src\black\const.py                               4      0      0      0   100%
+src\black\debug.py                              40      0     10      1    98%
+src\black\files.py                             215     16     82      6    91%
+src\black\handle_ipynb_magics.py               194    144     72      1    19%
+src\black\linegen.py                           942     26    552     31    96%
+src\black\lines.py                             806     58    504     47    91%
+src\black\mode.py                              102      2     10      2    96%
+src\black\nodes.py                             531     18    334     24    95%
+src\black\numerics.py                           35      0     14      0   100%
+src\black\output.py                             77      5     32      4    92%
+src\black\parsing.py                           144      6     48      0    97%
+src\black\ranges.py                            254     16    128     15    92%
+src\black\report.py                             66      0     24      0   100%
+src\black\resources\__init__.py                  0      0      0      0   100%
+src\black\rusty.py                              14      0      0      0   100%
+src\black\schema.py                             10      0      0      0   100%
+src\black\strings.py                           209     38     98      1    79%
+src\black\trans.py                             949     22    452     21    97%
+src\blackd\__init__.py                         167     13     34      3    92%
+src\blackd\client.py                            40      5     26      2    86%
+src\blackd\middlewares.py                       28      0     10      1    97%
+tests\__init__.py                                0      0      0      0   100%
+tests\conftest.py                               10      0      0      0   100%
+tests\optional.py                               68      9     20      8    81%
+tests\test_black.py                           1890     76    126     16    95%
+tests\test_blackd.py                           271      3     10      2    98%
+tests\test_concurrency_manager_shutdown.py      31      0      0      0   100%
+tests\test_docs.py                              40      6     18      6    79%
+tests\test_format.py                            41      0      4      0   100%
+tests\test_ipynb.py                            216    200      0      0     7%
+tests\test_no_ipynb.py                          22      0      0      0   100%
+tests\test_ranges.py                            39      0      0      0   100%
+tests\test_schema.py                             7      0      0      0   100%
+tests\test_tokenize.py                          27      5      2      1    79%
+tests\test_trans.py                             32      0      2      0   100%
+tests\util.py                                  176     15     36      1    92%
+------------------------------------------------------------------------------
+TOTAL                                         9153    810   3388    258    90%
+=========================== short test summary info ===========================
+FAILED tests/test_black.py::BlackTestCase::test_expression_diff - AssertionError: 123 != 0
+======== 1 failed, 480 passed, 4 skipped, 8 subtests passed in 19.24s =========
+ci-py315: exit 1 (20.29 seconds) C:\a\black\black> pytest tests --run-optional no_jupyter --numprocesses auto --cov -v --color=yes pid=8432
+  ci-py315: FAIL code 1 (62.97=setup[9.83]+cmd[32.58,0.27,20.29] seconds)
+  evaluation failed :( (63.00 seconds)

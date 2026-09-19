@@ -1,0 +1,136 @@
+  ACTION_USER_AGENT: taiki-e/install-action (a6b2e2dcd845ddd7f509ce4f3ed3d922b80cc5d9)
+  RUNNER_OS: Linux
+  RUNNER_ARCH: X64
+info: host platform: x86_64_linux
+info: installing cargo-minimal-versions@latest
+info: downloading https://github.com/taiki-e/cargo-minimal-versions/releases/download/v0.1.37/cargo-minimal-versions-x86_64-unknown-linux-musl.tar.gz
+info: verifying sha256 checksum for cargo-minimal-versions-x86_64-unknown-linux-musl.tar.gz
+info: cargo-minimal-versions installed at /home/runner/.cargo/bin/cargo-minimal-versions
++ cargo-minimal-versions minimal-versions --version
+cargo-minimal-versions 0.1.37
+
+info: installing cargo-hack@latest
+info: downloading https://github.com/taiki-e/cargo-hack/releases/download/v0.6.45/cargo-hack-x86_64-unknown-linux-musl.tar.gz
+info: verifying sha256 checksum for cargo-hack-x86_64-unknown-linux-musl.tar.gz
+info: cargo-hack installed at /home/runner/.cargo/bin/cargo-hack
++ cargo-hack hack --version
+cargo-hack 0.6.45
+
+with:
+  prefix-key: v0-rust
+  add-job-id-key: true
+  add-rust-environment-hash-key: true
+  cache-targets: true
+  cache-all-crates: false
+  cache-workspace-crates: false
+  save-if: true
+  cache-provider: github
+  cache-bin: true
+  lookup-only: false
+  cmd-format: {0}
+env:
+  CARGO_HOME: /home/runner/.cargo
+  CARGO_INCREMENTAL: 0
+  CARGO_TERM_COLOR: always
+Cache Provider:
+    github
+Workspaces:
+    /home/runner/work/ratatui/ratatui
+Cache Paths:
+    /home/runner/.cargo/bin
+    /home/runner/.cargo/.crates.toml
+    /home/runner/.cargo/.crates2.json
+    /home/runner/.cargo/registry
+    /home/runner/.cargo/git
+    /home/runner/work/ratatui/ratatui/target
+Restore Key:
+    v0-rust-minimal-versions-Linux-x64-6ff13d87
+Cache Key:
+    v0-rust-minimal-versions-Linux-x64-6ff13d87-0ea52bab
+.. Prefix:
+  - v0-rust-minimal-versions-Linux-x64
+.. Environment considered:
+  - Rust Versions:
+    - 1.98.1 x86_64-unknown-linux-gnu 48a229ceaefd4985c50990b14116b6d856af0985
+  - CARGO_HOME
+  - CARGO_INCREMENTAL
+  - CARGO_TERM_COLOR
+.. Lockfiles considered:
+  - /home/runner/work/ratatui/ratatui/.cargo/config.toml
+  - /home/runner/work/ratatui/ratatui/Cargo.lock
+  - /home/runner/work/ratatui/ratatui/examples/apps/advanced-widget-impl/Cargo.toml
+  - /home/runner/work/ratatui/ratatui/examples/apps/async-github/Cargo.toml
+  - /home/runner/work/ratatui/ratatui/examples/apps/calendar-explorer/Cargo.toml
+  - /home/runner/work/ratatui/ratatui/examples/apps/canvas/Cargo.toml
+  - /home/runner/work/ratatui/ratatui/examples/apps/chart/Cargo.toml
+  - /home/runner/work/ratatui/ratatui/examples/apps/color-explorer/Cargo.toml
+  - /home/runner/work/ratatui/ratatui/examples/apps/colors-rgb/Cargo.toml
+  - /home/runner/work/ratatui/ratatui/examples/apps/constraint-explorer/Cargo.toml
+  - /home/runner/work/ratatui/ratatui/examples/apps/constraints/Cargo.toml
+  - /home/runner/work/ratatui/ratatui/examples/apps/custom-widget/Cargo.toml
+  - /home/runner/work/ratatui/ratatui/examples/apps/demo/Cargo.toml
+  - /home/runner/work/ratatui/ratatui/examples/apps/demo2/Cargo.toml
+  - /home/runner/work/ratatui/ratatui/examples/apps/flex/Cargo.toml
+  - /home/runner/work/ratatui/ratatui/examples/apps/gauge/Cargo.toml
+  - /home/runner/work/ratatui/ratatui/examples/apps/hello-world/Cargo.toml
+  - /home/runner/work/ratatui/ratatui/examples/apps/hyperlink/Cargo.toml
+  - /home/runner/work/ratatui/ratatui/examples/apps/inline/Cargo.toml
+  - /home/runner/work/ratatui/ratatui/examples/apps/input-form/Cargo.toml
+  - /home/runner/work/ratatui/ratatui/examples/apps/minimal/Cargo.toml
+  - /home/runner/work/ratatui/ratatui/examples/apps/modifiers/Cargo.toml
+  - /home/runner/work/ratatui/ratatui/examples/apps/mouse-drawing/Cargo.toml
+  - /home/runner/work/ratatui/ratatui/examples/apps/panic/Cargo.toml
+  - /home/runner/work/ratatui/ratatui/examples/apps/popup/Cargo.toml
+  - /home/runner/work/ratatui/ratatui/examples/apps/release-header/Cargo.toml
+  - /home/runner/work/ratatui/ratatui/examples/apps/scrollbar/Cargo.toml
+  - /home/runner/work/ratatui/ratatui/examples/apps/table/Cargo.toml
+  - /home/runner/work/ratatui/ratatui/examples/apps/todo-list/Cargo.toml
+  - /home/runner/work/ratatui/ratatui/examples/apps/tracing/Cargo.toml
+  - /home/runner/work/ratatui/ratatui/examples/apps/user-input/Cargo.toml
+  - /home/runner/work/ratatui/ratatui/examples/apps/volatility-surface/Cargo.toml
+  - /home/runner/work/ratatui/ratatui/examples/apps/weather/Cargo.toml
+  - /home/runner/work/ratatui/ratatui/examples/apps/widget-ref-container/Cargo.toml
+  - /home/runner/work/ratatui/ratatui/examples/concepts/state/Cargo.toml
+  - /home/runner/work/ratatui/ratatui/ratatui-core/Cargo.toml
+  - /home/runner/work/ratatui/ratatui/ratatui-crossterm/Cargo.toml
+  - /home/runner/work/ratatui/ratatui/ratatui-macros/Cargo.toml
+  - /home/runner/work/ratatui/ratatui/ratatui-termina/Cargo.toml
+  - /home/runner/work/ratatui/ratatui/ratatui-termion/Cargo.toml
+  - /home/runner/work/ratatui/ratatui/ratatui-termwiz/Cargo.toml
+  - /home/runner/work/ratatui/ratatui/ratatui-widgets/Cargo.toml
+  - /home/runner/work/ratatui/ratatui/ratatui/Cargo.toml
+  - /home/runner/work/ratatui/ratatui/rust-toolchain.toml
+  - /home/runner/work/ratatui/ratatui/xtask/Cargo.toml
+
+... Restoring cache ...
+Cache hit for: v0-rust-minimal-versions-Linux-x64-6ff13d87-0ea52bab
+Received 247463936 of 454723009 (54.4%), 236.0 MBs/sec
+Received 454723009 of 454723009 (100.0%), 242.0 MBs/sec
+Cache Size: ~434 MB (454723009 B)
+Cache restored successfully
+Restored from cache key "v0-rust-minimal-versions-Linux-x64-6ff13d87-0ea52bab" full match: true.
+cargo minimal-versions check --direct --workspace --all-features --all-targets
+shell: /usr/bin/bash -e {0}
+env:
+  CARGO_HOME: /home/runner/.cargo
+  CARGO_INCREMENTAL: 0
+  CARGO_TERM_COLOR: always
+  CACHE_ON_FAILURE: false
+info: running `cargo update -Z direct-minimal-versions`
+    Updating crates.io index
+error: failed to select a version for `bitflags`.
+    ... required by package `line-clipping v0.3.8`
+    ... which satisfies dependency `line-clipping = "^0.3.8"` of package `ratatui-widgets v0.3.2 (/home/runner/work/ratatui/ratatui/ratatui-widgets)`
+    ... which satisfies path dependency `ratatui-widgets` of package `ratatui v0.30.2 (/home/runner/work/ratatui/ratatui/ratatui)`
+    ... which satisfies path dependency `ratatui` of package `advanced-widget-impl v0.0.0 (/home/runner/work/ratatui/ratatui/examples/apps/advanced-widget-impl)`
+versions that meet the requirements `^2.11` are: 2.13.1, 2.13.0, 2.12.1, 2.11.1, 2.11.0
+
+all possible versions conflict with previously selected packages
+
+  previously selected package `bitflags v2.9.0`
+    ... which satisfies dependency `bitflags = "^2.9"` of package `ratatui-core v0.1.2 (/home/runner/work/ratatui/ratatui/ratatui-core)`
+    ... which satisfies path dependency `ratatui-core` of package `ratatui v0.30.2 (/home/runner/work/ratatui/ratatui/ratatui)`
+    ... which satisfies path dependency `ratatui` of package `advanced-widget-impl v0.0.0 (/home/runner/work/ratatui/ratatui/examples/apps/advanced-widget-impl)`
+
+failed to select a version for `bitflags` which could resolve this conflict
+error: process didn't exit successfully: `/home/runner/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo update -Z direct-minimal-versions` (exit status: 101)

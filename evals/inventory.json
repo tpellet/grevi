@@ -1,0 +1,6774 @@
+[
+  {
+    "name": "AssetCacheLocatorUtil",
+    "summary": "Utility for reporting information about macOS Content Caches"
+  },
+  {
+    "name": "AssetCacheManagerUtil",
+    "summary": "control the macOS Content Cache"
+  },
+  {
+    "name": "AssetCacheTetheratorUtil",
+    "summary": "control networking of tethered devices"
+  },
+  {
+    "name": "BootCacheControl",
+    "summary": "provides control of caches used during startup"
+  },
+  {
+    "name": "DeRez",
+    "summary": "decompiles resources (DEPRECATED)"
+  },
+  {
+    "name": "DevToolsSecurity",
+    "summary": "Change the security authorization policies for developer systems"
+  },
+  {
+    "name": "GetFileInfo",
+    "summary": "get attributes of files and directories (DEPRECATED)"
+  },
+  {
+    "name": "KernelEventAgent",
+    "summary": "utility to provide user interface on behalf of the kernel"
+  },
+  {
+    "name": "NRswitchg",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "PasswordService",
+    "summary": "Mac OS X Server Password Server daemon"
+  },
+  {
+    "name": "ResMerger",
+    "summary": "Merges resource forks or files into one resource file (DEPRECATED)"
+  },
+  {
+    "name": "Rez",
+    "summary": "compiles resources (DEPRECATED)"
+  },
+  {
+    "name": "SafeEjectGPU",
+    "summary": "Facilitate safe eject/disconnect of eGPU(s) from system"
+  },
+  {
+    "name": "SetFile",
+    "summary": "set attributes of files and directories (DEPRECATED)"
+  },
+  {
+    "name": "SplitForks",
+    "summary": "Divide a two-fork HFS file into AppleDouble format resource and data files. (DEPRECATED)"
+  },
+  {
+    "name": "SvtAv1EncApp",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "WirelessRadioManagerd",
+    "summary": "Wireless Radio Manager daemon"
+  },
+  {
+    "name": "[",
+    "summary": "shell built-in commands"
+  },
+  {
+    "name": "aa",
+    "summary": "Manipulate Apple Archives"
+  },
+  {
+    "name": "aarch64-apple-darwin25-c++-16",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "aarch64-apple-darwin25-g++-16",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "aarch64-apple-darwin25-gcc-16",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "aarch64-apple-darwin25-gcc-ar-16",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "aarch64-apple-darwin25-gcc-nm-16",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "aarch64-apple-darwin25-gcc-ranlib-16",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "aarch64-apple-darwin25-gfortran-16",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "ab",
+    "summary": "Apache HTTP server benchmarking tool"
+  },
+  {
+    "name": "ac",
+    "summary": "connect time accounting"
+  },
+  {
+    "name": "accton",
+    "summary": "enable/disable system accounting"
+  },
+  {
+    "name": "actool",
+    "summary": "compiles, prints, updates, and verifies asset catalogs"
+  },
+  {
+    "name": "adaparse",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "addbuiltin",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "addedgeg",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "addgnupghome",
+    "summary": "Create .gnupg home directories"
+  },
+  {
+    "name": "addptg",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "adig",
+    "summary": "print information collected from Domain Name System (DNS) servers"
+  },
+  {
+    "name": "aea",
+    "summary": "Manipulate Apple Encrypted Archives"
+  },
+  {
+    "name": "afconvert",
+    "summary": "Audio File Convert"
+  },
+  {
+    "name": "affcat",
+    "summary": "Output contents of an image file to stdout"
+  },
+  {
+    "name": "affcompare",
+    "summary": "compare the contents of an ISO file to an AFF file"
+  },
+  {
+    "name": "affconvert",
+    "summary": "convert files between RAW and AFF formats"
+  },
+  {
+    "name": "affcopy",
+    "summary": "reorder and recompress AFF files"
+  },
+  {
+    "name": "affcrypto",
+    "summary": "handle encryption issues"
+  },
+  {
+    "name": "affdiskprint",
+    "summary": "create a diskprint AFF structure"
+  },
+  {
+    "name": "affinfo",
+    "summary": "print information about an AFF file"
+  },
+  {
+    "name": "affix",
+    "summary": "fix a corrupted AFF file"
+  },
+  {
+    "name": "affrecover",
+    "summary": "recover broken pages of an AFF file"
+  },
+  {
+    "name": "affsegment",
+    "summary": "segment manipulation tool"
+  },
+  {
+    "name": "affsign",
+    "summary": "sign an existing AFF file"
+  },
+  {
+    "name": "affstats",
+    "summary": "print specific statistics about one or more AFF files"
+  },
+  {
+    "name": "affuse",
+    "summary": "provide access to AFF containers"
+  },
+  {
+    "name": "affverify",
+    "summary": "verify the digital signature on a signed file"
+  },
+  {
+    "name": "affxml",
+    "summary": "print AFF information as XML"
+  },
+  {
+    "name": "afhash",
+    "summary": "Audio File Hash"
+  },
+  {
+    "name": "afida",
+    "summary": "Audio File Image Distortion Analyzer"
+  },
+  {
+    "name": "afinfo",
+    "summary": "Audio File Info"
+  },
+  {
+    "name": "afktool",
+    "summary": "AppleFirmwareKit debug utility"
+  },
+  {
+    "name": "afplay",
+    "summary": "Audio File Play"
+  },
+  {
+    "name": "afscexpand",
+    "summary": "decompress files compressed with HFS+ compression"
+  },
+  {
+    "name": "afterwriting",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "afterwriting-fonts",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "agentxtrap",
+    "summary": "send an AgentX NotifyPDU to an AgentX master agent"
+  },
+  {
+    "name": "agvtool",
+    "summary": "Apple-generic versioning tool for Xcode projects"
+  },
+  {
+    "name": "ahost",
+    "summary": "print the A or AAAA record associated with a hostname or IP address"
+  },
+  {
+    "name": "alias",
+    "summary": "shell built-in commands"
+  },
+  {
+    "name": "ambiguous_words",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "amt",
+    "summary": "Abstract Machine Test Utility"
+  },
+  {
+    "name": "amtog",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "ancestorg",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "android",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "apachectl",
+    "summary": "Apache HTTP Server Control Interface"
+  },
+  {
+    "name": "apfs_hfs_convert",
+    "summary": "convert an existing HFS file system to APFS file system"
+  },
+  {
+    "name": "apfs_unlockfv",
+    "summary": "unlock an APFS FileVault data volume"
+  },
+  {
+    "name": "apkanalyzer",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "app-sso",
+    "summary": "A tool used to control and get information about the Kerberos SSO extension"
+  },
+  {
+    "name": "applesimutils",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "applesingle",
+    "summary": "encode and decode files"
+  },
+  {
+    "name": "apply",
+    "summary": "apply a command to a set of arguments"
+  },
+  {
+    "name": "applygnupgdefaults",
+    "summary": "Run gpgconf --apply-defaults for all users"
+  },
+  {
+    "name": "appsleepd",
+    "summary": "app sleep daemon"
+  },
+  {
+    "name": "apropos",
+    "summary": "display online manual documentation pages"
+  },
+  {
+    "name": "ar",
+    "summary": "create and maintain library archives"
+  },
+  {
+    "name": "arch",
+    "summary": "print architecture type or run selected architecture of a universal binary"
+  },
+  {
+    "name": "archiveutil",
+    "summary": "command-line interface for the Archive Utility application"
+  },
+  {
+    "name": "arp",
+    "summary": "address resolution display and control"
+  },
+  {
+    "name": "as",
+    "summary": "assembler"
+  },
+  {
+    "name": "asa",
+    "summary": "interpret carriage-control characters"
+  },
+  {
+    "name": "aslmanager",
+    "summary": "Apple System Log data life-cycle manager"
+  },
+  {
+    "name": "asn1Coding",
+    "summary": "ASN.1 DER encoder"
+  },
+  {
+    "name": "asn1Decoding",
+    "summary": "ASN.1 DER decoder"
+  },
+  {
+    "name": "asn1Parser",
+    "summary": "ASN.1 syntax tree generator for libtasn1"
+  },
+  {
+    "name": "asr",
+    "summary": "Apple Software Restore; copy volumes (e.g. from disk images)"
+  },
+  {
+    "name": "assembleg",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "assetutil",
+    "summary": "process asset catalog.car files"
+  },
+  {
+    "name": "ast-grep",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "at",
+    "summary": "queue, examine or delete jobs for later execution"
+  },
+  {
+    "name": "atob",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "atos",
+    "summary": "convert numeric addresses to symbols of binary images or processes"
+  },
+  {
+    "name": "atq",
+    "summary": "queue, examine or delete jobs for later execution"
+  },
+  {
+    "name": "atrm",
+    "summary": "queue, examine or delete jobs for later execution"
+  },
+  {
+    "name": "atsutil",
+    "summary": "font registration system utility"
+  },
+  {
+    "name": "audit",
+    "summary": "audit management utility"
+  },
+  {
+    "name": "auditd",
+    "summary": "audit log management daemon"
+  },
+  {
+    "name": "auditreduce",
+    "summary": "select records from audit trail files"
+  },
+  {
+    "name": "automationmodetool",
+    "summary": "Manage UI automation security preferences"
+  },
+  {
+    "name": "automator",
+    "summary": "Runs Automator workflow"
+  },
+  {
+    "name": "automount",
+    "summary": "mount autofs on the appropriate mount points"
+  },
+  {
+    "name": "autopoint",
+    "summary": "copies standard gettext infrastructure"
+  },
+  {
+    "name": "auval",
+    "summary": "AudioUnit validation"
+  },
+  {
+    "name": "avbanalyse",
+    "summary": "Audio Video Bridging analysis tool"
+  },
+  {
+    "name": "avbcapture",
+    "summary": "Audio Video Bridging traffic capture tool"
+  },
+  {
+    "name": "avbdeviced",
+    "summary": "peristent entity management for AVB"
+  },
+  {
+    "name": "avbdiagnose",
+    "summary": "diagnostic tool for AVB"
+  },
+  {
+    "name": "avbutil",
+    "summary": "manage AVB features and settings"
+  },
+  {
+    "name": "avconvert",
+    "summary": "movie conversion tool"
+  },
+  {
+    "name": "avdmanager",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "aviocat",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "avmediainfo",
+    "summary": "media analysis tool"
+  },
+  {
+    "name": "awk",
+    "summary": "pattern-directed scanning and processing language"
+  },
+  {
+    "name": "b64decode",
+    "summary": "encode / decode a binary file"
+  },
+  {
+    "name": "b64encode",
+    "summary": "encode / decode a binary file"
+  },
+  {
+    "name": "baddbdir",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "banner",
+    "summary": "print large banner on printer"
+  },
+  {
+    "name": "base64",
+    "summary": "encode / decode a binary file"
+  },
+  {
+    "name": "basename",
+    "summary": "return filename or directory portion of pathname"
+  },
+  {
+    "name": "bash",
+    "summary": "GNU Bourne-Again SHell"
+  },
+  {
+    "name": "bashbug",
+    "summary": "report a bug in bash"
+  },
+  {
+    "name": "bat",
+    "summary": "a cat(1) clone with syntax highlighting and Git integration"
+  },
+  {
+    "name": "batch",
+    "summary": "queue, examine or delete jobs for later execution"
+  },
+  {
+    "name": "bc",
+    "summary": "arbitrary-precision decimal arithmetic language and calculator"
+  },
+  {
+    "name": "bg",
+    "summary": "shell built-in commands"
+  },
+  {
+    "name": "binaryornot",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "binhex",
+    "summary": "encode and decode files"
+  },
+  {
+    "name": "binhex.pl",
+    "summary": "use Convert::BinHex to encode files as BinHex"
+  },
+  {
+    "name": "bintrans",
+    "summary": "encode / decode a binary file"
+  },
+  {
+    "name": "bioutil",
+    "summary": "tool for viewing/changing biometrics configuration and listing/deleting enrolled biometric templates"
+  },
+  {
+    "name": "biplabg",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "bisect-create",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "bison",
+    "summary": "GNU Project parser generator (yacc replacement)"
+  },
+  {
+    "name": "bitesize.d",
+    "summary": "analyse disk I/O size by process. Uses DTrace"
+  },
+  {
+    "name": "bless",
+    "summary": "set volume bootability and startup disk options"
+  },
+  {
+    "name": "blkcalc",
+    "summary": "Converts between unallocated disk unit numbers and regular disk unit numbers"
+  },
+  {
+    "name": "blkcat",
+    "summary": "Display the contents of file system data unit in a disk image"
+  },
+  {
+    "name": "blkls",
+    "summary": "List or output file system data units"
+  },
+  {
+    "name": "blkstat",
+    "summary": "Display details of a file system data unit (i.e. block or sector)"
+  },
+  {
+    "name": "bltest",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "bputil",
+    "summary": "Utility to precisely modify the security settings on Apple Silicon Macs"
+  },
+  {
+    "name": "bq",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "br",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "brctl",
+    "summary": "Manage the CloudDocs daemon"
+  },
+  {
+    "name": "brew",
+    "summary": "The Package Manager for Everywhere"
+  },
+  {
+    "name": "brotli",
+    "summary": "compress or decompress files"
+  },
+  {
+    "name": "bspatch",
+    "summary": "apply a patch built with bsdiff(1)"
+  },
+  {
+    "name": "btoa",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "bun",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "bundle",
+    "summary": "Ruby Dependency Management"
+  },
+  {
+    "name": "bundler",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "bunx",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "bunzip2",
+    "summary": "a block-sorting file compressor, v1.0.8 bzcat - decompresses files to stdout bzip2recover - recovers data from damaged bzip2 files"
+  },
+  {
+    "name": "bv",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "bw",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "bzcmp",
+    "summary": "compare bzip2 compressed files"
+  },
+  {
+    "name": "bzdiff",
+    "summary": "compare bzip2 compressed files"
+  },
+  {
+    "name": "bzegrep",
+    "summary": "file pattern searcher"
+  },
+  {
+    "name": "bzfgrep",
+    "summary": "file pattern searcher"
+  },
+  {
+    "name": "bzgrep",
+    "summary": "file pattern searcher"
+  },
+  {
+    "name": "bzip2",
+    "summary": "a block-sorting file compressor, v1.0.8 bzcat - decompresses files to stdout bzip2recover - recovers data from damaged bzip2 files"
+  },
+  {
+    "name": "bzless",
+    "summary": "file perusal filter for crt viewing of bzip2 compressed text"
+  },
+  {
+    "name": "bzmore",
+    "summary": "file perusal filter for crt viewing of bzip2 compressed text"
+  },
+  {
+    "name": "c++-16",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "c89",
+    "summary": "standard C language compiler"
+  },
+  {
+    "name": "c99",
+    "summary": "standard C language compiler"
+  },
+  {
+    "name": "c_rehash",
+    "summary": "Create symbolic links to files named by the hash values"
+  },
+  {
+    "name": "caam",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "caffeinate",
+    "summary": "prevent the system from sleeping on behalf of a utility"
+  },
+  {
+    "name": "cairo-trace",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "cal",
+    "summary": "displays a calendar and the date of Easter"
+  },
+  {
+    "name": "calendar",
+    "summary": "reminder service"
+  },
+  {
+    "name": "cancel",
+    "summary": "cancel jobs"
+  },
+  {
+    "name": "cap_mkdb",
+    "summary": "create capability database"
+  },
+  {
+    "name": "captoinfo",
+    "summary": "convert a termcap description into a terminfo description"
+  },
+  {
+    "name": "cat",
+    "summary": "concatenate and print files"
+  },
+  {
+    "name": "catg",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "cd",
+    "summary": "shell built-in commands"
+  },
+  {
+    "name": "certtool",
+    "summary": "create key pairs, certificates and certificate signing requests for use with Keychains"
+  },
+  {
+    "name": "certutil",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "cfprefsd",
+    "summary": "defaults server"
+  },
+  {
+    "name": "chat",
+    "summary": "Automated conversational script with a modem"
+  },
+  {
+    "name": "check_arm_indent.sh",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "check_commit_msg.sh",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "checkgid",
+    "summary": "validate group identifiers"
+  },
+  {
+    "name": "chflags",
+    "summary": "change file flags"
+  },
+  {
+    "name": "chfn",
+    "summary": "add or change user database information"
+  },
+  {
+    "name": "chgrp",
+    "summary": "change group"
+  },
+  {
+    "name": "chktest",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "chmod",
+    "summary": "change file modes or Access Control Lists"
+  },
+  {
+    "name": "chown",
+    "summary": "change file owner and group"
+  },
+  {
+    "name": "chpass",
+    "summary": "add or change user database information"
+  },
+  {
+    "name": "chroot",
+    "summary": "change root directory"
+  },
+  {
+    "name": "chsh",
+    "summary": "add or change user database information"
+  },
+  {
+    "name": "cjpeg",
+    "summary": "compress an image file to a JPEG file"
+  },
+  {
+    "name": "cksum",
+    "summary": "display file checksums and block counts"
+  },
+  {
+    "name": "clang",
+    "summary": "the Clang C, C++, and Objective-C compiler"
+  },
+  {
+    "name": "classifier_tester",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "classify",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "clean-diff",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "clear",
+    "summary": "clear the terminal screen"
+  },
+  {
+    "name": "cliclick",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "cm",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "cmp",
+    "summary": "OpenSSL application commands"
+  },
+  {
+    "name": "cmsutil",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "cntraining",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "codesign",
+    "summary": "Create and manipulate code signatures"
+  },
+  {
+    "name": "codesign_allocate",
+    "summary": "add code signing data to a Mach-O file"
+  },
+  {
+    "name": "codex",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "codexbar",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "col",
+    "summary": "filter reverse line feeds from input"
+  },
+  {
+    "name": "colrm",
+    "summary": "remove columns from a file"
+  },
+  {
+    "name": "column",
+    "summary": "columnate lists"
+  },
+  {
+    "name": "combine_lang_model",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "combine_tessdata",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "comm",
+    "summary": "select or reject lines common to two files"
+  },
+  {
+    "name": "command",
+    "summary": "shell built-in commands"
+  },
+  {
+    "name": "compare-cvelists.sh",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "complg",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "compress",
+    "summary": "compress and expand data"
+  },
+  {
+    "name": "compression_tool",
+    "summary": "encode/decode files using the Compression library"
+  },
+  {
+    "name": "config_data",
+    "summary": "Query or change configuration of Perl modules"
+  },
+  {
+    "name": "converseg",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "convertfilestopdf",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "convertfilestops",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "convertformat",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "convertsegfilestopdf",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "convertsegfilestops",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "converttopdf",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "converttops",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "cookiecutter",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "copyg",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "corelist",
+    "summary": "a commandline frontend to Module::CoreList"
+  },
+  {
+    "name": "countg",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "countneg",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "cp",
+    "summary": "copy files"
+  },
+  {
+    "name": "cpan",
+    "summary": "easily interact with CPAN from the command line"
+  },
+  {
+    "name": "cpio",
+    "summary": "copy files to and from archives"
+  },
+  {
+    "name": "cpp",
+    "summary": "The C Preprocessor"
+  },
+  {
+    "name": "cpp-16",
+    "summary": "The C Preprocessor"
+  },
+  {
+    "name": "cpuctl",
+    "summary": "program to control CPUs"
+  },
+  {
+    "name": "cpuwalk.d",
+    "summary": "Measure which CPUs a process runs on. Uses DTrace"
+  },
+  {
+    "name": "creatbyproc.d",
+    "summary": "snoop creat()s by process name. Uses DTrace"
+  },
+  {
+    "name": "createhomedir",
+    "summary": "create and populate home directories on the local computer"
+  },
+  {
+    "name": "crlrefresh",
+    "summary": "update and maintain system-wide CRL cache"
+  },
+  {
+    "name": "crlutil",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "cron",
+    "summary": "daemon to execute scheduled commands (Vixie Cron)"
+  },
+  {
+    "name": "crontab",
+    "summary": "maintain crontab files for individual users (V3)"
+  },
+  {
+    "name": "crypto_bench",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "csplit",
+    "summary": "split files based on context"
+  },
+  {
+    "name": "csreq",
+    "summary": "Expert tool for manipulating Code Signing Requirement data"
+  },
+  {
+    "name": "csrutil",
+    "summary": "Configure system security policies"
+  },
+  {
+    "name": "ctags",
+    "summary": "create a tags file"
+  },
+  {
+    "name": "ctf_insert",
+    "summary": "insert Compact C Type Format data into a mach_kernel file"
+  },
+  {
+    "name": "cu",
+    "summary": "Call up another system"
+  },
+  {
+    "name": "cubhamg",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "cups-config",
+    "summary": "get cups api, compiler, directory, and link information"
+  },
+  {
+    "name": "cupsaccept",
+    "summary": "accept/reject jobs sent to a destination"
+  },
+  {
+    "name": "cupsctl",
+    "summary": "configure cupsd.conf options"
+  },
+  {
+    "name": "cupsd",
+    "summary": "cups scheduler"
+  },
+  {
+    "name": "cupsdisable",
+    "summary": "stop/start printers and classes"
+  },
+  {
+    "name": "cupsenable",
+    "summary": "stop/start printers and classes"
+  },
+  {
+    "name": "cupsfilter",
+    "summary": "convert a file to another format using cups filters (deprecated)"
+  },
+  {
+    "name": "cupstestppd",
+    "summary": "test conformance of ppd files"
+  },
+  {
+    "name": "curl",
+    "summary": "transfer a URL"
+  },
+  {
+    "name": "curl-config",
+    "summary": "Get information about a libcurl installation"
+  },
+  {
+    "name": "cut",
+    "summary": "cut out selected portions of each line of a file"
+  },
+  {
+    "name": "cwebp",
+    "summary": "compress an image file to a WebP file"
+  },
+  {
+    "name": "cws2fws",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "d8",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "dappprof",
+    "summary": "profile user and lib function usage. Uses DTrace"
+  },
+  {
+    "name": "dapptrace",
+    "summary": "trace user and library function usage. Uses DTrace"
+  },
+  {
+    "name": "dart",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "dash",
+    "summary": "command interpreter (shell)"
+  },
+  {
+    "name": "date",
+    "summary": "display or set date and time"
+  },
+  {
+    "name": "dav1d",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "dawg2wordlist",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "dbicadmin",
+    "summary": "utility for administrating DBIx::Class schemata"
+  },
+  {
+    "name": "dbilogstrip",
+    "summary": "filter to normalize DBI trace logs for diff'ing"
+  },
+  {
+    "name": "dbiprof",
+    "summary": "command-line client for DBI::ProfileData"
+  },
+  {
+    "name": "dbiproxy",
+    "summary": "A proxy server for the DBD::Proxy driver"
+  },
+  {
+    "name": "dbmmanage",
+    "summary": "Manage user authentication files in DBM format"
+  },
+  {
+    "name": "dbtest",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "dbtool",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "dc",
+    "summary": "arbitrary-precision decimal reverse-Polish notation calculator"
+  },
+  {
+    "name": "dd",
+    "summary": "convert and copy a file"
+  },
+  {
+    "name": "ddns-confgen",
+    "summary": "ddns key generation tool"
+  },
+  {
+    "name": "ddrescue",
+    "summary": "data recovery tool"
+  },
+  {
+    "name": "ddrescuelog",
+    "summary": "tool for ddrescue mapfiles"
+  },
+  {
+    "name": "debinhex.pl",
+    "summary": "use Convert::BinHex to decode BinHex files"
+  },
+  {
+    "name": "defaults",
+    "summary": "access the macOS user defaults system"
+  },
+  {
+    "name": "deledgeg",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "delptg",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "delv",
+    "summary": "DNS lookup and validation utility"
+  },
+  {
+    "name": "demandoc",
+    "summary": "emit only text of UNIX manuals"
+  },
+  {
+    "name": "derdump",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "derq",
+    "summary": "Query and manipulate DER entitlements"
+  },
+  {
+    "name": "dertimetest",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "desdp",
+    "summary": "scripting definition generator"
+  },
+  {
+    "name": "dev_mkdb",
+    "summary": "create /dev database"
+  },
+  {
+    "name": "df",
+    "summary": "display free disk space"
+  },
+  {
+    "name": "diff",
+    "summary": "differential file and directory comparator"
+  },
+  {
+    "name": "diff3",
+    "summary": "3-way differential file comparison"
+  },
+  {
+    "name": "diffstat",
+    "summary": "make histogram from diff-output"
+  },
+  {
+    "name": "dig",
+    "summary": "DNS lookup utility"
+  },
+  {
+    "name": "digest",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "dimacs2g",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "directg",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "dirmngr",
+    "summary": "GnuPG's network access daemon"
+  },
+  {
+    "name": "dirmngr-client",
+    "summary": "Tool to access the Dirmngr services"
+  },
+  {
+    "name": "dirname",
+    "summary": "return filename or directory portion of pathname"
+  },
+  {
+    "name": "disklabel",
+    "summary": "manipulate and query an Apple Label disk label"
+  },
+  {
+    "name": "diskutil",
+    "summary": "modify, verify and repair local disks"
+  },
+  {
+    "name": "dispqlen.d",
+    "summary": "dispatcher queue length by CPU. Uses DTrace"
+  },
+  {
+    "name": "distgraphg",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "distnoted",
+    "summary": "distributed notification server"
+  },
+  {
+    "name": "ditto",
+    "summary": "copy directory hierarchies, create and extract archives"
+  },
+  {
+    "name": "djpeg",
+    "summary": "decompress a JPEG file to an image file"
+  },
+  {
+    "name": "dmc",
+    "summary": "controls the Disk Mount Conditioner"
+  },
+  {
+    "name": "dmesg",
+    "summary": "display the system message buffer"
+  },
+  {
+    "name": "dnctl",
+    "summary": "Traffic shaper control program"
+  },
+  {
+    "name": "dns-sd",
+    "summary": "Multicast DNS (mDNS) & DNS Service Discovery (DNS-SD) Test Tool"
+  },
+  {
+    "name": "docker-credential-gcloud",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "domain-check",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "dot_clean",
+    "summary": "Merge._* files with corresponding native files"
+  },
+  {
+    "name": "dreadnaut",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "dretodot",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "dretog",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "drutil",
+    "summary": "interact with CD/DVD burners"
+  },
+  {
+    "name": "dscacheutil",
+    "summary": "gather information, statistics and initiate queries to the Directory Service cache"
+  },
+  {
+    "name": "dscl",
+    "summary": "Directory Service command line utility"
+  },
+  {
+    "name": "dsconfigad",
+    "summary": "retrieves/changes configuration for Active Directory"
+  },
+  {
+    "name": "dsconfigldap",
+    "summary": "LDAP server configuration/binding add/remove tool"
+  },
+  {
+    "name": "dseditgroup",
+    "summary": "group record manipulation tool"
+  },
+  {
+    "name": "dsenableroot",
+    "summary": "enables or disables the root account"
+  },
+  {
+    "name": "dserr",
+    "summary": "prints a description for an error code"
+  },
+  {
+    "name": "dsexport",
+    "summary": "export records from OpenDirectory"
+  },
+  {
+    "name": "dsmemberutil",
+    "summary": "various operations for the membership APIs, including state dump, check memberships, UUIDs, etc"
+  },
+  {
+    "name": "dsymutil",
+    "summary": "manipulate archived DWARF debug symbol files"
+  },
+  {
+    "name": "dtrace",
+    "summary": "dynamic tracing compiler and tracing utility"
+  },
+  {
+    "name": "dtruss",
+    "summary": "process syscall details. Uses DTrace"
+  },
+  {
+    "name": "du",
+    "summary": "display disk usage statistics"
+  },
+  {
+    "name": "dumpsexp",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "dvd2concat",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "dwarfdump",
+    "summary": "dump and verify DWARF debug information"
+  },
+  {
+    "name": "dwebp",
+    "summary": "decompress a WebP file to an image file"
+  },
+  {
+    "name": "dyld_info",
+    "summary": "Displays information used by dyld in programs and dylibs"
+  },
+  {
+    "name": "dyld_usage",
+    "summary": "report dynamic linker activity in real-time"
+  },
+  {
+    "name": "dynamic_pager",
+    "summary": "swap configuration daemon"
+  },
+  {
+    "name": "echo",
+    "summary": "shell built-in commands"
+  },
+  {
+    "name": "ecperf",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "ed",
+    "summary": "text editor"
+  },
+  {
+    "name": "edgetransg",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "edquota",
+    "summary": "edit user quotas"
+  },
+  {
+    "name": "egrep",
+    "summary": "file pattern searcher"
+  },
+  {
+    "name": "enc2xs",
+    "summary": "-- Perl Encode Module Generator"
+  },
+  {
+    "name": "enc_recon_frame_test",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "encguess",
+    "summary": "guess character encodings of files"
+  },
+  {
+    "name": "encode_keychange",
+    "summary": "produce the KeyChange string for SNMPv3"
+  },
+  {
+    "name": "encodeinttest",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "entr",
+    "summary": "run arbitrary commands when files change"
+  },
+  {
+    "name": "enum_options",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "env",
+    "summary": "set environment and execute command, or print environment"
+  },
+  {
+    "name": "envsubst",
+    "summary": "substitutes environment variables in shell format strings"
+  },
+  {
+    "name": "erb",
+    "summary": "Ruby Templating"
+  },
+  {
+    "name": "errinfo",
+    "summary": "print errno for syscall fails. Uses DTrace"
+  },
+  {
+    "name": "eslogger",
+    "summary": "log Endpoint Security events"
+  },
+  {
+    "name": "event_rpcgen.py",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "ewfacquire",
+    "summary": "acquires data in the EWF format"
+  },
+  {
+    "name": "ewfacquirestream",
+    "summary": "acquires data in the EWF format from stdin"
+  },
+  {
+    "name": "ewfdebug",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "ewfexport",
+    "summary": "exports media data stored in EWF files"
+  },
+  {
+    "name": "ewfinfo",
+    "summary": "show meta data stored in EWF files"
+  },
+  {
+    "name": "ewfmount",
+    "summary": "mount data stored in EWF files"
+  },
+  {
+    "name": "ewfrecover",
+    "summary": "exports media data stored in EWF files"
+  },
+  {
+    "name": "ewfverify",
+    "summary": "verifies media data stored in EWF files"
+  },
+  {
+    "name": "execsnoop",
+    "summary": "snoop new process execution. Uses DTrace"
+  },
+  {
+    "name": "exiftool",
+    "summary": "Read and write meta information in files"
+  },
+  {
+    "name": "expand",
+    "summary": "expand tabs to spaces, and vice versa"
+  },
+  {
+    "name": "expect",
+    "summary": "programmed dialogue with interactive programs, Version 5"
+  },
+  {
+    "name": "expr",
+    "summary": "evaluate expression"
+  },
+  {
+    "name": "eyapp",
+    "summary": "A Perl front-end to the Parse::Eyapp module"
+  },
+  {
+    "name": "f2py",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "false",
+    "summary": "shell built-in commands"
+  },
+  {
+    "name": "fastbase64",
+    "summary": "base64 encode/decode data and print to standard output"
+  },
+  {
+    "name": "fastbase64.coreutils",
+    "summary": "base64 encode/decode data and print to standard output (coreutils compatible)"
+  },
+  {
+    "name": "fax2ps",
+    "summary": "convert a TIFF facsimile to compressed PostScript™"
+  },
+  {
+    "name": "fax2tiff",
+    "summary": "create a TIFF Class F fax file from raw fax data"
+  },
+  {
+    "name": "fbectest",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "fc",
+    "summary": "shell built-in commands"
+  },
+  {
+    "name": "fc-cache",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "fc-cat",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "fc-conflist",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "fc-genconf",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "fc-list",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "fc-match",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "fc-pattern",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "fc-query",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "fc-scan",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "fc-validate",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "fcat",
+    "summary": "Output the contents of a file based on its name"
+  },
+  {
+    "name": "fcgistarter",
+    "summary": "Start a FastCGI program"
+  },
+  {
+    "name": "fd",
+    "summary": "find entries in the filesystem"
+  },
+  {
+    "name": "fddist",
+    "summary": "file descriptor usage distributions. Uses DTrace"
+  },
+  {
+    "name": "fdesetup",
+    "summary": "FileVault configuration tool"
+  },
+  {
+    "name": "fdisk",
+    "summary": "DOS partition maintenance program"
+  },
+  {
+    "name": "ffescape",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "ffeval",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "ffhash",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "ffind",
+    "summary": "Finds the name of the file or directory using a given inode"
+  },
+  {
+    "name": "ffmpeg",
+    "summary": "ffmpeg media converter"
+  },
+  {
+    "name": "ffplay",
+    "summary": "FFplay media player"
+  },
+  {
+    "name": "ffprobe",
+    "summary": "ffprobe media prober"
+  },
+  {
+    "name": "fg",
+    "summary": "shell built-in commands"
+  },
+  {
+    "name": "fgrep",
+    "summary": "file pattern searcher"
+  },
+  {
+    "name": "fibreconfig",
+    "summary": "Tool for configuring settings for Fibre Channel controllers and targets"
+  },
+  {
+    "name": "file",
+    "summary": "determine file type"
+  },
+  {
+    "name": "filebyproc.d",
+    "summary": "snoop opens by process name. Uses DTrace"
+  },
+  {
+    "name": "filecoordinationd",
+    "summary": "system-wide file access coordination"
+  },
+  {
+    "name": "fileinfo",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "fileproviderctl",
+    "summary": "introspect file provider extensions"
+  },
+  {
+    "name": "filtercalltree",
+    "summary": "Filter or prune a call tree file generated by sample or malloc_history"
+  },
+  {
+    "name": "find",
+    "summary": "walk a file hierarchy"
+  },
+  {
+    "name": "findrule",
+    "summary": "command line wrapper to File::Find::Rule"
+  },
+  {
+    "name": "finger",
+    "summary": "user information lookup program"
+  },
+  {
+    "name": "fipstest",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "firectl",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "firmwarepasswd",
+    "summary": "tool for setting and removing firmware passwords on a system"
+  },
+  {
+    "name": "fiwalk",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "fixproc",
+    "summary": "Fixes a process by performing the specified action"
+  },
+  {
+    "name": "flex",
+    "summary": "the fast lexical analyser generator"
+  },
+  {
+    "name": "fls",
+    "summary": "List file and directory names in a disk image"
+  },
+  {
+    "name": "flutter",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "fmt",
+    "summary": "simple text formatter"
+  },
+  {
+    "name": "fold",
+    "summary": "fold long lines for finite width output device"
+  },
+  {
+    "name": "fontrestore",
+    "summary": "Restore the available system fonts to a pristine state, if possible"
+  },
+  {
+    "name": "footprint",
+    "summary": "gathers memory information about one or more processes"
+  },
+  {
+    "name": "fourcc2pixfmt",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "fping",
+    "summary": "send ICMP ECHO_REQUEST packets to network hosts"
+  },
+  {
+    "name": "freetype-config",
+    "summary": "Get information about a libfreetype installation"
+  },
+  {
+    "name": "fribidi",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "fs_usage",
+    "summary": "report system calls and page faults related to filesystem activity in real-time"
+  },
+  {
+    "name": "fsck",
+    "summary": "filesystem consistency check and interactive repair"
+  },
+  {
+    "name": "fsck_apfs",
+    "summary": "APFS consistency check"
+  },
+  {
+    "name": "fsck_cs",
+    "summary": "verify and repair CoreStorage logical volume groups"
+  },
+  {
+    "name": "fsck_exfat",
+    "summary": "Verify and repair ExFAT file systems"
+  },
+  {
+    "name": "fsck_fskit",
+    "summary": "file system consistency check and interactive repair for FSKit"
+  },
+  {
+    "name": "fsck_hfs",
+    "summary": "HFS file system consistency check"
+  },
+  {
+    "name": "fsck_msdos",
+    "summary": "DOS/Windows (FAT) file system consistency check"
+  },
+  {
+    "name": "fsck_udf",
+    "summary": "check a UDF filesystem"
+  },
+  {
+    "name": "fsstat",
+    "summary": "Display general details of a file system"
+  },
+  {
+    "name": "fstyp",
+    "summary": "identify a file system"
+  },
+  {
+    "name": "fstyp_hfs",
+    "summary": "check for an HFS volume"
+  },
+  {
+    "name": "fstyp_msdos",
+    "summary": "check for an MSDOS FAT volume"
+  },
+  {
+    "name": "fstyp_ntfs",
+    "summary": "check for a Windows NT File System (NTFS) volume"
+  },
+  {
+    "name": "fstyp_udf",
+    "summary": "check for a UDF volume"
+  },
+  {
+    "name": "funzip",
+    "summary": "filter for extracting from a ZIP archive in a pipe"
+  },
+  {
+    "name": "fuser",
+    "summary": "list process IDs of all processes that have one or more files open"
+  },
+  {
+    "name": "fzf",
+    "summary": "a command-line fuzzy finder"
+  },
+  {
+    "name": "fzf-preview.sh",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "fzf-tmux",
+    "summary": "open fzf in tmux split pane"
+  },
+  {
+    "name": "g++-16",
+    "summary": "GNU project C and C++ compiler"
+  },
+  {
+    "name": "gatherheaderdoc",
+    "summary": "header documentation processor"
+  },
+  {
+    "name": "gcc",
+    "summary": "GNU project C and C++ compiler"
+  },
+  {
+    "name": "gcc-16",
+    "summary": "GNU project C and C++ compiler"
+  },
+  {
+    "name": "gcc-ar-16",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "gcc-nm-16",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "gcc-ranlib-16",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "gcloud",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "gcore",
+    "summary": "get a core image of a running process"
+  },
+  {
+    "name": "gcov",
+    "summary": "coverage testing tool"
+  },
+  {
+    "name": "gcov-16",
+    "summary": "coverage testing tool"
+  },
+  {
+    "name": "gcov-dump-16",
+    "summary": "offline gcda and gcno profile dump tool"
+  },
+  {
+    "name": "gcov-tool-16",
+    "summary": "offline gcda profile processing tool"
+  },
+  {
+    "name": "gdbus",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "gdbus-codegen",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "gem",
+    "summary": "RubyGems program"
+  },
+  {
+    "name": "gen-rc",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "gen_bridge_metadata",
+    "summary": "Objective-C Bridges Metadata Generator"
+  },
+  {
+    "name": "genbg",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "genbgL",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "gencat",
+    "summary": "NLS catalog compiler"
+  },
+  {
+    "name": "general_assembly.pl",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "geng",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "gengL",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "genktreeg",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "genposetg",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "genquarticg",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "genrang",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "genspecialg",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "genstrings",
+    "summary": "generate string tables from source code"
+  },
+  {
+    "name": "gentourng",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "gentreeg",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "getconf",
+    "summary": "retrieve standard configuration variables"
+  },
+  {
+    "name": "getopt",
+    "summary": "parse command options"
+  },
+  {
+    "name": "getopts",
+    "summary": "shell built-in commands"
+  },
+  {
+    "name": "gettext",
+    "summary": "translate message"
+  },
+  {
+    "name": "gettext.sh",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "gettextize",
+    "summary": "install or upgrade gettext infrastructure"
+  },
+  {
+    "name": "gfortran",
+    "summary": "GNU Fortran compiler"
+  },
+  {
+    "name": "gfortran-16",
+    "summary": "GNU Fortran compiler"
+  },
+  {
+    "name": "gh",
+    "summary": "GitHub CLI"
+  },
+  {
+    "name": "gi-compile-repository",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "gi-decompile-typelib",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "gi-inspect-typelib",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "gif2webp",
+    "summary": "Convert a GIF image to WebP"
+  },
+  {
+    "name": "gifbuild",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "gifclrmp",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "giffix",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "giftext",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "giftool",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "gio",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "gio-querymodules",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "git",
+    "summary": "the stupid content tracker"
+  },
+  {
+    "name": "git-credential-gcloud",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "git-cvsserver",
+    "summary": "A CVS server emulator for Git"
+  },
+  {
+    "name": "git-filter-repo",
+    "summary": "Rewrite repository history"
+  },
+  {
+    "name": "git-lfs",
+    "summary": "Work with large files in Git repositories"
+  },
+  {
+    "name": "git-receive-pack",
+    "summary": "Receive what is pushed into the repository"
+  },
+  {
+    "name": "git-shell",
+    "summary": "Restricted login shell for Git-only SSH access"
+  },
+  {
+    "name": "git-upload-archive",
+    "summary": "Send archive back to git-archive"
+  },
+  {
+    "name": "git-upload-pack",
+    "summary": "Send objects packed back to git-fetch-pack"
+  },
+  {
+    "name": "git2",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "gitleaks",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "glib-compile-resources",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "glib-compile-schemas",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "glib-genmarshal",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "glib-gettextize",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "glib-mkenums",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "gnupg-key-manage",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "gnutls-certtool",
+    "summary": "GnuTLS certificate tool"
+  },
+  {
+    "name": "gnutls-cli",
+    "summary": "GnuTLS client"
+  },
+  {
+    "name": "gnutls-cli-debug",
+    "summary": "GnuTLS debug client"
+  },
+  {
+    "name": "gnutls-serv",
+    "summary": "GnuTLS server"
+  },
+  {
+    "name": "gobject-query",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "gperf",
+    "summary": "manual page for gperf 3.0.3"
+  },
+  {
+    "name": "gpg",
+    "summary": "OpenPGP encryption and signing tool"
+  },
+  {
+    "name": "gpg-agent",
+    "summary": "Secret key management for GnuPG"
+  },
+  {
+    "name": "gpg-authcode-sign.sh",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "gpg-card",
+    "summary": "Administrate Smart Cards"
+  },
+  {
+    "name": "gpg-connect-agent",
+    "summary": "Communicate with a running agent"
+  },
+  {
+    "name": "gpg-error",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "gpg-error-config",
+    "summary": "Script to get information about the installed version of libgpg-error"
+  },
+  {
+    "name": "gpg-mail-tube",
+    "summary": "Encrypt rfc822 formatted mail in a pipeline"
+  },
+  {
+    "name": "gpg-wks-client",
+    "summary": "Client for the Web Key Service"
+  },
+  {
+    "name": "gpg-wks-server",
+    "summary": "Server providing the Web Key Service"
+  },
+  {
+    "name": "gpgconf",
+    "summary": "Modify .gnupg home directories"
+  },
+  {
+    "name": "gpgme-config",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "gpgme-json",
+    "summary": "Native messaging based GPGME operations"
+  },
+  {
+    "name": "gpgme-tool",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "gpgparsemail",
+    "summary": "Parse a mail message into an annotated format"
+  },
+  {
+    "name": "gpgrt-config",
+    "summary": "Helper script to get information about the installed version of gpg libraries"
+  },
+  {
+    "name": "gpgscm",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "gpgsm",
+    "summary": "CMS encryption and signing tool"
+  },
+  {
+    "name": "gpgsplit",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "gpgtar",
+    "summary": "Encrypt or sign files into an archive"
+  },
+  {
+    "name": "gpgv",
+    "summary": "Verify OpenPGP signatures"
+  },
+  {
+    "name": "gpt",
+    "summary": "GUID partition table maintenance utility"
+  },
+  {
+    "name": "gr2fonttest",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "graph2dot",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "graphicssession",
+    "summary": "graphics session initialization utility"
+  },
+  {
+    "name": "grep",
+    "summary": "file pattern searcher"
+  },
+  {
+    "name": "gresource",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "groups",
+    "summary": "show group memberships"
+  },
+  {
+    "name": "gsettings",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "gssd",
+    "summary": "Generic Security Services Daemon"
+  },
+  {
+    "name": "gsutil",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "gtester",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "gtester-report",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "gunzip",
+    "summary": "compression/decompression tool using Lempel-Ziv coding (LZ77)"
+  },
+  {
+    "name": "gzexe",
+    "summary": "create auto-decompressing executables"
+  },
+  {
+    "name": "gzip",
+    "summary": "compression/decompression tool using Lempel-Ziv coding (LZ77)"
+  },
+  {
+    "name": "h2ph",
+    "summary": "convert .h C header files to .ph Perl header files"
+  },
+  {
+    "name": "h2xs",
+    "summary": "convert .h C header files to Perl extensions"
+  },
+  {
+    "name": "halt",
+    "summary": "stopping and restarting the system"
+  },
+  {
+    "name": "hamheuristic",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "hash",
+    "summary": "shell built-in commands"
+  },
+  {
+    "name": "hb-info",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "hb-raster",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "hb-shape",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "hb-subset",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "hb-vector",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "hb-view",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "hdid",
+    "summary": "historical mechanism for attaching disk images"
+  },
+  {
+    "name": "hdik",
+    "summary": "lightweight tool to attach and mount disk images in-kernel"
+  },
+  {
+    "name": "hdiutil",
+    "summary": "manipulate disk images (attach, verify, create, etc)"
+  },
+  {
+    "name": "hdxml2manxml",
+    "summary": "HeaderDoc XML to MPGL translator"
+  },
+  {
+    "name": "head",
+    "summary": "display first lines of a file"
+  },
+  {
+    "name": "headerdoc2html",
+    "summary": "header documentation processor"
+  },
+  {
+    "name": "heap",
+    "summary": "List all the malloc-allocated buffers in the process's heap"
+  },
+  {
+    "name": "hexdump",
+    "summary": "ASCII, decimal, hexadecimal, octal dump"
+  },
+  {
+    "name": "hfind",
+    "summary": "Lookup a hash value in a hash database"
+  },
+  {
+    "name": "hidutil",
+    "summary": "HID event system debug utility"
+  },
+  {
+    "name": "hiutil",
+    "summary": "utility for creating and examining Help Viewer indices"
+  },
+  {
+    "name": "hmac256",
+    "summary": "Compute an HMAC-SHA-256 MAC"
+  },
+  {
+    "name": "host",
+    "summary": "DNS lookup utility"
+  },
+  {
+    "name": "hostinfo",
+    "summary": "host information"
+  },
+  {
+    "name": "hostname",
+    "summary": "set or print name of current host system"
+  },
+  {
+    "name": "hotspot.d",
+    "summary": "print disk event by location. Uses DTrace"
+  },
+  {
+    "name": "hpmdiagnose",
+    "summary": "- collects diagnostic information to help troubleshoot USB-C issues"
+  },
+  {
+    "name": "htcacheclean",
+    "summary": "Clean up the disk cache"
+  },
+  {
+    "name": "htdbm",
+    "summary": "Manipulate DBM password databases"
+  },
+  {
+    "name": "htdigest",
+    "summary": "manage user files for digest authentication"
+  },
+  {
+    "name": "htmltree",
+    "summary": "Parse the given HTML file(s) and dump the parse tree"
+  },
+  {
+    "name": "htpasswd",
+    "summary": "Manage user files for basic authentication"
+  },
+  {
+    "name": "httpd",
+    "summary": "Apache Hypertext Transfer Protocol Server"
+  },
+  {
+    "name": "httpd-wrapper",
+    "summary": "Wrapper script for httpd web server"
+  },
+  {
+    "name": "httpserv",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "httxt2dbm",
+    "summary": "Generate dbm files for use with RewriteMap"
+  },
+  {
+    "name": "hugo",
+    "summary": "Build your project"
+  },
+  {
+    "name": "ibtool",
+    "summary": "compiles, prints, updates, and verifies Interface Builder documents"
+  },
+  {
+    "name": "icat",
+    "summary": "Output the contents of a file based on its inode number"
+  },
+  {
+    "name": "iconutil",
+    "summary": "Utility to convert between '.iconset' and '.icns' files"
+  },
+  {
+    "name": "iconv",
+    "summary": "codeset conversion utility"
+  },
+  {
+    "name": "id",
+    "summary": "return user identity"
+  },
+  {
+    "name": "idle3",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "idle3.14",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "idn2",
+    "summary": "Libidn2 Internationalized Domain Names conversion tool"
+  },
+  {
+    "name": "ifconfig",
+    "summary": "configure network interface parameters"
+  },
+  {
+    "name": "ifind",
+    "summary": "Find the meta-data structure that has allocated a given disk unit or file name"
+  },
+  {
+    "name": "ils",
+    "summary": "List inode information"
+  },
+  {
+    "name": "imagetops",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "img2webp",
+    "summary": "create animated WebP file from a sequence of input images"
+  },
+  {
+    "name": "img_cat",
+    "summary": "Output contents of an image file"
+  },
+  {
+    "name": "img_stat",
+    "summary": "Display details of an image file"
+  },
+  {
+    "name": "imptrace",
+    "summary": "report importance donation events in real time"
+  },
+  {
+    "name": "indent",
+    "summary": "indent and format C program source"
+  },
+  {
+    "name": "indent_arm_assembly.pl",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "infocmp",
+    "summary": "compare or print out terminfo descriptions"
+  },
+  {
+    "name": "infotocap",
+    "summary": "convert a terminfo description into a termcap description"
+  },
+  {
+    "name": "install",
+    "summary": "install a cryptex, either to the host or to a target device"
+  },
+  {
+    "name": "install_name_tool",
+    "summary": "change dynamic shared library install names"
+  },
+  {
+    "name": "installer",
+    "summary": "system software and package installer tool"
+  },
+  {
+    "name": "instmodsh",
+    "summary": "A shell to examine installed modules"
+  },
+  {
+    "name": "ioalloccount",
+    "summary": "Summarize IOKit memory usage"
+  },
+  {
+    "name": "iofile.d",
+    "summary": "I/O wait time by file and process. Uses DTrace"
+  },
+  {
+    "name": "iofileb.d",
+    "summary": "I/O bytes by file and process. Uses DTrace"
+  },
+  {
+    "name": "iopattern",
+    "summary": "print disk I/O pattern. Uses DTrace"
+  },
+  {
+    "name": "iopending",
+    "summary": "plot number of pending disk events. Uses DTrace"
+  },
+  {
+    "name": "ioreg",
+    "summary": "show I/O Kit registry"
+  },
+  {
+    "name": "iosnoop",
+    "summary": "snoop I/O events as they occur. Uses DTrace"
+  },
+  {
+    "name": "iostat",
+    "summary": "report I/O statistics"
+  },
+  {
+    "name": "iotop",
+    "summary": "display top disk I/O events by process. Uses DTrace"
+  },
+  {
+    "name": "ip2cc",
+    "summary": "lookup country from IP address or hostname"
+  },
+  {
+    "name": "ipconfig",
+    "summary": "view and control IP configuration state"
+  },
+  {
+    "name": "ipcrm",
+    "summary": "remove the specified message queues, semaphore sets, and shared segments"
+  },
+  {
+    "name": "ipcs",
+    "summary": "report System V interprocess communication facilities status"
+  },
+  {
+    "name": "iperf3-darwin",
+    "summary": "perform network throughput tests"
+  },
+  {
+    "name": "ippeveprinter",
+    "summary": "an ipp everywhere printer application for cups"
+  },
+  {
+    "name": "ippfind",
+    "summary": "find internet printing protocol printers"
+  },
+  {
+    "name": "ipptool",
+    "summary": "perform internet printing protocol requests"
+  },
+  {
+    "name": "irb",
+    "summary": "Interactive Ruby Shell"
+  },
+  {
+    "name": "ismindex",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "istat",
+    "summary": "Display details of a meta-data structure (i.e. inode)"
+  },
+  {
+    "name": "jar",
+    "summary": "create an archive for classes and resources, and manipulate or restore individual classes or resources from an archive"
+  },
+  {
+    "name": "jarsigner",
+    "summary": "sign and verify Java Archive (JAR) files"
+  },
+  {
+    "name": "java",
+    "summary": "launch a Java application"
+  },
+  {
+    "name": "javac",
+    "summary": "read Java declarations and compile them into class files"
+  },
+  {
+    "name": "javadoc",
+    "summary": "generate HTML pages of API documentation from Java source files"
+  },
+  {
+    "name": "javap",
+    "summary": "disassemble one or more class files"
+  },
+  {
+    "name": "jcat",
+    "summary": "Show the contents of a block in the file system journal"
+  },
+  {
+    "name": "jcmd",
+    "summary": "send diagnostic command requests to a running Java Virtual Machine (JVM)"
+  },
+  {
+    "name": "jconsole",
+    "summary": "start a graphical console to monitor and manage Java applications"
+  },
+  {
+    "name": "jdb",
+    "summary": "find and fix bugs in Java platform programs"
+  },
+  {
+    "name": "jdeprscan",
+    "summary": "static analysis tool that scans a jar file (or some other aggregation of class files) for uses of deprecated API elements"
+  },
+  {
+    "name": "jdeps",
+    "summary": "launch the Java class dependency analyzer"
+  },
+  {
+    "name": "jemalloc-config",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "jemalloc.sh",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "jeprof",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "jfr",
+    "summary": "parse and print Flight Recorder files"
+  },
+  {
+    "name": "jhsdb",
+    "summary": "attach to a Java process or launch a postmortem debugger to analyze the content of a core dump from a crashed Java Virtual Machine (JVM)"
+  },
+  {
+    "name": "jinfo",
+    "summary": "generate Java configuration information for a specified Java process"
+  },
+  {
+    "name": "jlink",
+    "summary": "assemble and optimize a set of modules and their dependencies into a custom runtime image"
+  },
+  {
+    "name": "jls",
+    "summary": "List the contents of a file system journal"
+  },
+  {
+    "name": "jmap",
+    "summary": "print details of a specified process"
+  },
+  {
+    "name": "jmod",
+    "summary": "create JMOD files and list the content of existing JMOD files"
+  },
+  {
+    "name": "jobs",
+    "summary": "shell built-in commands"
+  },
+  {
+    "name": "join",
+    "summary": "relational database operator"
+  },
+  {
+    "name": "jot",
+    "summary": "print sequential or random data"
+  },
+  {
+    "name": "jpackage",
+    "summary": "tool for packaging self-contained Java applications"
+  },
+  {
+    "name": "jpeg_extract",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "jpegtran",
+    "summary": "lossless transformation of JPEG files"
+  },
+  {
+    "name": "jpgicc",
+    "summary": "little cms ICC profile applier for JPEG"
+  },
+  {
+    "name": "jps",
+    "summary": "list the instrumented JVMs on the target system"
+  },
+  {
+    "name": "jq",
+    "summary": "Command-line JSON processor"
+  },
+  {
+    "name": "jrunscript",
+    "summary": "run a command-line script shell that supports interactive and batch modes"
+  },
+  {
+    "name": "jshell",
+    "summary": "interactively evaluate declarations, statements, and expressions of the Java programming language in a read-eval-print loop (REPL)"
+  },
+  {
+    "name": "json-glib-format",
+    "summary": "JSON Formatting Tool"
+  },
+  {
+    "name": "json-glib-validate",
+    "summary": "JSON Validation Tool"
+  },
+  {
+    "name": "json_pp",
+    "summary": "JSON::PP command utility"
+  },
+  {
+    "name": "json_xs",
+    "summary": "JSON::XS commandline utility"
+  },
+  {
+    "name": "jstack",
+    "summary": "print Java stack traces of Java threads for a specified Java process"
+  },
+  {
+    "name": "jstat",
+    "summary": "monitor JVM statistics"
+  },
+  {
+    "name": "jstatd",
+    "summary": "monitor the creation and termination of instrumented Java HotSpot VMs"
+  },
+  {
+    "name": "kadmin",
+    "summary": "Kerberos administration utility"
+  },
+  {
+    "name": "kadmin.local",
+    "summary": "compatiblity shim for MIT Kerberos kadmin.local"
+  },
+  {
+    "name": "kbxutil",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "kcc",
+    "summary": "Kerberos credential cache tools"
+  },
+  {
+    "name": "kcditto",
+    "summary": "macOS kernel management helper tool"
+  },
+  {
+    "name": "kdcsetup",
+    "summary": "Kerberos Open Directory Single Sign On"
+  },
+  {
+    "name": "kdestroy",
+    "summary": "remove one credential or destroy the current ticket file"
+  },
+  {
+    "name": "kextcache",
+    "summary": "create kext cache files"
+  },
+  {
+    "name": "kextfind",
+    "summary": "find kernel extensions (kexts) based on a variety of criteria and print information"
+  },
+  {
+    "name": "kextlibs",
+    "summary": "find OSBundleLibraries needed by a kext"
+  },
+  {
+    "name": "kextload",
+    "summary": "load kernel extensions (kexts) into the kernel"
+  },
+  {
+    "name": "kextstat",
+    "summary": "display status of loaded kernel extensions (kexts)"
+  },
+  {
+    "name": "kextunload",
+    "summary": "terminate driver I/O Kit driver instances and unload kernel extensions (kexts)"
+  },
+  {
+    "name": "kextutil",
+    "summary": "load, diagnose problems with, and generate symbols for kernel extensions (kexts)"
+  },
+  {
+    "name": "keytool",
+    "summary": "a key and certificate management utility"
+  },
+  {
+    "name": "kgetcred",
+    "summary": "get a ticket for a particular service"
+  },
+  {
+    "name": "kill",
+    "summary": "shell built-in commands"
+  },
+  {
+    "name": "kill.d",
+    "summary": "snoop process signals as they occur. Uses DTrace"
+  },
+  {
+    "name": "killall",
+    "summary": "kill processes by name"
+  },
+  {
+    "name": "kinit",
+    "summary": "acquire initial tickets"
+  },
+  {
+    "name": "kissat",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "klist",
+    "summary": "list Kerberos credentials"
+  },
+  {
+    "name": "klist_cdhashes",
+    "summary": "reports information about kexts that have been approved via SKEL"
+  },
+  {
+    "name": "kpasswd",
+    "summary": "Kerberos 5 password changing program"
+  },
+  {
+    "name": "krb5-config",
+    "summary": "give information on how to link code against Heimdal libraries"
+  },
+  {
+    "name": "krbservicesetup",
+    "summary": "Kerberos Open Directory Single Sign On"
+  },
+  {
+    "name": "ksba-config",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "ksh",
+    "summary": "{"
+  },
+  {
+    "name": "kswitch",
+    "summary": "switch between default credential caches"
+  },
+  {
+    "name": "ktrace",
+    "summary": "record kernel trace files"
+  },
+  {
+    "name": "ktutil",
+    "summary": "manage Kerberos keytabs"
+  },
+  {
+    "name": "labelg",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "lam",
+    "summary": "laminate files"
+  },
+  {
+    "name": "lame",
+    "summary": "create mp3 audio files"
+  },
+  {
+    "name": "languagesetup",
+    "summary": "Set the primary language for the system"
+  },
+  {
+    "name": "last",
+    "summary": "indicate last logins of users and ttys"
+  },
+  {
+    "name": "lastcomm",
+    "summary": "show last commands executed in reverse order"
+  },
+  {
+    "name": "lastwords",
+    "summary": "print syscalls before exit. Uses DTrace"
+  },
+  {
+    "name": "latency",
+    "summary": "monitors scheduling and interrupt latency"
+  },
+  {
+    "name": "launchctl",
+    "summary": "Interfaces with launchd"
+  },
+  {
+    "name": "launchd",
+    "summary": "System wide and per-user daemon/agent manager"
+  },
+  {
+    "name": "layerutil",
+    "summary": "create compiled layered image stack"
+  },
+  {
+    "name": "ld",
+    "summary": "linker"
+  },
+  {
+    "name": "ldapadd",
+    "summary": "LDAP modify entry and LDAP add entry tools"
+  },
+  {
+    "name": "ldapcompare",
+    "summary": "LDAP compare tool"
+  },
+  {
+    "name": "ldapdelete",
+    "summary": "LDAP delete entry tool"
+  },
+  {
+    "name": "ldapexop",
+    "summary": "issue LDAP extended operations"
+  },
+  {
+    "name": "ldapmodify",
+    "summary": "LDAP modify entry and LDAP add entry tools"
+  },
+  {
+    "name": "ldapmodrdn",
+    "summary": "LDAP rename entry tool"
+  },
+  {
+    "name": "ldappasswd",
+    "summary": "change the password of an LDAP entry"
+  },
+  {
+    "name": "ldapsearch",
+    "summary": "LDAP search tool"
+  },
+  {
+    "name": "ldapurl",
+    "summary": "LDAP URL formatting tool"
+  },
+  {
+    "name": "ldapwhoami",
+    "summary": "LDAP who am i? tool"
+  },
+  {
+    "name": "leaks",
+    "summary": "Search a process's memory for unreferenced malloc buffers"
+  },
+  {
+    "name": "leave",
+    "summary": "remind you when you have to leave"
+  },
+  {
+    "name": "less",
+    "summary": "display the contents of a file in a terminal"
+  },
+  {
+    "name": "lessecho",
+    "summary": "expand metacharacters"
+  },
+  {
+    "name": "lesskey",
+    "summary": "customize key bindings for less"
+  },
+  {
+    "name": "libassuan-config",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "libgcrypt-config",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "libnetcfg",
+    "summary": "configure libnet"
+  },
+  {
+    "name": "libpng-config",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "libpng16-config",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "libtool",
+    "summary": "create static libraries ranlib - add or update the table of contents of archive libraries"
+  },
+  {
+    "name": "lightpanda",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "linear",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "linegraphg",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "link",
+    "summary": "link files"
+  },
+  {
+    "name": "linkicc",
+    "summary": "little cms device link generator"
+  },
+  {
+    "name": "lint",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "lipo",
+    "summary": "create or operate on universal files"
+  },
+  {
+    "name": "listg",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "listsuites",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "lldb",
+    "summary": "LLDB Documentation"
+  },
+  {
+    "name": "ln",
+    "summary": "link files"
+  },
+  {
+    "name": "loads.d",
+    "summary": "print load averages. Uses DTrace"
+  },
+  {
+    "name": "locale",
+    "summary": "display locale settings"
+  },
+  {
+    "name": "localedef",
+    "summary": "define locale environment"
+  },
+  {
+    "name": "localemanager",
+    "summary": "Configure OpenDirectory Server Locales"
+  },
+  {
+    "name": "locate",
+    "summary": "find filenames quickly"
+  },
+  {
+    "name": "lockf",
+    "summary": "execute a command while holding a file lock"
+  },
+  {
+    "name": "lockstat",
+    "summary": "report kernel lock and profiling statistics"
+  },
+  {
+    "name": "log",
+    "summary": "shell built-in commands"
+  },
+  {
+    "name": "logger",
+    "summary": "make entries in the system log"
+  },
+  {
+    "name": "login",
+    "summary": "shell built-in commands"
+  },
+  {
+    "name": "logname",
+    "summary": "display user's login name"
+  },
+  {
+    "name": "logresolve",
+    "summary": "Resolve IP-addresses to hostnames in Apache log files"
+  },
+  {
+    "name": "look",
+    "summary": "display lines beginning with a given string"
+  },
+  {
+    "name": "lorder",
+    "summary": "list dependencies for object files"
+  },
+  {
+    "name": "loudnorm.rb",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "lp",
+    "summary": "print files"
+  },
+  {
+    "name": "lpadmin",
+    "summary": "configure cups printers and classes"
+  },
+  {
+    "name": "lpc",
+    "summary": "line printer control program (deprecated)"
+  },
+  {
+    "name": "lpinfo",
+    "summary": "show available devices or drivers (deprecated)"
+  },
+  {
+    "name": "lpmove",
+    "summary": "move a job or all jobs to a new destination"
+  },
+  {
+    "name": "lpoptions",
+    "summary": "display or set printer options and defaults"
+  },
+  {
+    "name": "lpq",
+    "summary": "show printer queue status"
+  },
+  {
+    "name": "lpr",
+    "summary": "print files"
+  },
+  {
+    "name": "lprm",
+    "summary": "cancel print jobs"
+  },
+  {
+    "name": "lpstat",
+    "summary": "print cups status information"
+  },
+  {
+    "name": "ls",
+    "summary": "list directory contents"
+  },
+  {
+    "name": "lsappinfo",
+    "summary": "Control and query CoreApplicationServices about the app state on the system"
+  },
+  {
+    "name": "lsbom",
+    "summary": "list contents of a bom file"
+  },
+  {
+    "name": "lskq",
+    "summary": "display process kqueue state"
+  },
+  {
+    "name": "lsm",
+    "summary": "Latent Semantic Mapping tool"
+  },
+  {
+    "name": "lsmp",
+    "summary": "Display mach port information for processes on the system"
+  },
+  {
+    "name": "lsof",
+    "summary": "list open files"
+  },
+  {
+    "name": "lstmeval",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "lstmtraining",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "lsvfs",
+    "summary": "list installed virtual file systems"
+  },
+  {
+    "name": "lto-dump-16",
+    "summary": "Tool for dumping LTO object files"
+  },
+  {
+    "name": "lwp-download",
+    "summary": "Fetch large files from the web"
+  },
+  {
+    "name": "lwp-dump",
+    "summary": "See what headers and content is returned for a URL"
+  },
+  {
+    "name": "lwp-mirror",
+    "summary": "Simple mirror utility"
+  },
+  {
+    "name": "lwp-request",
+    "summary": "Simple command line user agent"
+  },
+  {
+    "name": "lz4",
+    "summary": "lz4, unlz4, lz4cat - Compress or decompress .lz4 files"
+  },
+  {
+    "name": "lz4c",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "lz4cat",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "lzcat",
+    "summary": "Compress or decompress .xz and .lzma files"
+  },
+  {
+    "name": "lzcmp",
+    "summary": "compare compressed files"
+  },
+  {
+    "name": "lzdiff",
+    "summary": "compare compressed files"
+  },
+  {
+    "name": "lzegrep",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "lzfgrep",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "lzgrep",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "lzless",
+    "summary": "view xz or lzma compressed (text) files"
+  },
+  {
+    "name": "lzma",
+    "summary": "Compress or decompress .xz and .lzma files"
+  },
+  {
+    "name": "lzmadec",
+    "summary": "Small .xz and .lzma decompressors"
+  },
+  {
+    "name": "lzmainfo",
+    "summary": "show information stored in the .lzma file header"
+  },
+  {
+    "name": "lzmore",
+    "summary": "view xz or lzma compressed (text) files"
+  },
+  {
+    "name": "m4",
+    "summary": "macro language processor"
+  },
+  {
+    "name": "mDNSResponder",
+    "summary": "Multicast and Unicast DNS daemon"
+  },
+  {
+    "name": "mDNSResponderHelper",
+    "summary": "mDNS privilege separation helper"
+  },
+  {
+    "name": "macbinary",
+    "summary": "encode and decode files"
+  },
+  {
+    "name": "machine",
+    "summary": "print machine type"
+  },
+  {
+    "name": "mactime",
+    "summary": "Create an ASCII time line of file activity"
+  },
+  {
+    "name": "mail",
+    "summary": "send and receive mail"
+  },
+  {
+    "name": "mailx",
+    "summary": "send and receive mail"
+  },
+  {
+    "name": "make",
+    "summary": "GNU make utility to maintain groups of programs"
+  },
+  {
+    "name": "make_chlayout_test",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "makepqg",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "malloc_history",
+    "summary": "Show the malloc and anonymous VM allocations that the process has performed"
+  },
+  {
+    "name": "man",
+    "summary": "display online manual documentation pages"
+  },
+  {
+    "name": "mandoc",
+    "summary": "format manual pages"
+  },
+  {
+    "name": "mangle",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "manpath",
+    "summary": "display search path for manual pages"
+  },
+  {
+    "name": "markdown-it",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "mcxquery",
+    "summary": "Managed Client (MCX) compositor query tool"
+  },
+  {
+    "name": "mcxrefresh",
+    "summary": "Managed Client (MCX) preference refresh tool"
+  },
+  {
+    "name": "md5",
+    "summary": "calculate a message-digest fingerprint (checksum) for a file"
+  },
+  {
+    "name": "md5sum",
+    "summary": "calculate a message-digest fingerprint (checksum) for a file"
+  },
+  {
+    "name": "mddiagnose",
+    "summary": "gather information to aid in diagnosing Spotlight issues"
+  },
+  {
+    "name": "mdfind",
+    "summary": "finds files matching a given query"
+  },
+  {
+    "name": "mdimport",
+    "summary": "import file hierarchies into the metadata datastore"
+  },
+  {
+    "name": "mdls",
+    "summary": "lists the metadata attributes for the specified file"
+  },
+  {
+    "name": "mdutil",
+    "summary": "manage the metadata stores used by Spotlight"
+  },
+  {
+    "name": "memory_pressure",
+    "summary": "Tool to apply real or simulate memory pressure on the system"
+  },
+  {
+    "name": "merge-all-source-plugins",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "merge_unicharsets",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "mesg",
+    "summary": "display (do not display) messages from other users"
+  },
+  {
+    "name": "mftraining",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "mg",
+    "summary": "emacs-like text editor"
+  },
+  {
+    "name": "mib2c",
+    "summary": "-- generate template code for extending the agent"
+  },
+  {
+    "name": "mib2c-update",
+    "summary": "script to merge custom code into updated mib2c code"
+  },
+  {
+    "name": "mig",
+    "summary": "Mach Interface Generator"
+  },
+  {
+    "name": "minisign",
+    "summary": "A dead simple tool to sign files and verify signatures"
+  },
+  {
+    "name": "minitest",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "missing_codec_desc",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "mkbom",
+    "summary": "create a bill-of-materials file"
+  },
+  {
+    "name": "mkdir",
+    "summary": "make directories"
+  },
+  {
+    "name": "mkextunpack",
+    "summary": "extract or list the contents of a multikext (mkext) archive"
+  },
+  {
+    "name": "mkfifo",
+    "summary": "make fifos"
+  },
+  {
+    "name": "mkfile",
+    "summary": "create a file"
+  },
+  {
+    "name": "mknod",
+    "summary": "make device special file"
+  },
+  {
+    "name": "mkpassdb",
+    "summary": "Mac OS X Server Password Server database creation tool"
+  },
+  {
+    "name": "mktemp",
+    "summary": "make temporary file name (unique)"
+  },
+  {
+    "name": "mlx.distributed_config",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "mlx.launch",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "mlx_lm",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "mlx_lm.awq",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "mlx_lm.benchmark",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "mlx_lm.cache_prompt",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "mlx_lm.chat",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "mlx_lm.convert",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "mlx_lm.dwq",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "mlx_lm.dynamic_quant",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "mlx_lm.evaluate",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "mlx_lm.fuse",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "mlx_lm.generate",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "mlx_lm.gptq",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "mlx_lm.lora",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "mlx_lm.manage",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "mlx_lm.perplexity",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "mlx_lm.server",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "mlx_lm.share",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "mlx_lm.upload",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "mmcat",
+    "summary": "Output the contents of a partition to stdout"
+  },
+  {
+    "name": "mmdc",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "mmls",
+    "summary": "Display the partition layout of a volume system  (partition tables)"
+  },
+  {
+    "name": "mmstat",
+    "summary": "Display details about the volume system (partition tables)"
+  },
+  {
+    "name": "mnthome",
+    "summary": "mount an AFP (AppleShare) home directory with the correct privileges"
+  },
+  {
+    "name": "modutil",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "mount",
+    "summary": "mount file systems"
+  },
+  {
+    "name": "mount_9p",
+    "summary": "mount a 9P volume"
+  },
+  {
+    "name": "mount_afp",
+    "summary": "mount an afp (AppleShare) filesystem"
+  },
+  {
+    "name": "mount_apfs",
+    "summary": "mount an APFS volume"
+  },
+  {
+    "name": "mount_cd9660",
+    "summary": "mount an ISO-9660 filesystem"
+  },
+  {
+    "name": "mount_cddafs",
+    "summary": "mount an Audio CD"
+  },
+  {
+    "name": "mount_exfat",
+    "summary": "mount an ExFAT file system"
+  },
+  {
+    "name": "mount_fdesc",
+    "summary": "mount the file-descriptor file system"
+  },
+  {
+    "name": "mount_ftp",
+    "summary": "mount a FTP filesystem"
+  },
+  {
+    "name": "mount_hfs",
+    "summary": "mount an HFS+ file system"
+  },
+  {
+    "name": "mount_msdos",
+    "summary": "mount an MS-DOS file system"
+  },
+  {
+    "name": "mount_nfs",
+    "summary": "mount NFS file systems"
+  },
+  {
+    "name": "mount_smbfs",
+    "summary": "mount a shared resource from an SMB file server"
+  },
+  {
+    "name": "mount_tmpfs",
+    "summary": "mount a tmpfs volume"
+  },
+  {
+    "name": "mount_udf",
+    "summary": "mount a UDF filesystem"
+  },
+  {
+    "name": "mount_virtiofs",
+    "summary": "mount a virtio-fs volume"
+  },
+  {
+    "name": "mount_webdav",
+    "summary": "mount a WebDAV filesystem"
+  },
+  {
+    "name": "mp2bug",
+    "summary": "mod_perl bug report generator"
+  },
+  {
+    "name": "mpg123",
+    "summary": "play audio MPEG 1.0/2.0/2.5 stream (layers 1, 2 and 3)"
+  },
+  {
+    "name": "mpg123-id3dump",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "mpg123-strip",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "mpicalc",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "mpioutil",
+    "summary": "Tool for configuring paths to multipathed logical units"
+  },
+  {
+    "name": "msgattrib",
+    "summary": "attribute matching and manipulation on message catalog"
+  },
+  {
+    "name": "msgcat",
+    "summary": "combines several message catalogs"
+  },
+  {
+    "name": "msgcmp",
+    "summary": "compare message catalog and template"
+  },
+  {
+    "name": "msgcomm",
+    "summary": "match two message catalogs"
+  },
+  {
+    "name": "msgconv",
+    "summary": "character set conversion for message catalog"
+  },
+  {
+    "name": "msgen",
+    "summary": "create English message catalog"
+  },
+  {
+    "name": "msgexec",
+    "summary": "process translations of message catalog"
+  },
+  {
+    "name": "msgfilter",
+    "summary": "edit translations of message catalog"
+  },
+  {
+    "name": "msgfmt",
+    "summary": "compile message catalog to binary format"
+  },
+  {
+    "name": "msggrep",
+    "summary": "pattern matching on message catalog"
+  },
+  {
+    "name": "msginit",
+    "summary": "initialize a message catalog"
+  },
+  {
+    "name": "msgmerge",
+    "summary": "merge message catalog and template"
+  },
+  {
+    "name": "msgpre",
+    "summary": "pretranslate a message catalog"
+  },
+  {
+    "name": "msgunfmt",
+    "summary": "uncompile message catalog from binary format"
+  },
+  {
+    "name": "msguniq",
+    "summary": "unify duplicate translations in message catalog"
+  },
+  {
+    "name": "mtree",
+    "summary": "map a directory hierarchy"
+  },
+  {
+    "name": "multig",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "multinit",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "murge",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "mv",
+    "summary": "move files"
+  },
+  {
+    "name": "nbdst",
+    "summary": "NetBoot deferred shadow tool"
+  },
+  {
+    "name": "nbrhoodg",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "nc",
+    "summary": "arbitrary TCP and UDP connections and listens"
+  },
+  {
+    "name": "ncal",
+    "summary": "displays a calendar and the date of Easter"
+  },
+  {
+    "name": "ncctl",
+    "summary": "Control NFS kernel credentials"
+  },
+  {
+    "name": "ncurses5.4-config",
+    "summary": "helper script for ncurses libraries"
+  },
+  {
+    "name": "ndp",
+    "summary": "control/diagnose IPv6 neighbor discovery protocol"
+  },
+  {
+    "name": "net-server",
+    "summary": "Base Net::Server starting module"
+  },
+  {
+    "name": "net-snmp-config",
+    "summary": "returns information about installed net-snmp libraries and binaries"
+  },
+  {
+    "name": "net-snmp-create-v3-user",
+    "summary": "create a SNMPv3 user in net-snmp configuration file"
+  },
+  {
+    "name": "netbiosd",
+    "summary": "NetBIOS protocol daemon"
+  },
+  {
+    "name": "netstat",
+    "summary": "show network status"
+  },
+  {
+    "name": "nettle-hash",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "nettle-lfib-stream",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "nettle-pbkdf2",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "nettop",
+    "summary": "Display updated information about the network"
+  },
+  {
+    "name": "networkQuality",
+    "summary": "Network quality testing tool"
+  },
+  {
+    "name": "networksetup",
+    "summary": "configuration tool for network settings in System Preferences"
+  },
+  {
+    "name": "newedgeg",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "newfs_apfs",
+    "summary": "construct a new APFS volume"
+  },
+  {
+    "name": "newfs_exfat",
+    "summary": "construct a new ExFAT file system"
+  },
+  {
+    "name": "newfs_fskit",
+    "summary": "construct a new file system using FSKit"
+  },
+  {
+    "name": "newfs_hfs",
+    "summary": "construct a new HFS Plus file system"
+  },
+  {
+    "name": "newfs_msdos",
+    "summary": "construct a new MS-DOS (FAT) file system"
+  },
+  {
+    "name": "newfs_udf",
+    "summary": "construct a new UDF file system"
+  },
+  {
+    "name": "newgrp",
+    "summary": "change to a new group"
+  },
+  {
+    "name": "newproc.d",
+    "summary": "snoop new processes. Uses DTrace"
+  },
+  {
+    "name": "newsyslog",
+    "summary": "maintain system log files to manageable sizes"
+  },
+  {
+    "name": "nfs4mapid",
+    "summary": "shows NFSv4 mappings from uids or gids to over the wire string names and string names to uids or gids"
+  },
+  {
+    "name": "nfsd",
+    "summary": "NFS server daemon"
+  },
+  {
+    "name": "nfsiod",
+    "summary": "local NFS asynchronous I/O"
+  },
+  {
+    "name": "nfsstat",
+    "summary": "display NFS statistics"
+  },
+  {
+    "name": "ngettext",
+    "summary": "translate message and choose plural form"
+  },
+  {
+    "name": "ngrok",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "nice",
+    "summary": "shell built-in commands"
+  },
+  {
+    "name": "nl",
+    "summary": "line numbering filter"
+  },
+  {
+    "name": "nlcontrol",
+    "summary": "NETLOGON secure channel utility"
+  },
+  {
+    "name": "nm",
+    "summary": "display name list (symbol table)"
+  },
+  {
+    "name": "nmedit",
+    "summary": "change global symbols to local symbols"
+  },
+  {
+    "name": "node",
+    "summary": "server-side JavaScript runtime"
+  },
+  {
+    "name": "nohup",
+    "summary": "shell built-in commands"
+  },
+  {
+    "name": "nologin",
+    "summary": "politely refuse a login"
+  },
+  {
+    "name": "nonspr10",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "normalize.py",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "normalizer",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "notifyd",
+    "summary": "notification server"
+  },
+  {
+    "name": "notifyutil",
+    "summary": "notification command line utility"
+  },
+  {
+    "name": "npm",
+    "summary": "javascript package manager"
+  },
+  {
+    "name": "npx",
+    "summary": "Run a command from a local or remote npm package"
+  },
+  {
+    "name": "nslookup",
+    "summary": "query Internet name servers interactively"
+  },
+  {
+    "name": "nspr-config",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "nss-config",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "nss-policy-check",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "nssdefaults",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "nsupdate",
+    "summary": "Dynamic DNS update utility"
+  },
+  {
+    "name": "ntm",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "numpy-config",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "nvram",
+    "summary": "manipulate firmware NVRAM variables"
+  },
+  {
+    "name": "obsidian",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "ocspclnt",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "ocspd",
+    "summary": "OCSP and CRL Daemon"
+  },
+  {
+    "name": "ocspresp",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "ocsptool",
+    "summary": "GnuTLS OCSP tool"
+  },
+  {
+    "name": "od",
+    "summary": "octal, decimal, hex, ASCII dump"
+  },
+  {
+    "name": "odutil",
+    "summary": "allows caller to examine or change state of opendirectoryd(8)"
+  },
+  {
+    "name": "oidcalc",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "omp",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "onig-config",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "open",
+    "summary": "open files and directories"
+  },
+  {
+    "name": "opendiff",
+    "summary": "Use FileMerge to graphically compare or merge file or directories"
+  },
+  {
+    "name": "opensnoop",
+    "summary": "snoop file opens as they occur. Uses DTrace"
+  },
+  {
+    "name": "openssl",
+    "summary": "OpenSSL command line program"
+  },
+  {
+    "name": "opj_compress",
+    "summary": "This program reads in an image of a certain type and converts it to a jpeg2000 file. It is part of the OpenJPEG library. Valid input image extensions are .bmp, .pgm, .pgx, .png, .pnm, .ppm, .raw, .tga, .tif . For PNG resp. TIF it needs libpng resp. libtiff . Valid output image extensions are .j2k, .jp2"
+  },
+  {
+    "name": "opj_decompress",
+    "summary": "This program reads in a jpeg2000 image and converts it to another image type. It is part of the OpenJPEG library. Valid input image extensions are .j2k, .jp2, .j2c, .jpt Valid output image extensions are .bmp, .pgm, .pgx, .png, .pnm, .ppm, .raw, .tga, .tif . For PNG resp. TIF it needs libpng resp. libtiff"
+  },
+  {
+    "name": "opj_dump",
+    "summary": "This program reads in a jpeg2000 image and dumps the contents to stdout. It is part of the OpenJPEG library. Valid input image extensions are .j2k, .jp2, .jpt"
+  },
+  {
+    "name": "osacompile",
+    "summary": "compile AppleScripts and other OSA language scripts"
+  },
+  {
+    "name": "osadecompile",
+    "summary": "display compiled AppleScripts or other OSA language scripts"
+  },
+  {
+    "name": "osalang",
+    "summary": "information about installed OSA languages"
+  },
+  {
+    "name": "osascript",
+    "summary": "execute OSA scripts AppleScript, JavaScript, etc"
+  },
+  {
+    "name": "otctl",
+    "summary": "Command line interface do provide diagnostic information for iCloud Keychain syncing"
+  },
+  {
+    "name": "out123",
+    "summary": "send raw PCM audio or a waveform pattern to an output device"
+  },
+  {
+    "name": "p11-kit",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "p11tool",
+    "summary": "GnuTLS PKCS #11 tool"
+  },
+  {
+    "name": "p7content",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "p7env",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "p7sign",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "p7verify",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "pagesize",
+    "summary": "print system page size"
+  },
+  {
+    "name": "pal2rgb",
+    "summary": "convert a palette color TIFF image to a full color image"
+  },
+  {
+    "name": "pandoc",
+    "summary": "general markup converter"
+  },
+  {
+    "name": "pango-list",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "pango-segmentation",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "pango-view",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "par.pl",
+    "summary": "Make and run Perl Archives"
+  },
+  {
+    "name": "parl",
+    "summary": "Binary PAR Loader"
+  },
+  {
+    "name": "passwd",
+    "summary": "OpenSSL application commands"
+  },
+  {
+    "name": "paste",
+    "summary": "merge corresponding or subsequent lines of files"
+  },
+  {
+    "name": "patch",
+    "summary": "apply a diff file to an original"
+  },
+  {
+    "name": "patcheck",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "pathchk",
+    "summary": "check pathnames"
+  },
+  {
+    "name": "pathopens.d",
+    "summary": "full pathnames opened ok count. Uses DTrace"
+  },
+  {
+    "name": "pax",
+    "summary": "read and write file archives and copy directory hierarchies"
+  },
+  {
+    "name": "pbcopy",
+    "summary": "provide copying and pasting to the pasteboard (the Clipboard) from command line"
+  },
+  {
+    "name": "pbpaste",
+    "summary": "provide copying and pasting to the pasteboard (the Clipboard) from command line"
+  },
+  {
+    "name": "pcap-config",
+    "summary": "write libpcap compiler and linker flags to standard output"
+  },
+  {
+    "name": "pcre2-config",
+    "summary": "program to return PCRE2 configuration"
+  },
+  {
+    "name": "pcre2grep",
+    "summary": "a grep with Perl-compatible regular expressions"
+  },
+  {
+    "name": "pcre2test",
+    "summary": "a program for testing Perl-compatible regular expressions"
+  },
+  {
+    "name": "pdfattach",
+    "summary": "Portable Document Format (PDF) document embedded file creator (version 3.03)"
+  },
+  {
+    "name": "pdfdetach",
+    "summary": "Portable Document Format (PDF) document embedded file extractor (version 3.03)"
+  },
+  {
+    "name": "pdffonts",
+    "summary": "Portable Document Format (PDF) font analyzer (version 3.03)"
+  },
+  {
+    "name": "pdfimages",
+    "summary": "Portable Document Format (PDF) image extractor (version 3.03)"
+  },
+  {
+    "name": "pdfinfo",
+    "summary": "Portable Document Format (PDF) document information extractor (version 3.03)"
+  },
+  {
+    "name": "pdfseparate",
+    "summary": "Portable Document Format (PDF) page extractor"
+  },
+  {
+    "name": "pdfsig",
+    "summary": "Portable Document Format (PDF) digital signatures tool"
+  },
+  {
+    "name": "pdftocairo",
+    "summary": "Portable Document Format (PDF) to PNG/JPEG/TIFF/PDF/PS/EPS/SVG using cairo"
+  },
+  {
+    "name": "pdftohtml",
+    "summary": "program to convert PDF files into HTML, XML and PNG images"
+  },
+  {
+    "name": "pdftoppm",
+    "summary": "Portable Document Format (PDF) to Portable Pixmap (PPM) converter (version 3.03)"
+  },
+  {
+    "name": "pdftops",
+    "summary": "Portable Document Format (PDF) to PostScript converter (version 3.03)"
+  },
+  {
+    "name": "pdftotext",
+    "summary": "Portable Document Format (PDF) to text converter (version 3.03)"
+  },
+  {
+    "name": "pdfunite",
+    "summary": "Portable Document Format (PDF) page merger"
+  },
+  {
+    "name": "pdisk",
+    "summary": "Apple partition table editor"
+  },
+  {
+    "name": "perl",
+    "summary": "The Perl 5 language interpreter"
+  },
+  {
+    "name": "perlbug",
+    "summary": "how to submit bug reports on Perl"
+  },
+  {
+    "name": "perldoc",
+    "summary": "Look up Perl documentation in Pod format"
+  },
+  {
+    "name": "perlivp",
+    "summary": "Perl Installation Verification Procedure"
+  },
+  {
+    "name": "pfctl",
+    "summary": "control the packet filter (PF) and network address translation (NAT) device"
+  },
+  {
+    "name": "pgrep",
+    "summary": "find or signal processes by name"
+  },
+  {
+    "name": "pi",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "pickg",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "pico",
+    "summary": "simple text editor in the style of the Alpine Composer"
+  },
+  {
+    "name": "piconv",
+    "summary": "-- iconv(1), reinvented in perl"
+  },
+  {
+    "name": "pidpersec.d",
+    "summary": "print new PIDs per sec. Uses DTrace"
+  },
+  {
+    "name": "pinentry",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "pinentry-curses",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "pinentry-tty",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "ping",
+    "summary": "send ICMP ECHO_REQUEST packets to network hosts"
+  },
+  {
+    "name": "ping6",
+    "summary": "send ICMPv6 ECHO_REQUEST packets to network hosts"
+  },
+  {
+    "name": "pip3",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "pip3.14",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "pk11ectest",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "pk11gcmtest",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "pk11importtest",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "pk11mode",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "pk12util",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "pk1sign",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "pkcs1-conv",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "pkgbuild",
+    "summary": "Build a macOS Installer component package from on-disk files"
+  },
+  {
+    "name": "pkgutil",
+    "summary": "Query and manipulate macOS Installer packages and receipts"
+  },
+  {
+    "name": "pkill",
+    "summary": "find or signal processes by name"
+  },
+  {
+    "name": "pkix-errcodes",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "pktdumper",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "pl",
+    "summary": "ASCII property list utility"
+  },
+  {
+    "name": "pl2pm",
+    "summary": "Rough tool to translate Perl4 .pl files to Perl5 .pm modules"
+  },
+  {
+    "name": "planarg",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "plockstat",
+    "summary": "front-end to DTrace to print statistics about POSIX mutexes and read/write locks"
+  },
+  {
+    "name": "plotframes",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "pluginkit",
+    "summary": "plugin plug-in extension pluginkit"
+  },
+  {
+    "name": "plutil",
+    "summary": "property list utility"
+  },
+  {
+    "name": "pmset",
+    "summary": "manipulate power management settings"
+  },
+  {
+    "name": "png-fix-itxt",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "pngfix",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "po-fetch",
+    "summary": "fetches a set of PO files from a translation project's site"
+  },
+  {
+    "name": "pod2html",
+    "summary": "convert .pod files to .html files"
+  },
+  {
+    "name": "pod2man",
+    "summary": "Convert POD data to formatted *roff input"
+  },
+  {
+    "name": "pod2readme",
+    "summary": "Intelligently generate a README file from POD"
+  },
+  {
+    "name": "pod2text",
+    "summary": "Convert POD data to formatted ASCII text"
+  },
+  {
+    "name": "pod2usage",
+    "summary": "print usage messages from embedded pod docs in files"
+  },
+  {
+    "name": "podchecker",
+    "summary": "check the syntax of POD format documentation files"
+  },
+  {
+    "name": "postalias",
+    "summary": "Postfix alias database maintenance"
+  },
+  {
+    "name": "postcat",
+    "summary": "show Postfix queue file contents"
+  },
+  {
+    "name": "postconf",
+    "summary": "Postfix configuration utility"
+  },
+  {
+    "name": "postdrop",
+    "summary": "Postfix mail posting utility"
+  },
+  {
+    "name": "postfix",
+    "summary": "Postfix control program"
+  },
+  {
+    "name": "postkick",
+    "summary": "kick a Postfix service"
+  },
+  {
+    "name": "postlock",
+    "summary": "lock mail folder and execute command"
+  },
+  {
+    "name": "postlog",
+    "summary": "Postfix-compatible logging utility"
+  },
+  {
+    "name": "postmap",
+    "summary": "Postfix lookup table management"
+  },
+  {
+    "name": "postmulti",
+    "summary": "Postfix multi-instance manager"
+  },
+  {
+    "name": "postqueue",
+    "summary": "Postfix queue control"
+  },
+  {
+    "name": "postsuper",
+    "summary": "Postfix superintendent"
+  },
+  {
+    "name": "pp",
+    "summary": "PAR Packager"
+  },
+  {
+    "name": "ppdc",
+    "summary": "cups ppd compiler (deprecated)"
+  },
+  {
+    "name": "ppdhtml",
+    "summary": "cups html summary generator (deprecated)"
+  },
+  {
+    "name": "ppdi",
+    "summary": "import ppd files (deprecated)"
+  },
+  {
+    "name": "ppdmerge",
+    "summary": "merge ppd files (deprecated)"
+  },
+  {
+    "name": "ppdpo",
+    "summary": "ppd message catalog generator (deprecated)"
+  },
+  {
+    "name": "ppm2tiff",
+    "summary": "create a TIFF file from PPM, PGM and PBM image files Synopsis ppm2tiff [ options ] [ input.ppm ] output.tif"
+  },
+  {
+    "name": "pppd",
+    "summary": "Point-to-Point Protocol Daemon"
+  },
+  {
+    "name": "pr",
+    "summary": "print files"
+  },
+  {
+    "name": "praudit",
+    "summary": "print the contents of audit trail files"
+  },
+  {
+    "name": "priclass.d",
+    "summary": "priority distribution by scheduling class. Uses DTrace"
+  },
+  {
+    "name": "pridist.d",
+    "summary": "process priority distribution. Uses DTrace"
+  },
+  {
+    "name": "printenv",
+    "summary": "shell built-in commands"
+  },
+  {
+    "name": "printf",
+    "summary": "shell built-in commands"
+  },
+  {
+    "name": "printf_gettext",
+    "summary": "translate format string and apply it"
+  },
+  {
+    "name": "printf_ngettext",
+    "summary": "translate format string and apply it"
+  },
+  {
+    "name": "probetest",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "procsystime",
+    "summary": "analyse system call times. Uses DTrace"
+  },
+  {
+    "name": "productbuild",
+    "summary": "Build a product archive for the macOS Installer or the Mac App Store"
+  },
+  {
+    "name": "productg",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "productsign",
+    "summary": "Sign a macOS Installer product archive"
+  },
+  {
+    "name": "profgen",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "profiles",
+    "summary": "Profiles Tool"
+  },
+  {
+    "name": "protoc",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "protoc-36.0.0",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "protoc-gen-upb",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "protoc-gen-upb-36.0.0",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "protoc-gen-upb_minitable",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "protoc-gen-upb_minitable-36.0.0",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "protoc-gen-upbdefs",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "protoc-gen-upbdefs-36.0.0",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "prove",
+    "summary": "Run tests through a TAP harness"
+  },
+  {
+    "name": "ps",
+    "summary": "process status"
+  },
+  {
+    "name": "psicc",
+    "summary": "little cms PostScript converter"
+  },
+  {
+    "name": "psktool",
+    "summary": "GnuTLS PSK tool"
+  },
+  {
+    "name": "psm",
+    "summary": "Command line interface to Apple Silicon password slot manager"
+  },
+  {
+    "name": "pstat",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "ptar",
+    "summary": "a tar-like program written in perl"
+  },
+  {
+    "name": "ptardiff",
+    "summary": "program that diffs an extracted archive against an unextracted one"
+  },
+  {
+    "name": "ptargrep",
+    "summary": "Apply pattern matching to the contents of files in a tar archive"
+  },
+  {
+    "name": "purge",
+    "summary": "force disk cache to be purged (flushed and emptied)"
+  },
+  {
+    "name": "pwd",
+    "summary": "shell built-in commands"
+  },
+  {
+    "name": "pwd_mkdb",
+    "summary": "generate the password databases"
+  },
+  {
+    "name": "pwdecrypt",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "pwpolicy",
+    "summary": "gets and sets password policies"
+  },
+  {
+    "name": "pydoc3",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "pydoc3.14",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "pygmentize",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "python",
+    "summary": "an interpreted, interactive, object-oriented programming language"
+  },
+  {
+    "name": "python3",
+    "summary": "an interpreted, interactive, object-oriented programming language"
+  },
+  {
+    "name": "python3-config",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "python3.14",
+    "summary": "an interpreted, interactive, object-oriented programming language"
+  },
+  {
+    "name": "python3.14-config",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "pzstd",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "qlmanage",
+    "summary": "Quick Look Server debug and management tool"
+  },
+  {
+    "name": "qt-faststart",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "quota",
+    "summary": "display disk usage and limits"
+  },
+  {
+    "name": "quotacheck",
+    "summary": "filesystem quota consistency checker"
+  },
+  {
+    "name": "quotaoff",
+    "summary": "turn filesystem quotas on and off"
+  },
+  {
+    "name": "quotaon",
+    "summary": "turn filesystem quotas on and off"
+  },
+  {
+    "name": "r8",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "racc",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "racoon",
+    "summary": "IKE (ISAKMP/Oakley) key management daemon"
+  },
+  {
+    "name": "rake",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "ranlabg",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "ransubg",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "rarpd",
+    "summary": "Reverse ARP Daemon"
+  },
+  {
+    "name": "raw2tiff",
+    "summary": "create a TIFF file from a raw data file"
+  },
+  {
+    "name": "rbs",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "rdbg",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "rdjpgcom",
+    "summary": "display text comments from a JPEG file"
+  },
+  {
+    "name": "rdoc",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "read",
+    "summary": "shell built-in commands"
+  },
+  {
+    "name": "readlink",
+    "summary": "display file status"
+  },
+  {
+    "name": "realpath",
+    "summary": "return resolved physical path"
+  },
+  {
+    "name": "reboot",
+    "summary": "stopping and restarting the system"
+  },
+  {
+    "name": "recode-sr-latin",
+    "summary": "convert Serbian text from Cyrillic to Latin script"
+  },
+  {
+    "name": "remtest",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "renice",
+    "summary": "alter priority of running processes"
+  },
+  {
+    "name": "repquota",
+    "summary": "summarize quotas for a file system"
+  },
+  {
+    "name": "reset",
+    "summary": "terminal initialization"
+  },
+  {
+    "name": "resolveLinks",
+    "summary": "Resolves link requests in collections of HTML files"
+  },
+  {
+    "name": "resourceshrinker",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "retrace",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "rev",
+    "summary": "reverse lines of a file"
+  },
+  {
+    "name": "rg",
+    "summary": "recursively search the current directory for lines matching a pattern"
+  },
+  {
+    "name": "ri",
+    "summary": "Ruby API reference front end"
+  },
+  {
+    "name": "rm",
+    "summary": "remove directory entries"
+  },
+  {
+    "name": "rmdir",
+    "summary": "remove directories"
+  },
+  {
+    "name": "rmiregistry",
+    "summary": "create and start a remote object registry on the specified port on the current host"
+  },
+  {
+    "name": "rmlint",
+    "summary": "find duplicate files and other space waste efficiently"
+  },
+  {
+    "name": "rotatelogs",
+    "summary": "Piped logging program to rotate Apache logs"
+  },
+  {
+    "name": "route",
+    "summary": "manually manipulate the routing tables"
+  },
+  {
+    "name": "rpc.lockd",
+    "summary": "NFS file locking daemon"
+  },
+  {
+    "name": "rpc.statd",
+    "summary": "host status monitoring daemon"
+  },
+  {
+    "name": "rpcbind",
+    "summary": "portmap"
+  },
+  {
+    "name": "rpcgen",
+    "summary": "Remote Procedure Call (RPC) protocol compiler"
+  },
+  {
+    "name": "rpcinfo",
+    "summary": "report RPC information"
+  },
+  {
+    "name": "rrsync",
+    "summary": "a script to setup restricted rsync users via ssh logins"
+  },
+  {
+    "name": "rs",
+    "summary": "reshape a data array"
+  },
+  {
+    "name": "rsaperf",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "rsapoptst",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "rsync",
+    "summary": "a fast, versatile, local/remote file-copying tool"
+  },
+  {
+    "name": "rsync-ssl",
+    "summary": "a helper script for connecting to an ssl rsync daemon"
+  },
+  {
+    "name": "rtadvd",
+    "summary": "router advertisement daemon"
+  },
+  {
+    "name": "rtk",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "ruby",
+    "summary": "Interpreted object-oriented scripting language"
+  },
+  {
+    "name": "rwbypid.d",
+    "summary": "read/write calls by PID. Uses DTrace"
+  },
+  {
+    "name": "rwbytype.d",
+    "summary": "read/write bytes by vnode type. Uses DTrace"
+  },
+  {
+    "name": "rwsnoop",
+    "summary": "snoop read/write events. Uses DTrace"
+  },
+  {
+    "name": "sa",
+    "summary": "print system accounting statistics"
+  },
+  {
+    "name": "safaridriver",
+    "summary": "Safari WebDriver REST API service"
+  },
+  {
+    "name": "sample",
+    "summary": "Profile a process during a time interval"
+  },
+  {
+    "name": "sampleproc",
+    "summary": "sample processes on the CPUs. Uses DTrace"
+  },
+  {
+    "name": "sandbox-exec",
+    "summary": "execute within a sandbox (DEPRECATED)"
+  },
+  {
+    "name": "say",
+    "summary": "Convert text to audible speech"
+  },
+  {
+    "name": "sc_auth",
+    "summary": "SmartCard authorization setup script"
+  },
+  {
+    "name": "sc_usage",
+    "summary": "show system call usage statistics"
+  },
+  {
+    "name": "scalar",
+    "summary": "A tool for managing large Git repositories"
+  },
+  {
+    "name": "scale_slice_test",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "scandeps.pl",
+    "summary": "Scan file prerequisites"
+  },
+  {
+    "name": "scp",
+    "summary": "OpenSSH secure file copy"
+  },
+  {
+    "name": "screen",
+    "summary": "screen manager with VT100/ANSI terminal emulation"
+  },
+  {
+    "name": "screencapture",
+    "summary": "capture images from the screen and save them to a file or the clipboard"
+  },
+  {
+    "name": "screenshot2",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "script",
+    "summary": "make typescript of terminal session"
+  },
+  {
+    "name": "scselect",
+    "summary": "Select system configuration location"
+  },
+  {
+    "name": "scutil",
+    "summary": "Manage system configuration parameters"
+  },
+  {
+    "name": "sdbthreadtst",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "sdef",
+    "summary": "scripting definition extractor"
+  },
+  {
+    "name": "sdiff",
+    "summary": "side-by-side diff"
+  },
+  {
+    "name": "sdkmanager",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "sdl2-config",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "sdp",
+    "summary": "scripting definition (sdef) processor"
+  },
+  {
+    "name": "sdrtest",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "sdx",
+    "summary": "Starkit Developer eXtension"
+  },
+  {
+    "name": "searchdiagnose",
+    "summary": "gathers information to aid in diagnosing Spotlight and Search issues"
+  },
+  {
+    "name": "secmodtest",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "security",
+    "summary": "Command line interface to keychains and Security framework"
+  },
+  {
+    "name": "securityd",
+    "summary": "Security context daemon for keychain and cryptographic operations"
+  },
+  {
+    "name": "sed",
+    "summary": "stream editor"
+  },
+  {
+    "name": "seek_print",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "seeksize.d",
+    "summary": "print disk event seek report. Uses DTrace"
+  },
+  {
+    "name": "segedit",
+    "summary": "extract and replace sections from object files"
+  },
+  {
+    "name": "selfserv",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "sendmail",
+    "summary": "Postfix to Sendmail compatibility interface"
+  },
+  {
+    "name": "seq",
+    "summary": "print sequences of numbers"
+  },
+  {
+    "name": "serialver",
+    "summary": "return the serialVersionUID for one or more classes in a form suitable for copying into an evolving class"
+  },
+  {
+    "name": "set_unicharset_properties",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "setkey",
+    "summary": "manually manipulate the IPsec SA/SP database"
+  },
+  {
+    "name": "setquota",
+    "summary": "Sets home directory quotas on the local computer"
+  },
+  {
+    "name": "setuids.d",
+    "summary": "snoop setuid calls as they occur. Uses DTrace"
+  },
+  {
+    "name": "sexp-conv",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "sfltool",
+    "summary": "tool for testing and debugging SharedFileList"
+  },
+  {
+    "name": "sftp",
+    "summary": "OpenSSH secure file transfer"
+  },
+  {
+    "name": "sg",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "sh",
+    "summary": "POSIX-compliant command interpreter"
+  },
+  {
+    "name": "sha1",
+    "summary": "calculate a message-digest fingerprint (checksum) for a file"
+  },
+  {
+    "name": "sha1sum",
+    "summary": "calculate a message-digest fingerprint (checksum) for a file"
+  },
+  {
+    "name": "sha224",
+    "summary": "calculate a message-digest fingerprint (checksum) for a file"
+  },
+  {
+    "name": "sha224sum",
+    "summary": "calculate a message-digest fingerprint (checksum) for a file"
+  },
+  {
+    "name": "sha256",
+    "summary": "calculate a message-digest fingerprint (checksum) for a file"
+  },
+  {
+    "name": "sha256sum",
+    "summary": "calculate a message-digest fingerprint (checksum) for a file"
+  },
+  {
+    "name": "sha384",
+    "summary": "calculate a message-digest fingerprint (checksum) for a file"
+  },
+  {
+    "name": "sha384sum",
+    "summary": "calculate a message-digest fingerprint (checksum) for a file"
+  },
+  {
+    "name": "sha512",
+    "summary": "calculate a message-digest fingerprint (checksum) for a file"
+  },
+  {
+    "name": "sha512sum",
+    "summary": "calculate a message-digest fingerprint (checksum) for a file"
+  },
+  {
+    "name": "shapeclustering",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "shar",
+    "summary": "create a shell archive of files"
+  },
+  {
+    "name": "sharing",
+    "summary": "create share points for smb services"
+  },
+  {
+    "name": "shasum",
+    "summary": "Print or Check SHA Checksums"
+  },
+  {
+    "name": "shazam",
+    "summary": "A utility for ShazamKit"
+  },
+  {
+    "name": "shlibsign",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "shlock",
+    "summary": "create or verify a lock file for shell scripts"
+  },
+  {
+    "name": "shortcuts",
+    "summary": "Command-line utility for running shortcuts"
+  },
+  {
+    "name": "shortg",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "showg",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "showmount",
+    "summary": "show remote NFS mounts on host"
+  },
+  {
+    "name": "shutdown",
+    "summary": "close down the system at a given time"
+  },
+  {
+    "name": "sidxindex",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "sigdist.d",
+    "summary": "signal distribution by process. Uses DTrace"
+  },
+  {
+    "name": "sigfind",
+    "summary": "Find a binary signature in a file"
+  },
+  {
+    "name": "signtool",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "signver",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "sips",
+    "summary": "scriptable image processing system"
+  },
+  {
+    "name": "size",
+    "summary": "print the size of the sections in an object file"
+  },
+  {
+    "name": "skywalkctl",
+    "summary": "Interact with Skywalk subsystem"
+  },
+  {
+    "name": "slapacl",
+    "summary": "Check access to a list of attributes"
+  },
+  {
+    "name": "slapadd",
+    "summary": "Add entries to a SLAPD database"
+  },
+  {
+    "name": "slapauth",
+    "summary": "Check a list of string-represented IDs for LDAP authc/authz"
+  },
+  {
+    "name": "slapcat",
+    "summary": "SLAPD database to LDIF utility"
+  },
+  {
+    "name": "slapconfig",
+    "summary": "-- tool to configure slapd and related daemons"
+  },
+  {
+    "name": "slapdn",
+    "summary": "Check a list of string-represented LDAP DNs based on schema syntax"
+  },
+  {
+    "name": "slapindex",
+    "summary": "Reindex entries in a SLAPD database"
+  },
+  {
+    "name": "slappasswd",
+    "summary": "OpenLDAP password utility"
+  },
+  {
+    "name": "slapschema",
+    "summary": "SLAPD in-database schema checking utility"
+  },
+  {
+    "name": "slaptest",
+    "summary": "Check the suitability of the OpenLDAP slapd configuration"
+  },
+  {
+    "name": "sleep",
+    "summary": "suspend execution for an interval of time"
+  },
+  {
+    "name": "slugify",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "smbd",
+    "summary": "SMB server daemon"
+  },
+  {
+    "name": "smbdiagnose",
+    "summary": "gather information to aid in diagnosing SMB file sharing issues"
+  },
+  {
+    "name": "smbutil",
+    "summary": "interface to the SMB requester"
+  },
+  {
+    "name": "snmp-bridge-mib",
+    "summary": "provide Linux bridge information via SNMP"
+  },
+  {
+    "name": "snmpbulkget",
+    "summary": "communicates with a network entity using SNMP GETBULK requests"
+  },
+  {
+    "name": "snmpbulkwalk",
+    "summary": "retrieve a subtree of management values using SNMP GETBULK requests"
+  },
+  {
+    "name": "snmpconf",
+    "summary": "creates and modifies SNMP configuration files"
+  },
+  {
+    "name": "snmpd",
+    "summary": "daemon to respond to SNMP request packets"
+  },
+  {
+    "name": "snmpdelta",
+    "summary": "Monitor delta differences in SNMP Counter values"
+  },
+  {
+    "name": "snmpdf",
+    "summary": "display disk space usage on a network entity via SNMP"
+  },
+  {
+    "name": "snmpget",
+    "summary": "communicates with a network entity using SNMP GET requests"
+  },
+  {
+    "name": "snmpgetnext",
+    "summary": "communicates with a network entity using SNMP GETNEXT requests"
+  },
+  {
+    "name": "snmpinform",
+    "summary": "sends an SNMP notification to a manager"
+  },
+  {
+    "name": "snmpnetstat",
+    "summary": "display networking status and configuration information from a network entity via SNMP"
+  },
+  {
+    "name": "snmpset",
+    "summary": "communicates with a network entity using SNMP SET requests"
+  },
+  {
+    "name": "snmpstatus",
+    "summary": "retrieves a fixed set of management information from a network entity"
+  },
+  {
+    "name": "snmptable",
+    "summary": "retrieve an SNMP table and display it in tabular form"
+  },
+  {
+    "name": "snmptest",
+    "summary": "communicates with a network entity using SNMP requests"
+  },
+  {
+    "name": "snmptranslate",
+    "summary": "translate MIB OID names between numeric and textual forms"
+  },
+  {
+    "name": "snmptrap",
+    "summary": "sends an SNMP notification to a manager"
+  },
+  {
+    "name": "snmptrapd",
+    "summary": "Receive and log SNMP trap messages"
+  },
+  {
+    "name": "snmpusm",
+    "summary": "creates and maintains SNMPv3 users on a network entity"
+  },
+  {
+    "name": "snmpvacm",
+    "summary": "creates and maintains SNMPv3 View-based Access Control entries on a network entity"
+  },
+  {
+    "name": "snmpwalk",
+    "summary": "retrieve a subtree of management values using SNMP GETNEXT requests"
+  },
+  {
+    "name": "sntp",
+    "summary": "A very Simple Network Time Protocol client program"
+  },
+  {
+    "name": "sntpd",
+    "summary": "very Simple Network Time Protocol server daemon"
+  },
+  {
+    "name": "soelim",
+    "summary": "interpret.so requests in manpages"
+  },
+  {
+    "name": "softwareupdate",
+    "summary": "system software update tool"
+  },
+  {
+    "name": "sort",
+    "summary": "sort or merge records (lines) of text and binary files"
+  },
+  {
+    "name": "sorter",
+    "summary": "Sort files in an image into categories based on file type"
+  },
+  {
+    "name": "source2c",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "spctl",
+    "summary": "SecAssessment system policy security"
+  },
+  {
+    "name": "spfd",
+    "summary": "simple forking daemon to provide SPF query services"
+  },
+  {
+    "name": "spfquery",
+    "summary": "(Mail::SPF) - Checks if a given set of e-mail parameters matches a domain's SPF policy"
+  },
+  {
+    "name": "spindump",
+    "summary": "Profile entire system during a time interval"
+  },
+  {
+    "name": "spit",
+    "summary": "translate some text through a Large Language Model"
+  },
+  {
+    "name": "splain",
+    "summary": "produce verbose warning diagnostics"
+  },
+  {
+    "name": "split",
+    "summary": "split a file into pieces"
+  },
+  {
+    "name": "spm_decode",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "spm_encode",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "spm_export_vocab",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "spm_normalize",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "spm_train",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "spray",
+    "summary": "send many packets to host"
+  },
+  {
+    "name": "sqlite3",
+    "summary": "A command line interface for SQLite version 3"
+  },
+  {
+    "name": "srch_strings",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "ssh",
+    "summary": "OpenSSH remote login client"
+  },
+  {
+    "name": "ssh-add",
+    "summary": "adds private key identities to the OpenSSH authentication agent"
+  },
+  {
+    "name": "ssh-agent",
+    "summary": "OpenSSH authentication agent"
+  },
+  {
+    "name": "ssh-copy-id",
+    "summary": "use locally available keys to authorise logins on a remote machine"
+  },
+  {
+    "name": "ssh-keygen",
+    "summary": "OpenSSH authentication key utility"
+  },
+  {
+    "name": "ssh-keyscan",
+    "summary": "gather SSH public keys from servers"
+  },
+  {
+    "name": "sshd",
+    "summary": "OpenSSH daemon"
+  },
+  {
+    "name": "ssltap",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "sso_util",
+    "summary": "Kerberos Open Directory Single Sign On"
+  },
+  {
+    "name": "stapler",
+    "summary": "Attach and validate tickets for notarized executables"
+  },
+  {
+    "name": "stat",
+    "summary": "display file status"
+  },
+  {
+    "name": "stdbuf",
+    "summary": "change standard streams initial buffering"
+  },
+  {
+    "name": "streamzip",
+    "summary": "create a zip file from stdin"
+  },
+  {
+    "name": "stringdups",
+    "summary": "Identify duplicate strings or other objects in malloc blocks of a target process"
+  },
+  {
+    "name": "strings",
+    "summary": "find the printable strings in a object, or other binary, file"
+  },
+  {
+    "name": "strip",
+    "summary": "remove symbols"
+  },
+  {
+    "name": "strsclnt",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "stty",
+    "summary": "set the options for a terminal device interface"
+  },
+  {
+    "name": "stz",
+    "summary": "Manipulate Streamable Archives"
+  },
+  {
+    "name": "su",
+    "summary": "substitute user identity"
+  },
+  {
+    "name": "subdivideg",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "sudo",
+    "summary": "execute a command as another user"
+  },
+  {
+    "name": "sum",
+    "summary": "display file checksums and block counts"
+  },
+  {
+    "name": "sutf",
+    "summary": "convert encoding of text files"
+  },
+  {
+    "name": "sutf-benchmark",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "sw_vers",
+    "summary": "print macOS system version information"
+  },
+  {
+    "name": "swift",
+    "summary": "-- Safe, fast, and expressive general-purpose programming language"
+  },
+  {
+    "name": "swiftformat",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "symbols",
+    "summary": "display symbol information about a file or process"
+  },
+  {
+    "name": "symbolscache",
+    "summary": "display and modify symbolcache information"
+  },
+  {
+    "name": "symkeyutil",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "sync",
+    "summary": "force completion of pending disk writes (flush cache)"
+  },
+  {
+    "name": "syncthing",
+    "summary": "Syncthing"
+  },
+  {
+    "name": "syntax_suggest",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "syscallbypid.d",
+    "summary": "syscalls by process ID. Uses DTrace"
+  },
+  {
+    "name": "syscallbyproc.d",
+    "summary": "syscalls by process name. Uses DTrace"
+  },
+  {
+    "name": "syscallbysysc.d",
+    "summary": "syscalls by syscall. Uses DTrace"
+  },
+  {
+    "name": "sysctl",
+    "summary": "get or set kernel state"
+  },
+  {
+    "name": "sysdiagnose",
+    "summary": "gathers system-wide diagnostic information helpful in investigating system performance issues"
+  },
+  {
+    "name": "syslog",
+    "summary": "Apple System Log utility"
+  },
+  {
+    "name": "syslogd",
+    "summary": "Apple System Log server"
+  },
+  {
+    "name": "syspolicy_check",
+    "summary": "Check if macOS app is ready for notarization or distribution"
+  },
+  {
+    "name": "system-override",
+    "summary": "configure system overrides"
+  },
+  {
+    "name": "system_profiler",
+    "summary": "reports system hardware and software configuration"
+  },
+  {
+    "name": "systemextensionsctl",
+    "summary": "examine and manage system extensions"
+  },
+  {
+    "name": "systemkeychain",
+    "summary": "creates system keychains and allows keychains to unlock keychains"
+  },
+  {
+    "name": "systemsetup",
+    "summary": "configuration tool for certain machine settings in System Preferences"
+  },
+  {
+    "name": "systemstats",
+    "summary": "summarize system stats"
+  },
+  {
+    "name": "tab2space",
+    "summary": "Utility to expand tabs and ensure consistent line endings"
+  },
+  {
+    "name": "tabs",
+    "summary": "set terminal tabs"
+  },
+  {
+    "name": "tail",
+    "summary": "display the last part of a file"
+  },
+  {
+    "name": "tailscale",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "tailscaled",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "tailspin",
+    "summary": "configure, save and print tailspin output"
+  },
+  {
+    "name": "talk",
+    "summary": "talk to another user"
+  },
+  {
+    "name": "tar",
+    "summary": "manipulate tape archives"
+  },
+  {
+    "name": "target_dec_fate.sh",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "taskinfo",
+    "summary": "display policy information from kernel"
+  },
+  {
+    "name": "taskpolicy",
+    "summary": "execute a program with an altered I/O or scheduling policy or change settings of already running process"
+  },
+  {
+    "name": "tbtdiagnose",
+    "summary": "- collects diagnostic information to help troubleshoot Thunderbolt issues"
+  },
+  {
+    "name": "tccutil",
+    "summary": "manage the privacy database"
+  },
+  {
+    "name": "tclsh",
+    "summary": "Simple shell containing Tcl interpreter"
+  },
+  {
+    "name": "tcpdump",
+    "summary": "dump traffic on a network"
+  },
+  {
+    "name": "tcsh",
+    "summary": "C shell with file name completion and command line editing"
+  },
+  {
+    "name": "tee",
+    "summary": "duplicate standard input"
+  },
+  {
+    "name": "tesseract",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "test",
+    "summary": "shell built-in commands"
+  },
+  {
+    "name": "test-unit",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "text2image",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "textutil",
+    "summary": "text utility"
+  },
+  {
+    "name": "tftp",
+    "summary": "trivial file transfer program"
+  },
+  {
+    "name": "tic",
+    "summary": "the terminfo entry-description compiler"
+  },
+  {
+    "name": "tidy",
+    "summary": "validate, correct, and pretty-print HTML files"
+  },
+  {
+    "name": "tidy_changelog",
+    "summary": "command-line tool for CPAN::Changes"
+  },
+  {
+    "name": "tiff2bw",
+    "summary": "convert a color TIFF image to greyscale"
+  },
+  {
+    "name": "tiff2icns",
+    "summary": "converts TIFF to icns format"
+  },
+  {
+    "name": "tiff2pdf",
+    "summary": "convert a TIFF image to a PDF document"
+  },
+  {
+    "name": "tiff2ps",
+    "summary": "convert TIFF image to PostScript™"
+  },
+  {
+    "name": "tiff2rgba",
+    "summary": "convert a TIFF image to RGBA color space"
+  },
+  {
+    "name": "tiffcmp",
+    "summary": "compare two TIFF files"
+  },
+  {
+    "name": "tiffcp",
+    "summary": "copy (and possibly convert) a TIFF file"
+  },
+  {
+    "name": "tiffcrop",
+    "summary": "select, copy, crop, convert, extract, and/or process one or more TIFF files"
+  },
+  {
+    "name": "tiffdither",
+    "summary": "convert a greyscale TIFF image to bilevel using dithering"
+  },
+  {
+    "name": "tiffdump",
+    "summary": "print verbatim information about TIFF files"
+  },
+  {
+    "name": "tiffinfo",
+    "summary": "print information about TIFF files"
+  },
+  {
+    "name": "tiffmedian",
+    "summary": "apply the median cut algorithm to data in a TIFF file"
+  },
+  {
+    "name": "tiffset",
+    "summary": "set or unset a field in a TIFF header"
+  },
+  {
+    "name": "tiffsplit",
+    "summary": "split a multi-image TIFF into single-image TIFF files"
+  },
+  {
+    "name": "tiffutil",
+    "summary": "tiffutil(1) - manipulates tiff files"
+  },
+  {
+    "name": "tificc",
+    "summary": "little cms ICC profile applier for TIFF"
+  },
+  {
+    "name": "time",
+    "summary": "shell built-in commands"
+  },
+  {
+    "name": "timerfires",
+    "summary": "analyze timers as they fire"
+  },
+  {
+    "name": "timesyncanalyse",
+    "summary": "time synchronization analysis tool"
+  },
+  {
+    "name": "tjbench",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "tkcon",
+    "summary": "Tk console replacement"
+  },
+  {
+    "name": "tkmib",
+    "summary": "an interactive graphical MIB browser for SNMP"
+  },
+  {
+    "name": "tkpp",
+    "summary": "frontend to pp written in Perl/Tk"
+  },
+  {
+    "name": "tmdiagnose",
+    "summary": "gather information to aid in diagnosing Time Machine issues"
+  },
+  {
+    "name": "tmutil",
+    "summary": "Time Machine utility"
+  },
+  {
+    "name": "tmux",
+    "summary": "terminal multiplexer"
+  },
+  {
+    "name": "toe",
+    "summary": "table of (terminfo) entries"
+  },
+  {
+    "name": "top",
+    "summary": "display sorted information about processes"
+  },
+  {
+    "name": "tops",
+    "summary": "perform in-place substitutions on code"
+  },
+  {
+    "name": "topsyscall",
+    "summary": "top syscalls by syscall name. Uses DTrace"
+  },
+  {
+    "name": "topsysproc",
+    "summary": "top syscalls by process name. Uses DTrace"
+  },
+  {
+    "name": "touch",
+    "summary": "change file access and modification times"
+  },
+  {
+    "name": "tput",
+    "summary": "initialize a terminal or query terminfo database"
+  },
+  {
+    "name": "tr",
+    "summary": "translate characters"
+  },
+  {
+    "name": "trace",
+    "summary": "record and modify trace files"
+  },
+  {
+    "name": "traceroute",
+    "summary": "print the route packets take to network host"
+  },
+  {
+    "name": "traceroute6",
+    "summary": "print the route IPv6 packets will take to a network node"
+  },
+  {
+    "name": "transicc",
+    "summary": "little cms ColorSpace conversion calculator"
+  },
+  {
+    "name": "traptoemail",
+    "summary": "snmptrapd handler script to convert snmp traps into emails"
+  },
+  {
+    "name": "trash",
+    "summary": "Moves files and directories to the user trash folder"
+  },
+  {
+    "name": "trasher",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "tree",
+    "summary": "list contents of directories in a tree-like format"
+  },
+  {
+    "name": "treereg",
+    "summary": "Compiler for Tree Regular Expressions"
+  },
+  {
+    "name": "trietool",
+    "summary": "trie manipulation tool"
+  },
+  {
+    "name": "trietool-0.2",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "trimforce",
+    "summary": "enable TRIM commands on third-party drives"
+  },
+  {
+    "name": "true",
+    "summary": "shell built-in commands"
+  },
+  {
+    "name": "truncate",
+    "summary": "truncate, extend the length of files, or perform space management in files"
+  },
+  {
+    "name": "trust",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "trustcachectl",
+    "summary": "Load trust caches and query whether a cd hash is present in a loaded trust cache"
+  },
+  {
+    "name": "tsk_comparedir",
+    "summary": "compare the contents of a directory with the contents of an image or local device"
+  },
+  {
+    "name": "tsk_gettimes",
+    "summary": "Collect MAC times from a disk image into a body file"
+  },
+  {
+    "name": "tsk_imageinfo",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "tsk_loaddb",
+    "summary": "populate a SQLite database with metadata from a disk image"
+  },
+  {
+    "name": "tsk_recover",
+    "summary": "Export files from an image into a local directory"
+  },
+  {
+    "name": "tsort",
+    "summary": "topological sort of a directed graph"
+  },
+  {
+    "name": "tstclnt",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "tty",
+    "summary": "return user's terminal name"
+  },
+  {
+    "name": "twohamg",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "ty",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "type",
+    "summary": "shell built-in commands"
+  },
+  {
+    "name": "typeprof",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "typst",
+    "summary": "The Typst compiler"
+  },
+  {
+    "name": "uasysdiagnose",
+    "summary": "Produce system diagnostics for UserActivity.framework"
+  },
+  {
+    "name": "ubs",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "ug",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "ug+",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "ugrep",
+    "summary": "ug -- file pattern searcher"
+  },
+  {
+    "name": "ugrep+",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "ugrep-indexer",
+    "summary": "-- file indexer to accelerate recursive searching"
+  },
+  {
+    "name": "ul",
+    "summary": "do underlining"
+  },
+  {
+    "name": "ulimit",
+    "summary": "shell built-in commands"
+  },
+  {
+    "name": "umask",
+    "summary": "shell built-in commands"
+  },
+  {
+    "name": "umount",
+    "summary": "unmount filesystems"
+  },
+  {
+    "name": "umtool",
+    "summary": "Diagnostic tool for UserManagement"
+  },
+  {
+    "name": "unalias",
+    "summary": "shell built-in commands"
+  },
+  {
+    "name": "uname",
+    "summary": "display information about the system"
+  },
+  {
+    "name": "uncoded_frame",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "uncompress",
+    "summary": "compress and expand data"
+  },
+  {
+    "name": "underlyingg",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "unexpand",
+    "summary": "expand tabs to spaces, and vice versa"
+  },
+  {
+    "name": "unicharset_extractor",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "unifdef",
+    "summary": "remove preprocessor conditionals from code"
+  },
+  {
+    "name": "unifdefall",
+    "summary": "remove preprocessor conditionals from code"
+  },
+  {
+    "name": "uniq",
+    "summary": "report or filter out repeated lines in a file"
+  },
+  {
+    "name": "uniqg",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "units",
+    "summary": "conversion calculator"
+  },
+  {
+    "name": "universalaccessd",
+    "summary": "universal access server"
+  },
+  {
+    "name": "unlink",
+    "summary": "remove directory entries"
+  },
+  {
+    "name": "unlz4",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "unlzma",
+    "summary": "Compress or decompress .xz and .lzma files"
+  },
+  {
+    "name": "unvis",
+    "summary": "revert a visual representation of data back to original form"
+  },
+  {
+    "name": "unwrap-diff",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "unxz",
+    "summary": "Compress or decompress .xz and .lzma files"
+  },
+  {
+    "name": "unzip",
+    "summary": "list, test and extract compressed files in a ZIP archive"
+  },
+  {
+    "name": "unzipsfx",
+    "summary": "self-extracting stub for prepending to ZIP archives"
+  },
+  {
+    "name": "unzstd",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "update-checkasm.sh",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "uptime",
+    "summary": "show how long system has been running"
+  },
+  {
+    "name": "usdcat",
+    "summary": "Write usd file(s) either as text to stdout or to a specified output file"
+  },
+  {
+    "name": "usdchecker",
+    "summary": "Utility for checking the compliance of a given USD stage or a USDZ package"
+  },
+  {
+    "name": "usdcrush",
+    "summary": "Utility for reducing the size of a source USD"
+  },
+  {
+    "name": "usdextract",
+    "summary": "Utility to extract files from .usdz, .glb, and .gltf files"
+  },
+  {
+    "name": "usdrecord",
+    "summary": "Utility for generating images from a USD file"
+  },
+  {
+    "name": "usdtree",
+    "summary": "Utility to display the structure of the USD file as a tree in the terminal"
+  },
+  {
+    "name": "usdzip",
+    "summary": "Utility for creating a .usdz file containing USD assets and for inspecting existing .usdz files"
+  },
+  {
+    "name": "usernoted",
+    "summary": "Notification Center daemon"
+  },
+  {
+    "name": "users",
+    "summary": "list current users"
+  },
+  {
+    "name": "usnjls",
+    "summary": "List the contents of a NTFS Update Sequence Number journal"
+  },
+  {
+    "name": "uttype",
+    "summary": "Information about Uniform Type Identifiers"
+  },
+  {
+    "name": "uuchk",
+    "summary": "display information read from the UUCP configuration files"
+  },
+  {
+    "name": "uucico",
+    "summary": "UUCP file transfer daemon"
+  },
+  {
+    "name": "uuconv",
+    "summary": "convert UUCP configuration files"
+  },
+  {
+    "name": "uucp",
+    "summary": "Unix to Unix copy"
+  },
+  {
+    "name": "uudecode",
+    "summary": "encode / decode a binary file"
+  },
+  {
+    "name": "uuencode",
+    "summary": "encode / decode a binary file"
+  },
+  {
+    "name": "uuidgen",
+    "summary": "generates new UUID strings"
+  },
+  {
+    "name": "uulog",
+    "summary": "display entries in the UUCP log file"
+  },
+  {
+    "name": "uuname",
+    "summary": "list remote UUCP sites"
+  },
+  {
+    "name": "uupick",
+    "summary": "retrieve files transferred by uuto"
+  },
+  {
+    "name": "uusched",
+    "summary": "schedule the uucp file transport program"
+  },
+  {
+    "name": "uustat",
+    "summary": "UUCP status inquiry and control"
+  },
+  {
+    "name": "uuto",
+    "summary": "send files to a particular user on a remote system"
+  },
+  {
+    "name": "uux",
+    "summary": "Remote command execution over UUCP"
+  },
+  {
+    "name": "uuxqt",
+    "summary": "UUCP execution daemon"
+  },
+  {
+    "name": "uv",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "uvx",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "validation",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "vcolg",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "venc_data_dump",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "vfychain",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "vfyserv",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "viewdiagnostic",
+    "summary": "Visualize diagnostic reports"
+  },
+  {
+    "name": "vifs",
+    "summary": "safely edit fstab"
+  },
+  {
+    "name": "vim",
+    "summary": "Vi IMproved, a programmer's text editor"
+  },
+  {
+    "name": "vimdiff",
+    "summary": "edit between two and eight versions of a file with Vim and show differences"
+  },
+  {
+    "name": "vimtutor",
+    "summary": "the Vim tutor"
+  },
+  {
+    "name": "vipw",
+    "summary": "edit the password file"
+  },
+  {
+    "name": "vis",
+    "summary": "display non-printable characters in a visual format"
+  },
+  {
+    "name": "visudo",
+    "summary": "edit the sudoers file"
+  },
+  {
+    "name": "vm_stat",
+    "summary": "show Mach virtual memory statistics"
+  },
+  {
+    "name": "vmaf",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "vmmap",
+    "summary": "Display the virtual memory regions allocated in a process"
+  },
+  {
+    "name": "vpnd",
+    "summary": "Mac OS X VPN service daemon"
+  },
+  {
+    "name": "vsdbutil",
+    "summary": "manipulates the volume status DB"
+  },
+  {
+    "name": "vtool",
+    "summary": "Mach-O version number utility"
+  },
+  {
+    "name": "vwebp",
+    "summary": "decompress a WebP file and display it in a window"
+  },
+  {
+    "name": "w",
+    "summary": "display who is logged in and what they are doing"
+  },
+  {
+    "name": "wait",
+    "summary": "shell built-in commands"
+  },
+  {
+    "name": "wait4path",
+    "summary": "wait for given path to show up in the namespace"
+  },
+  {
+    "name": "wakeonlan",
+    "summary": "Perl script to wake up computers"
+  },
+  {
+    "name": "wall",
+    "summary": "write a message to users"
+  },
+  {
+    "name": "watchgnupg",
+    "summary": "Read and print logs from a socket"
+  },
+  {
+    "name": "watercluster2",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "wc",
+    "summary": "word, line, character, and byte count"
+  },
+  {
+    "name": "wdutil",
+    "summary": "Wireless Diagnostics command line utility"
+  },
+  {
+    "name": "webpinfo",
+    "summary": "print out the chunk level structure of WebP files along with basic integrity checks"
+  },
+  {
+    "name": "webpmux",
+    "summary": "create animated WebP files from non-animated WebP images, extract frames from animated WebP images, and manage XMP/EXIF metadata and ICC profile"
+  },
+  {
+    "name": "wfsctl",
+    "summary": "WebDAV File Sharing control utility"
+  },
+  {
+    "name": "what",
+    "summary": "show what versions of object modules were used to construct a file"
+  },
+  {
+    "name": "whatis",
+    "summary": "display online manual documentation pages"
+  },
+  {
+    "name": "wheel3",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "wheel3.14",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "whereis",
+    "summary": "locate programs"
+  },
+  {
+    "name": "which",
+    "summary": "shell built-in commands"
+  },
+  {
+    "name": "who",
+    "summary": "display who is on the system"
+  },
+  {
+    "name": "whoami",
+    "summary": "display effective user id"
+  },
+  {
+    "name": "whois",
+    "summary": "Internet domain name and network number directory service"
+  },
+  {
+    "name": "wish",
+    "summary": "Simple windowing shell"
+  },
+  {
+    "name": "wordlist2dawg",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "write",
+    "summary": "send a message to another user"
+  },
+  {
+    "name": "wrjpgcom",
+    "summary": "insert text comments into a JPEG file"
+  },
+  {
+    "name": "x264",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "x265",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "xar",
+    "summary": "eXtensible ARchiver"
+  },
+  {
+    "name": "xargs",
+    "summary": "construct argument list(s) and execute utility"
+  },
+  {
+    "name": "xattr",
+    "summary": "display and manipulate extended attributes"
+  },
+  {
+    "name": "xcode-select",
+    "summary": "Manages the active developer directory for Xcode and BSD tools"
+  },
+  {
+    "name": "xcodebuild",
+    "summary": "build Xcode projects and workspaces"
+  },
+  {
+    "name": "xcodebuildmcp",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "xcodebuildmcp-doctor",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "xcodegen",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "xcrun",
+    "summary": "Run or locate development tools and properties"
+  },
+  {
+    "name": "xctrace",
+    "summary": "Record, import, export and symbolicate Instruments.trace files"
+  },
+  {
+    "name": "xed",
+    "summary": "Xcode text editor invocation tool"
+  },
+  {
+    "name": "xgettext",
+    "summary": "extract gettext strings from source"
+  },
+  {
+    "name": "xgettext.pl",
+    "summary": "Extract translatable strings from source"
+  },
+  {
+    "name": "xip",
+    "summary": "Create or expand a secure archive for secure distribution"
+  },
+  {
+    "name": "xml2-config",
+    "summary": "script to get information about the installed version of GNOME-XML"
+  },
+  {
+    "name": "xml2man",
+    "summary": "MPGL to mdoc (man page) translator"
+  },
+  {
+    "name": "xmlcatalog",
+    "summary": "Command line tool to parse and manipulate XML or SGML catalog files"
+  },
+  {
+    "name": "xmllint",
+    "summary": "command line XML tool"
+  },
+  {
+    "name": "xpath",
+    "summary": "a script to query XPath statements in XML documents"
+  },
+  {
+    "name": "xprotect",
+    "summary": "Utility for interacting with XProtect"
+  },
+  {
+    "name": "xscertadmin",
+    "summary": "-- process Certificate Revocation Lists in an OD environment"
+  },
+  {
+    "name": "xsltproc",
+    "summary": "command line XSLT processor"
+  },
+  {
+    "name": "xsubpp",
+    "summary": "compiler to convert Perl XS code into C code"
+  },
+  {
+    "name": "xtractprotos",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "xxd",
+    "summary": "make a hex dump or do the reverse"
+  },
+  {
+    "name": "xxh128sum",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "xxh32sum",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "xxh3sum",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "xxh64sum",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "xxhsum",
+    "summary": "print or check xxHash non-cryptographic checksums"
+  },
+  {
+    "name": "xz",
+    "summary": "Compress or decompress .xz and .lzma files"
+  },
+  {
+    "name": "xzcat",
+    "summary": "Compress or decompress .xz and .lzma files"
+  },
+  {
+    "name": "xzcmp",
+    "summary": "compare compressed files"
+  },
+  {
+    "name": "xzdec",
+    "summary": "Small .xz and .lzma decompressors"
+  },
+  {
+    "name": "xzdiff",
+    "summary": "compare compressed files"
+  },
+  {
+    "name": "xzegrep",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "xzfgrep",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "xzgrep",
+    "summary": "search possibly-compressed files for patterns"
+  },
+  {
+    "name": "xzless",
+    "summary": "view xz or lzma compressed (text) files"
+  },
+  {
+    "name": "xzmore",
+    "summary": "view xz or lzma compressed (text) files"
+  },
+  {
+    "name": "ya",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "yacc",
+    "summary": "parser generator"
+  },
+  {
+    "name": "yapp",
+    "summary": "A perl frontend to the Parse::Yapp module"
+  },
+  {
+    "name": "yat2m",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "yazi",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "yes",
+    "summary": "be repetitively affirmative"
+  },
+  {
+    "name": "yq",
+    "summary": "is a portable command-line data file processor"
+  },
+  {
+    "name": "zcat",
+    "summary": "compression/decompression tool using Lempel-Ziv coding (LZ77)"
+  },
+  {
+    "name": "zcmp",
+    "summary": "compare compressed files"
+  },
+  {
+    "name": "zdiff",
+    "summary": "compare compressed files"
+  },
+  {
+    "name": "zdump",
+    "summary": "timezone dumper"
+  },
+  {
+    "name": "zegrep",
+    "summary": "file pattern searcher"
+  },
+  {
+    "name": "zellij",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "zfgrep",
+    "summary": "file pattern searcher"
+  },
+  {
+    "name": "zforce",
+    "summary": "force gzip files to have a.gz suffix"
+  },
+  {
+    "name": "zgrep",
+    "summary": "file pattern searcher"
+  },
+  {
+    "name": "zic",
+    "summary": "timezone compiler"
+  },
+  {
+    "name": "zip",
+    "summary": "package and compress (archive) files"
+  },
+  {
+    "name": "zipcloak",
+    "summary": "encrypt entries in a zipfile"
+  },
+  {
+    "name": "zipdetails",
+    "summary": "display the internal structure of zip files"
+  },
+  {
+    "name": "zipgrep",
+    "summary": "search files in a ZIP archive for lines matching a pattern"
+  },
+  {
+    "name": "zipinfo",
+    "summary": "list detailed information about a ZIP archive"
+  },
+  {
+    "name": "zipnote",
+    "summary": "write the comments in zipfile to stdout, edit comments and rename files in zipfile"
+  },
+  {
+    "name": "zipsplit",
+    "summary": "split a zipfile into smaller zipfiles"
+  },
+  {
+    "name": "zless",
+    "summary": "view compressed files"
+  },
+  {
+    "name": "zmore",
+    "summary": "view compressed files"
+  },
+  {
+    "name": "zmqshell.py",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "znew",
+    "summary": "convert compressed files to gzipped files"
+  },
+  {
+    "name": "zprint",
+    "summary": "show information about kernel zones"
+  },
+  {
+    "name": "zsh",
+    "summary": "the Z shell"
+  },
+  {
+    "name": "zstd",
+    "summary": "zstd, zstdmt, unzstd, zstdcat - Compress or decompress .zst files"
+  },
+  {
+    "name": "zstdcat",
+    "summary": "(no man page)"
+  },
+  {
+    "name": "zstdgrep",
+    "summary": "print lines matching a pattern in zstandard-compressed files"
+  },
+  {
+    "name": "zstdless",
+    "summary": "view zstandard-compressed files"
+  },
+  {
+    "name": "zstdmt",
+    "summary": "(no man page)"
+  }
+]

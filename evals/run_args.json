@@ -1,0 +1,22 @@
+[
+ {"request": "extract foo.tar.gz", "tool": "tar", "required": [["-x"], ["-f"]], "optional": ["-z", "-v"]},
+ {"request": "list the contents of backup.tar without extracting anything", "tool": "tar", "required": [["-t"], ["-f"]], "optional": ["-v"]},
+ {"request": "create a gzip compressed archive of the photos folder", "tool": "tar", "required": [["-c"], ["-z"], ["-f"]], "optional": ["-v"]},
+ {"request": "show all files including hidden ones in long format", "tool": "ls", "required": [["-a", "-A"], ["-l"]], "optional": ["-h", "-G"]},
+ {"request": "recursively search for TODO in all files under src", "tool": "grep", "required": [["-r", "-R", "--recursive"]], "optional": ["-n", "--line-number", "-i", "--color"]},
+ {"request": "search for the word error in app.log ignoring case", "tool": "grep", "required": [["-i", "--ignore-case"]], "optional": ["-n", "--line-number", "--color"]},
+ {"request": "count only the lines in notes.md", "tool": "wc", "required": [["-l", "--lines"]], "optional": []},
+ {"request": "copy the docs folder and everything inside it to backup", "tool": "cp", "required": [["-r", "-R", "-a"]], "optional": ["-p", "-v"]},
+ {"request": "download the file at the url and save it under its original name", "tool": "curl", "required": [["-O", "--remote-name"]], "optional": ["-L", "--location", "-s", "--silent", "-S", "--show-error", "-f", "--fail"]},
+ {"request": "sort the lines of scores.txt numerically", "tool": "sort", "required": [["-n", "--numeric-sort"]], "optional": ["-r", "--reverse"]},
+ {"request": "show the end of app.log and keep following it as it grows", "tool": "tail", "required": [["-f", "-F", "--follow"]], "optional": ["-n"]},
+ {"request": "show the first 5 lines of data.csv", "tool": "head", "required": [["-n", "--lines", "-5"]], "optional": []},
+ {"request": "find files larger than 100 megabytes under the current directory", "tool": "find", "required": [["-size"]], "optional": ["-type"]},
+ {"request": "make the directory build/output including any missing parent directories", "tool": "mkdir", "required": [["-p", "--parents"]], "optional": ["-v"]},
+ {"request": "show the disk usage of each item in this directory in human readable units", "tool": "du", "required": [["-h", "--human-readable"]], "optional": ["-s", "-d", "--max-depth", "-c"]},
+ {"request": "compare old.txt and new.txt side by side", "tool": "diff", "required": [["-y", "--side-by-side"]], "optional": ["-W", "--width"]},
+ {"request": "compress report.pdf with gzip but keep the original file", "tool": "gzip", "required": [["-k", "--keep"]], "optional": ["-v", "-9"]},
+ {"request": "which process is listening on tcp port 8080", "tool": "lsof", "required": [["-i"]], "optional": ["-n", "-P", "-s"]},
+ {"request": "print notes.md with line numbers", "tool": "cat", "required": [["-n", "--number"]], "optional": ["-b"]},
+ {"request": "remove the build directory and everything in it", "tool": "rm", "required": [["-r", "-R", "--recursive"]], "optional": ["-f", "--force", "-v"]}
+]
