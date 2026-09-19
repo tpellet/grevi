@@ -74,7 +74,10 @@ signing. Commit subject: semantic prefix + bead ID, e.g. `feat: add hunch pick (
 prompt nobody answers stalls the whole run. If a destructive or mutating step seems needed
 (`rm`, `git reset --hard`, `git stash`, force-push, `mv` over an existing file, anything `dcg`
 blocks), skip it, record it in the bead notes or your report, and continue. Leave scratch files
-in place. `dcg` blocking a command is not a puzzle to route around.
+in place. Never use `rm` in any form (`rm -f`, `rm -rf`), `rmdir`, `unlink`, `git rm`,
+`find -delete`, `cargo clean`, `git restore`, `git worktree remove` or `git branch -D`, even on
+your own scratch files: overwrite with the Write/Edit tool, write a new filename, or create a new
+directory instead. Use non-interactive flags (`-y`, `--yes`) for every command. `dcg` blocking a command is not a puzzle to route around.
 
 **Public repo: scan before every push.** `tpellet/hunch` is public; a push is publication. Before
 every `git push`: `gitleaks git . --log-opts="origin/main..HEAD" --redact -v` (no leaks; the repo's
