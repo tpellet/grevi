@@ -37,7 +37,6 @@ pub fn capabilities() -> Outcome {
             { "name": "HUNCH_CACHE_DIR", "default": "platform cache dir/hunch" },
             { "name": "HUNCH_NO_CACHE", "meaning": "disable the answer cache (entries expire after 7 days anyway)" },
             { "name": "HUNCH_PRICE_PER_MTOK", "default": 0.042 },
-            { "name": "HUNCH_NO_PREWARM", "meaning": "do not open the connection early" },
             { "name": "HUNCH_INVENTORY_FILE", "meaning": "JSON array of {name, summary} replacing the PATH inventory (tests, evals)" },
             { "name": "HUNCH_CNF", "meaning": "enable the command-not-found hook from `hunch init`" }
         ],

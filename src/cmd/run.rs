@@ -172,9 +172,6 @@ pub async fn route(
 
 pub async fn run(ctx: &Config, intent: &str, flags: RunFlags) -> Result<Outcome, HunchError> {
     let client = Client::new(ctx)?;
-    if ctx.prewarm {
-        client.prewarm();
-    }
     let cache_dir = ctx.cache_dir.clone();
     let tools = tokio::task::spawn_blocking(move || load_tools(cache_dir))
         .await
