@@ -10,7 +10,7 @@ ls | hunch pick "last month's electricity bill"
 hunch is "asks for a refund" < mail.txt && ./refund
 ```
 
-demo.gif: pending
+![demo](demo.gif)
 
 Excerpts from a terminal, captured 2026-09-19 on `jev-1.13.0`:
 
