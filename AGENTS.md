@@ -30,6 +30,12 @@ calibrated threshold · Unix-first human output, one machine envelope · safe by
 - **No backwards-compatibility shims**: no users yet; fix things directly.
 - Treat unexplained working-tree changes as another agent's work: never stash, revert or
   overwrite them; commit only your own paths.
+- **Unattended runs: never trigger a confirmation prompt.** Agents often run while Thomas is
+  away, and a prompt nobody answers stalls the whole run. Never run `rm`/`rm -rf`, `rmdir`,
+  `unlink`, `git reset --hard`, `git clean`, `git stash`, `git checkout -- <path>`, a
+  force-push, a branch/tag/release deletion, a `mv` over an existing file, or anything `dcg`
+  blocks. If such a step seems needed, skip it, record it (`br update <id> --append-notes`
+  or your report), and continue. Leave scratch files in place.
 
 ## Toolchain (Rust & Cargo)
 
