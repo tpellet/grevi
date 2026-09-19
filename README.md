@@ -132,6 +132,16 @@ hunch add --yes "the auth fix" && git commit
 
 `add` scores each unstaged hunk against your topic and stages the ones that are about it. `--dry-run` only scores; `--yes` skips the question. Tracked files only; stages into the index, never commits; binary changes are never staged.
 
+### hunch sort
+
+```sh
+hunch sort ~/Downloads                      # dry run: proposes a folder per file
+hunch sort ~/Downloads --apply              # moves, writes an undo log
+hunch sort ~/Downloads --undo <log>         # moves them back
+```
+
+`sort` looks at each file directly in the directory (not recursive, hidden files skipped) and proposes one of the existing folders under it, up to two levels deep, as its home; `--into <root>` picks the folders from another root. Dry-run by default: `--apply` renames the files and writes an undo log (`sort-undo-<timestamp>.tsv` in the cache directory) after every move; `--undo <log>` restores whatever the original path is still free for. It never overwrites a file, never deletes one, and only moves within one volume (`--into` must be on the same volume). Only file names and the first 2,000 characters of text files (or of a PDF's first two pages, when `pdftotext` is installed) are sent, redacted; a file the model cannot place, or places without confidence, stays where it is.
+
 ## How it works
 
 hunch points, it does not generate. Every token it prints comes from your stdin, a tool on your PATH, that tool's man page, or your own request. A flag that is not in the man page cannot appear.

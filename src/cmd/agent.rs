@@ -21,6 +21,7 @@ pub fn capabilities() -> Outcome {
             { "name": "run", "usage": "hunch run [--dry-run|--yes|--exec --yes] [--no-args] <intent...>", "stdin": false, "exit": [0, 3, 7, 130], "data": "tool, fit, argv[], flags[], complete, blocked, executed, child_exit, alternatives[]" },
             { "name": "is", "usage": "<stdin> | hunch is \"<condition>\" [--band 0.15]", "stdin": true, "exit": [0, 1, 3], "data": "p, verdict, truncated" },
             { "name": "add", "usage": "hunch add [--dry-run|--yes] \"<topic>\"", "stdin": false, "exit": [0, 3, 130], "data": "hunks[{file,header,p,staged}]", "note": "tracked files only; index only, never commits; works from any subdirectory" },
+            { "name": "sort", "usage": "hunch sort <dir> [--into <root>] [--apply | --undo <log>]", "stdin": false, "exit": [0, 3], "data": "moves[], skipped[], undo_log, applied", "note": "dry-run by default; never overwrites, never deletes; same volume only" },
             { "name": "capabilities", "usage": "hunch capabilities --json" },
             { "name": "robot-docs", "usage": "hunch robot-docs [guide|commands|exit-codes|examples|privacy]" },
             { "name": "health", "usage": "hunch health --json", "exit": [0, 4, 5] },

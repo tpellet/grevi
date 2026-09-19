@@ -18,21 +18,17 @@ fn capabilities_lists_verbs_exit_codes_env() {
             "{verb}"
         );
     }
-    // Wave 2: Task 14 lists `add`; `sort` stays unlisted until Task 15 lands.
-    assert!(
-        d["commands"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .any(|c| c["name"] == "add")
-    );
-    assert!(
-        !d["commands"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .any(|c| c["name"] == "sort")
-    );
+    // Wave 2: both `add` (Task 14) and `sort` (Task 15) are listed.
+    for verb in ["add", "sort"] {
+        assert!(
+            d["commands"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|c| c["name"] == verb),
+            "{verb}"
+        );
+    }
     assert_eq!(d["exit_codes"].as_array().unwrap().len(), 9);
     assert!(
         d["env"]

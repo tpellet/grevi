@@ -106,8 +106,7 @@ pub enum Cmd {
         #[arg(long)]
         dry_run: bool,
     },
-    /// Propose moving files into existing folders by meaning (wave 2; hidden until Task 15 lands)
-    #[command(hide = true)]
+    /// Propose moving files into existing folders by meaning
     Sort {
         /// Directory whose files (not recursive, not hidden) are sorted
         dir: std::path::PathBuf,

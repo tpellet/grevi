@@ -1,7 +1,7 @@
 use assert_cmd::Command;
 
 #[test]
-fn help_lists_v0_verbs_and_hides_wave_2() {
+fn help_lists_every_verb() {
     let out = Command::cargo_bin("hunch")
         .unwrap()
         .arg("--help")
@@ -21,9 +21,9 @@ fn help_lists_v0_verbs_and_hides_wave_2() {
     ] {
         assert!(text.contains(verb), "{verb} missing from --help");
     }
-    // `add` landed with Task 14; `sort` stays a hidden stub until Task 15 lands.
+    // Wave 2: `add` (Task 14) and `sort` (Task 15) are both listed.
     assert!(
-        text.contains("Stage only") && !text.contains("Propose moving"),
+        text.contains("Stage only") && text.contains("Propose moving"),
         "{text}"
     );
 }
