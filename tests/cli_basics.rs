@@ -96,13 +96,12 @@ fn run_flags_after_intent_are_flags() {
         .unwrap();
     let c = hunch::cli::Cli::from_arg_matches(&m).unwrap();
     assert!(c.g.json);
-    match c.cmd {
-        hunch::cli::Cmd::Run {
-            intent, dry_run, ..
-        } => {
-            assert!(dry_run);
-            assert_eq!(intent, ["burn", "a", "dvd"]);
-        }
-        _ => panic!("expected run"),
-    }
+    let hunch::cli::Cmd::Run {
+        intent, dry_run, ..
+    } = c.cmd
+    else {
+        unreachable!("expected run")
+    };
+    assert!(dry_run);
+    assert_eq!(intent, ["burn", "a", "dvd"]);
 }
