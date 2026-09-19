@@ -16,6 +16,8 @@ Safety:
 
 Agent surface: `capabilities`, `robot-docs`, README and PRIVACY.md list both verbs; PRIVACY.md says what each sends (`add`: the topic and each unstaged hunk, clipped; `sort`: file names, the first 2,000 characters of each text file or of a PDF's first two pages, and the folder names under the root).
 
+Speed: `run` opens its API connection while it reads the tool inventory, about 200 ms at p50 on `run cold full` (ABBA A/B in `benchmarks/README.md`); the other verbs have no local work to overlap and stay without prewarm.
+
 ## 0.1.0
 
 First release. macOS and Linux.

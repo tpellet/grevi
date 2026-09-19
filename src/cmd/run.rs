@@ -172,6 +172,9 @@ pub async fn route(
 
 pub async fn run(ctx: &Config, intent: &str, flags: RunFlags) -> Result<Outcome, HunchError> {
     let client = Client::new(ctx)?;
+    // Open the connection now; the inventory read below is the local work it overlaps with
+    // (measured in benchmarks/README.md; the other verbs have no such work and do not prewarm).
+    client.prewarm();
     let cache_dir = ctx.cache_dir.clone();
     let tools = tokio::task::spawn_blocking(move || load_tools(cache_dir))
         .await

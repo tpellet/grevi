@@ -158,15 +158,15 @@ Latency, end to end, per verb. Measured 2026-09-19 on a typical macOS dev machin
 
 | Run | p50 | p95 | n | failed |
 |:---|---:|---:|---:|---:|
-| `pick cold` (`ls /usr/bin`, 924 lines) | 721 ms | 799 ms | 15 | 0 |
-| `pick warm` (cache hit) | 7 ms | 12 ms | 15 | 0 |
-| `is cold` (same 924 lines) | 434 ms | 512 ms | 15 | 0 |
-| `why cold` (a 12-line failing `cargo build`) | 602 ms | 676 ms | 15 | 0 |
-| `run cold route-only` (`--no-args`) | 1,879 ms | 2,003 ms | 15 | 0 |
-| `run cold full` | 1,946 ms | 2,110 ms | 15 | 0 |
-| `rg -c compress` on the same 924 lines | 2 ms | 3 ms | 15 | 0 |
+| `pick cold` (`ls /usr/bin`, 924 lines) | 739 ms | 804 ms | 15 | 0 |
+| `pick warm` (cache hit) | 6 ms | 10 ms | 15 | 0 |
+| `is cold` (same 924 lines) | 454 ms | 488 ms | 15 | 0 |
+| `why cold` (a 12-line failing `cargo build`) | 638 ms | 732 ms | 15 | 0 |
+| `run cold route-only` (`--no-args`) | 1,823 ms | 2,007 ms | 15 | 0 |
+| `run cold full` | 1,940 ms | 2,251 ms | 15 | 0 |
+| `rg -c compress` on the same 924 lines | 3 ms | 4 ms | 15 | 0 |
 
-`is` is one request, so its p50 is close to the network round trip. `run cold full` is what you feel when you type `, <something>`: p50 is about 1.9 s, above 1 s. Route-only saves about 70 ms at p50, so the time is in routing over the tool inventory, not in argument pointing. `rg` sits under hyperfine's 5 ms floor; the row shows what a local tool costs on the same input, not a race hunch is running.
+`is` is one request, so its p50 is close to the network round trip. `run cold full` is what you feel when you type `, <something>`: p50 is about 1.9 s, above 1 s. Route-only saves about 100 ms at p50, so the time is in routing over the tool inventory, not in argument pointing. `run` opens its connection to the API while it reads the tool inventory; that overlap is worth about 200 ms at p50 on this verb (measured in [benchmarks/](benchmarks/README.md)). `rg` sits under hyperfine's 5 ms floor; the row shows what a local tool costs on the same input, not a race hunch is running.
 
 Cost is computed from the request's input tokens at `HUNCH_PRICE_PER_MTOK` (default 0.042 $/Mtok) and reported in `meta.cost_usd`. Three calls from the session that produced the excerpts above: `why` on the 12-line build log, 2 requests, 1,436 tokens, $0.00006; `is` on a 6-line mail, 1 request, 346 tokens, $0.000015; `pick` over 5 file names, 1 request, 487 tokens, $0.00002.
 
