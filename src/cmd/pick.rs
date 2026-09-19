@@ -17,9 +17,6 @@ pub async fn run(
         return Err(HunchError::Usage("-n must be at least 1".into()));
     }
     let client = Client::new(ctx)?;
-    if ctx.prewarm {
-        client.prewarm();
-    }
     let lines = crate::input::read_stdin_async().await?;
     // Blank lines never leave the machine: as empty items they would take window slots and tokens.
     // A repeated line is sent once (the first occurrence keeps its line number): two identical

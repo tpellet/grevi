@@ -73,7 +73,6 @@ pub fn bin() -> assert_cmd::Command {
         "HUNCH_CACHE_DIR",
         "HUNCH_NO_CACHE",
         "HUNCH_PRICE_PER_MTOK",
-        "HUNCH_NO_PREWARM",
         "HUNCH_INVENTORY_FILE",
     ] {
         c.env_remove(var);
@@ -101,7 +100,6 @@ pub fn config(server: &MockServer) -> hunch::config::Config {
         concurrency: 8,
         cache_dir: None,
         price_per_mtok: 0.042,
-        prewarm: false,
         stats: std::sync::Arc::new(hunch::jev::client::Stats::default()),
     }
 }

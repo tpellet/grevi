@@ -131,9 +131,6 @@ pub async fn run(
         return Err(HunchError::Usage("-n must be at least 1".into()));
     }
     let client = Client::new(ctx)?;
-    if ctx.prewarm {
-        client.prewarm();
-    }
     let (lines, child_exit) = if cmd.is_empty() {
         (crate::input::read_stdin_async().await?, None)
     } else {

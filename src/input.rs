@@ -60,7 +60,7 @@ pub fn read_stdin() -> Result<Vec<String>, HunchError> {
     Ok(lines)
 }
 
-/// Reads stdin on the blocking pool so the runtime keeps driving the prewarm connection meanwhile.
+/// Reads stdin on the blocking pool so a slow producer never stalls the runtime.
 pub async fn read_stdin_async() -> Result<Vec<String>, HunchError> {
     tokio::task::spawn_blocking(read_stdin)
         .await

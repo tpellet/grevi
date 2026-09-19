@@ -17,7 +17,6 @@ pub struct Config {
     pub concurrency: usize,
     pub cache_dir: Option<PathBuf>,
     pub price_per_mtok: f64,
-    pub prewarm: bool,
     pub stats: Arc<Stats>,
 }
 
@@ -67,7 +66,6 @@ impl Config {
             concurrency: parse("HUNCH_CONCURRENCY", 8usize)?.max(1),
             cache_dir,
             price_per_mtok: parse("HUNCH_PRICE_PER_MTOK", 0.042f64)?,
-            prewarm: env("HUNCH_NO_PREWARM").is_none(),
             stats: Arc::new(Stats::default()),
         })
     }
@@ -120,7 +118,6 @@ mod tests {
             concurrency: 8,
             cache_dir: None,
             price_per_mtok: 0.042,
-            prewarm: false,
             stats: Arc::new(Stats::default()),
         }
     }

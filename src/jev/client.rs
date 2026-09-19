@@ -51,24 +51,6 @@ impl Client {
         })
     }
 
-    /// Opens the TLS connection while local work runs; the pooled connection is reused by `ask`.
-    /// On the current-thread runtime the spawned task only progresses while the caller is parked
-    /// in an `.await`, so callers must do their local work through `spawn_blocking` (see
-    /// `input::read_stdin_async`, `run::load_tools`), or prewarm races `ask` and buys nothing.
-    pub fn prewarm(&self) {
-        let req = self
-            .http
-            .get(format!("{}/v1/models", self.base))
-            .bearer_auth(&self.key);
-        tokio::spawn(async move {
-            // Read the body too: hyper returns an HTTP/1.1 connection to the pool only once the
-            // response is consumed, and the point of prewarm is that `ask` reuses it.
-            if let Ok(r) = req.send().await {
-                let _ = r.bytes().await;
-            }
-        });
-    }
-
     pub async fn ask(
         &self,
         state: &serde_json::Value,

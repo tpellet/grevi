@@ -16,9 +16,6 @@ pub async fn run(ctx: &Config, condition: &str, band: f64) -> Result<Outcome, Hu
         )));
     }
     let client = Client::new(ctx)?;
-    if ctx.prewarm {
-        client.prewarm();
-    }
     let lines = crate::input::read_stdin_async().await?;
     let mut text = crate::input::redact(&lines.join("\n"));
     // Counted in chars, like the slicing below: bytes would under-truncate multi-byte text.
