@@ -41,10 +41,8 @@ $ hunch is "asks for a refund" < mail.txt; echo $?
 Shell installer, macOS and Linux:
 
 ```sh
-curl --proto '=https' --tlsv1.2 -LsSf https://github.com/tpellet/hunch/releases/latest/download/hunch-installer.sh | sh
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/tpellet/hunch/releases/download/v0.1.0/hunch-installer.sh | sh
 ```
-
-release binaries: pending
 
 From source, with Rust 1.87 or newer:
 

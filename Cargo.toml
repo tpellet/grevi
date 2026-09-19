@@ -12,6 +12,9 @@ keywords = ["cli", "llm", "semantic", "pointer", "jev"]
 categories = ["command-line-utilities"]
 publish = false
 
+[package.metadata.dist]
+dist = true
+
 [dependencies]
 anyhow = "1"
 blake3 = "1.8"
@@ -37,3 +40,8 @@ tokio = { version = "1.53", features = ["rt-multi-thread", "macros"] }
 lto = "thin"
 codegen-units = 1
 strip = true
+
+# The profile that 'dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"
