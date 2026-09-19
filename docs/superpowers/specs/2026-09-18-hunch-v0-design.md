@@ -56,7 +56,7 @@ Out of scope for the Rust CLI: tab bankruptcy (browser extension), clipboard rou
 
 - Choice ≤ 255 options → tournament: windows of ≤ 200 items + `NONE`, then finalists.
 - 32k tokens for state + longest question; 64k per request → small windows, pre-filtering.
-- 1,200 requests/min (20/s) → concurrency cap 16, retries honoring `retry-after`,
+- 1,200 requests/min (20/s) → concurrency cap 8, retries honoring `retry-after`,
   `why` pre-filters logs so a 50k-line log needs ≤ 20 requests.
 - Literal reading → atomic, explicit questions with `NONE` options and absolute fit Nouls.
 - Noul and Choice probabilities are not on one scale (TypeSafe's jaggedness page: a Noul and an
@@ -82,8 +82,8 @@ Out of scope for the Rust CLI: tab bankruptcy (browser extension), clipboard rou
 ## Configuration (env, overridable by flags)
 
 `TYPESAFE_API_KEY` or `TYPESAFE_API_KEY_FILE` (path chosen by the user), `HUNCH_BASE_URL`
-(default `https://api.typesafe.ai`), `HUNCH_MODEL` (default `jev-latest`; pin for stable
-thresholds), `HUNCH_THRESHOLD` (0.5), `HUNCH_CONCURRENCY` (16), `HUNCH_CACHE_DIR`
+(default `https://api.typesafe.ai`), `HUNCH_MODEL` (default pinned `jev-1.13.0` so thresholds
+stay stable; `jev-latest` is opt-in), `HUNCH_THRESHOLD` (0.5), `HUNCH_CONCURRENCY` (8), `HUNCH_CACHE_DIR`
 (platform cache dir + `/hunch`), `HUNCH_NO_CACHE=1`, `HUNCH_PRICE_PER_MTOK` (0.042).
 
 ## Distribution
