@@ -47,7 +47,7 @@ curl --proto '=https' --tlsv1.2 -LsSf https://github.com/tpellet/hunch/releases/
 From source, with Rust 1.87 or newer:
 
 ```sh
-cargo install --git https://github.com/tpellet/hunch --locked
+cargo install --git https://github.com/tpellet/hunch --locked hunch
 ```
 
 The crates.io name `hunch` is taken, so there is no `cargo install hunch`.
