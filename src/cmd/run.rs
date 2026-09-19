@@ -1,6 +1,11 @@
 use crate::cmd::Outcome;
 use crate::config::Config;
-use crate::exit::HunchError;
+use crate::exit::{Exit, HunchError};
+use crate::inventory::{self, Tool};
+use crate::jev::client::Client;
+use crate::jev::{Question, Questions};
+use crate::manpage;
+use crate::tournament::{Prompts, shortlist};
 
 pub struct RunFlags {
     pub yes: bool,
@@ -10,16 +15,142 @@ pub struct RunFlags {
     pub machine: bool,
 }
 
-/// Task 1 stub with the final signature; Task 9 replaces the body (Task 10 extends it).
+pub struct Route {
+    pub tool: Option<Tool>,
+    pub fit: f64,
+    pub alternatives: Vec<(String, f64)>,
+}
+
+fn load_tools(cache_dir: Option<std::path::PathBuf>) -> Result<Vec<Tool>, HunchError> {
+    if let Ok(p) = std::env::var("HUNCH_INVENTORY_FILE") {
+        let b = std::fs::read(&p)
+            .map_err(|e| HunchError::Input(format!("HUNCH_INVENTORY_FILE: {e}")))?;
+        return serde_json::from_slice(&b)
+            .map_err(|e| HunchError::Input(format!("HUNCH_INVENTORY_FILE: {e}")));
+    }
+    inventory::load(cache_dir.as_deref())
+}
+
+pub async fn route(
+    client: &Client,
+    ctx: &Config,
+    request: &str,
+    tools: &[Tool],
+) -> Result<Route, HunchError> {
+    let items: Vec<String> = tools
+        .iter()
+        .map(|t| format!("{}: {}", t.name, t.summary))
+        .collect();
+    let prompts = Prompts {
+        choose: "Which command in `items` is the right tool to accomplish `request`? Choose NONE if no listed command does it.".into(),
+        none: "none of the listed commands does what the request asks".into(),
+        any: "Is there a command in `items` whose purpose is to accomplish `request`?".into(),
+    };
+    // Round 1: windows only. The absolute fit Nouls below are round 2, so no Choice finals round.
+    let finalists: Vec<usize> = shortlist(client, request, &items, &prompts, 3)
+        .await?
+        .iter()
+        .take(12)
+        .map(|c| c.index)
+        .collect();
+    if finalists.is_empty() {
+        return Ok(Route {
+            tool: None,
+            fit: 0.0,
+            alternatives: vec![],
+        });
+    }
+    // Round 2: absolute fit per finalist, with a richer man-page excerpt.
+    // `man` costs ~90 ms per page; render the finalists' pages in parallel, not in series.
+    let described: Vec<String> = std::thread::scope(|s| {
+        let handles: Vec<_> = finalists
+            .iter()
+            .map(|&i| {
+                let t = &tools[i];
+                s.spawn(move || match manpage::description(&t.name, 500) {
+                    Some(d) => format!("{}: {}. {}", t.name, t.summary, d),
+                    None => format!("{}: {}", t.name, t.summary),
+                })
+            })
+            .collect();
+        handles
+            .into_iter()
+            .map(|h| h.join().unwrap_or_default())
+            .collect()
+    });
+    let state = serde_json::json!({ "request": request, "commands": described });
+    let mut qs = Questions::new();
+    for (k, _) in finalists.iter().enumerate() {
+        qs.insert(
+            format!("fit{k:02}"),
+            Question::noul_with(
+                // What the command is, never what running it would do: a counterfactual Noul
+                // sits at 0.33–0.59 whatever the input (measured on jev-1.13).
+                format!("Is the command described in `commands[{k}]` a correct, direct way to accomplish `request`?"),
+                "this command is a correct, direct way to accomplish the request",
+                "this command does something else, or is only tangentially related",
+            ),
+        );
+    }
+    let r = client.ask(&state, &qs).await?;
+    // A missing answer is a protocol error, not "low confidence".
+    let mut fits: Vec<(usize, f64)> = Vec::with_capacity(finalists.len());
+    for (k, &i) in finalists.iter().enumerate() {
+        fits.push((i, r.noul(&format!("fit{k:02}"))?));
+    }
+    fits.sort_by(|a, b| b.1.total_cmp(&a.1));
+    let (best, fit) = fits[0];
+    let alternatives = fits
+        .iter()
+        .skip(1)
+        .take(4)
+        .map(|(i, p)| (tools[*i].name.clone(), *p))
+        .collect();
+    let tool = (fit >= ctx.threshold).then(|| tools[best].clone());
+    Ok(Route {
+        tool,
+        fit,
+        alternatives,
+    })
+}
+
 pub async fn run(ctx: &Config, intent: &str, flags: RunFlags) -> Result<Outcome, HunchError> {
-    let _ = (
-        ctx,
-        intent,
-        flags.yes,
-        flags.exec,
-        flags.dry_run,
-        flags.no_args,
-        flags.machine,
-    );
-    Err(HunchError::Usage("not implemented yet".into()))
+    let client = Client::new(ctx)?;
+    if ctx.prewarm {
+        client.prewarm();
+    }
+    let cache_dir = ctx.cache_dir.clone();
+    let tools = tokio::task::spawn_blocking(move || load_tools(cache_dir))
+        .await
+        .map_err(|e| HunchError::Input(e.to_string()))??;
+    let r = route(&client, ctx, intent, &tools).await?;
+    let alts: Vec<_> = r
+        .alternatives
+        .iter()
+        .map(|(n, p)| serde_json::json!({ "tool": n, "fit": p }))
+        .collect();
+    let Some(tool) = r.tool else {
+        if !flags.machine {
+            eprintln!("hunch: nothing installed does this (best fit {:.2})", r.fit);
+            for (n, p) in r.alternatives.iter().take(3) {
+                eprintln!("  closest: {n} ({p:.2})");
+            }
+        }
+        return Ok(Outcome {
+            exit: Exit::Abstain,
+            data: serde_json::json!({ "tool": null, "fit": r.fit, "alternatives": alts }),
+            human: String::new(),
+        });
+    };
+    // Task 10 replaces this function from here: argument pointing, never-execute list, confirmation, execution.
+    let _ = (flags.yes, flags.exec, flags.dry_run, flags.no_args);
+    let argv = vec![tool.name.clone()];
+    if !flags.machine {
+        eprintln!("hunch: {} ({:.2}) — {}", tool.name, r.fit, tool.summary);
+    }
+    Ok(Outcome {
+        exit: Exit::Ok,
+        data: serde_json::json!({ "tool": tool.name, "summary": tool.summary, "fit": r.fit, "argv": argv, "alternatives": alts, "executed": false }),
+        human: format!("{}\n", argv.join(" ")),
+    })
 }
