@@ -1,0 +1,4922 @@
+[
+ {
+  "request": "Print IP addresses of the host name",
+  "decision": "host",
+  "choice": "host",
+  "conf": 0.66,
+  "any": 0.97,
+  "fits": [
+   [
+    "host",
+    0.92
+   ],
+   [
+    "ahost",
+    0.91
+   ],
+   [
+    "dig",
+    0.87
+   ],
+   [
+    "nslookup",
+    0.85
+   ],
+   [
+    "adig",
+    0.62
+   ]
+  ],
+  "latency": 1.7414955829954124,
+  "round1_top": [
+   "nslookup",
+   "host",
+   "ahost",
+   "dig",
+   "adig"
+  ],
+  "gold": "hostname  -i",
+  "head": "hostname",
+  "bm25": "hostname",
+  "leaks_name": false
+ },
+ {
+  "request": "Find all files in the current directory tree ignoring the \".git\" directory",
+  "decision": "fd",
+  "choice": "fd",
+  "conf": 0.57,
+  "any": 0.9,
+  "fits": [
+   [
+    "find",
+    0.59
+   ],
+   [
+    "fd",
+    0.59
+   ],
+   [
+    "rg",
+    0.21
+   ],
+   [
+    "tree",
+    0.2
+   ],
+   [
+    "ugrep",
+    0.18
+   ]
+  ],
+  "latency": 1.6823923330011894,
+  "round1_top": [
+   "find",
+   "tree",
+   "mtree",
+   "mdfind",
+   "rg"
+  ],
+  "gold": "find . -type d -name '.git*' -prune -o -type f -print",
+  "head": "find",
+  "bm25": "rg",
+  "leaks_name": true
+ },
+ {
+  "request": "Recursively counts non-blank lines in all files in a current folder, that match regex '\\.php|\\.as|\\.sql|\\.css|\\.js', but skip folders './pma', './blog', './punbb', './js/3rdparty' and files like '*.svn'.",
+  "decision": "abstain",
+  "choice": "rg",
+  "conf": 0.49,
+  "any": 0.32,
+  "fits": [
+   [
+    "pcre2grep",
+    0.29
+   ],
+   [
+    "awk",
+    0.27
+   ],
+   [
+    "rg",
+    0.24
+   ],
+   [
+    "ugrep",
+    0.23
+   ],
+   [
+    "perl",
+    0.23
+   ]
+  ],
+  "latency": 1.400164999999106,
+  "round1_top": [
+   "rg",
+   "ugrep",
+   "pcre2grep",
+   "find",
+   "awk"
+  ],
+  "gold": "find . -path './pma' -prune -o -path './blog' -prune -o -path './punbb' -prune -o -path './js/3rdparty' -prune -o -print | egrep '\\.php|\\.as|\\.sql|\\.css|\\.js' | grep -v '\\.svn' | xargs cat | sed '/^\\s*$/d' | wc -l",
+  "head": "find",
+  "bm25": "rg",
+  "leaks_name": false
+ },
+ {
+  "request": "print top 10 largest files and directories",
+  "decision": "abstain",
+  "choice": "du",
+  "conf": 0.98,
+  "any": 0.67,
+  "fits": [
+   [
+    "du",
+    0.49
+   ],
+   [
+    "rmlint",
+    0.12
+   ],
+   [
+    "tree",
+    0.07
+   ],
+   [
+    "wc",
+    0.07
+   ],
+   [
+    "quota",
+    0.06
+   ]
+  ],
+  "latency": 1.1671573749990785,
+  "round1_top": [
+   "du",
+   "tree",
+   "mtree",
+   "rmlint",
+   "wc"
+  ],
+  "gold": "du -a . | sort -nr | head",
+  "head": "du",
+  "bm25": "open",
+  "leaks_name": false
+ },
+ {
+  "request": "Count files accessed more than a month ago",
+  "decision": "abstain",
+  "choice": "find",
+  "conf": 0.74,
+  "any": 0.28,
+  "fits": [
+   [
+    "find",
+    0.44
+   ],
+   [
+    "awk",
+    0.19
+   ],
+   [
+    "mactime",
+    0.16
+   ],
+   [
+    "stat",
+    0.12
+   ],
+   [
+    "sa",
+    0.11
+   ]
+  ],
+  "latency": 0.9518574579997221,
+  "round1_top": [
+   "find",
+   "mactime",
+   "stat",
+   "awk",
+   "rg"
+  ],
+  "gold": "find . -atime +30 -exec ls \\; | wc -l",
+  "head": "find",
+  "bm25": "javap",
+  "leaks_name": false
+ },
+ {
+  "request": "Delete all files in the current directory tree whose names end with ~",
+  "decision": "abstain",
+  "choice": "find",
+  "conf": 0.81,
+  "any": 0.42,
+  "fits": [
+   [
+    "rm",
+    0.15
+   ],
+   [
+    "find",
+    0.13
+   ],
+   [
+    "unlink",
+    0.1
+   ],
+   [
+    "xargs",
+    0.09
+   ],
+   [
+    "trash",
+    0.08
+   ]
+  ],
+  "latency": 1.2527338750005583,
+  "round1_top": [
+   "rm",
+   "find",
+   "xargs",
+   "unlink",
+   "zsh"
+  ],
+  "gold": "find . -name \"*~\" -delete",
+  "head": "find",
+  "bm25": "fls",
+  "leaks_name": false
+ },
+ {
+  "request": "create a gzip of all the files in the current folder excluding the already gzipped files",
+  "decision": "abstain",
+  "choice": "gzip",
+  "conf": 0.58,
+  "any": 0.55,
+  "fits": [
+   [
+    "gzip",
+    0.26
+   ],
+   [
+    "zip",
+    0.14
+   ],
+   [
+    "xargs",
+    0.1
+   ],
+   [
+    "find",
+    0.1
+   ],
+   [
+    "sh",
+    0.08
+   ]
+  ],
+  "latency": 1.4132774169993354,
+  "round1_top": [
+   "gzip",
+   "tar",
+   "xargs",
+   "find",
+   "znew"
+  ],
+  "gold": "gzip `find . \\! -name '*.gz' -print`",
+  "head": "gzip",
+  "bm25": "jmod",
+  "leaks_name": true
+ },
+ {
+  "request": "Execute awk script \"script.awk\" with 2 arguments both \"file.txt\" and format the output as a table",
+  "decision": "abstain",
+  "choice": "awk",
+  "conf": 0.88,
+  "any": 0.84,
+  "fits": [
+   [
+    "awk",
+    0.34
+   ],
+   [
+    "column",
+    0.05
+   ],
+   [
+    "sh",
+    0.04
+   ],
+   [
+    "perl",
+    0.04
+   ],
+   [
+    "dash",
+    0.03
+   ]
+  ],
+  "latency": 1.557861250003043,
+  "round1_top": [
+   "awk",
+   "sh",
+   "dash",
+   "pr",
+   "perl"
+  ],
+  "gold": "awk -f script.awk file.txt{,} | column -t",
+  "head": "awk",
+  "bm25": "awk",
+  "leaks_name": true
+ },
+ {
+  "request": "Print the list of the current directory's subdirectories",
+  "decision": "ls",
+  "choice": "ls",
+  "conf": 0.88,
+  "any": 0.93,
+  "fits": [
+   [
+    "tree",
+    0.71
+   ],
+   [
+    "ls",
+    0.56
+   ],
+   [
+    "find",
+    0.43
+   ],
+   [
+    "fd",
+    0.43
+   ],
+   [
+    "mtree",
+    0.27
+   ]
+  ],
+  "latency": 0.9641271670043352,
+  "round1_top": [
+   "ls",
+   "tree",
+   "find",
+   "fd",
+   "mtree"
+  ],
+  "gold": "find -maxdepth 1 -type d",
+  "head": "find",
+  "bm25": "heap",
+  "leaks_name": false
+ },
+ {
+  "request": "find CSS files, omitting results containing \"CVS\"",
+  "decision": "find",
+  "choice": "find",
+  "conf": 0.66,
+  "any": 0.78,
+  "fits": [
+   [
+    "find",
+    0.69
+   ],
+   [
+    "fd",
+    0.63
+   ],
+   [
+    "ugrep",
+    0.22
+   ],
+   [
+    "mdfind",
+    0.2
+   ],
+   [
+    "locate",
+    0.2
+   ]
+  ],
+  "latency": 0.8246714169945335,
+  "round1_top": [
+   "rg",
+   "find",
+   "ugrep",
+   "mdfind",
+   "pcre2grep"
+  ],
+  "gold": "find . \\! -path \"*CVS*\" -type f -name \"*.css\"",
+  "head": "find",
+  "bm25": "tclsh",
+  "leaks_name": true
+ },
+ {
+  "request": "Create a bzip2 archive `dir_txt.tar.bz2' of all .txt files in the dir/ directory tree",
+  "decision": "abstain",
+  "choice": "tar",
+  "conf": 0.89,
+  "any": 0.43,
+  "fits": [
+   [
+    "tar",
+    0.33
+   ],
+   [
+    "ditto",
+    0.18
+   ],
+   [
+    "pax",
+    0.15
+   ],
+   [
+    "ptar",
+    0.12
+   ],
+   [
+    "zsh",
+    0.12
+   ]
+  ],
+  "latency": 1.2305602920023375,
+  "round1_top": [
+   "tar",
+   "bzip2",
+   "ptar",
+   "ditto",
+   "pax"
+  ],
+  "gold": "find dir/ -name '*.txt' | tar -c --files-from=- | bzip2 > dir_txt.tar.bz2",
+  "head": "find",
+  "bm25": "ptargrep",
+  "leaks_name": false
+ },
+ {
+  "request": "Split \"$1\" into files of at most \"$2\" or default 10000 using a numeric suffix of length 6 and suffix \"${tdir}/x\"",
+  "decision": "abstain",
+  "choice": "split",
+  "conf": 0.9,
+  "any": 0.81,
+  "fits": [
+   [
+    "split",
+    0.42
+   ],
+   [
+    "csplit",
+    0.11
+   ],
+   [
+    "dd",
+    0.09
+   ],
+   [
+    "perl",
+    0.09
+   ],
+   [
+    "zipsplit",
+    0.05
+   ]
+  ],
+  "latency": 1.4936642079992453,
+  "round1_top": [
+   "split",
+   "csplit",
+   "zipsplit",
+   "dd",
+   "tiffsplit"
+  ],
+  "gold": "split -l ${2:-10000} -d -a 6 \"$1\" \"${tdir}/x\"",
+  "head": "split",
+  "bm25": "zforce",
+  "leaks_name": true
+ },
+ {
+  "request": "Find broken symlinks in current directory",
+  "decision": "find",
+  "choice": "find",
+  "conf": 0.91,
+  "any": 0.73,
+  "fits": [
+   [
+    "find",
+    0.66
+   ],
+   [
+    "fd",
+    0.34
+   ],
+   [
+    "mtree",
+    0.28
+   ],
+   [
+    "rmlint",
+    0.23
+   ],
+   [
+    "lsof",
+    0.2
+   ]
+  ],
+  "latency": 1.0890602500003297,
+  "round1_top": [
+   "find",
+   "ls",
+   "readlink",
+   "stat",
+   "realpath"
+  ],
+  "gold": "find . -type l -xtype l",
+  "head": "find",
+  "bm25": "rg",
+  "leaks_name": true
+ },
+ {
+  "request": "Convert Unix `cal` output to latex table code.",
+  "decision": "abstain",
+  "choice": "awk",
+  "conf": 0.25,
+  "any": 0.14,
+  "fits": [
+   [
+    "awk",
+    0.35
+   ],
+   [
+    "pandoc",
+    0.33
+   ],
+   [
+    "sed",
+    0.21
+   ],
+   [
+    "perl",
+    0.2
+   ],
+   [
+    "python3",
+    0.17
+   ]
+  ],
+  "latency": 1.62907954199909,
+  "round1_top": [
+   "pandoc",
+   "awk",
+   "xsltproc",
+   "ncal",
+   "textutil"
+  ],
+  "gold": "cal 02 2012|perl -lnE'$.==1||eof||do{$,=\"\\t&\";$\\=\"\\t\\\\\\\\\\n\";$l=$_;print map{substr($l,$_*3,3)}(1..5)}'",
+  "head": "cal",
+  "bm25": "uucp",
+  "leaks_name": true
+ },
+ {
+  "request": "Display operating system type, ie. GNU/Linux",
+  "decision": "uname",
+  "choice": "uname",
+  "conf": 0.98,
+  "any": 0.91,
+  "fits": [
+   [
+    "uname",
+    0.79
+   ],
+   [
+    "hostinfo",
+    0.34
+   ],
+   [
+    "getconf",
+    0.2
+   ],
+   [
+    "dmesg",
+    0.11
+   ],
+   [
+    "sh",
+    0.09
+   ]
+  ],
+  "latency": 1.4809977499971865,
+  "round1_top": [
+   "uname",
+   "hostinfo",
+   "machine",
+   "getconf",
+   "arch"
+  ],
+  "gold": "uname -o",
+  "head": "uname",
+  "bm25": "dmesg",
+  "leaks_name": false
+ },
+ {
+  "request": "Replace the text 'Windows' with 'Linux' in all text files in the current directory and below",
+  "decision": "abstain",
+  "choice": "perl",
+  "conf": 0.19,
+  "any": 0.6,
+  "fits": [
+   [
+    "tops",
+    0.37
+   ],
+   [
+    "perl",
+    0.25
+   ],
+   [
+    "sed",
+    0.22
+   ],
+   [
+    "awk",
+    0.15
+   ],
+   [
+    "ed",
+    0.14
+   ]
+  ],
+  "latency": 1.199990125001932,
+  "round1_top": [
+   "sed",
+   "tops",
+   "perl",
+   "awk",
+   "ed"
+  ],
+  "gold": "find . -name '*.txt' -print | xargs perl -pi -e's/Windows/Linux/ig' *.txt",
+  "head": "find",
+  "bm25": "pico",
+  "leaks_name": false
+ },
+ {
+  "request": "Remove leading and trailing spaces or tabs from \"   wordA wordB wordC   \"",
+  "decision": "sed",
+  "choice": "sed",
+  "conf": 0.18,
+  "any": 0.52,
+  "fits": [
+   [
+    "sed",
+    0.65
+   ],
+   [
+    "awk",
+    0.61
+   ],
+   [
+    "perl",
+    0.51
+   ],
+   [
+    "fmt",
+    0.47
+   ],
+   [
+    "ed",
+    0.32
+   ]
+  ],
+  "latency": 0.9622021670002141,
+  "round1_top": [
+   "sed",
+   "awk",
+   "perl",
+   "tr",
+   "xargs"
+  ],
+  "gold": "echo \"   wordA wordB wordC   \" | sed -e 's/^[ \\t]*//' | sed -e 's/[ \\t]*$//'",
+  "head": "echo",
+  "bm25": "expand",
+  "leaks_name": false
+ },
+ {
+  "request": "Delete all contents form the files that contain the case insensitive regex 'stringtofind' in maximum 1 level down the / directory excluding other partitions",
+  "decision": "abstain",
+  "choice": "find",
+  "conf": 0.31,
+  "any": 0.22,
+  "fits": [
+   [
+    "truncate",
+    0.14
+   ],
+   [
+    "perl",
+    0.11
+   ],
+   [
+    "ed",
+    0.1
+   ],
+   [
+    "sh",
+    0.1
+   ],
+   [
+    "find",
+    0.09
+   ]
+  ],
+  "latency": 0.8382741250024992,
+  "round1_top": [
+   "sed",
+   "xargs",
+   "pcre2grep",
+   "find",
+   "truncate"
+  ],
+  "gold": "find / -maxdepth 1 -xdev -type f -exec grep -Zli \"stringtofind\" {} + | parallel -0 sed \"'/./d'\" '{}'",
+  "head": "find",
+  "bm25": "heap",
+  "leaks_name": false
+ },
+ {
+  "request": "Find root's Ruby files accessed in the last two minutes",
+  "decision": "abstain",
+  "choice": "fs_usage",
+  "conf": 0.34,
+  "any": 0.42,
+  "fits": [
+   [
+    "opensnoop",
+    0.48
+   ],
+   [
+    "fs_usage",
+    0.37
+   ],
+   [
+    "lsof",
+    0.18
+   ],
+   [
+    "ktrace",
+    0.16
+   ],
+   [
+    "rwsnoop",
+    0.15
+   ]
+  ],
+  "latency": 1.5703229170030681,
+  "round1_top": [
+   "fs_usage",
+   "lsof",
+   "opensnoop",
+   "pathopens.d",
+   "rwsnoop"
+  ],
+  "gold": "find /apps/ -user root -type f -amin -2 -name *.rb",
+  "head": "find",
+  "bm25": "fd",
+  "leaks_name": true
+ },
+ {
+  "request": "Dump \"/dev/ttySomething\" in both hex and text",
+  "decision": "od",
+  "choice": "od",
+  "conf": 0.36,
+  "any": 0.86,
+  "fits": [
+   [
+    "od",
+    0.73
+   ],
+   [
+    "hexdump",
+    0.66
+   ],
+   [
+    "xxd",
+    0.44
+   ],
+   [
+    "dd",
+    0.13
+   ],
+   [
+    "vis",
+    0.12
+   ]
+  ],
+  "latency": 1.5235160830052337,
+  "round1_top": [
+   "od",
+   "hexdump",
+   "xxd",
+   "dd",
+   "vis"
+  ],
+  "gold": "od -t x1 -t a /dev/ttySomething",
+  "head": "od",
+  "bm25": "od",
+  "leaks_name": false
+ },
+ {
+  "request": "display all files in the current folder while discarding the errors save the output to a file",
+  "decision": "abstain",
+  "choice": "ls",
+  "conf": 0.55,
+  "any": 0.78,
+  "fits": [
+   [
+    "ls",
+    0.3
+   ],
+   [
+    "fd",
+    0.26
+   ],
+   [
+    "tree",
+    0.2
+   ],
+   [
+    "find",
+    0.2
+   ],
+   [
+    "bash",
+    0.16
+   ]
+  ],
+  "latency": 0.8189372089982498,
+  "round1_top": [
+   "ls",
+   "tree",
+   "find",
+   "pr",
+   "tee"
+  ],
+  "gold": "find . 2>/dev/null >files_and_folders",
+  "head": "find",
+  "bm25": "usdtree",
+  "leaks_name": false
+ },
+ {
+  "request": "Removes files 'junk1', 'junk2', 'junk3'.",
+  "decision": "rm",
+  "choice": "rm",
+  "conf": 0.99,
+  "any": 0.98,
+  "fits": [
+   [
+    "rm",
+    0.86
+   ],
+   [
+    "unlink",
+    0.6
+   ],
+   [
+    "trash",
+    0.15
+   ],
+   [
+    "find",
+    0.04
+   ],
+   [
+    "lz4",
+    0.04
+   ]
+  ],
+  "latency": 0.8992022909951629,
+  "round1_top": [
+   "rm",
+   "unlink",
+   "dash",
+   "trash",
+   "bash"
+  ],
+  "gold": "rm junk1 junk2 junk3",
+  "head": "rm",
+  "bm25": "pod2html",
+  "leaks_name": false
+ },
+ {
+  "request": "Create a named screen session",
+  "decision": "screen",
+  "choice": "screen",
+  "conf": 0.99,
+  "any": 0.95,
+  "fits": [
+   [
+    "screen",
+    0.65
+   ],
+   [
+    "tmux",
+    0.17
+   ],
+   [
+    "write",
+    0.05
+   ],
+   [
+    "bash",
+    0.04
+   ],
+   [
+    "dash",
+    0.03
+   ]
+  ],
+  "latency": 1.134792542005016,
+  "round1_top": [
+   "screen",
+   "tmux",
+   "launchctl",
+   "dash",
+   "bash"
+  ],
+  "gold": "screen -x main -X title blah",
+  "head": "screen",
+  "bm25": "c_rehash",
+  "leaks_name": true
+ },
+ {
+  "request": "display all the files in the home folder that have been modified in the last 7*24 hours",
+  "decision": "find",
+  "choice": "find",
+  "conf": 0.88,
+  "any": 0.87,
+  "fits": [
+   [
+    "find",
+    0.57
+   ],
+   [
+    "mdfind",
+    0.28
+   ],
+   [
+    "fd",
+    0.11
+   ],
+   [
+    "bash",
+    0.09
+   ],
+   [
+    "ls",
+    0.08
+   ]
+  ],
+  "latency": 0.8774694590028957,
+  "round1_top": [
+   "find",
+   "ls",
+   "mdfind",
+   "mactime",
+   "sh"
+  ],
+  "gold": "find $HOME -mtime -7",
+  "head": "find",
+  "bm25": "heap",
+  "leaks_name": false
+ },
+ {
+  "request": "Find all .sql files in the current directory recursively and apply script \"scriptname\" to them",
+  "decision": "abstain",
+  "choice": "find",
+  "conf": 0.45,
+  "any": 0.47,
+  "fits": [
+   [
+    "find",
+    0.27
+   ],
+   [
+    "fd",
+    0.23
+   ],
+   [
+    "apply",
+    0.16
+   ],
+   [
+    "bash",
+    0.13
+   ],
+   [
+    "xargs",
+    0.12
+   ]
+  ],
+  "latency": 0.9138009999951464,
+  "round1_top": [
+   "find",
+   "xargs",
+   "rg",
+   "apply",
+   "sqlite3"
+  ],
+  "gold": "find . -name '*.sql' -exec scriptname {} +",
+  "head": "find",
+  "bm25": "rg",
+  "leaks_name": true
+ },
+ {
+  "request": "Find files modified at least 5 days in the future",
+  "decision": "abstain",
+  "choice": "find",
+  "conf": 0.69,
+  "any": 0.72,
+  "fits": [
+   [
+    "find",
+    0.48
+   ],
+   [
+    "touch",
+    0.14
+   ],
+   [
+    "mdfind",
+    0.1
+   ],
+   [
+    "fd",
+    0.07
+   ],
+   [
+    "stat",
+    0.05
+   ]
+  ],
+  "latency": 0.8381999170014751,
+  "round1_top": [
+   "find",
+   "mdfind",
+   "stat",
+   "rg",
+   "touch"
+  ],
+  "gold": "find . -newermt \"5 days\"",
+  "head": "find",
+  "bm25": "fd",
+  "leaks_name": true
+ },
+ {
+  "request": "find all the xml files in a directory and pass it as an argument to a jar (parallel is used to achieve parallel processing)",
+  "decision": "abstain",
+  "choice": "find",
+  "conf": 0.39,
+  "any": 0.42,
+  "fits": [
+   [
+    "xargs",
+    0.15
+   ],
+   [
+    "apply",
+    0.15
+   ],
+   [
+    "fd",
+    0.13
+   ],
+   [
+    "find",
+    0.12
+   ],
+   [
+    "locate",
+    0.1
+   ]
+  ],
+  "latency": 0.923712957999669,
+  "round1_top": [
+   "xargs",
+   "find",
+   "jar",
+   "mdfind",
+   "rg"
+  ],
+  "gold": "find /dump -type f -name '*.xml' | parallel -j8 java -jar ProcessFile.jar {}",
+  "head": "find",
+  "bm25": "xpath",
+  "leaks_name": true
+ },
+ {
+  "request": "find all the regular/normal files in the current folder and replace everything expect the extension of the file and display unique file extensions",
+  "decision": "abstain",
+  "choice": "find",
+  "conf": 0.27,
+  "any": 0.13,
+  "fits": [
+   [
+    "find",
+    0.14
+   ],
+   [
+    "awk",
+    0.14
+   ],
+   [
+    "perl",
+    0.13
+   ],
+   [
+    "fd",
+    0.09
+   ],
+   [
+    "bash",
+    0.07
+   ]
+  ],
+  "latency": 0.9761020000005374,
+  "round1_top": [
+   "find",
+   "awk",
+   "fd",
+   "bash",
+   "uniq"
+  ],
+  "gold": "find . -type f | sed -e 's#.*\\(\\.[a-zA-Z]*\\)$#\\1#' | sort | uniq",
+  "head": "find",
+  "bm25": "usdtree",
+  "leaks_name": true
+ },
+ {
+  "request": "find Texinfo source files in /usr/local/doc",
+  "decision": "find",
+  "choice": "find",
+  "conf": 0.99,
+  "any": 0.88,
+  "fits": [
+   [
+    "find",
+    0.76
+   ],
+   [
+    "mdfind",
+    0.38
+   ],
+   [
+    "locate",
+    0.3
+   ],
+   [
+    "ugrep",
+    0.15
+   ],
+   [
+    "rg",
+    0.12
+   ]
+  ],
+  "latency": 0.8460974170011468,
+  "round1_top": [
+   "find",
+   "rg",
+   "mdfind",
+   "ugrep",
+   "locate"
+  ],
+  "gold": "find /usr/local/doc -name '*.texi'",
+  "head": "find",
+  "bm25": "fd",
+  "leaks_name": true
+ },
+ {
+  "request": "Create a symbolic link to \"$file\" named \"/tmp/allfiles\"",
+  "decision": "ln",
+  "choice": "ln",
+  "conf": 0.97,
+  "any": 0.94,
+  "fits": [
+   [
+    "ln",
+    0.83
+   ],
+   [
+    "link",
+    0.41
+   ],
+   [
+    "dash",
+    0.14
+   ],
+   [
+    "bash",
+    0.1
+   ],
+   [
+    "mv",
+    0.08
+   ]
+  ],
+  "latency": 1.2496553749952,
+  "round1_top": [
+   "ln",
+   "dash",
+   "sh",
+   "ditto",
+   "cp"
+  ],
+  "gold": "ln $file /tmp/allfiles",
+  "head": "ln",
+  "bm25": "c_rehash",
+  "leaks_name": false
+ },
+ {
+  "request": "display the directory name along with the modified time for all the files /var",
+  "decision": "abstain",
+  "choice": "ls",
+  "conf": 0.26,
+  "any": 0.44,
+  "fits": [
+   [
+    "find",
+    0.39
+   ],
+   [
+    "stat",
+    0.24
+   ],
+   [
+    "fd",
+    0.23
+   ],
+   [
+    "mdls",
+    0.22
+   ],
+   [
+    "istat",
+    0.21
+   ]
+  ],
+  "latency": 1.021894750003412,
+  "round1_top": [
+   "ls",
+   "stat",
+   "find",
+   "mactime",
+   "GetFileInfo"
+  ],
+  "gold": "find /var -maxdepth 2 -type d -exec stat  -c \"%n %y\" {} \\;",
+  "head": "find",
+  "bm25": "webpinfo",
+  "leaks_name": false
+ },
+ {
+  "request": "find all directories that names are 'apt' and display details",
+  "decision": "find",
+  "choice": "find",
+  "conf": 0.95,
+  "any": 0.81,
+  "fits": [
+   [
+    "find",
+    0.69
+   ],
+   [
+    "fd",
+    0.63
+   ],
+   [
+    "mdfind",
+    0.41
+   ],
+   [
+    "locate",
+    0.21
+   ],
+   [
+    "ugrep",
+    0.2
+   ]
+  ],
+  "latency": 0.7974691249983152,
+  "round1_top": [
+   "find",
+   "mdfind",
+   "rg",
+   "locate",
+   "tree"
+  ],
+  "gold": "find  / -type d -name \"apt\" -ls",
+  "head": "find",
+  "bm25": "w",
+  "leaks_name": true
+ },
+ {
+  "request": "Recursively finds all files and prints only names of files that contain \"word\" and suppressing error messages .",
+  "decision": "abstain",
+  "choice": "rg",
+  "conf": 0.38,
+  "any": 0.61,
+  "fits": [
+   [
+    "fd",
+    0.37
+   ],
+   [
+    "pcre2grep",
+    0.35
+   ],
+   [
+    "grep",
+    0.32
+   ],
+   [
+    "rg",
+    0.3
+   ],
+   [
+    "zegrep",
+    0.27
+   ]
+  ],
+  "latency": 0.8734020830015652,
+  "round1_top": [
+   "rg",
+   "ugrep",
+   "find",
+   "pcre2grep",
+   "zgrep"
+  ],
+  "gold": "find . | xargs grep 'word' -sl",
+  "head": "find",
+  "bm25": "fuser",
+  "leaks_name": false
+ },
+ {
+  "request": "Count the number of all directories under directory '/mount/point' non-recursively",
+  "decision": "find",
+  "choice": "find",
+  "conf": 0.48,
+  "any": 0.74,
+  "fits": [
+   [
+    "find",
+    0.51
+   ],
+   [
+    "fd",
+    0.31
+   ],
+   [
+    "ls",
+    0.3
+   ],
+   [
+    "tree",
+    0.18
+   ],
+   [
+    "mtree",
+    0.16
+   ]
+  ],
+  "latency": 0.8227480830028071,
+  "round1_top": [
+   "find",
+   "ls",
+   "tree",
+   "mtree",
+   "sh"
+  ],
+  "gold": "find /mount/point -maxdepth 1 -type d | wc -l",
+  "head": "find",
+  "bm25": "rg",
+  "leaks_name": false
+ },
+ {
+  "request": "Find files in the current directory and its sub-directories that begin with 'f'.",
+  "decision": "find",
+  "choice": "find",
+  "conf": 0.67,
+  "any": 0.96,
+  "fits": [
+   [
+    "fd",
+    0.79
+   ],
+   [
+    "find",
+    0.76
+   ],
+   [
+    "mdfind",
+    0.58
+   ],
+   [
+    "locate",
+    0.47
+   ],
+   [
+    "ugrep",
+    0.13
+   ]
+  ],
+  "latency": 0.8694976670012693,
+  "round1_top": [
+   "find",
+   "rg",
+   "mdfind",
+   "tree",
+   "ifind"
+  ],
+  "gold": "find . -name f* -print",
+  "head": "find",
+  "bm25": "open",
+  "leaks_name": true
+ },
+ {
+  "request": "Copy the current directory tree to \"newdirpathname\" preserving directory hierarchy",
+  "decision": "ditto",
+  "choice": "ditto",
+  "conf": 0.81,
+  "any": 0.95,
+  "fits": [
+   [
+    "ditto",
+    0.89
+   ],
+   [
+    "rsync",
+    0.7
+   ],
+   [
+    "pax",
+    0.63
+   ],
+   [
+    "cp",
+    0.5
+   ],
+   [
+    "tar",
+    0.38
+   ]
+  ],
+  "latency": 1.167898708001303,
+  "round1_top": [
+   "ditto",
+   "cp",
+   "rsync",
+   "pax",
+   "tar"
+  ],
+  "gold": "find ./ -depth -print | cpio -pvd newdirpathname",
+  "head": "find",
+  "bm25": "mtree",
+  "leaks_name": false
+ },
+ {
+  "request": "display all the directories in specific path ( saved in $x ) excluding those that are present in a path and save the ouput to a file",
+  "decision": "abstain",
+  "choice": "find",
+  "conf": 0.47,
+  "any": 0.48,
+  "fits": [
+   [
+    "find",
+    0.34
+   ],
+   [
+    "fd",
+    0.2
+   ],
+   [
+    "tree",
+    0.12
+   ],
+   [
+    "ls",
+    0.11
+   ],
+   [
+    "dash",
+    0.09
+   ]
+  ],
+  "latency": 0.8694288329934352,
+  "round1_top": [
+   "tree",
+   "ls",
+   "find",
+   "sh",
+   "bash"
+  ],
+  "gold": "find $x -type d -wholename '*' ! -wholename */@eaDir* > /tmp/mediaindex/$nn.dir",
+  "head": "find",
+  "bm25": "wait4path",
+  "leaks_name": false
+ },
+ {
+  "request": "Find all directories in current directory without going into sub-directories",
+  "decision": "find",
+  "choice": "find",
+  "conf": 0.43,
+  "any": 0.88,
+  "fits": [
+   [
+    "find",
+    0.6
+   ],
+   [
+    "fd",
+    0.57
+   ],
+   [
+    "ls",
+    0.42
+   ],
+   [
+    "mdfind",
+    0.28
+   ],
+   [
+    "tree",
+    0.23
+   ]
+  ],
+  "latency": 0.7807658329984406,
+  "round1_top": [
+   "ls",
+   "find",
+   "tree",
+   "mtree",
+   "rg"
+  ],
+  "gold": "find . -type d -maxdepth 1",
+  "head": "find",
+  "bm25": "mkdir",
+  "leaks_name": true
+ },
+ {
+  "request": "List regular files in current directory with read, write and execute permission for all users and also show the permissions",
+  "decision": "abstain",
+  "choice": "ls",
+  "conf": 0.46,
+  "any": 0.67,
+  "fits": [
+   [
+    "find",
+    0.41
+   ],
+   [
+    "ls",
+    0.24
+   ],
+   [
+    "tree",
+    0.19
+   ],
+   [
+    "fd",
+    0.13
+   ],
+   [
+    "awk",
+    0.12
+   ]
+  ],
+  "latency": 0.8969639169954462,
+  "round1_top": [
+   "ls",
+   "find",
+   "stat",
+   "sh",
+   "tree"
+  ],
+  "gold": "find . -type f  -perm 777 -exec ls -l {} \\;",
+  "head": "find",
+  "bm25": "users",
+  "leaks_name": false
+ },
+ {
+  "request": "Remove the \"123_\" prefix from all filenames of .txt files in current directory.",
+  "decision": "abstain",
+  "choice": "mv",
+  "conf": 0.56,
+  "any": 0.31,
+  "fits": [
+   [
+    "mv",
+    0.39
+   ],
+   [
+    "perl",
+    0.16
+   ],
+   [
+    "python3",
+    0.14
+   ],
+   [
+    "sed",
+    0.13
+   ],
+   [
+    "xargs",
+    0.11
+   ]
+  ],
+  "latency": 0.7553829999960726,
+  "round1_top": [
+   "mv",
+   "sh",
+   "dash",
+   "bash",
+   "perl"
+  ],
+  "gold": "find -name \"123*.txt\" -exec rename 's/^123_//' {} \";\"",
+  "head": "find",
+  "bm25": "kdestroy",
+  "leaks_name": false
+ },
+ {
+  "request": "Find all executable files under {} and take their names only and reverse sort them",
+  "decision": "abstain",
+  "choice": "find",
+  "conf": 0.7,
+  "any": 0.46,
+  "fits": [
+   [
+    "find",
+    0.32
+   ],
+   [
+    "fd",
+    0.3
+   ],
+   [
+    "sort",
+    0.15
+   ],
+   [
+    "bash",
+    0.11
+   ],
+   [
+    "rev",
+    0.08
+   ]
+  ],
+  "latency": 1.02269887500006,
+  "round1_top": [
+   "find",
+   "tree",
+   "ls",
+   "sort",
+   "fd"
+  ],
+  "gold": "find {} -type f -depth 1 -print0 -perm +0111 | xargs -n1 -0 basename | sort -r && echo",
+  "head": "find",
+  "bm25": "sort",
+  "leaks_name": true
+ },
+ {
+  "request": "delete all the empty files in the current directory",
+  "decision": "abstain",
+  "choice": "find",
+  "conf": 0.62,
+  "any": 0.44,
+  "fits": [
+   [
+    "rm",
+    0.28
+   ],
+   [
+    "truncate",
+    0.23
+   ],
+   [
+    "unlink",
+    0.21
+   ],
+   [
+    "fd",
+    0.15
+   ],
+   [
+    "xargs",
+    0.13
+   ]
+  ],
+  "latency": 0.772226374996535,
+  "round1_top": [
+   "find",
+   "rm",
+   "unlink",
+   "truncate",
+   "rmlint"
+  ],
+  "gold": "find . -empty -exec rm {}\\;",
+  "head": "find",
+  "bm25": "heap",
+  "leaks_name": false
+ },
+ {
+  "request": "Find all *.txt files/directories under current directory and execute process once with all of them as arguments",
+  "decision": "abstain",
+  "choice": "xargs",
+  "conf": 0.35,
+  "any": 0.72,
+  "fits": [
+   [
+    "xargs",
+    0.36
+   ],
+   [
+    "bash",
+    0.27
+   ],
+   [
+    "apply",
+    0.17
+   ],
+   [
+    "fd",
+    0.17
+   ],
+   [
+    "find",
+    0.15
+   ]
+  ],
+  "latency": 0.7491846249977243,
+  "round1_top": [
+   "xargs",
+   "find",
+   "apply",
+   "rg",
+   "mdfind"
+  ],
+  "gold": "find . -name \\*.txt -exec process {} +",
+  "head": "find",
+  "bm25": "fuser",
+  "leaks_name": true
+ },
+ {
+  "request": "display all the statistics of the files in the current folder and discard the errors. ( + symbol at the end is used to give stat bulk input than a single file )",
+  "decision": "abstain",
+  "choice": "stat",
+  "conf": 0.47,
+  "any": 0.84,
+  "fits": [
+   [
+    "stat",
+    0.35
+   ],
+   [
+    "mdls",
+    0.18
+   ],
+   [
+    "du",
+    0.16
+   ],
+   [
+    "mtree",
+    0.15
+   ],
+   [
+    "affstats",
+    0.1
+   ]
+  ],
+  "latency": 1.2870196250005392,
+  "round1_top": [
+   "stat",
+   "du",
+   "istat",
+   "img_stat",
+   "cksum"
+  ],
+  "gold": "find . -type f -exec stat {} + > /dev/null",
+  "head": "find",
+  "bm25": "usdtree",
+  "leaks_name": false
+ },
+ {
+  "request": "Move all *.data files/directories in $S directory to $S/data/ directory",
+  "decision": "abstain",
+  "choice": "mv",
+  "conf": 0.86,
+  "any": 0.65,
+  "fits": [
+   [
+    "mv",
+    0.36
+   ],
+   [
+    "rsync",
+    0.16
+   ],
+   [
+    "ditto",
+    0.16
+   ],
+   [
+    "tcsh",
+    0.14
+   ],
+   [
+    "sh",
+    0.1
+   ]
+  ],
+  "latency": 0.9980130839976482,
+  "round1_top": [
+   "mv",
+   "cp",
+   "find",
+   "sh",
+   "rsync"
+  ],
+  "gold": "find \"${S}\" -name '*.data' -exec mv '{}' \"${S}/data/\" \\;",
+  "head": "find",
+  "bm25": "heap",
+  "leaks_name": false
+ },
+ {
+  "request": "display all the files in the current folder along with the hidden files with the depth",
+  "decision": "abstain",
+  "choice": "tree",
+  "conf": 0.86,
+  "any": 0.75,
+  "fits": [
+   [
+    "tree",
+    0.46
+   ],
+   [
+    "find",
+    0.34
+   ],
+   [
+    "fd",
+    0.32
+   ],
+   [
+    "ls",
+    0.21
+   ],
+   [
+    "mtree",
+    0.13
+   ]
+  ],
+  "latency": 0.8317282909993082,
+  "round1_top": [
+   "tree",
+   "find",
+   "ls",
+   "mtree",
+   "fd"
+  ],
+  "gold": "find . \u2014 name \"*\" \u2014 print -\u043e -name \".*\" \u2014 print -depth",
+  "head": "find",
+  "bm25": "webpinfo",
+  "leaks_name": false
+ },
+ {
+  "request": "set alias \"histgrep\" for command \"history | grep\"",
+  "decision": "abstain",
+  "choice": "alias",
+  "conf": 0.84,
+  "any": 0.7,
+  "fits": [
+   [
+    "alias",
+    0.22
+   ],
+   [
+    "tcsh",
+    0.14
+   ],
+   [
+    "type",
+    0.11
+   ],
+   [
+    "dash",
+    0.08
+   ],
+   [
+    "zsh",
+    0.08
+   ]
+  ],
+  "latency": 1.2326253339997493,
+  "round1_top": [
+   "alias",
+   "dash",
+   "zsh",
+   "postalias",
+   "sh"
+  ],
+  "gold": "alias histgrep=\"history | grep\"",
+  "head": "alias",
+  "bm25": "grep",
+  "leaks_name": true
+ },
+ {
+  "request": "Find all files/directories that were modified after February 1st under '/usr' directory tree",
+  "decision": "find",
+  "choice": "find",
+  "conf": 0.97,
+  "any": 0.9,
+  "fits": [
+   [
+    "find",
+    0.73
+   ],
+   [
+    "mdfind",
+    0.29
+   ],
+   [
+    "bash",
+    0.09
+   ],
+   [
+    "sh",
+    0.05
+   ],
+   [
+    "ls",
+    0.05
+   ]
+  ],
+  "latency": 0.8117353749985341,
+  "round1_top": [
+   "find",
+   "mdfind",
+   "stat",
+   "bash",
+   "tree"
+  ],
+  "gold": "find /usr -newermt \"Feb 1\"",
+  "head": "find",
+  "bm25": "tree",
+  "leaks_name": true
+ },
+ {
+  "request": "Find UTF-8 files with BOM",
+  "decision": "abstain",
+  "choice": "encguess",
+  "conf": 0.38,
+  "any": 0.26,
+  "fits": [
+   [
+    "pcre2grep",
+    0.21
+   ],
+   [
+    "rg",
+    0.17
+   ],
+   [
+    "find",
+    0.17
+   ],
+   [
+    "sutf",
+    0.15
+   ],
+   [
+    "encguess",
+    0.14
+   ]
+  ],
+  "latency": 0.9405426250013988,
+  "round1_top": [
+   "pcre2grep",
+   "rg",
+   "ugrep",
+   "awk",
+   "xxd"
+  ],
+  "gold": "find -type f -print0 | xargs -0 grep -l `printf '^\\xef\\xbb\\xbf'` | sed 's/^/found BOM in: /'",
+  "head": "find",
+  "bm25": "lsbom",
+  "leaks_name": true
+ },
+ {
+  "request": "file1.txt and file2.txt both contain a name and a number on each line. For each name whose corresponding number does not match in both files, display the \"Age of ... is different\" message.",
+  "decision": "abstain",
+  "choice": "awk",
+  "conf": 0.51,
+  "any": 0.3,
+  "fits": [
+   [
+    "awk",
+    0.45
+   ],
+   [
+    "perl",
+    0.22
+   ],
+   [
+    "python",
+    0.21
+   ],
+   [
+    "lzdiff",
+    0.12
+   ],
+   [
+    "diff",
+    0.11
+   ]
+  ],
+  "latency": 1.1005444999973406,
+  "round1_top": [
+   "awk",
+   "diff",
+   "perl",
+   "join",
+   "sdiff"
+  ],
+  "gold": "join file{1,2}.txt | awk '$2 != $3 { print \"Age of \" $1 \" is different\" }'",
+  "head": "join",
+  "bm25": "whois",
+  "leaks_name": false
+ },
+ {
+  "request": "display all the text and pdf files in the current folder",
+  "decision": "ls",
+  "choice": "ls",
+  "conf": 0.48,
+  "any": 0.66,
+  "fits": [
+   [
+    "mdfind",
+    0.52
+   ],
+   [
+    "find",
+    0.46
+   ],
+   [
+    "fd",
+    0.44
+   ],
+   [
+    "tree",
+    0.31
+   ],
+   [
+    "ls",
+    0.26
+   ]
+  ],
+  "latency": 0.7469492090021959,
+  "round1_top": [
+   "ls",
+   "find",
+   "tree",
+   "pr",
+   "mdfind"
+  ],
+  "gold": "find . -regex \".*\\(\\.txt\\|\\.pdf\\)$\"",
+  "head": "find",
+  "bm25": "trash",
+  "leaks_name": false
+ },
+ {
+  "request": "find the file \"httpd.log\" in the entire file system",
+  "decision": "find",
+  "choice": "find",
+  "conf": 0.8,
+  "any": 0.95,
+  "fits": [
+   [
+    "find",
+    0.81
+   ],
+   [
+    "mdfind",
+    0.67
+   ],
+   [
+    "locate",
+    0.55
+   ],
+   [
+    "ifind",
+    0.23
+   ],
+   [
+    "ugrep",
+    0.15
+   ]
+  ],
+  "latency": 0.8160605419980129,
+  "round1_top": [
+   "find",
+   "locate",
+   "mdfind",
+   "rg",
+   "ugrep"
+  ],
+  "gold": "find / -type f -name httpd.log",
+  "head": "find",
+  "bm25": "uulog",
+  "leaks_name": true
+ },
+ {
+  "request": "Find all files/directories under current directory tree with '.old' extension",
+  "decision": "find",
+  "choice": "find",
+  "conf": 0.99,
+  "any": 0.97,
+  "fits": [
+   [
+    "find",
+    0.82
+   ],
+   [
+    "mdfind",
+    0.58
+   ],
+   [
+    "locate",
+    0.39
+   ],
+   [
+    "ugrep",
+    0.25
+   ],
+   [
+    "rg",
+    0.15
+   ]
+  ],
+  "latency": 0.7794483339966973,
+  "round1_top": [
+   "find",
+   "rg",
+   "mdfind",
+   "ugrep",
+   "locate"
+  ],
+  "gold": "find . -name \u201d*.old\u201d -print",
+  "head": "find",
+  "bm25": "tree",
+  "leaks_name": true
+ },
+ {
+  "request": "Print what year it was 222 days ago",
+  "decision": "abstain",
+  "choice": "date",
+  "conf": 0.93,
+  "any": 0.58,
+  "fits": [
+   [
+    "python3",
+    0.35
+   ],
+   [
+    "date",
+    0.33
+   ],
+   [
+    "python",
+    0.33
+   ],
+   [
+    "bash",
+    0.23
+   ],
+   [
+    "perl",
+    0.23
+   ]
+  ],
+  "latency": 1.1589409580046777,
+  "round1_top": [
+   "date",
+   "ncal",
+   "sh",
+   "zsh",
+   "bash"
+  ],
+  "gold": "date '+%Y' --date='222 days ago'",
+  "head": "date",
+  "bm25": "what",
+  "leaks_name": false
+ },
+ {
+  "request": "File 'mydatafile' has a number on each line, display the sum of these numbers.",
+  "decision": "awk",
+  "choice": "awk",
+  "conf": 0.84,
+  "any": 0.73,
+  "fits": [
+   [
+    "awk",
+    0.7
+   ],
+   [
+    "dc",
+    0.5
+   ],
+   [
+    "perl",
+    0.36
+   ],
+   [
+    "yq",
+    0.35
+   ],
+   [
+    "python",
+    0.33
+   ]
+  ],
+  "latency": 2.085140249997494,
+  "round1_top": [
+   "awk",
+   "dc",
+   "perl",
+   "sum",
+   "sh"
+  ],
+  "gold": "awk '{s+=$1} END {print s}' mydatafile",
+  "head": "awk",
+  "bm25": "cut",
+  "leaks_name": false
+ },
+ {
+  "request": "display all directories in the entire file system",
+  "decision": "find",
+  "choice": "find",
+  "conf": 0.75,
+  "any": 0.78,
+  "fits": [
+   [
+    "find",
+    0.57
+   ],
+   [
+    "fd",
+    0.2
+   ],
+   [
+    "tree",
+    0.19
+   ],
+   [
+    "locate",
+    0.11
+   ],
+   [
+    "mtree",
+    0.09
+   ]
+  ],
+  "latency": 0.8439943330013193,
+  "round1_top": [
+   "tree",
+   "find",
+   "mtree",
+   "ls",
+   "sh"
+  ],
+  "gold": "find / -type d -print",
+  "head": "find",
+  "bm25": "blkcat",
+  "leaks_name": false
+ },
+ {
+  "request": "Create an empty file \"foo\" in each directory under the current directory containing a file named \"bar\".",
+  "decision": "abstain",
+  "choice": "find",
+  "conf": 0.69,
+  "any": 0.33,
+  "fits": [
+   [
+    "perl",
+    0.19
+   ],
+   [
+    "find",
+    0.16
+   ],
+   [
+    "xargs",
+    0.13
+   ],
+   [
+    "mkfile",
+    0.12
+   ],
+   [
+    "sh",
+    0.1
+   ]
+  ],
+  "latency": 0.8355372910009464,
+  "round1_top": [
+   "find",
+   "touch",
+   "xargs",
+   "sh",
+   "mkfile"
+  ],
+  "gold": "find -name \"bar\" -execdir touch foo \\;",
+  "head": "find",
+  "bm25": "rg",
+  "leaks_name": false
+ },
+ {
+  "request": "display all the files in the file system which have been modified in the last 10 minutes",
+  "decision": "find",
+  "choice": "find",
+  "conf": 0.89,
+  "any": 0.76,
+  "fits": [
+   [
+    "find",
+    0.61
+   ],
+   [
+    "mdfind",
+    0.32
+   ],
+   [
+    "bash",
+    0.09
+   ],
+   [
+    "fd",
+    0.08
+   ],
+   [
+    "mactime",
+    0.06
+   ]
+  ],
+  "latency": 0.7816102910001064,
+  "round1_top": [
+   "find",
+   "mdfind",
+   "ls",
+   "mactime",
+   "stat"
+  ],
+  "gold": "find / -mmin -10",
+  "head": "find",
+  "bm25": "tail",
+  "leaks_name": false
+ },
+ {
+  "request": "Create a sorted unique list of new or modified files comparing \"old/\" and \"new/\"",
+  "decision": "abstain",
+  "choice": "comm",
+  "conf": 0.29,
+  "any": 0.65,
+  "fits": [
+   [
+    "diff",
+    0.24
+   ],
+   [
+    "git",
+    0.22
+   ],
+   [
+    "sdiff",
+    0.21
+   ],
+   [
+    "comm",
+    0.17
+   ],
+   [
+    "mtree",
+    0.15
+   ]
+  ],
+  "latency": 1.329482207998808,
+  "round1_top": [
+   "diff",
+   "comm",
+   "tsk_comparedir",
+   "scalar",
+   "mtree"
+  ],
+  "gold": "(rsync -rcn --out-format=\"%n\" old/ new/ && rsync -rcn --out-format=\"%n\" new/ old/) | sort | uniq",
+  "head": "rsync",
+  "bm25": "lpmove",
+  "leaks_name": false
+ },
+ {
+  "request": "find all the files that have been modified today",
+  "decision": "find",
+  "choice": "find",
+  "conf": 0.96,
+  "any": 0.9,
+  "fits": [
+   [
+    "find",
+    0.69
+   ],
+   [
+    "mdfind",
+    0.36
+   ],
+   [
+    "locate",
+    0.1
+   ],
+   [
+    "stat",
+    0.06
+   ],
+   [
+    "ls",
+    0.06
+   ]
+  ],
+  "latency": 0.8216180420058663,
+  "round1_top": [
+   "find",
+   "mdfind",
+   "rg",
+   "stat",
+   "mactime"
+  ],
+  "gold": "find /tmp/test/* -mtime +0",
+  "head": "find",
+  "bm25": "fuser",
+  "leaks_name": true
+ },
+ {
+  "request": "Find all the .mp3 files in the music folder and pass to the ls command, -print0 is required if any filenames contain whitespace",
+  "decision": "abstain",
+  "choice": "find",
+  "conf": 0.81,
+  "any": 0.68,
+  "fits": [
+   [
+    "find",
+    0.48
+   ],
+   [
+    "mdfind",
+    0.34
+   ],
+   [
+    "fd",
+    0.31
+   ],
+   [
+    "locate",
+    0.18
+   ],
+   [
+    "tree",
+    0.11
+   ]
+  ],
+  "latency": 0.7616212079956313,
+  "round1_top": [
+   "find",
+   "mdfind",
+   "xargs",
+   "rg",
+   "ugrep"
+  ],
+  "gold": "find ./music -name \"*.mp3\" -print0 | xargs -0 ls",
+  "head": "find",
+  "bm25": "trash",
+  "leaks_name": true
+ },
+ {
+  "request": "Serach  in root directory all files which  have more than 2 links.",
+  "decision": "find",
+  "choice": "find",
+  "conf": 0.98,
+  "any": 0.77,
+  "fits": [
+   [
+    "find",
+    0.63
+   ],
+   [
+    "bash",
+    0.09
+   ],
+   [
+    "stat",
+    0.07
+   ],
+   [
+    "sh",
+    0.07
+   ],
+   [
+    "awk",
+    0.07
+   ]
+  ],
+  "latency": 0.7467648329984513,
+  "round1_top": [
+   "find",
+   "stat",
+   "sh",
+   "ls",
+   "rg"
+  ],
+  "gold": "find / -links +2 -print",
+  "head": "find",
+  "bm25": "fuser",
+  "leaks_name": false
+ },
+ {
+  "request": "set a crontab to create or update the timestamp of \"washere2\" in the current directory every 30 minutes.",
+  "decision": "crontab",
+  "choice": "crontab",
+  "conf": 0.93,
+  "any": 0.9,
+  "fits": [
+   [
+    "crontab",
+    0.61
+   ],
+   [
+    "launchctl",
+    0.2
+   ],
+   [
+    "launchd",
+    0.17
+   ],
+   [
+    "touch",
+    0.1
+   ],
+   [
+    "entr",
+    0.07
+   ]
+  ],
+  "latency": 1.148875875005615,
+  "round1_top": [
+   "crontab",
+   "touch",
+   "dash",
+   "launchctl",
+   "sh"
+  ],
+  "gold": "echo \"30 * * * * touch $(pwd)/washere2\" | crontab",
+  "head": "echo",
+  "bm25": "libtool",
+  "leaks_name": false
+ },
+ {
+  "request": "change the permissions of all the files ending with \"fits\" in the folder \"/store/01\" and save the output file names to a log file",
+  "decision": "abstain",
+  "choice": "find",
+  "conf": 0.39,
+  "any": 0.38,
+  "fits": [
+   [
+    "chmod",
+    0.17
+   ],
+   [
+    "perl",
+    0.1
+   ],
+   [
+    "find",
+    0.09
+   ],
+   [
+    "sudo",
+    0.09
+   ],
+   [
+    "sh",
+    0.08
+   ]
+  ],
+  "latency": 0.8811792920023436,
+  "round1_top": [
+   "chmod",
+   "find",
+   "sh",
+   "xargs",
+   "dash"
+  ],
+  "gold": "find /store/01 -name \"*.fits\" -exec chmod -x+r {} \\; -exec ls -l {} \\; | tee ALL_FILES.LOG",
+  "head": "find",
+  "bm25": "screencapture",
+  "leaks_name": false
+ },
+ {
+  "request": "Rename all files matching \"access.log.<number>.gz\" incrementing <number>.",
+  "decision": "abstain",
+  "choice": "mv",
+  "conf": 0.24,
+  "any": 0.12,
+  "fits": [
+   [
+    "mv",
+    0.15
+   ],
+   [
+    "perl",
+    0.08
+   ],
+   [
+    "bash",
+    0.07
+   ],
+   [
+    "python3",
+    0.07
+   ],
+   [
+    "find",
+    0.06
+   ]
+  ],
+  "latency": 0.8514944999988074,
+  "round1_top": [
+   "mv",
+   "bash",
+   "zsh",
+   "dash",
+   "sh"
+  ],
+  "gold": "find -name 'access.log.*.gz' | sort -Vr | rename 's/(\\d+)/$1+1/ge'",
+  "head": "find",
+  "bm25": "vtool",
+  "leaks_name": false
+ },
+ {
+  "request": "On host \"server_b\", connect as ssh user \"user\" and copy \"/my_folder/my_file.xml\" to directory \"/my_new_folder/\", with all transfer data relayed through local host.",
+  "decision": "abstain",
+  "choice": "scp",
+  "conf": 0.49,
+  "any": 0.74,
+  "fits": [
+   [
+    "rsync",
+    0.34
+   ],
+   [
+    "scp",
+    0.25
+   ],
+   [
+    "pax",
+    0.23
+   ],
+   [
+    "sftp",
+    0.21
+   ],
+   [
+    "uucp",
+    0.18
+   ]
+  ],
+  "latency": 1.2192606249955134,
+  "round1_top": [
+   "scp",
+   "ssh",
+   "dash",
+   "rsync",
+   "ditto"
+  ],
+  "gold": "scp -3 user@server_b:/my_folder/my_file.xml user@server_b:/my_new_folder/",
+  "head": "scp",
+  "bm25": "trash",
+  "leaks_name": false
+ },
+ {
+  "request": "Search for the case insensitive regex 'STRING_TO_SEARCH_FOR' in all files under current directory",
+  "decision": "rg",
+  "choice": "rg",
+  "conf": 0.51,
+  "any": 0.95,
+  "fits": [
+   [
+    "rg",
+    0.62
+   ],
+   [
+    "pcre2grep",
+    0.62
+   ],
+   [
+    "grep",
+    0.49
+   ],
+   [
+    "ugrep",
+    0.44
+   ],
+   [
+    "zegrep",
+    0.27
+   ]
+  ],
+  "latency": 1.0171743750033784,
+  "round1_top": [
+   "rg",
+   "ugrep",
+   "pcre2grep",
+   "grep",
+   "zegrep"
+  ],
+  "gold": "find . -type f -exec grep -n -i STRING_TO_SEARCH_FOR /dev/null {} \\;",
+  "head": "find",
+  "bm25": "rg",
+  "leaks_name": false
+ },
+ {
+  "request": "Search directory tree `MyApp.app' for directories whose name is 'Headers' and delete them suppressing error messages",
+  "decision": "abstain",
+  "choice": "find",
+  "conf": 0.74,
+  "any": 0.54,
+  "fits": [
+   [
+    "rm",
+    0.15
+   ],
+   [
+    "rmdir",
+    0.13
+   ],
+   [
+    "find",
+    0.11
+   ],
+   [
+    "fd",
+    0.11
+   ],
+   [
+    "bash",
+    0.1
+   ]
+  ],
+  "latency": 1.7991316249972442,
+  "round1_top": [
+   "find",
+   "rm",
+   "sh",
+   "rmdir",
+   "bash"
+  ],
+  "gold": "find MyApp.app -name Headers -type d -exec rm -rf \"{}\" \\; 2>/dev/null",
+  "head": "find",
+  "bm25": "lwp-dump",
+  "leaks_name": false
+ },
+ {
+  "request": "Print the git log in a tabular form",
+  "decision": "abstain",
+  "choice": "git",
+  "conf": 0.89,
+  "any": 0.84,
+  "fits": [
+   [
+    "git",
+    0.39
+   ],
+   [
+    "pr",
+    0.11
+   ],
+   [
+    "po-fetch",
+    0.08
+   ],
+   [
+    "bat",
+    0.07
+   ],
+   [
+    "zsh",
+    0.07
+   ]
+  ],
+  "latency": 1.027564333002374,
+  "round1_top": [
+   "git",
+   "scalar",
+   "pr",
+   "bat",
+   "npx"
+  ],
+  "gold": "git log --pretty=format:'%h|%an|%s' -10 | column -t -s '|'",
+  "head": "git",
+  "bm25": "snmptable",
+  "leaks_name": true
+ },
+ {
+  "request": "Make DNS lookup requests for domain list in file '/path/to/host-list.txt'",
+  "decision": "abstain",
+  "choice": "xargs",
+  "conf": 0.43,
+  "any": 0.81,
+  "fits": [
+   [
+    "adig",
+    0.38
+   ],
+   [
+    "dig",
+    0.34
+   ],
+   [
+    "xargs",
+    0.26
+   ],
+   [
+    "host",
+    0.25
+   ],
+   [
+    "nslookup",
+    0.22
+   ]
+  ],
+  "latency": 0.8530294169977424,
+  "round1_top": [
+   "host",
+   "nslookup",
+   "dig",
+   "adig",
+   "whois"
+  ],
+  "gold": "dig -f /path/to/host-list.txt",
+  "head": "dig",
+  "bm25": "host",
+  "leaks_name": false
+ },
+ {
+  "request": "Finds more than 5 days old files in two directories  and compresses them.",
+  "decision": "abstain",
+  "choice": "find",
+  "conf": 0.59,
+  "any": 0.25,
+  "fits": [
+   [
+    "compress",
+    0.11
+   ],
+   [
+    "find",
+    0.09
+   ],
+   [
+    "lz4",
+    0.09
+   ],
+   [
+    "perl",
+    0.09
+   ],
+   [
+    "bzip2",
+    0.09
+   ]
+  ],
+  "latency": 0.712363083002856,
+  "round1_top": [
+   "find",
+   "tar",
+   "sh",
+   "xargs",
+   "bash"
+  ],
+  "gold": "find /home/folder1 /home/folder2 -type f -mtime +5 -exec compress {} \\;",
+  "head": "find",
+  "bm25": "open",
+  "leaks_name": false
+ },
+ {
+  "request": "Find all files/directories that belong to the group 'accts' under '/apps' directory tree",
+  "decision": "find",
+  "choice": "find",
+  "conf": 0.94,
+  "any": 0.94,
+  "fits": [
+   [
+    "find",
+    0.73
+   ],
+   [
+    "fd",
+    0.16
+   ],
+   [
+    "locate",
+    0.12
+   ],
+   [
+    "ugrep",
+    0.12
+   ],
+   [
+    "mdfind",
+    0.09
+   ]
+  ],
+  "latency": 0.7256689580026432,
+  "round1_top": [
+   "find",
+   "ifind",
+   "sh",
+   "mdfind",
+   "tree"
+  ],
+  "gold": "find /apps -group accts -print",
+  "head": "find",
+  "bm25": "tree",
+  "leaks_name": true
+ },
+ {
+  "request": "Find the passwd file under root and two levels down",
+  "decision": "find",
+  "choice": "find",
+  "conf": 0.99,
+  "any": 0.91,
+  "fits": [
+   [
+    "find",
+    0.76
+   ],
+   [
+    "mdfind",
+    0.31
+   ],
+   [
+    "ugrep",
+    0.3
+   ],
+   [
+    "tree",
+    0.26
+   ],
+   [
+    "locate",
+    0.25
+   ]
+  ],
+  "latency": 0.754187999998976,
+  "round1_top": [
+   "find",
+   "tree",
+   "mdfind",
+   "rg",
+   "locate"
+  ],
+  "gold": "find / -maxdepth 3 -name passwd",
+  "head": "find",
+  "bm25": "dsenableroot",
+  "leaks_name": true
+ },
+ {
+  "request": "Display a long listing of the oldest file under '/hom/backups' directory tree",
+  "decision": "abstain",
+  "choice": "find",
+  "conf": 0.52,
+  "any": 0.53,
+  "fits": [
+   [
+    "find",
+    0.29
+   ],
+   [
+    "bash",
+    0.13
+   ],
+   [
+    "sort",
+    0.1
+   ],
+   [
+    "mdfind",
+    0.1
+   ],
+   [
+    "ls",
+    0.09
+   ]
+  ],
+  "latency": 0.7472308750002412,
+  "round1_top": [
+   "find",
+   "ls",
+   "tree",
+   "sh",
+   "stat"
+  ],
+  "gold": "find /home/backups -printf \"%T@ %p\\n\" | sort -n | head -1 | cut -d\" \" -f2- | xargs ls -al",
+  "head": "find",
+  "bm25": "usdtree",
+  "leaks_name": false
+ },
+ {
+  "request": "display long listing of all the text files in the current folder (plus at the end executes quickly by sending bulk data as input to the command in exec)",
+  "decision": "abstain",
+  "choice": "ls",
+  "conf": 0.82,
+  "any": 0.4,
+  "fits": [
+   [
+    "ls",
+    0.3
+   ],
+   [
+    "find",
+    0.16
+   ],
+   [
+    "xargs",
+    0.09
+   ],
+   [
+    "fd",
+    0.08
+   ],
+   [
+    "tree",
+    0.08
+   ]
+  ],
+  "latency": 0.7769331250019604,
+  "round1_top": [
+   "ls",
+   "xargs",
+   "find",
+   "pr",
+   "fd"
+  ],
+  "gold": "find . -name \"*.txt\" -exec ls -la {} +",
+  "head": "find",
+  "bm25": "usdtree",
+  "leaks_name": false
+ },
+ {
+  "request": "Make a list of all files in the current directory tree, except *.png and *.class, and view it in the vim editor",
+  "decision": "abstain",
+  "choice": "find",
+  "conf": 0.46,
+  "any": 0.43,
+  "fits": [
+   [
+    "fd",
+    0.3
+   ],
+   [
+    "find",
+    0.22
+   ],
+   [
+    "ugrep",
+    0.11
+   ],
+   [
+    "vim",
+    0.08
+   ],
+   [
+    "tree",
+    0.07
+   ]
+  ],
+  "latency": 1.0587361669968232,
+  "round1_top": [
+   "find",
+   "tree",
+   "vim",
+   "rg",
+   "fd"
+  ],
+  "gold": "find . | grep -E -v '\\.png$|\\.class$' | vim -",
+  "head": "find",
+  "bm25": "tree",
+  "leaks_name": false
+ },
+ {
+  "request": "Write summary of files present only in dir1, and which files differ between dir1 and dir2 to file 'difference1.txt'",
+  "decision": "abstain",
+  "choice": "diff",
+  "conf": 0.55,
+  "any": 0.67,
+  "fits": [
+   [
+    "comm",
+    0.25
+   ],
+   [
+    "diff",
+    0.22
+   ],
+   [
+    "tsk_comparedir",
+    0.16
+   ],
+   [
+    "vimdiff",
+    0.15
+   ],
+   [
+    "sdiff",
+    0.13
+   ]
+  ],
+  "latency": 1.1165322080050828,
+  "round1_top": [
+   "diff",
+   "comm",
+   "sdiff",
+   "tsk_comparedir",
+   "lzdiff"
+  ],
+  "gold": "diff -r dir1 dir2 | grep dir1 | awk '{print $4}' > difference1.txt",
+  "head": "diff",
+  "bm25": "exiftool",
+  "leaks_name": false
+ },
+ {
+  "request": "Send contents of \"input.txt.gz\" to \"command\" on stdin",
+  "decision": "zcat",
+  "choice": "zcat",
+  "conf": 0.73,
+  "any": 0.79,
+  "fits": [
+   [
+    "zcat",
+    0.54
+   ],
+   [
+    "gunzip",
+    0.43
+   ],
+   [
+    "gzip",
+    0.34
+   ],
+   [
+    "bunzip2",
+    0.16
+   ],
+   [
+    "uncompress",
+    0.13
+   ]
+  ],
+  "latency": 1.365470374999859,
+  "round1_top": [
+   "zcat",
+   "uncompress",
+   "gunzip",
+   "gzip",
+   "bzip2"
+  ],
+  "gold": "zcat input.txt.gz | command -",
+  "head": "zcat",
+  "bm25": "uuto",
+  "leaks_name": false
+ },
+ {
+  "request": "Print lines 10000 to 10010 from input \"seq 1 100000\"",
+  "decision": "abstain",
+  "choice": "sed",
+  "conf": 0.47,
+  "any": 0.69,
+  "fits": [
+   [
+    "sed",
+    0.43
+   ],
+   [
+    "tail",
+    0.41
+   ],
+   [
+    "awk",
+    0.37
+   ],
+   [
+    "ed",
+    0.31
+   ],
+   [
+    "less",
+    0.3
+   ]
+  ],
+  "latency": 1.1186237090005307,
+  "round1_top": [
+   "tail",
+   "sed",
+   "awk",
+   "nl",
+   "head"
+  ],
+  "gold": "seq 1 100000 | sed -n '10000,10010p'",
+  "head": "seq",
+  "bm25": "seq",
+  "leaks_name": true
+ },
+ {
+  "request": "Search all .c and .h files in the current directory tree for string \"e\"",
+  "decision": "rg",
+  "choice": "rg",
+  "conf": 0.6,
+  "any": 0.89,
+  "fits": [
+   [
+    "rg",
+    0.57
+   ],
+   [
+    "ugrep",
+    0.45
+   ],
+   [
+    "grep",
+    0.44
+   ],
+   [
+    "pcre2grep",
+    0.39
+   ],
+   [
+    "zegrep",
+    0.2
+   ]
+  ],
+  "latency": 0.7614187500003027,
+  "round1_top": [
+   "rg",
+   "ugrep",
+   "pcre2grep",
+   "grep",
+   "find"
+  ],
+  "gold": "find . -name \"*.[ch]\" -exec grep --color -aHn \"e\" {} \\;",
+  "head": "find",
+  "bm25": "rg",
+  "leaks_name": false
+ },
+ {
+  "request": "List files larger than 10MB under /var/log /tmp that haven't changed in a month",
+  "decision": "find",
+  "choice": "find",
+  "conf": 0.99,
+  "any": 0.55,
+  "fits": [
+   [
+    "find",
+    0.75
+   ],
+   [
+    "fd",
+    0.31
+   ],
+   [
+    "mdfind",
+    0.09
+   ],
+   [
+    "bash",
+    0.08
+   ],
+   [
+    "sh",
+    0.05
+   ]
+  ],
+  "latency": 0.7643881660042098,
+  "round1_top": [
+   "find",
+   "tree",
+   "mdfind",
+   "sh",
+   "stat"
+  ],
+  "gold": "find /tmp /var/tmp -size +30M -mtime 31 -ls",
+  "head": "find",
+  "bm25": "unzip",
+  "leaks_name": false
+ },
+ {
+  "request": "find all the files in the current directory which have the size 40 bytes in the current disk partition.",
+  "decision": "find",
+  "choice": "find",
+  "conf": 0.96,
+  "any": 0.86,
+  "fits": [
+   [
+    "find",
+    0.76
+   ],
+   [
+    "mdfind",
+    0.27
+   ],
+   [
+    "fd",
+    0.25
+   ],
+   [
+    "stat",
+    0.06
+   ],
+   [
+    "ls",
+    0.05
+   ]
+  ],
+  "latency": 0.7477915839990601,
+  "round1_top": [
+   "find",
+   "ifind",
+   "mdfind",
+   "stat",
+   "fd"
+  ],
+  "gold": "find . -size -40 -xdev -print",
+  "head": "find",
+  "bm25": "size",
+  "leaks_name": true
+ },
+ {
+  "request": "Delete all files under $INTRANETDESTINATION/monthly directory tree that were modified more than 366 days ago",
+  "decision": "abstain",
+  "choice": "find",
+  "conf": 0.9,
+  "any": 0.52,
+  "fits": [
+   [
+    "rm",
+    0.16
+   ],
+   [
+    "xargs",
+    0.09
+   ],
+   [
+    "perl",
+    0.09
+   ],
+   [
+    "unlink",
+    0.08
+   ],
+   [
+    "awk",
+    0.07
+   ]
+  ],
+  "latency": 0.77226983300352,
+  "round1_top": [
+   "find",
+   "rm",
+   "sh",
+   "bash",
+   "xargs"
+  ],
+  "gold": "find $INTRANETDESTINATION/monthly -mtime +366 -exec rm {} \\;",
+  "head": "find",
+  "bm25": "fuser",
+  "leaks_name": false
+ },
+ {
+  "request": "Find all *.txt files/directories under current directory and execute the python script hello.py for each of them with the file path as an argument to the script",
+  "decision": "abstain",
+  "choice": "fd",
+  "conf": 0.25,
+  "any": 0.67,
+  "fits": [
+   [
+    "xargs",
+    0.35
+   ],
+   [
+    "fd",
+    0.31
+   ],
+   [
+    "find",
+    0.3
+   ],
+   [
+    "entr",
+    0.22
+   ],
+   [
+    "apply",
+    0.18
+   ]
+  ],
+  "latency": 0.7863825000022189,
+  "round1_top": [
+   "xargs",
+   "find",
+   "rg",
+   "apply",
+   "sh"
+  ],
+  "gold": "find . -name \"*.txt\" | python hello.py",
+  "head": "find",
+  "bm25": "tsk_comparedir",
+  "leaks_name": true
+ },
+ {
+  "request": "Starts new window named 'win0' in detached tmux session 'vims', opens file 'foo' within.",
+  "decision": "abstain",
+  "choice": "tmux",
+  "conf": 0.94,
+  "any": 0.78,
+  "fits": [
+   [
+    "tmux",
+    0.22
+   ],
+   [
+    "screen",
+    0.12
+   ],
+   [
+    "bash",
+    0.11
+   ],
+   [
+    "sh",
+    0.08
+   ],
+   [
+    "zstdless",
+    0.04
+   ]
+  ],
+  "latency": 0.9030021250000573,
+  "round1_top": [
+   "tmux",
+   "screen",
+   "fzf-tmux",
+   "sh",
+   "dash"
+  ],
+  "gold": "tmux new-window -t vims -d -n \"win0\" \"vim foo\"",
+  "head": "tmux",
+  "bm25": "fzf-tmux",
+  "leaks_name": true
+ },
+ {
+  "request": "Remove leading and trailing space from lines in file 'in.txt', interactively page through a hexdump of the result.",
+  "decision": "abstain",
+  "choice": "sed",
+  "conf": 0.22,
+  "any": 0.23,
+  "fits": [
+   [
+    "perl",
+    0.19
+   ],
+   [
+    "sed",
+    0.14
+   ],
+   [
+    "awk",
+    0.13
+   ],
+   [
+    "vim",
+    0.13
+   ],
+   [
+    "ed",
+    0.1
+   ]
+  ],
+  "latency": 0.7679676670013578,
+  "round1_top": [
+   "sed",
+   "xxd",
+   "ed",
+   "od",
+   "awk"
+  ],
+  "gold": "awk '{gsub(/^[ \\t]+|[ \\t]+$/,\"\"); print;}' in.txt | hexdump -C | less",
+  "head": "awk",
+  "bm25": "colrm",
+  "leaks_name": false
+ },
+ {
+  "request": "Find all files under current directory and run the command fromdos for each of them with the file path as argument",
+  "decision": "abstain",
+  "choice": "apply",
+  "conf": 0.31,
+  "any": 0.5,
+  "fits": [
+   [
+    "xargs",
+    0.41
+   ],
+   [
+    "apply",
+    0.24
+   ],
+   [
+    "find",
+    0.22
+   ],
+   [
+    "fd",
+    0.22
+   ],
+   [
+    "entr",
+    0.12
+   ]
+  ],
+  "latency": 0.8732654589985032,
+  "round1_top": [
+   "xargs",
+   "find",
+   "apply",
+   "fd",
+   "sh"
+  ],
+  "gold": "find . -type f -exec fromdos {} \\;",
+  "head": "find",
+  "bm25": "rg",
+  "leaks_name": true
+ },
+ {
+  "request": "Print git branch currently checked out in a working directory.",
+  "decision": "abstain",
+  "choice": "git",
+  "conf": 0.98,
+  "any": 0.86,
+  "fits": [
+   [
+    "git",
+    0.32
+   ],
+   [
+    "sh",
+    0.07
+   ],
+   [
+    "scalar",
+    0.05
+   ],
+   [
+    "bash",
+    0.04
+   ],
+   [
+    "zstdless",
+    0.02
+   ]
+  ],
+  "latency": 0.9043563329978497,
+  "round1_top": [
+   "git",
+   "scalar",
+   "sh",
+   "bash",
+   "spray"
+  ],
+  "gold": "git status | grep \"On branch\" | cut -c 11-",
+  "head": "git",
+  "bm25": "infocmp",
+  "leaks_name": true
+ },
+ {
+  "request": "Find all files in the current directory tree whose size is greater than 1MB, and move them to the \"files\" folder",
+  "decision": "abstain",
+  "choice": "find",
+  "conf": 0.82,
+  "any": 0.41,
+  "fits": [
+   [
+    "mv",
+    0.12
+   ],
+   [
+    "find",
+    0.09
+   ],
+   [
+    "fd",
+    0.07
+   ],
+   [
+    "sh",
+    0.06
+   ],
+   [
+    "xargs",
+    0.06
+   ]
+  ],
+  "latency": 0.7403645000013057,
+  "round1_top": [
+   "find",
+   "sh",
+   "bash",
+   "xargs",
+   "mv"
+  ],
+  "gold": "find . -size +1M -print0 | xargs -0 -I '{}' mv '{}' files",
+  "head": "find",
+  "bm25": "trash",
+  "leaks_name": true
+ },
+ {
+  "request": "Search the home directory for filenames starting with \"xx\" except for \"xxx\" files",
+  "decision": "find",
+  "choice": "find",
+  "conf": 0.9,
+  "any": 0.89,
+  "fits": [
+   [
+    "find",
+    0.7
+   ],
+   [
+    "mdfind",
+    0.59
+   ],
+   [
+    "locate",
+    0.58
+   ],
+   [
+    "ugrep",
+    0.16
+   ],
+   [
+    "bash",
+    0.12
+   ]
+  ],
+  "latency": 0.7463375829975121,
+  "round1_top": [
+   "find",
+   "mdfind",
+   "rg",
+   "ugrep",
+   "ls"
+  ],
+  "gold": "find ~ -name 'xx*' -and -not -name 'xxx'",
+  "head": "find",
+  "bm25": "rg",
+  "leaks_name": false
+ },
+ {
+  "request": "Remove trailing white spaces from all files under dir directory",
+  "decision": "abstain",
+  "choice": "sed",
+  "conf": 0.47,
+  "any": 0.27,
+  "fits": [
+   [
+    "sed",
+    0.24
+   ],
+   [
+    "awk",
+    0.23
+   ],
+   [
+    "tops",
+    0.16
+   ],
+   [
+    "tr",
+    0.15
+   ],
+   [
+    "vim",
+    0.13
+   ]
+  ],
+  "latency": 0.832903583002917,
+  "round1_top": [
+   "sed",
+   "awk",
+   "perl",
+   "ed",
+   "tops"
+  ],
+  "gold": "find dir -type f -exec sed -i 's/ *$//' '{}' ';'",
+  "head": "find",
+  "bm25": "rm",
+  "leaks_name": false
+ },
+ {
+  "request": "Copies all files like \"*FooBar*\" under the current directory to the '~/foo/bar' directory.",
+  "decision": "cp",
+  "choice": "cp",
+  "conf": 0.78,
+  "any": 0.82,
+  "fits": [
+   [
+    "rsync",
+    0.59
+   ],
+   [
+    "cp",
+    0.57
+   ],
+   [
+    "ditto",
+    0.29
+   ],
+   [
+    "pax",
+    0.16
+   ],
+   [
+    "install",
+    0.15
+   ]
+  ],
+  "latency": 0.9178892089985311,
+  "round1_top": [
+   "cp",
+   "rsync",
+   "ditto",
+   "mv",
+   "find"
+  ],
+  "gold": "find . -name '*FoooBar*' | sed 's/.*/\"&\"/' | xargs cp ~/foo/bar",
+  "head": "find",
+  "bm25": "rg",
+  "leaks_name": false
+ },
+ {
+  "request": "search for all the log files in the folder \"/var/log\" and create a tar ball and compress it to bz2.",
+  "decision": "abstain",
+  "choice": "tar",
+  "conf": 0.86,
+  "any": 0.56,
+  "fits": [
+   [
+    "tar",
+    0.26
+   ],
+   [
+    "ditto",
+    0.24
+   ],
+   [
+    "zip",
+    0.14
+   ],
+   [
+    "ptar",
+    0.12
+   ],
+   [
+    "pax",
+    0.12
+   ]
+  ],
+  "latency": 0.7815667920003762,
+  "round1_top": [
+   "tar",
+   "ptar",
+   "pax",
+   "bzip2",
+   "ditto"
+  ],
+  "gold": "find /var/log -name '*.log' | tar cv --files-from=- | bzip2 > log.tar.bz2",
+  "head": "find",
+  "bm25": "logger",
+  "leaks_name": false
+ },
+ {
+  "request": "Delete empty lines from standard input",
+  "decision": "sed",
+  "choice": "sed",
+  "conf": 0.64,
+  "any": 0.64,
+  "fits": [
+   [
+    "sed",
+    0.72
+   ],
+   [
+    "awk",
+    0.51
+   ],
+   [
+    "perl",
+    0.25
+   ],
+   [
+    "grep",
+    0.22
+   ],
+   [
+    "ed",
+    0.21
+   ]
+  ],
+  "latency": 0.8956076249960461,
+  "round1_top": [
+   "sed",
+   "awk",
+   "grep",
+   "ed",
+   "uniq"
+  ],
+  "gold": "sed -n \"s/^$//;t;p;\"",
+  "head": "sed",
+  "bm25": "tee",
+  "leaks_name": false
+ },
+ {
+  "request": "display all the file in the folder /home/david/ which start with the word \"index\"",
+  "decision": "ls",
+  "choice": "ls",
+  "conf": 0.42,
+  "any": 0.89,
+  "fits": [
+   [
+    "fd",
+    0.78
+   ],
+   [
+    "find",
+    0.69
+   ],
+   [
+    "mdfind",
+    0.57
+   ],
+   [
+    "ls",
+    0.35
+   ],
+   [
+    "tree",
+    0.21
+   ]
+  ],
+  "latency": 0.830754208000144,
+  "round1_top": [
+   "ls",
+   "find",
+   "rg",
+   "mdfind",
+   "tree"
+  ],
+  "gold": "find /home/david -name 'index*'",
+  "head": "find",
+  "bm25": "heap",
+  "leaks_name": false
+ },
+ {
+  "request": "display list of all the files in the current folder which are empty.",
+  "decision": "find",
+  "choice": "find",
+  "conf": 0.94,
+  "any": 0.59,
+  "fits": [
+   [
+    "find",
+    0.73
+   ],
+   [
+    "rmlint",
+    0.21
+   ],
+   [
+    "awk",
+    0.15
+   ],
+   [
+    "stat",
+    0.11
+   ],
+   [
+    "wc",
+    0.11
+   ]
+  ],
+  "latency": 0.8016423750013928,
+  "round1_top": [
+   "find",
+   "ls",
+   "rmlint",
+   "stat",
+   "wc"
+  ],
+  "gold": "find . -size 0 -ls",
+  "head": "find",
+  "bm25": "heap",
+  "leaks_name": false
+ },
+ {
+  "request": "Numerically sort each line of standard input",
+  "decision": "sort",
+  "choice": "sort",
+  "conf": 0.99,
+  "any": 0.8,
+  "fits": [
+   [
+    "sort",
+    0.72
+   ],
+   [
+    "perl",
+    0.14
+   ],
+   [
+    "awk",
+    0.06
+   ],
+   [
+    "zsh",
+    0.05
+   ],
+   [
+    "tsort",
+    0.02
+   ]
+  ],
+  "latency": 0.9193109580010059,
+  "round1_top": [
+   "sort",
+   "tsort",
+   "nl",
+   "awk",
+   "perl"
+  ],
+  "gold": "sort -n",
+  "head": "sort",
+  "bm25": "tee",
+  "leaks_name": true
+ },
+ {
+  "request": "Print file system disk space usage and grand total for the root file system with sizes in powers of 1000",
+  "decision": "abstain",
+  "choice": "df",
+  "conf": 0.9,
+  "any": 0.91,
+  "fits": [
+   [
+    "df",
+    0.47
+   ],
+   [
+    "du",
+    0.29
+   ],
+   [
+    "snmpdf",
+    0.09
+   ],
+   [
+    "repquota",
+    0.06
+   ],
+   [
+    "quota",
+    0.05
+   ]
+  ],
+  "latency": 1.3547722080038511,
+  "round1_top": [
+   "df",
+   "snmpdf",
+   "systemstats",
+   "quota",
+   "stat"
+  ],
+  "gold": "df -H --total /",
+  "head": "df",
+  "bm25": "blkcat",
+  "leaks_name": false
+ },
+ {
+  "request": "Print position number of day '9' in fourth line of calendar output for September, 2009.",
+  "decision": "abstain",
+  "choice": "cal",
+  "conf": 0.42,
+  "any": 0.82,
+  "fits": [
+   [
+    "cal",
+    0.38
+   ],
+   [
+    "ncal",
+    0.37
+   ],
+   [
+    "awk",
+    0.13
+   ],
+   [
+    "grep",
+    0.12
+   ],
+   [
+    "python",
+    0.1
+   ]
+  ],
+  "latency": 0.7037500840015127,
+  "round1_top": [
+   "ncal",
+   "cal",
+   "date",
+   "zsh",
+   "sh"
+  ],
+  "gold": "cal 09 2009 | awk '{day=\"9\"; if (NR==4) {col=index($0,day); print col } }'",
+  "head": "cal",
+  "bm25": "icat",
+  "leaks_name": false
+ },
+ {
+  "request": "find all hidden files in the current folder which have been modified after profile file",
+  "decision": "find",
+  "choice": "find",
+  "conf": 0.91,
+  "any": 0.68,
+  "fits": [
+   [
+    "find",
+    0.51
+   ],
+   [
+    "mdfind",
+    0.26
+   ],
+   [
+    "fd",
+    0.21
+   ],
+   [
+    "bash",
+    0.07
+   ],
+   [
+    "rg",
+    0.06
+   ]
+  ],
+  "latency": 0.9411187919977237,
+  "round1_top": [
+   "find",
+   "mdfind",
+   "rg",
+   "ls",
+   "ifind"
+  ],
+  "gold": "find . -type f -name \".*\" -newer .cshrc -print",
+  "head": "find",
+  "bm25": "which",
+  "leaks_name": true
+ },
+ {
+  "request": "Set 444 permission to all regular files under current directory",
+  "decision": "abstain",
+  "choice": "chmod",
+  "conf": 0.8,
+  "any": 0.77,
+  "fits": [
+   [
+    "chmod",
+    0.32
+   ],
+   [
+    "find",
+    0.14
+   ],
+   [
+    "xargs",
+    0.11
+   ],
+   [
+    "perl",
+    0.08
+   ],
+   [
+    "sh",
+    0.07
+   ]
+  ],
+  "latency": 0.9123217090018443,
+  "round1_top": [
+   "chmod",
+   "find",
+   "sh",
+   "dash",
+   "xargs"
+  ],
+  "gold": "find . -type f -print | xargs chmod 444",
+  "head": "find",
+  "bm25": "hostname",
+  "leaks_name": false
+ },
+ {
+  "request": "download content from \"http://search.twitter.com/search.json?q=node.js\" and format it as json",
+  "decision": "curl",
+  "choice": "curl",
+  "conf": 0.76,
+  "any": 0.85,
+  "fits": [
+   [
+    "curl",
+    0.66
+   ],
+   [
+    "lwp-request",
+    0.41
+   ],
+   [
+    "nc",
+    0.25
+   ],
+   [
+    "lwp-download",
+    0.23
+   ],
+   [
+    "python3",
+    0.2
+   ]
+  ],
+  "latency": 1.2611275000017486,
+  "round1_top": [
+   "curl",
+   "yq",
+   "lwp-request",
+   "nc",
+   "jq"
+  ],
+  "gold": "curl -s http://search.twitter.com/search.json?q=node.js | json",
+  "head": "curl",
+  "bm25": "json-glib-format",
+  "leaks_name": false
+ },
+ {
+  "request": "Search for 'example' in all regular files from the current directory tree",
+  "decision": "rg",
+  "choice": "rg",
+  "conf": 0.47,
+  "any": 0.91,
+  "fits": [
+   [
+    "rg",
+    0.7
+   ],
+   [
+    "ugrep",
+    0.57
+   ],
+   [
+    "fd",
+    0.55
+   ],
+   [
+    "pcre2grep",
+    0.51
+   ],
+   [
+    "bzgrep",
+    0.49
+   ]
+  ],
+  "latency": 0.8216011249969597,
+  "round1_top": [
+   "rg",
+   "ugrep",
+   "pcre2grep",
+   "grep",
+   "find"
+  ],
+  "gold": "find -type f -print0 | xargs -r0 grep -F 'example'",
+  "head": "find",
+  "bm25": "rg",
+  "leaks_name": false
+ },
+ {
+  "request": "Delete all .svn files/directories under current directory",
+  "decision": "abstain",
+  "choice": "find",
+  "conf": 0.79,
+  "any": 0.48,
+  "fits": [
+   [
+    "rm",
+    0.3
+   ],
+   [
+    "find",
+    0.22
+   ],
+   [
+    "trash",
+    0.19
+   ],
+   [
+    "git",
+    0.18
+   ],
+   [
+    "unlink",
+    0.15
+   ]
+  ],
+  "latency": 0.8164302919976762,
+  "round1_top": [
+   "rm",
+   "find",
+   "unlink",
+   "trash",
+   "bash"
+  ],
+  "gold": "find . -name .svn -delete",
+  "head": "find",
+  "bm25": "open",
+  "leaks_name": false
+ },
+ {
+  "request": "Execute COMMAND on all files and directories in the current directory tree",
+  "decision": "abstain",
+  "choice": "find",
+  "conf": 0.53,
+  "any": 0.72,
+  "fits": [
+   [
+    "xargs",
+    0.2
+   ],
+   [
+    "apply",
+    0.19
+   ],
+   [
+    "entr",
+    0.19
+   ],
+   [
+    "find",
+    0.18
+   ],
+   [
+    "tops",
+    0.15
+   ]
+  ],
+  "latency": 0.8150851669997792,
+  "round1_top": [
+   "xargs",
+   "find",
+   "apply",
+   "rg",
+   "ugrep"
+  ],
+  "gold": "find . -exec COMMAND {} +",
+  "head": "find",
+  "bm25": "tree",
+  "leaks_name": false
+ },
+ {
+  "request": "List .html files in the current directory tree that contain string \"base\\-maps\" but do NOT contain string \"base\\-maps\\-bot\"",
+  "decision": "abstain",
+  "choice": "rg",
+  "conf": 0.63,
+  "any": 0.75,
+  "fits": [
+   [
+    "rg",
+    0.49
+   ],
+   [
+    "pcre2grep",
+    0.48
+   ],
+   [
+    "ugrep",
+    0.44
+   ],
+   [
+    "fd",
+    0.4
+   ],
+   [
+    "awk",
+    0.27
+   ]
+  ],
+  "latency": 0.7701177089984412,
+  "round1_top": [
+   "rg",
+   "ugrep",
+   "find",
+   "pcre2grep",
+   "mdfind"
+  ],
+  "gold": "find . -name \"*.html\" -exec grep -lR 'base\\-maps' {} \\; | xargs grep -L 'base\\-maps\\-bot'",
+  "head": "find",
+  "bm25": "net-server",
+  "leaks_name": false
+ },
+ {
+  "request": "Search the `images' directory tree for regular files",
+  "decision": "find",
+  "choice": "find",
+  "conf": 0.98,
+  "any": 0.96,
+  "fits": [
+   [
+    "find",
+    0.79
+   ],
+   [
+    "tree",
+    0.35
+   ],
+   [
+    "ls",
+    0.27
+   ],
+   [
+    "mdfind",
+    0.26
+   ],
+   [
+    "locate",
+    0.22
+   ]
+  ],
+  "latency": 0.7692242080011056,
+  "round1_top": [
+   "find",
+   "tree",
+   "ls",
+   "rg",
+   "mdfind"
+  ],
+  "gold": "find images/ -type f",
+  "head": "find",
+  "bm25": "treereg",
+  "leaks_name": false
+ },
+ {
+  "request": "search for all html files in current folder folder and create a zip file of all these files",
+  "decision": "abstain",
+  "choice": "zip",
+  "conf": 0.69,
+  "any": 0.45,
+  "fits": [
+   [
+    "zip",
+    0.39
+   ],
+   [
+    "tar",
+    0.21
+   ],
+   [
+    "jar",
+    0.19
+   ],
+   [
+    "archiveutil",
+    0.14
+   ],
+   [
+    "ditto",
+    0.13
+   ]
+  ],
+  "latency": 0.9898188750012196,
+  "round1_top": [
+   "zip",
+   "streamzip",
+   "ditto",
+   "archiveutil",
+   "pax"
+  ],
+  "gold": "find . -type f -name \"*.html\" | zip -j all-html-files -@",
+  "head": "find",
+  "bm25": "zipgrep",
+  "leaks_name": false
+ },
+ {
+  "request": "Create script filesPermissions.sh that restores the original permissions of the regular files in the current directory tree",
+  "decision": "abstain",
+  "choice": "chmod",
+  "conf": 0.35,
+  "any": 0.24,
+  "fits": [
+   [
+    "chmod",
+    0.17
+   ],
+   [
+    "pax",
+    0.11
+   ],
+   [
+    "mtree",
+    0.09
+   ],
+   [
+    "lsbom",
+    0.09
+   ],
+   [
+    "tmutil",
+    0.07
+   ]
+  ],
+  "latency": 0.9613958340050885,
+  "round1_top": [
+   "chmod",
+   "mtree",
+   "find",
+   "sh",
+   "zsh"
+  ],
+  "gold": "find . -type f | xargs stat -c \"%a %n\" | awk '{print \"chmod \"$1\" \"$2}' > ./filesPermissions.sh",
+  "head": "find",
+  "bm25": "usdtree",
+  "leaks_name": false
+ },
+ {
+  "request": "Create a symbolic link in the current directory to \"$file\"",
+  "decision": "ln",
+  "choice": "ln",
+  "conf": 0.99,
+  "any": 0.95,
+  "fits": [
+   [
+    "ln",
+    0.8
+   ],
+   [
+    "c_rehash",
+    0.05
+   ],
+   [
+    "ditto",
+    0.05
+   ],
+   [
+    "cp",
+    0.05
+   ],
+   [
+    "mv",
+    0.05
+   ]
+  ],
+  "latency": 0.7757897909978055,
+  "round1_top": [
+   "ln",
+   "c_rehash",
+   "dash",
+   "sh",
+   "ditto"
+  ],
+  "gold": "ln -s \"$file\"",
+  "head": "ln",
+  "bm25": "c_rehash",
+  "leaks_name": false
+ },
+ {
+  "request": "Move all directories from the `sourceDir' directory tree to the `destDir' directory",
+  "decision": "abstain",
+  "choice": "mv",
+  "conf": 0.47,
+  "any": 0.49,
+  "fits": [
+   [
+    "rsync",
+    0.29
+   ],
+   [
+    "mv",
+    0.2
+   ],
+   [
+    "ditto",
+    0.12
+   ],
+   [
+    "cp",
+    0.09
+   ],
+   [
+    "tar",
+    0.07
+   ]
+  ],
+  "latency": 0.8492185000068275,
+  "round1_top": [
+   "mv",
+   "rsync",
+   "cp",
+   "ditto",
+   "find"
+  ],
+  "gold": "find sourceDir -mindepth 1 -type d  -exec mv -t destDir \"{}\"  \\+",
+  "head": "find",
+  "bm25": "lpmove",
+  "leaks_name": false
+ },
+ {
+  "request": "list in long format all files from / whose filename ends in \"jbd\", not descending into directories that are not readable while searching, and not descending into directories on other filesystems",
+  "decision": "abstain",
+  "choice": "find",
+  "conf": 0.9,
+  "any": 0.84,
+  "fits": [
+   [
+    "find",
+    0.37
+   ],
+   [
+    "fd",
+    0.15
+   ],
+   [
+    "mdfind",
+    0.07
+   ],
+   [
+    "bash",
+    0.07
+   ],
+   [
+    "ls",
+    0.06
+   ]
+  ],
+  "latency": 0.8319454579977901,
+  "round1_top": [
+   "find",
+   "ls",
+   "tree",
+   "rg",
+   "ifind"
+  ],
+  "gold": "find / -mount \\! -readable -prune  -o  -path /dev -prune  -o  -name '*.jbd' -ls",
+  "head": "find",
+  "bm25": "mesg",
+  "leaks_name": false
+ },
+ {
+  "request": "display the long listing of all files in /var/log which were modified 60 days or more ago.",
+  "decision": "abstain",
+  "choice": "find",
+  "conf": 0.69,
+  "any": 0.82,
+  "fits": [
+   [
+    "find",
+    0.22
+   ],
+   [
+    "ls",
+    0.2
+   ],
+   [
+    "bash",
+    0.12
+   ],
+   [
+    "fd",
+    0.12
+   ],
+   [
+    "sh",
+    0.08
+   ]
+  ],
+  "latency": 0.821687915995426,
+  "round1_top": [
+   "find",
+   "ls",
+   "sh",
+   "stat",
+   "tree"
+  ],
+  "gold": "find /var/log/ -mtime +60 -type f -exec ls -l {} \\;",
+  "head": "find",
+  "bm25": "fuser",
+  "leaks_name": false
+ },
+ {
+  "request": "set alias \"devn\" for command \"cat > /dev/null\"",
+  "decision": "abstain",
+  "choice": "alias",
+  "conf": 0.88,
+  "any": 0.58,
+  "fits": [
+   [
+    "alias",
+    0.33
+   ],
+   [
+    "hash",
+    0.2
+   ],
+   [
+    "tcsh",
+    0.16
+   ],
+   [
+    "zsh",
+    0.09
+   ],
+   [
+    "head",
+    0.09
+   ]
+  ],
+  "latency": 0.7299279579965514,
+  "round1_top": [
+   "alias",
+   "postalias",
+   "dash",
+   "zsh",
+   "sh"
+  ],
+  "gold": "alias devn='cat > /dev/null'",
+  "head": "alias",
+  "bm25": "dev_mkdb",
+  "leaks_name": true
+ },
+ {
+  "request": "Save the list of files modified within a fortnight ago to `deploy.txt' removing the leading ./ from the file names",
+  "decision": "abstain",
+  "choice": "find",
+  "conf": 0.75,
+  "any": 0.47,
+  "fits": [
+   [
+    "find",
+    0.29
+   ],
+   [
+    "git",
+    0.12
+   ],
+   [
+    "mdfind",
+    0.11
+   ],
+   [
+    "sh",
+    0.07
+   ],
+   [
+    "bash",
+    0.06
+   ]
+  ],
+  "latency": 0.813092083997617,
+  "round1_top": [
+   "find",
+   "git",
+   "mdfind",
+   "ls",
+   "sh"
+  ],
+  "gold": "find . -type f -mtime -14 | sed 's|./||' >deploy.txt",
+  "head": "find",
+  "bm25": "screencapture",
+  "leaks_name": false
+ },
+ {
+  "request": "List and see contents of all abc.def files under the directories /ghi and /jkl",
+  "decision": "abstain",
+  "choice": "find",
+  "conf": 0.59,
+  "any": 0.75,
+  "fits": [
+   [
+    "fd",
+    0.46
+   ],
+   [
+    "find",
+    0.44
+   ],
+   [
+    "mtree",
+    0.38
+   ],
+   [
+    "ugrep",
+    0.18
+   ],
+   [
+    "mdfind",
+    0.18
+   ]
+  ],
+  "latency": 0.8005667500037816,
+  "round1_top": [
+   "find",
+   "rg",
+   "ls",
+   "ugrep",
+   "tree"
+  ],
+  "gold": "find /ghi /jkl -type f -name abc.def 2> /dev/null -exec ls {} \\; -exec cat {} \\;",
+  "head": "find",
+  "bm25": "tree",
+  "leaks_name": false
+ },
+ {
+  "request": "Read a line of standard input into variable \"_command\" with the prompt as the current working directory followed by \"$\"",
+  "decision": "abstain",
+  "choice": "read",
+  "conf": 0.33,
+  "any": 0.78,
+  "fits": [
+   [
+    "bash",
+    0.22
+   ],
+   [
+    "tcsh",
+    0.19
+   ],
+   [
+    "read",
+    0.17
+   ],
+   [
+    "dash",
+    0.17
+   ],
+   [
+    "zsh",
+    0.16
+   ]
+  ],
+  "latency": 1.1598003750041244,
+  "round1_top": [
+   "read",
+   "dash",
+   "bash",
+   "zsh",
+   "tcsh"
+  ],
+  "gold": "read -p \"`pwd -P`\\$ \" _command",
+  "head": "read",
+  "bm25": "cpan",
+  "leaks_name": true
+ },
+ {
+  "request": "search for all the php files in the folder \"/home/mywebsite\" which have been changed in the last 30*24 hours",
+  "decision": "find",
+  "choice": "find",
+  "conf": 0.98,
+  "any": 0.81,
+  "fits": [
+   [
+    "find",
+    0.74
+   ],
+   [
+    "mdfind",
+    0.19
+   ],
+   [
+    "fd",
+    0.17
+   ],
+   [
+    "locate",
+    0.09
+   ],
+   [
+    "bash",
+    0.07
+   ]
+  ],
+  "latency": 0.8707194579983479,
+  "round1_top": [
+   "find",
+   "rg",
+   "mdfind",
+   "ugrep",
+   "ifind"
+  ],
+  "gold": "find /home/mywebsite -type f -name \"*.php\" -ctime -30",
+  "head": "find",
+  "bm25": "heap",
+  "leaks_name": false
+ },
+ {
+  "request": "Print numbers from 1 to 10 with 2 values per line",
+  "decision": "abstain",
+  "choice": "pr",
+  "conf": 0.47,
+  "any": 0.89,
+  "fits": [
+   [
+    "perl",
+    0.26
+   ],
+   [
+    "jot",
+    0.25
+   ],
+   [
+    "awk",
+    0.25
+   ],
+   [
+    "pr",
+    0.24
+   ],
+   [
+    "seq",
+    0.23
+   ]
+  ],
+  "latency": 0.8584581249961047,
+  "round1_top": [
+   "jot",
+   "seq",
+   "awk",
+   "pr",
+   "perl"
+  ],
+  "gold": "seq 10 | sed '2~2G' | awk -v RS='' '{$1=$1; print}'",
+  "head": "seq",
+  "bm25": "mpg123",
+  "leaks_name": false
+ },
+ {
+  "request": "Change permissions to 644 for all regular files under the /path/to/dir/ tree",
+  "decision": "abstain",
+  "choice": "chmod",
+  "conf": 0.71,
+  "any": 0.85,
+  "fits": [
+   [
+    "chmod",
+    0.41
+   ],
+   [
+    "xargs",
+    0.11
+   ],
+   [
+    "find",
+    0.08
+   ],
+   [
+    "sudo",
+    0.08
+   ],
+   [
+    "perl",
+    0.07
+   ]
+  ],
+  "latency": 0.7453767909973976,
+  "round1_top": [
+   "chmod",
+   "find",
+   "sh",
+   "sudo",
+   "dash"
+  ],
+  "gold": "find /path/to/dir/ -type f -print0 | xargs -0 chmod 644",
+  "head": "find",
+  "bm25": "treereg",
+  "leaks_name": false
+ }
+]
