@@ -59,6 +59,10 @@ Out of scope for the Rust CLI: tab bankruptcy (browser extension), clipboard rou
 - 1,200 requests/min (20/s) → concurrency cap 16, retries honoring `retry-after`,
   `why` pre-filters logs so a 50k-line log needs ≤ 20 requests.
 - Literal reading → atomic, explicit questions with `NONE` options and absolute fit Nouls.
+- Noul and Choice probabilities are not on one scale (TypeSafe's jaggedness page: a Noul and an
+  equivalent yes/no Choice on the same question can answer 0.22 vs 0.01) → the one threshold
+  gates absolute Nouls only (`is`, the "any" Noul of `pick`/`why`, `run`'s fit, `add`, `sort`);
+  a Choice answer is relative and must beat `NONE`, never the threshold.
 - No arithmetic, dates, or counting in questions; code does those.
 
 ## Exit codes
