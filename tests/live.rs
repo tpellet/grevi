@@ -51,3 +51,29 @@ fn inventory_finds_many_tools_here() {
         }
     }
 }
+
+#[test]
+#[ignore]
+fn live_run_routes_tar() {
+    if !live_key_present() {
+        return;
+    }
+    let out = assert_cmd::Command::cargo_bin("hunch")
+        .unwrap()
+        .args([
+            "--json",
+            "run",
+            "--dry-run",
+            "extract",
+            "the",
+            "gzipped",
+            "archive",
+        ])
+        .output()
+        .unwrap();
+    let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+    assert!(
+        ["tar", "bsdtar", "gunzip", "gzip"].contains(&v["data"]["tool"].as_str().unwrap_or("")),
+        "{v}"
+    );
+}
