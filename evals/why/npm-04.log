@@ -1,0 +1,300 @@
+     13|   describe('beforeEach', () => {
+     14|     beforeEach(async () => {
+     15|       await page.getByTestId('non-existing').click()
+       |                                              ^
+     16|     }, 500)
+     17|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[19/36]⎯
+
+ FAIL  |firefox| hooks-timeout.test.ts > timeouts are failing correctly > afterEach > skipped
+TimeoutError: locator.click: Timeout 250ms exceeded.
+Call log:
+  - waiting for locator('[data-vitest="true"]').contentFrame().getByTestId('non-existing')
+
+ ❯ hooks-timeout.test.ts:23:46
+     21|   describe('afterEach', () => {
+     22|     afterEach(async () => {
+     23|       await page.getByTestId('non-existing').click()
+       |                                              ^
+     24|     }, 500)
+     25|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[20/36]⎯
+
+ FAIL  |firefox| hooks-timeout.test.ts > timeouts are failing correctly > onTestFinished > fails
+TimeoutError: locator.click: Timeout 250ms exceeded.
+Call log:
+  - waiting for locator('[data-vitest="true"]').contentFrame().getByTestId('non-existing')
+
+ ❯ hooks-timeout.test.ts:48:48
+     46|     it('fails', ({ onTestFinished }) => {
+     47|       onTestFinished(async () => {
+     48|         await page.getByTestId('non-existing').click()
+       |                                                ^
+     49|       }, 500)
+     50|     })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[21/36]⎯
+
+ FAIL  |firefox| hooks-timeout.test.ts > timeouts are failing correctly > onTestFinished > fails global
+TimeoutError: locator.click: Timeout 250ms exceeded.
+Call log:
+  - waiting for locator('[data-vitest="true"]').contentFrame().getByTestId('non-existing')
+
+ ❯ hooks-timeout.test.ts:54:48
+     52|     it('fails global', () => {
+     53|       onTestFinished(async () => {
+     54|         await page.getByTestId('non-existing').click()
+       |                                                ^
+     55|       }, 500)
+     56|     })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22/36]⎯
+
+ FAIL  |firefox| hooks-timeout.test.ts > timeouts are failing correctly > onTestFailed > fails
+AssertionError: expected not to be reached
+ ❯ hooks-timeout.test.ts:65:14
+     63|       }, 500)
+     64|
+     65|       expect.unreachable()
+       |              ^
+     66|     })
+     67|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[23/36]⎯
+
+ FAIL  |firefox| hooks-timeout.test.ts > timeouts are failing correctly > onTestFailed > fails
+TimeoutError: locator.click: Timeout 250ms exceeded.
+Call log:
+  - waiting for locator('[data-vitest="true"]').contentFrame().getByTestId('non-existing')
+
+ ❯ hooks-timeout.test.ts:62:48
+     60|     it('fails', ({ onTestFailed }) => {
+     61|       onTestFailed(async () => {
+     62|         await page.getByTestId('non-existing').click()
+       |                                                ^
+     63|       }, 500)
+     64|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[24/36]⎯
+
+ FAIL  |firefox| hooks-timeout.test.ts > timeouts are failing correctly > onTestFailed > fails global
+AssertionError: expected not to be reached
+ ❯ hooks-timeout.test.ts:73:14
+     71|       }, 500)
+     72|
+     73|       expect.unreachable()
+       |              ^
+     74|     })
+     75|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[25/36]⎯
+
+ FAIL  |firefox| hooks-timeout.test.ts > timeouts are failing correctly > onTestFailed > fails global
+Error: Hook timed out in 500ms.
+If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "hookTimeout".
+ ❯ hooks-timeout.test.ts:69:7
+     67|
+     68|     it('fails global', () => {
+     69|       onTestFailed(async () => {
+       |       ^
+     70|         await page.getByTestId('non-existing').click()
+     71|       }, 500)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[26/36]⎯
+
+ FAIL  |webkit| hooks-timeout.test.ts > timeouts are failing correctly > click on non-existing element fails
+TimeoutError: locator.click: Timeout 248ms exceeded.
+Call log:
+  - waiting for locator('[data-vitest="true"]').contentFrame().getByRole('code')
+
+ ❯ hooks-timeout.test.ts:6:34
+      4| describe.runIf(server.provider === 'playwright')('timeouts are failing…
+      5|   it('click on non-existing element fails', async () => {
+      6|     await page.getByRole('code').click()
+       |                                  ^
+      7|   }, 500)
+      8|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[27/36]⎯
+
+ FAIL  |webkit| hooks-timeout.test.ts > timeouts are failing correctly > expect.element on non-existing element fails
+VitestBrowserElementError: Cannot find element with locator: getByRole('code')
+
+ARIA tree:
+
+HTML:
+<body>
+
+</body>
+ ❯ hooks-timeout.test.ts:10:50
+      8|
+      9|   it('expect.element on non-existing element fails', async () => {
+     10|     await expect.element(page.getByRole('code')).toBeVisible()
+       |                                                  ^
+     11|   }, 1000)
+     12|
+
+Caused by: Error: Matcher did not succeed in time.
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[28/36]⎯
+
+ FAIL  |webkit| hooks-timeout.test.ts > timeouts are failing correctly > beforeEach > skipped
+TimeoutError: locator.click: Timeout 250ms exceeded.
+Call log:
+  - waiting for locator('[data-vitest="true"]').contentFrame().getByTestId('non-existing')
+
+ ❯ hooks-timeout.test.ts:15:46
+     13|   describe('beforeEach', () => {
+     14|     beforeEach(async () => {
+     15|       await page.getByTestId('non-existing').click()
+       |                                              ^
+     16|     }, 500)
+     17|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[29/36]⎯
+
+ FAIL  |webkit| hooks-timeout.test.ts > timeouts are failing correctly > afterEach > skipped
+TimeoutError: locator.click: Timeout 249ms exceeded.
+Call log:
+  - waiting for locator('[data-vitest="true"]').contentFrame().getByTestId('non-existing')
+
+ ❯ hooks-timeout.test.ts:23:46
+     21|   describe('afterEach', () => {
+     22|     afterEach(async () => {
+     23|       await page.getByTestId('non-existing').click()
+       |                                              ^
+     24|     }, 500)
+     25|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[30/36]⎯
+
+ FAIL  |webkit| hooks-timeout.test.ts > timeouts are failing correctly > onTestFinished > fails
+TimeoutError: locator.click: Timeout 250ms exceeded.
+Call log:
+  - waiting for locator('[data-vitest="true"]').contentFrame().getByTestId('non-existing')
+
+ ❯ hooks-timeout.test.ts:48:48
+     46|     it('fails', ({ onTestFinished }) => {
+     47|       onTestFinished(async () => {
+     48|         await page.getByTestId('non-existing').click()
+       |                                                ^
+     49|       }, 500)
+     50|     })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[31/36]⎯
+
+ FAIL  |webkit| hooks-timeout.test.ts > timeouts are failing correctly > onTestFinished > fails global
+TimeoutError: locator.click: Timeout 250ms exceeded.
+Call log:
+  - waiting for locator('[data-vitest="true"]').contentFrame().getByTestId('non-existing')
+
+ ❯ hooks-timeout.test.ts:54:48
+     52|     it('fails global', () => {
+     53|       onTestFinished(async () => {
+     54|         await page.getByTestId('non-existing').click()
+       |                                                ^
+     55|       }, 500)
+     56|     })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[32/36]⎯
+
+ FAIL  |webkit| hooks-timeout.test.ts > timeouts are failing correctly > onTestFailed > fails
+AssertionError: expected not to be reached
+ ❯ hooks-timeout.test.ts:65:14
+     63|       }, 500)
+     64|
+     65|       expect.unreachable()
+       |              ^
+     66|     })
+     67|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[33/36]⎯
+
+ FAIL  |webkit| hooks-timeout.test.ts > timeouts are failing correctly > onTestFailed > fails
+TimeoutError: locator.click: Timeout 249ms exceeded.
+Call log:
+  - waiting for locator('[data-vitest="true"]').contentFrame().getByTestId('non-existing')
+
+ ❯ hooks-timeout.test.ts:62:48
+     60|     it('fails', ({ onTestFailed }) => {
+     61|       onTestFailed(async () => {
+     62|         await page.getByTestId('non-existing').click()
+       |                                                ^
+     63|       }, 500)
+     64|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[34/36]⎯
+
+ FAIL  |webkit| hooks-timeout.test.ts > timeouts are failing correctly > onTestFailed > fails global
+AssertionError: expected not to be reached
+ ❯ hooks-timeout.test.ts:73:14
+     71|       }, 500)
+     72|
+     73|       expect.unreachable()
+       |              ^
+     74|     })
+     75|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[35/36]⎯
+
+ FAIL  |webkit| hooks-timeout.test.ts > timeouts are failing correctly > onTestFailed > fails global
+TimeoutError: locator.click: Timeout 250ms exceeded.
+Call log:
+  - waiting for locator('[data-vitest="true"]').contentFrame().getByTestId('non-existing')
+
+ ❯ hooks-timeout.test.ts:70:48
+     68|     it('fails global', () => {
+     69|       onTestFailed(async () => {
+     70|         await page.getByTestId('non-existing').click()
+       |                                                ^
+     71|       }, 500)
+     72|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[36/36]⎯
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  specs/runner.test.ts > timeout hooks
+ × specs/runner.test.ts > timeout hooks 6482ms
+   → Snapshot `timeout hooks 1` mismatched
+Error: Snapshot `timeout hooks 1` mismatched
+
+- Expected
++ Received
+
+@@ -56,14 +56,10 @@
+
+   FAIL  |firefox| hooks-timeout.test.ts > timeouts are failing correctly > onTestFailed > fails
+  TimeoutError: locator.click: Timeout <ms> exceeded.
+   ❯ hooks-timeout.test.ts:62:48
+
+-  FAIL  |firefox| hooks-timeout.test.ts > timeouts are failing correctly > onTestFailed > fails global
+- TimeoutError: locator.click: Timeout <ms> exceeded.
+-  ❯ hooks-timeout.test.ts:70:48
+-
+   FAIL  |firefox| hooks-timeout.test.ts > timeouts are failing correctly > onTestFinished > fails
+  TimeoutError: locator.click: Timeout <ms> exceeded.
+   ❯ hooks-timeout.test.ts:48:48
+
+   FAIL  |firefox| hooks-timeout.test.ts > timeouts are failing correctly > onTestFinished > fails global
+
+ ❯ specs/runner.test.ts:434:20
+    432|   }).sort().join('\n\n')
+    433|
+    434|   expect(snapshot).toMatchInlineSnapshot(`
+       |                    ^
+    435|     " FAIL  |chromium| hooks-timeout.test.ts > timeouts are failing co…
+    436|     TimeoutError: locator.click: Timeout <ms> exceeded.
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+  Snapshots  1 failed
+ Test Files  1 failed (1)
+      Tests  1 failed | 20 passed (21)
+   Start at  00:17:58
+   Duration  68.83s (tests 99%)
+
+[ELIFECYCLE] Command failed with exit code 1.
+[ELIFECYCLE] Command failed with exit code 1.
+[ELIFECYCLE] Command failed with exit code 1.

@@ -1,0 +1,285 @@
+  DOCKER_METADATA_OUTPUT_TAG_NAMES: pr-4953
+  DOCKER_METADATA_OUTPUT_LABELS: org.opencontainers.image.created=2026-09-10T04:04:07.011Z
+org.opencontainers.image.description=The toolkit to pack, ship, store, and distribute container content
+org.opencontainers.image.licenses=Apache-2.0
+org.opencontainers.image.revision=54ac02ed6441aec825032343b710ab187970e591
+org.opencontainers.image.source=https://github.com/distribution/distribution
+org.opencontainers.image.title=Distribution
+org.opencontainers.image.url=https://github.com/distribution/distribution
+org.opencontainers.image.version=pr-4953
+  DOCKER_METADATA_OUTPUT_ANNOTATIONS: manifest:org.opencontainers.image.created=2026-09-10T04:04:07.011Z
+manifest:org.opencontainers.image.description=The toolkit to pack, ship, store, and deliver container content
+manifest:org.opencontainers.image.licenses=Apache-2.0
+manifest:org.opencontainers.image.revision=54ac02ed6441aec825032343b710ab187970e591
+manifest:org.opencontainers.image.source=https://github.com/distribution/distribution
+manifest:org.opencontainers.image.title=distribution
+manifest:org.opencontainers.image.url=https://github.com/distribution/distribution
+manifest:org.opencontainers.image.version=pr-4953
+  DOCKER_METADATA_OUTPUT_JSON: {"tags":["distribution/distribution:pr-4953","ghcr.io/distribution/distribution:pr-4953"],"tag-names":["pr-4953"],"labels":{"org.opencontainers.image.created":"2026-09-10T04:04:07.011Z","org.opencontainers.image.description":"The toolkit to pack, ship, store, and distribute container content","org.opencontainers.image.licenses":"Apache-2.0","org.opencontainers.image.revision":"54ac02ed6441aec825032343b710ab187970e591","org.opencontainers.image.source":"https://github.com/distribution/distribution","org.opencontainers.image.title":"Distribution","org.opencontainers.image.url":"https://github.com/distribution/distribution","org.opencontainers.image.version":"pr-4953"},"annotations":["manifest:org.opencontainers.image.created=2026-09-10T04:04:07.011Z","manifest:org.opencontainers.image.description=The toolkit to pack, ship, store, and deliver container content","manifest:org.opencontainers.image.licenses=Apache-2.0","manifest:org.opencontainers.image.revision=54ac02ed6441aec825032343b710ab187970e591","manifest:org.opencontainers.image.source=https://github.com/distribution/distribution","manifest:org.opencontainers.image.title=distribution","manifest:org.opencontainers.image.url=https://github.com/distribution/distribution","manifest:org.opencontainers.image.version=pr-4953"]}
+  DOCKER_METADATA_OUTPUT_BAKE_FILE_TAGS: /home/runner/work/_temp/docker-actions-toolkit-dMGmNE/docker-metadata-action-bake-tags.json
+  DOCKER_METADATA_OUTPUT_BAKE_FILE_LABELS: /home/runner/work/_temp/docker-actions-toolkit-dMGmNE/docker-metadata-action-bake-labels.json
+  DOCKER_METADATA_OUTPUT_BAKE_FILE_ANNOTATIONS: /home/runner/work/_temp/docker-actions-toolkit-dMGmNE/docker-metadata-action-bake-annotations.json
+  DOCKER_METADATA_OUTPUT_BAKE_FILE: /home/runner/work/_temp/docker-actions-toolkit-dMGmNE/docker-metadata-action-bake.json
+refs/pull/4953/merge: read/write
+refs/heads/main: read
+Client: Docker Engine - Community
+ Version:           28.0.4
+ API version:       1.48
+ Go version:        go1.23.7
+ Git commit:        b8034c0
+ Built:             Tue Mar 25 15:07:16 2025
+ OS/Arch:           linux/amd64
+ Context:           default
+
+Server: Docker Engine - Community
+ Engine:
+  Version:          28.0.4
+  API version:      1.48 (minimum version 1.24)
+  Go version:       go1.23.7
+  Git commit:       6430e49
+  Built:            Tue Mar 25 15:07:16 2025
+  OS/Arch:          linux/amd64
+  Experimental:     false
+ containerd:
+  Version:          v2.3.4
+  GitCommit:        db8809540e1a7a9da5d518876894933ff55692ab
+ runc:
+  Version:          1.5.1
+  GitCommit:        v1.5.1-0-g8f2685a4
+ docker-init:
+  Version:          0.19.0
+  GitCommit:        de40ad0
+Client: Docker Engine - Community
+ Version:    28.0.4
+ Context:    default
+ Debug Mode: false
+ Plugins:
+  buildx: Docker Buildx (Docker Inc.)
+    Version:  v0.37.0
+    Path:     /usr/libexec/docker/cli-plugins/docker-buildx
+  compose: Docker Compose (Docker Inc.)
+    Version:  v2.38.2
+    Path:     /usr/libexec/docker/cli-plugins/docker-compose
+
+Server:
+ Containers: 1
+  Running: 1
+  Paused: 0
+  Stopped: 0
+ Images: 7
+ Server Version: 28.0.4
+ Storage Driver: overlay2
+  Backing Filesystem: extfs
+  Supports d_type: true
+  Using metacopy: false
+  Native Overlay Diff: false
+  userxattr: false
+ Logging Driver: json-file
+ Cgroup Driver: systemd
+ Cgroup Version: 2
+ Plugins:
+  Volume: local
+  Network: bridge host ipvlan macvlan null overlay
+  Log: awslogs fluentd gcplogs gelf journald json-file local splunk syslog
+ Swarm: inactive
+ Runtimes: runc io.containerd.runc.v2
+ Default Runtime: runc
+ Init Binary: docker-init
+ containerd version: db8809540e1a7a9da5d518876894933ff55692ab
+ runc version: v1.5.1-0-g8f2685a4
+ init version: de40ad0
+ Security Options:
+  apparmor
+  seccomp
+   Profile: builtin
+  cgroupns
+ Kernel Version: 6.17.0-1022-azure
+ Operating System: Ubuntu 24.04.5 LTS
+ OSType: linux
+ Architecture: x86_64
+ CPUs: 4
+ Total Memory: 15.61GiB
+ Name: runnervmlun5p
+ ID: a4efb8b6-20f9-46f4-b827-91ac0547be3a
+ Docker Root Dir: /var/lib/docker
+ Debug Mode: false
+ Username: githubactions
+ Experimental: false
+ Insecure Registries:
+  ::1/128
+  127.0.0.0/8
+ Live Restore Enabled: false
+
+No proxy configuration found
+github.com/docker/buildx v0.37.0 ac30b249211430b85fb8f37b6e7154b5c47ba0b6
+{
+  "nodes": [
+    {
+      "name": "builder-952f7821-7049-4b7a-888d-4359776838cd0",
+      "endpoint": "unix:///var/run/docker.sock",
+      "status": "running",
+      "buildkitd-flags": "--allow-insecure-entitlement security.insecure --allow-insecure-entitlement network.host",
+      "buildkit": "v0.32.2",
+      "platforms": "linux/amd64,linux/amd64/v2,linux/amd64/v3,linux/amd64/v4,linux/386",
+      "features": {
+        "Automatically load images to the Docker Engine image store": true,
+        "Cache export": true,
+        "Direct push": true,
+        "Docker exporter": true,
+        "Multi-platform build": true,
+        "OCI exporter": true
+      },
+      "labels": {
+        "org.mobyproject.buildkit.worker.executor": "oci",
+        "org.mobyproject.buildkit.worker.hostname": "d23c228f0adb",
+        "org.mobyproject.buildkit.worker.network": "host",
+        "org.mobyproject.buildkit.worker.oci.process-mode": "sandbox",
+        "org.mobyproject.buildkit.worker.selinux.enabled": "false",
+        "org.mobyproject.buildkit.worker.snapshotter": "overlayfs"
+      },
+      "gcPolicy": [
+        {
+          "all": false,
+          "filter": [
+            "type==source.local type==exec.cachemount type==source.git.checkout"
+          ],
+          "keepDuration": "48h0m0s",
+          "maxUsedSpace": "488.3MiB"
+        },
+        {
+          "all": false,
+          "keepDuration": "1440h0m0s",
+          "reservedSpace": "9.313GiB",
+          "maxUsedSpace": "93.13GiB",
+          "minFreeSpace": "27.01GiB"
+        },
+        {
+          "all": false,
+          "reservedSpace": "9.313GiB",
+          "maxUsedSpace": "93.13GiB",
+          "minFreeSpace": "27.01GiB"
+        },
+        {
+          "all": true,
+          "reservedSpace": "9.313GiB",
+          "maxUsedSpace": "93.13GiB",
+          "minFreeSpace": "27.01GiB"
+        }
+      ]
+    }
+  ],
+  "name": "builder-952f7821-7049-4b7a-888d-4359776838cd",
+  "driver": "docker-container",
+  "lastActivity": "2026-09-10T04:04:09.000Z"
+}
+#1 [internal] load local bake definitions
+#1 reading docker-bake.hcl 2.37kB / 2.37kB done
+#1 DONE 0.0s
+{
+  "group": {
+    "default": {
+      "targets": [
+        "artifact-all"
+      ]
+    }
+  },
+  "target": {
+    "artifact-all": {
+      "context": ".",
+      "dockerfile": "Dockerfile",
+      "target": "artifact",
+      "platforms": [
+        "linux/amd64",
+        "linux/arm/v6",
+        "linux/arm/v7",
+        "linux/arm64",
+        "linux/ppc64le",
+        "linux/s390x",
+        "linux/riscv64"
+      ],
+      "output": [
+        {
+          "dest": "./bin",
+          "type": "local"
+        }
+      ]
+    }
+  }
+}
+#1 [internal] load local bake definitions
+#1 reading docker-bake.hcl 2.37kB / 2.37kB done
+#1 DONE 0.0s
+{
+  "group": {
+    "default": {
+      "targets": [
+        "artifact-all"
+      ]
+    }
+  },
+  "target": {
+    "artifact-all": {
+      "attest": [
+        {
+          "builder-id": "https://github.com/distribution/distribution/actions/runs/34435460797/attempts/1",
+          "mode": "max",
+          "type": "provenance"
+        }
+      ],
+      "context": ".",
+      "dockerfile": "Dockerfile",
+      "target": "artifact",
+      "platforms": [
+        "linux/amd64",
+        "linux/arm/v6",
+        "linux/arm/v7",
+        "linux/arm64",
+        "linux/ppc64le",
+        "linux/s390x",
+        "linux/riscv64"
+      ],
+      "output": [
+        {
+          "dest": "./bin",
+          "type": "local"
+        }
+      ]
+    }
+  }
+}
+#0 building with "builder-952f7821-7049-4b7a-888d-4359776838cd" instance using docker-container driver
+
+#1 [internal] load local bake definitions
+#1 reading docker-bake.hcl 2.37kB / 2.37kB done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile:
+#2 transferring dockerfile: 3.06kB done
+#2 DONE 0.1s
+
+#3 [auth] docker/dockerfile:pull token for registry-1.docker.io
+#3 DONE 0.0s
+
+#4 resolve image config for docker-image://docker.io/docker/dockerfile:1
+#4 DONE 0.9s
+
+#5 docker-image://docker.io/docker/dockerfile:1@sha256:ecfaec9ed6d810b56388c508f4121597bfbba70d41a6dfeee4d8cad5f295fc32
+#5 resolve docker.io/docker/dockerfile:1@sha256:ecfaec9ed6d810b56388c508f4121597bfbba70d41a6dfeee4d8cad5f295fc32 0.1s done
+#5 sha256:9f624ef51ad55db0ea52d755cc777566386156106fbb4f465eecb22c67ac55ed 1.05MB / 14.14MB 0.2s
+#5 sha256:9f624ef51ad55db0ea52d755cc777566386156106fbb4f465eecb22c67ac55ed 14.14MB / 14.14MB 0.3s
+#5 sha256:9f624ef51ad55db0ea52d755cc777566386156106fbb4f465eecb22c67ac55ed 14.14MB / 14.14MB 0.3s done
+#5 extracting sha256:9f624ef51ad55db0ea52d755cc777566386156106fbb4f465eecb22c67ac55ed
+#5 extracting sha256:9f624ef51ad55db0ea52d755cc777566386156106fbb4f465eecb22c67ac55ed 0.3s done
+#5 DONE 0.9s
+Dockerfile:63
+--------------------
+  61 |
+  62 |     FROM upx/upx:latest AS packer
+  63 | >>> COPY --from=binary /registry
+  64 |     RUN upx --best --lzma /registry
+  65 |
+--------------------
+ERROR: failed to solve: dockerfile parse error on line 63: COPY requires at least two arguments, but only one was provided. Destination could not be determined
+builder-952f7821-7049-4b7a-888d-4359776838cd/builder-952f7821-7049-4b7a-888d-4359776838cd0/a6nniinf3m748wlnd4w525gcu
+Build summary supported!

@@ -2,3 +2,4 @@
 /evals/out/
 /evals/prototype/router_cache.json
 /evals/prototype/inventory.json
+__pycache__/

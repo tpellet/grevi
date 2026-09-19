@@ -1,0 +1,300 @@
+dist/assets/objective-cpp-CLxacb5B.js                   171.97 kB │ gzip:  30.62 kB
+dist/assets/javascript-wDzz0qaB.js                      174.83 kB │ gzip:  16.51 kB
+dist/assets/tsx-COt5Ahok.js                             175.54 kB │ gzip:  16.51 kB
+dist/assets/jsx-g9-lgVsj.js                             177.79 kB │ gzip:  16.61 kB
+dist/assets/typescript-BPQ3VLAy.js                      181.08 kB │ gzip:  16.04 kB
+dist/assets/angular-ts-BwZT4LLn.js                      183.82 kB │ gzip:  16.63 kB
+dist/assets/vue-vine-_Ih-lPRR.js                        190.22 kB │ gzip:  18.07 kB
+dist/assets/wolfram-lXgVvXCa.js                         262.39 kB │ gzip:  77.14 kB
+dist/assets/treemap-KMMF4GRG-CHpJMVL_.js                331.07 kB │ gzip:  80.67 kB
+dist/assets/cytoscape.esm-uhR9LuK4.js                   442.69 kB │ gzip: 141.93 kB
+dist/assets/mermaid.core-5PIu81Me.js                    461.99 kB │ gzip: 129.04 kB
+dist/assets/wasm-CG6Dc4jp.js                            622.34 kB │ gzip: 230.29 kB
+dist/assets/cpp-CofmeUqb.js                             626.08 kB │ gzip:  44.82 kB
+dist/assets/emacs-lisp-C9XAeP06.js                      779.85 kB │ gzip: 196.03 kB
+dist/assets/index-DQmDKXG4.js                         1,629.79 kB │ gzip: 494.48 kB
+✓ built in 14.88s
+go test -race -count=1 ./...
+shell: /usr/bin/bash -e {0}
+env:
+  CGO_ENABLED: 1
+go: downloading github.com/google/go-cmp v0.7.0
+go: downloading github.com/google/uuid v1.6.0
+go: downloading github.com/stretchr/testify v1.10.0
+go: downloading golang.org/x/crypto v0.43.0
+go: downloading github.com/charmbracelet/bubbletea v1.3.10
+go: downloading github.com/charmbracelet/lipgloss v1.1.0
+go: downloading golang.org/x/term v0.36.0
+go: downloading github.com/containerd/console v1.0.3
+go: downloading github.com/mattn/go-runewidth v0.0.16
+go: downloading github.com/olekukonko/tablewriter v0.0.5
+go: downloading github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
+go: downloading github.com/spf13/cobra v1.7.0
+go: downloading golang.org/x/sync v0.17.0
+go: downloading github.com/d4l3k/go-bfloat16 v0.0.0-20211005043715-690c3bdd05f1
+go: downloading github.com/x448/float16 v0.8.4
+go: downloading golang.org/x/sys v0.37.0
+go: downloading github.com/wk8/go-ordered-map/v2 v2.1.8
+go: downloading github.com/klauspost/compress v1.18.3
+go: downloading golang.org/x/image v0.22.0
+go: downloading github.com/gin-gonic/gin v1.10.0
+go: downloading golang.org/x/mod v0.30.0
+go: downloading golang.org/x/text v0.30.0
+go: downloading github.com/emirpasic/gods/v2 v2.0.0-alpha
+go: downloading github.com/agnivade/levenshtein v1.1.1
+go: downloading github.com/mattn/go-sqlite3 v1.14.24
+go: downloading github.com/pelletier/go-toml/v2 v2.2.2
+go: downloading gopkg.in/yaml.v3 v3.0.1
+go: downloading google.golang.org/protobuf v1.34.1
+go: downloading github.com/dlclark/regexp2 v1.11.5
+go: downloading github.com/tree-sitter/go-tree-sitter v0.25.0
+go: downloading github.com/tree-sitter/tree-sitter-cpp v0.23.4
+go: downloading github.com/gin-contrib/cors v1.7.2
+go: downloading github.com/davecgh/go-spew v1.1.1
+go: downloading github.com/pmezard/go-difflib v1.0.0
+go: downloading github.com/charmbracelet/x/ansi v0.10.1
+go: downloading github.com/charmbracelet/x/term v0.2.1
+go: downloading github.com/muesli/ansi v0.0.0-20230316100256-276c6243b2f6
+go: downloading github.com/muesli/cancelreader v0.2.2
+go: downloading github.com/charmbracelet/x/cellbuf v0.0.13-0.20250311204145-2c3ea96c31dd
+go: downloading github.com/muesli/termenv v0.16.0
+go: downloading github.com/rivo/uniseg v0.4.7
+go: downloading github.com/spf13/pflag v1.0.5
+go: downloading github.com/bahlo/generic-list-go v0.2.0
+go: downloading github.com/buger/jsonparser v1.1.1
+go: downloading github.com/mailru/easyjson v0.7.7
+go: downloading github.com/gin-contrib/sse v0.1.0
+go: downloading github.com/mattn/go-isatty v0.0.20
+go: downloading golang.org/x/net v0.46.0
+go: downloading github.com/mattn/go-pointer v0.0.1
+go: downloading github.com/lucasb-eyer/go-colorful v1.2.0
+go: downloading github.com/charmbracelet/colorprofile v0.2.3-0.20250311203215-f60798e515dc
+go: downloading github.com/aymanbagabas/go-osc52/v2 v2.0.1
+go: downloading github.com/go-playground/validator/v10 v10.20.0
+go: downloading github.com/ugorji/go/codec v1.2.12
+go: downloading github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e
+go: downloading github.com/gabriel-vasile/mimetype v1.4.3
+go: downloading github.com/go-playground/universal-translator v0.18.1
+go: downloading github.com/leodido/go-urn v1.4.0
+go: downloading github.com/go-playground/locales v0.14.1
+[no test files]
+1.031s
+1.073s
+[no test files]
+[no test files]
+[no test files]
+[no test files]
+[no test files]
+[no test files]
+1.247s
+4.401s
+1.258s
+1.020s
+15.550s
+[no test files]
+1.025s
+3.483s
+1.052s
+[no test files]
+1.023s
+1.009s
+[no test files]
+1.038s
+1.006s
+1.009s
+1.008s
+1.008s
+1.009s
+1.855s
+[no test files]
+3.240s
+1.006s
+1.163s
+1.216s
+1.011s
+1.190s
+1.060s
+1.085s
+1.033s
+2.116s
+[no test files]
+[no test files]
+time=2026-09-15T18:46:57.046Z level=INFO msg="Failed to load private key: open /home/runner/.ollama/id_ed25519: no such file or directory"
+time=2026-09-15T18:46:57.047Z level=INFO msg="Failed to load private key: open /home/runner/.ollama/id_ed25519: no such file or directory"
+time=2026-09-15T18:46:57.052Z level=INFO msg="Failed to load private key: open /home/runner/.ollama/id_ed25519: no such file or directory"
+time=2026-09-15T18:46:57.052Z level=WARN msg="cloud proxy signing failed" error="open /home/runner/.ollama/id_ed25519: no such file or directory"
+time=2026-09-15T18:46:57.052Z level=INFO msg="Failed to load private key: open /home/runner/.ollama/id_ed25519: no such file or directory"
+[GIN] 2026/09/15 - 18:46:57 | 200 |      18.248µs |       127.0.0.1 | GET      "/api/codex/_health"
+[GIN] 2026/09/15 - 18:46:57 | 426 |     156.535µs |       127.0.0.1 | GET      "/api/codex/v1/responses"
+[GIN] 2026/09/15 - 18:46:57 | 200 |      13.621µs |      192.0.2.10 | GET      "/"
+[GIN] 2026/09/15 - 18:46:57 | 403 |      18.909µs |      192.0.2.10 | GET      "/api/codex/_health"
+time=2026-09-15T18:46:57.674Z level=ERROR msg="panic in create background goroutine" panic=boom stack="goroutine 403 [running]:\nruntime/debug.Stack()\n\t/opt/hostedtoolcache/go/1.26.0/x64/src/runtime/debug/stack.go:26 +0x68\ngithub.com/ollama/ollama/server.recoverCreatePanic(0xc00033ee18)\n\t/home/runner/work/ollama/ollama/server/create.go:330 +0x4c\npanic({0x17f34c0?, 0x1a0c630?})\n\t/opt/hostedtoolcache/go/1.26.0/x64/src/runtime/panic.go:860 +0x13a\ngithub.com/ollama/ollama/server.TestRecoverCreatePanic.func1(0xc00033ee78)\n\t/home/runner/work/ollama/ollama/server/create_test.go:95 +0xac\ngithub.com/ollama/ollama/server.TestRecoverCreatePanic(0xc000144fc8)\n\t/home/runner/work/ollama/ollama/server/create_test.go:96 +0x3f\ntesting.tRunner(0xc000144fc8, 0x1a03e18)\n\t/opt/hostedtoolcache/go/1.26.0/x64/src/testing/testing.go:2036 +0x21d\ncreated by testing.(*T).Run in goroutine 1\n\t/opt/hostedtoolcache/go/1.26.0/x64/src/testing/testing.go:2101 +0xb13\n"
+time=2026-09-15T18:46:57.728Z level=INFO msg="000000000000 part 0 stalled; retrying. If this persists, press ctrl-c to exit, then 'ollama pull' to find a faster connection."
+time=2026-09-15T18:46:58.076Z level=DEBUG msg="ignoring unusable gguf metadata file" path=/tmp/TestGGUFMetadataUnusableFile3572873947/001/metadata/sha256-cf76e0dbe671a1e63b53fdb51dd86a92600a0dd794aa05fbc2905cedaf3f41a1.json error="unexpected EOF"
+time=2026-09-15T18:46:58.077Z level=DEBUG msg="ignoring unusable gguf metadata file" path=/tmp/TestGGUFMetadataUnusableFile3572873947/001/metadata/sha256-cf76e0dbe671a1e63b53fdb51dd86a92600a0dd794aa05fbc2905cedaf3f41a1.json error="unexpected EOF"
+time=2026-09-15T18:46:58.078Z level=DEBUG msg="ignoring unusable gguf metadata file" path=/tmp/TestGGUFMetadataUnusableFile3572873947/001/metadata/sha256-cf76e0dbe671a1e63b53fdb51dd86a92600a0dd794aa05fbc2905cedaf3f41a1.json error="invalid character '\\x00' looking for beginning of value"
+time=2026-09-15T18:46:58.078Z level=DEBUG msg="ignoring unusable gguf metadata file" path=/tmp/TestGGUFMetadataUnusableFile3572873947/001/metadata/sha256-cf76e0dbe671a1e63b53fdb51dd86a92600a0dd794aa05fbc2905cedaf3f41a1.json error="invalid character '\\x00' looking for beginning of value"
+time=2026-09-15T18:46:58.078Z level=DEBUG msg="ignoring unusable gguf metadata file" path=/tmp/TestGGUFMetadataUnusableFile3572873947/001/metadata/sha256-cf76e0dbe671a1e63b53fdb51dd86a92600a0dd794aa05fbc2905cedaf3f41a1.json error=EOF
+time=2026-09-15T18:46:58.079Z level=DEBUG msg="ignoring unusable gguf metadata file" path=/tmp/TestGGUFMetadataUnusableFile3572873947/001/metadata/sha256-cf76e0dbe671a1e63b53fdb51dd86a92600a0dd794aa05fbc2905cedaf3f41a1.json error=EOF
+time=2026-09-15T18:46:58.079Z level=DEBUG msg="ignoring unusable gguf metadata file" path=/tmp/TestGGUFMetadataUnusableFile3572873947/001/metadata/sha256-cf76e0dbe671a1e63b53fdb51dd86a92600a0dd794aa05fbc2905cedaf3f41a1.json error="json: cannot unmarshal array into Go value of type server.ggufMetadata"
+time=2026-09-15T18:46:58.079Z level=DEBUG msg="ignoring unusable gguf metadata file" path=/tmp/TestGGUFMetadataUnusableFile3572873947/001/metadata/sha256-cf76e0dbe671a1e63b53fdb51dd86a92600a0dd794aa05fbc2905cedaf3f41a1.json error="json: cannot unmarshal array into Go value of type server.ggufMetadata"
+time=2026-09-15T18:46:58.080Z level=DEBUG msg="ignoring unusable gguf metadata file" path=/tmp/TestGGUFMetadataUnusableFile3572873947/001/metadata/sha256-cf76e0dbe671a1e63b53fdb51dd86a92600a0dd794aa05fbc2905cedaf3f41a1.json error="no metadata"
+time=2026-09-15T18:46:58.080Z level=DEBUG msg="ignoring unusable gguf metadata file" path=/tmp/TestGGUFMetadataUnusableFile3572873947/001/metadata/sha256-cf76e0dbe671a1e63b53fdb51dd86a92600a0dd794aa05fbc2905cedaf3f41a1.json error="no metadata"
+time=2026-09-15T18:46:58.081Z level=DEBUG msg="ignoring unusable gguf metadata file" path=/tmp/TestGGUFMetadataUnusableFile3572873947/001/metadata/sha256-cf76e0dbe671a1e63b53fdb51dd86a92600a0dd794aa05fbc2905cedaf3f41a1.json error="json: cannot unmarshal array into Go struct field ggufMetadata.kv of type map[string]interface {}"
+time=2026-09-15T18:46:58.081Z level=DEBUG msg="ignoring unusable gguf metadata file" path=/tmp/TestGGUFMetadataUnusableFile3572873947/001/metadata/sha256-cf76e0dbe671a1e63b53fdb51dd86a92600a0dd794aa05fbc2905cedaf3f41a1.json error="json: cannot unmarshal array into Go struct field ggufMetadata.kv of type map[string]interface {}"
+time=2026-09-15T18:46:58.154Z level=INFO msg="total blobs: 0"
+time=2026-09-15T18:46:58.154Z level=INFO msg="total unused blobs removed: 0"
+time=2026-09-15T18:47:01.369Z level=WARN msg="model is missing token[REDACTED] and Go TEMPLATE support is unavailable; chat responses may be poorly formatted" model=registry.ollama.ai/library/delete-during-load:latest env="OLLAMA_GO_TEMPLATE=1"
+time=2026-09-15T18:47:01.377Z level=INFO msg="total blobs: 1"
+time=2026-09-15T18:47:01.377Z level=INFO msg="total unused blobs removed: 1"
+time=2026-09-15T18:47:01.447Z level=DEBUG msg="downloading blob" digest=sha256:75936e13eda2d5d933139f65b838add35fa5ba6d78b500976c61cc5d25b96438 size=445
+time=2026-09-15T18:47:01.448Z level=DEBUG msg="download summary" blobs=1 bytes=445 duration=1ms mb_per_sec=0.4 max_transfers=4
+time=2026-09-15T18:47:01.449Z level=DEBUG msg="downloading blob" digest=sha256:7570eba0efe972c536076c1bc0511a5306522089584be0f12af347a4d1bdd446 size=1344
+time=2026-09-15T18:47:01.449Z level=DEBUG msg="downloading blob" digest=sha256:ebf66612f8a18c70e0987e261abad5b7bbc3de3be516af0c1c57748fe4633213 size=23
+==================
+WARNING: DATA RACE
+Read at 0x00c001ad0408 by goroutine 654:
+  github.com/ollama/ollama/server.TestPullModelManifestListDownloadsSelectedChildOnly.func2()
+      /home/runner/work/ollama/ollama/server/images_test.go:567 +0x52
+  github.com/ollama/ollama/server.downloadWithTransfer.func1()
+      /home/runner/work/ollama/ollama/server/images.go:1318 +0xec
+  github.com/ollama/ollama/x/transfer.(*progressTracker).add()
+      /home/runner/work/ollama/ollama/x/transfer/transfer.go:158 +0xc2
+  github.com/ollama/ollama/x/transfer.(*downloader).copy()
+      /home/runner/work/ollama/ollama/x/transfer/download.go:385 +0x64e
+  github.com/ollama/ollama/x/transfer.(*downloader).save()
+      /home/runner/work/ollama/ollama/x/transfer/download.go:321 +0x43e
+  github.com/ollama/ollama/x/transfer.(*downloader).downloadOnce()
+      /home/runner/work/ollama/ollama/x/transfer/download.go:280 +0xfab
+  github.com/ollama/ollama/x/transfer.(*downloader).download()
+      /home/runner/work/ollama/ollama/x/transfer/download.go:179 +0x164
+  github.com/ollama/ollama/x/transfer.download.func1()
+      /home/runner/work/ollama/ollama/x/transfer/download.go:149 +0x1a4
+  golang.org/x/sync/errgroup.(*Group).Go.func1()
+      /home/runner/go/pkg/mod/golang.org/x/sync@v0.17.0/errgroup/errgroup.go:93 +0x86
+
+Previous write at 0x00c001ad0408 by goroutine 655:
+  github.com/ollama/ollama/server.TestPullModelManifestListDownloadsSelectedChildOnly.func2()
+      /home/runner/work/ollama/ollama/server/images_test.go:567 +0x10a
+  github.com/ollama/ollama/server.downloadWithTransfer.func1()
+      /home/runner/work/ollama/ollama/server/images.go:1318 +0xec
+  github.com/ollama/ollama/x/transfer.(*progressTracker).add()
+      /home/runner/work/ollama/ollama/x/transfer/transfer.go:158 +0xc2
+  github.com/ollama/ollama/x/transfer.(*downloader).copy()
+      /home/runner/work/ollama/ollama/x/transfer/download.go:385 +0x64e
+  github.com/ollama/ollama/x/transfer.(*downloader).save()
+      /home/runner/work/ollama/ollama/x/transfer/download.go:321 +0x43e
+  github.com/ollama/ollama/x/transfer.(*downloader).downloadOnce()
+      /home/runner/work/ollama/ollama/x/transfer/download.go:280 +0xfab
+  github.com/ollama/ollama/x/transfer.(*downloader).download()
+      /home/runner/work/ollama/ollama/x/transfer/download.go:179 +0x164
+  github.com/ollama/ollama/x/transfer.download.func1()
+      /home/runner/work/ollama/ollama/x/transfer/download.go:149 +0x1a4
+  golang.org/x/sync/errgroup.(*Group).Go.func1()
+      /home/runner/go/pkg/mod/golang.org/x/sync@v0.17.0/errgroup/errgroup.go:93 +0x86
+
+Goroutine 654 (running) created at:
+  golang.org/x/sync/errgroup.(*Group).Go()
+      /home/runner/go/pkg/mod/golang.org/x/sync@v0.17.0/errgroup/errgroup.go:78 +0x11c
+  github.com/ollama/ollama/x/transfer.download()
+      /home/runner/work/ollama/ollama/x/transfer/download.go:144 +0x120a
+  github.com/ollama/ollama/x/transfer.Download()
+      /home/runner/work/ollama/ollama/x/transfer/transfer.go:163 +0x93a
+  github.com/ollama/ollama/server.downloadWithTransfer()
+      /home/runner/work/ollama/ollama/server/images.go:1334 +0x8ac
+  github.com/ollama/ollama/server.pullWithTransfer()
+      /home/runner/work/ollama/ollama/server/images.go:1353 +0xe9
+  github.com/ollama/ollama/server.PullModel()
+      /home/runner/work/ollama/ollama/server/images.go:1126 +0x105e
+  github.com/ollama/ollama/server.TestPullModelManifestListDownloadsSelectedChildOnly()
+      /home/runner/work/ollama/ollama/server/images_test.go:566 +0xff7
+  testing.tRunner()
+      /opt/hostedtoolcache/go/1.26.0/x64/src/testing/testing.go:2036 +0x21c
+  testing.(*T).Run.gowrap1()
+      /opt/hostedtoolcache/go/1.26.0/x64/src/testing/testing.go:2101 +0x38
+
+Goroutine 655 (finished) created at:
+  golang.org/x/sync/errgroup.(*Group).Go()
+      /home/runner/go/pkg/mod/golang.org/x/sync@v0.17.0/errgroup/errgroup.go:78 +0x11c
+  github.com/ollama/ollama/x/transfer.download()
+      /home/runner/work/ollama/ollama/x/transfer/download.go:144 +0x120a
+  github.com/ollama/ollama/x/transfer.Download()
+      /home/runner/work/ollama/ollama/x/transfer/transfer.go:163 +0x93a
+  github.com/ollama/ollama/server.downloadWithTransfer()
+      /home/runner/work/ollama/ollama/server/images.go:1334 +0x8ac
+  github.com/ollama/ollama/server.pullWithTransfer()
+      /home/runner/work/ollama/ollama/server/images.go:1353 +0xe9
+  github.com/ollama/ollama/server.PullModel()
+      /home/runner/work/ollama/ollama/server/images.go:1126 +0x105e
+  github.com/ollama/ollama/server.TestPullModelManifestListDownloadsSelectedChildOnly()
+      /home/runner/work/ollama/ollama/server/images_test.go:566 +0xff7
+  testing.tRunner()
+      /opt/hostedtoolcache/go/1.26.0/x64/src/testing/testing.go:2036 +0x21c
+  testing.(*T).Run.gowrap1()
+      /opt/hostedtoolcache/go/1.26.0/x64/src/testing/testing.go:2101 +0x38
+==================
+time=2026-09-15T18:47:01.451Z level=DEBUG msg="download summary" blobs=2 bytes=1367 duration=2ms mb_per_sec=0.6 max_transfers=4
+time=2026-09-15T18:47:01.452Z level=DEBUG msg="manifest written" name=127.0.0.1:33967/library/test:latest sha256=d7988495cd9248734a85eb14e7c8c4a5438d493795f1cbf826b8ecbb068ab8f3 size=464
+--- FAIL: TestPullModelManifestListDownloadsSelectedChildOnly (0.01s)
+    testing.go:1712: race detected during execution of test
+time=2026-09-15T18:47:01.464Z level=ERROR msg="unknown capability" capability=unknown
+time=2026-09-15T18:47:01.492Z level=WARN msg="model is missing token[REDACTED] and Go TEMPLATE support is unavailable; chat responses may be poorly formatted" model=registry.ollama.ai/library/list-follow-a:latest env="OLLAMA_GO_TEMPLATE=1"
+time=2026-09-15T18:47:01.575Z level=WARN msg="model is missing token[REDACTED] and Go TEMPLATE support is unavailable; chat responses may be poorly formatted" model=registry.ollama.ai/library/list-follow-b:latest env="OLLAMA_GO_TEMPLATE=1"
+time=2026-09-15T18:47:01.576Z level=WARN msg="model is missing token[REDACTED] and Go TEMPLATE support is unavailable; chat responses may be poorly formatted" model=registry.ollama.ai/library/list-follow-a:latest env="OLLAMA_GO_TEMPLATE=1"
+time=2026-09-15T18:47:01.578Z level=WARN msg="model is missing token[REDACTED] and Go TEMPLATE support is unavailable; chat responses may be poorly formatted" model=registry.ollama.ai/library/list-follow-b:latest env="OLLAMA_GO_TEMPLATE=1"
+time=2026-09-15T18:47:01.580Z level=WARN msg="model is missing token[REDACTED] and Go TEMPLATE support is unavailable; chat responses may be poorly formatted" model=registry.ollama.ai/library/list-follow-a:latest env="OLLAMA_GO_TEMPLATE=1"
+time=2026-09-15T18:47:01.585Z level=WARN msg="model is missing token[REDACTED] and Go TEMPLATE support is unavailable; chat responses may be poorly formatted" model=registry.ollama.ai/library/list-follow-b:latest env="OLLAMA_GO_TEMPLATE=1"
+time=2026-09-15T18:47:01.592Z level=WARN msg="could not load model to describe it" model=registry.ollama.ai/library/broken:latest error="template: :1: unexpected \"}\" in if"
+time=2026-09-15T18:47:01.597Z level=DEBUG msg="refreshing model recommendations from remote" url=https://ollama.com/api/experimental/model-recommendations
+time=2026-09-15T18:47:01.599Z level=DEBUG msg="model recommendations refreshed" count=2
+time=2026-09-15T18:47:01.600Z level=DEBUG msg="persisted model recommendations snapshot" path=/tmp/TestModelRecommendationsCacheRefreshAppliesServerSideChanges255669054/001/.ollama/cache/model-recommendations.json count=2
+time=2026-09-15T18:47:01.600Z level=DEBUG msg="refreshing model recommendations from remote" url=https://ollama.com/api/experimental/model-recommendations
+time=2026-09-15T18:47:01.601Z level=DEBUG msg="model recommendations refreshed" count=2
+time=2026-09-15T18:47:01.602Z level=DEBUG msg="persisted model recommendations snapshot" path=/tmp/TestModelRecommendationsCacheRefreshAppliesServerSideChanges255669054/001/.ollama/cache/model-recommendations.json count=2
+time=2026-09-15T18:47:01.603Z level=DEBUG msg="refreshing model recommendations from remote" url=https://ollama.com/api/experimental/model-recommendations
+time=2026-09-15T18:47:01.605Z level=DEBUG msg="refreshing model recommendations from remote" url=https://ollama.com/api/experimental/model-recommendations
+time=2026-09-15T18:47:01.607Z level=DEBUG msg="refreshing model recommendations from remote" url=https://ollama.com/api/experimental/model-recommendations
+time=2026-09-15T18:47:01.609Z level=DEBUG msg="refreshing model recommendations from remote" url=https://ollama.com/api/experimental/model-recommendations
+time=2026-09-15T18:47:01.611Z level=DEBUG msg="refreshing model recommendations from remote" url=https://ollama.com/api/experimental/model-recommendations
+time=2026-09-15T18:47:01.613Z level=DEBUG msg="refreshing model recommendations from remote" url=https://ollama.com/api/experimental/model-recommendations
+time=2026-09-15T18:47:01.615Z level=DEBUG msg="refreshing model recommendations from remote" url=https://ollama.com/api/experimental/model-recommendations
+time=2026-09-15T18:47:01.616Z level=WARN msg="dropping cloud recommendation missing limits" model=bad:cloud
+time=2026-09-15T18:47:01.622Z level=DEBUG msg="persisted model recommendations snapshot" path=/tmp/TestModelRecommendationsSnapshotPersistAndLoad3787429799/001/.ollama/cache/model-recommendations.json count=2
+time=2026-09-15T18:47:01.622Z level=DEBUG msg="loaded model recommendations snapshot" path=/tmp/TestModelRecommendationsSnapshotPersistAndLoad3787429799/001/.ollama/cache/model-recommendations.json count=2
+time=2026-09-15T18:47:01.623Z level=WARN msg="failed to parse model recommendations snapshot" path=/tmp/TestModelRecommendationsLoadSnapshotInvalidDoesNotOverwrite2865637653/001/.ollama/cache/model-recommendations.json error="invalid character 'i' looking for beginning of object key string"
+time=2026-09-15T18:47:01.624Z level=WARN msg="dropping cloud recommendation missing limits" model=bad-cloud:cloud
+time=2026-09-15T18:47:01.624Z level=DEBUG msg="serving model recommendations" recommendation_source=default count=6
+time=2026-09-15T18:47:01.625Z level=DEBUG msg="triggering model recommendations refresh on read"
+time=2026-09-15T18:47:01.625Z level=DEBUG msg="serving model recommendations" recommendation_source=cache count=1
+time=2026-09-15T18:47:01.625Z level=DEBUG msg="skipping model recommendations read refresh because cloud is disabled"
+time=2026-09-15T18:47:01.638Z level=DEBUG msg="triggering model recommendations refresh on read"
+time=2026-09-15T18:47:01.638Z level=DEBUG msg="serving model recommendations" recommendation_source=cache count=1
+[GIN] 2026/09/15 - 18:47:01 | 200 |     162.204µs |       192.0.2.1 | GET      "/api/experimental/model-recommendations"
+[GIN] 2026/09/15 - 18:47:01 | 405 |       1.302µs |       192.0.2.1 | POST     "/api/experimental/model-recommendations"
+time=2026-09-15T18:47:01.638Z level=DEBUG msg="skipping model recommendations read refresh because cloud is disabled"
+time=2026-09-15T18:47:01.650Z level=DEBUG msg="triggering model recommendations refresh on read"
+time=2026-09-15T18:47:01.650Z level=DEBUG msg="refreshing model recommendations from remote" url=https://ollama.com/api/experimental/model-recommendations
+time=2026-09-15T18:47:01.651Z level=DEBUG msg="model recommendations refreshed" count=1
+time=2026-09-15T18:47:01.657Z level=DEBUG msg="persisted model recommendations snapshot" path=/tmp/TestModelRecommendationsGetSWRTriggersRefreshOnRead1024095550/001/.ollama/cache/model-recommendations.json count=1
+time=2026-09-15T18:47:01.663Z level=DEBUG msg="triggering model recommendations refresh on read"
+time=2026-09-15T18:47:01.663Z level=DEBUG msg="refreshing model recommendations from remote" url=https://ollama.com/api/experimental/model-recommendations
+time=2026-09-15T18:47:01.714Z level=DEBUG msg="model recommendations refreshed" count=1
+time=2026-09-15T18:47:01.774Z level=DEBUG msg="persisted model recommendations snapshot" path=/tmp/TestModelRecommendationsGetSWRSkipsWhenRefreshAlreadyInFlight2109916811/001/.ollama/cache/model-recommendations.json count=1
+time=2026-09-15T18:47:01.777Z level=DEBUG msg="triggering model recommendations refresh on read"
+time=2026-09-15T18:47:01.777Z level=DEBUG msg="refreshing model recommendations from remote" url=https://ollama.com/api/experimental/model-recommendations
+time=2026-09-15T18:47:01.978Z level=DEBUG msg="model recommendations refreshed" count=1
+time=2026-09-15T18:47:02.212Z level=DEBUG msg="persisted model recommendations snapshot" path=/tmp/TestModelRecommendationsGetSWRThrottlesRefreshAfterCompletion2808602519/001/.ollama/cache/model-recommendations.json count=1
+time=2026-09-15T18:47:02.247Z level=DEBUG msg="triggering model recommendations refresh on read"
+time=2026-09-15T18:47:02.248Z level=DEBUG msg="refreshing model recommendations from remote" url=https://ollama.com/api/experimental/model-recommendations
+time=2026-09-15T18:47:02.248Z level=WARN msg="model recommendations read refresh failed" error="Get \"https://ollama.com/api/experimental/model-recommendations?ts=1789498022\": temporary upstream failure"
+time=2026-09-15T18:47:02.354Z level=DEBUG msg="triggering model recommendations refresh on read"
+time=2026-09-15T18:47:02.354Z level=DEBUG msg="refreshing model recommendations from remote" url=https://ollama.com/api/experimental/model-recommendations
+time=2026-09-15T18:47:02.355Z level=DEBUG msg="model recommendations refreshed" count=1
+time=2026-09-15T18:47:02.419Z level=DEBUG msg="persisted model recommendations snapshot" path=/tmp/TestModelRecommendationsGetSWRRetriesAfterReadRefreshCooldown1921999361/001/.ollama/cache/model-recommendations.json count=1
+time=2026-09-15T18:47:02.451Z level=DEBUG msg="skipping model show cloud cache hydration because cloud is disabled"
+time=2026-09-15T18:47:02.545Z level=WARN msg="model is missing token[REDACTED] and Go TEMPLATE support is unavailable; chat responses may be poorly formatted" model=registry.ollama.ai/library/show-cache-overlay:latest env="OLLAMA_GO_TEMPLATE=1"
+time=2026-09-15T18:47:02.548Z level=WARN msg="model is missing token[REDACTED] and Go TEMPLATE support is unavailable; chat responses may be poorly formatted" model=registry.ollama.ai/library/show-cache-overlay:latest env="OLLAMA_GO_TEMPLATE=1"
+time=2026-09-15T18:47:02.554Z level=DEBUG msg="triggering model show cloud refresh on read" model=kimi-k2.5 verbose=false
+[GIN] 2026/09/15 - 18:47:02 | 200 |     712.372µs |       127.0.0.1 | POST     "/api/show"
+time=2026-09-15T18:47:02.572Z level=DEBUG msg="truncating input messages which exceed context length" truncated=1
+time=2026-09-15T18:47:02.572Z level=DEBUG msg="truncating input messages which exceed context length" truncated=1

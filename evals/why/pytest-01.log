@@ -1,0 +1,300 @@
+tests/pydantic_core/validators/test_tuple.py .........................................................................................         [ 40%]
+tests/pydantic_core/validators/test_typed_dict.py ............................................................................................ [ 41%]
+.............................................................................................................................................. [ 42%]
+....................s                                                                                                                          [ 42%]
+tests/pydantic_core/validators/test_union.py .....................................................x..............................              [ 43%]
+tests/pydantic_core/validators/test_url.py ................................................................................................... [ 43%]
+.............................................................................................................................................. [ 44%]
+.............................................................................................................................xx..xxx.x........ [ 45%]
+                                                                                                                                               [ 45%]
+tests/pydantic_core/validators/test_uuid.py .................................................................................................  [ 46%]
+tests/pydantic_core/validators/test_with_default.py .......................................................................................... [ 47%]
+..................................                                                                                                             [ 47%]
+tests/test_abc.py ...                                                                                                                          [ 47%]
+tests/test_aliases.py ...................................................................s.....s..s.....ssssssssss..s.....s..s.....s..s.....s. [ 48%]
+.s.....s..s.....ssssssssss..........                                                                                                           [ 48%]
+tests/test_allow_partial.py ...................                                                                                                [ 48%]
+tests/test_annotated.py .....................................................                                                                  [ 49%]
+tests/test_assert_in_validators.py .                                                                                                           [ 49%]
+tests/test_callable.py ........                                                                                                                [ 49%]
+tests/test_color.py ..........................................................................................                                 [ 50%]
+tests/test_computed_fields.py ............................x...s...x                                                                            [ 50%]
+tests/test_config.py ....................................................................................                                      [ 51%]
+tests/test_construction.py .......................................................                                                             [ 51%]
+tests/test_create_model.py ............................                                                                                        [ 51%]
+tests/test_dataclasses.py .............................................x..........................................................s........... [ 52%]
+..............................ss.............................................................................................................. [ 53%]
+...........                                                                                                                                    [ 53%]
+tests/test_datetime.py ....................................................................................................................... [ 54%]
+.................................................................................................................                              [ 55%]
+tests/test_decorators.py ...............................                                                                                       [ 55%]
+tests/test_deferred_annotations.py sssssssss                                                                                                   [ 55%]
+tests/test_deprecated.py ................................................                                                                      [ 56%]
+tests/test_deprecated_fields.py ............                                                                                                   [ 56%]
+tests/test_deprecated_validate_arguments.py .....................                                                                              [ 56%]
+tests/test_docs.py ...........s.........................................................................................s................s.sss [ 57%]
+ssss..sss.sssssssssssss.........s.s..s........s.s..s.........................s.............................s................ss................ [ 58%]
+.......................s....ss.................s...........................s......s..............s.s...................................s...... [ 59%]
+s.......ss.s.............................s..ssssss..sssssssssss.......ssssssssss.sss...........................ss............s.s.....s.ss..... [ 60%]
+.................................................s...................................s.................................s.ss...ss..ss.......... [ 61%]
+........s........ss.........ssssssss.s...                                                                                                      [ 61%]
+tests/test_docs_extraction.py ..........xx....                                                                                                 [ 61%]
+tests/test_dunder_all.py ..                                                                                                                    [ 61%]
+tests/test_edge_cases.py ..................................................................................................................... [ 62%]
+...................................................................................                                                            [ 63%]
+tests/test_errors.py ....                                                                                                                      [ 63%]
+tests/test_experimental_arguments_schema.py ...........                                                                                        [ 63%]
+tests/test_exports.py ........................................................................................................................ [ 64%]
+.......................................                                                                                                        [ 64%]
+tests/test_fields.py .......................................................................                                                   [ 65%]
+tests/test_forward_ref.py ................................................xxx...........x........x.                                            [ 65%]
+tests/test_freethreaded.py sssss                                                                                                               [ 65%]
+tests/test_generics.py ................................................s..........................x.....................sx.......xx........... [ 66%]
+..........                                                                                                                                     [ 66%]
+tests/test_internal.py ...xx......................................                                                                             [ 67%]
+tests/test_json.py ............................................................                                                                [ 67%]
+tests/test_json_schema.py .................................................................................................................... [ 68%]
+.............................................................................................................................................. [ 69%]
+......................................ss...........................................x.......................................................... [ 70%]
+..............................s............................................................................................................... [ 71%]
+...................................................................................................................                            [ 72%]
+tests/test_lazy_imports.py sssss                                                                                                               [ 72%]
+tests/test_main.py ...........................................................................................................ssssssssssssssss [ 73%]
+sssssssss...........................................x......................................................................................... [ 74%]
+................s                                                                                                                              [ 74%]
+tests/test_meta.py x                                                                                                                           [ 74%]
+tests/test_migration.py ...................................................................................................................... [ 75%]
+...............................................................................................................                                [ 76%]
+tests/test_missing_sentinel.py .............                                                                                                   [ 76%]
+tests/test_model_signature.py .....................                                                                                            [ 76%]
+tests/test_model_validator.py .........                                                                                                        [ 76%]
+tests/test_networks.py ....................................................................s.................................................. [ 77%]
+..............................................................................x............................................................... [ 78%]
+..................................................                                                                                             [ 78%]
+tests/test_networks_ipaddress.py ............................................................................................................. [ 79%]
+................................................                                                                                               [ 80%]
+tests/test_parse.py ...........                                                                                                                [ 80%]
+tests/test_pickle.py ......................                                                                                                    [ 80%]
+tests/test_pipeline.py ..............................................................................................................          [ 81%]
+tests/test_plugin_loader.py .........                                                                                                          [ 81%]
+tests/test_plugins.py ..............                                                                                                           [ 81%]
+tests/test_private_attributes.py .....................................                                                                         [ 81%]
+tests/test_rich_repr.py ..                                                                                                                     [ 81%]
+tests/test_root_model.py ...............................................................................                                       [ 82%]
+tests/test_schema_gather.py ................                                                                                                   [ 82%]
+tests/test_serialize.py ............................................................................................                           [ 83%]
+tests/test_serialize_as_any.py ..............                                                                                                  [ 83%]
+tests/test_strict.py ......                                                                                                                    [ 83%]
+tests/test_structural_pattern_matching.py .                                                                                                    [ 83%]
+tests/test_titles.py ....................................................................................................................      [ 84%]
+tests/test_tools.py .........                                                                                                                  [ 84%]
+tests/test_type_adapter.py .........................................................x......................................................... [ 85%]
+...........................................................................................................                                    [ 85%]
+tests/test_type_alias_type.py ...................                                                                                              [ 86%]
+tests/test_type_hints.py ......                                                                                                                [ 86%]
+tests/test_types.py ........s..........................x.......................ss............................................................. [ 86%]
+.............................................................................................................................................. [ 88%]
+.....................                                                                                                                          [ 88%]
+tests/test_types_payment_card_number.py ..............................................                                                         [ 88%]
+tests/test_types_self.py .............                                                                                                         [ 88%]
+tests/test_types_typeddict.py ................................................................................                                 [ 89%]
+tests/test_types_zoneinfo.py ......                                                                                                            [ 89%]
+tests/test_typing.py ................                                                                                                          [ 89%]
+tests/test_utils.py .......................................................................................................................... [ 90%]
+......................................                                                                                                         [ 90%]
+tests/test_v1.py ...                                                                                                                           [ 90%]
+tests/test_v1_hypothesis_plugin.py F                                                                                                           [ 90%]
+tests/test_v1_hypothesis_plugin.py:14 test_v1_hypothesis_plugin_imports - pydantic.warnings.PydanticDeprecatedSince20: `pydantic.generics:…
+tests/test_v1_hypothesis_plugin.py F                                                                                                           [ 90%]
+tests/test_v1_hypothesis_plugin.py:23 test_v1_hypothesis_plugin_registers_strategies - pydantic.warnings.PydanticDeprecatedSince20: `pydan…
+tests/test_validate_call.py .................................................................                                                  [ 91%]
+tests/test_validation_context.py ....                                                                                                          [ 91%]
+tests/test_validators.py ..................................................................................................................... [ 92%]
+...................................................x.......x....                                                                               [ 92%]
+tests/test_validators_dataclass.py ........                                                                                                    [ 92%]
+tests/test_version.py .......                                                                                                                  [ 92%]
+tests/test_warnings.py .....                                                                                                                   [ 92%]
+tests/types/test_bool.py ...........................................................                                                           [ 93%]
+tests/types/test_bytes.py ......................                                                                                               [ 93%]
+tests/types/test_complex.py ..                                                                                                                 [ 93%]
+tests/types/test_counter.py ...............                                                                                                    [ 93%]
+tests/types/test_date.py ................                                                                                                      [ 93%]
+tests/types/test_datetime.py ..............                                                                                                    [ 93%]
+tests/types/test_decimal.py .................................................................................................................. [ 94%]
+..........................................................                                                                                     [ 94%]
+tests/types/test_defaultdict.py .................                                                                                              [ 95%]
+tests/types/test_deque.py .............................                                                                                        [ 95%]
+tests/types/test_dict.py ...                                                                                                                   [ 95%]
+tests/types/test_ellipsis.py .                                                                                                                 [ 95%]
+tests/types/test_enum.py .....................                                                                                                 [ 95%]
+tests/types/test_float.py ........................................                                                                             [ 95%]
+tests/types/test_fraction.py ......................................................................................                            [ 96%]
+tests/types/test_frozenset.py .................                                                                                                [ 96%]
+tests/types/test_int.py ......................................................                                                                 [ 96%]
+tests/types/test_iterable.py .........                                                                                                         [ 96%]
+tests/types/test_list.py ..........................                                                                                            [ 97%]
+tests/types/test_literal.py ....                                                                                                               [ 97%]
+tests/types/test_mapping.py ...                                                                                                                [ 97%]
+tests/types/test_model.py ..................                                                                                                   [ 97%]
+tests/types/test_namedtuple.py ...........................                                                                                     [ 97%]
+tests/types/test_none.py .....                                                                                                                 [ 97%]
+tests/types/test_ordered_dict.py .................                                                                                             [ 97%]
+tests/types/test_path.py ...............................                                                                                       [ 97%]
+tests/types/test_pattern.py ...............                                                                                                    [ 98%]
+tests/types/test_sequence.py .....................                                                                                             [ 98%]
+tests/types/test_set.py ..........................                                                                                             [ 98%]
+tests/types/test_str.py ................................................                                                                       [ 98%]
+tests/types/test_time.py ..............                                                                                                        [ 98%]
+tests/types/test_timedelta.py ...........                                                                                                      [ 98%]
+tests/types/test_tuple.py .....................                                                                                                [ 99%]
+tests/types/test_uuid.py ..........                                                                                                            [ 99%]
+tests/types/unions/test_discriminated_union.py ...........................................................x.........x...x...x.....             [ 99%]
+tests/types/unions/test_union.py ........................                                                                                      [100%]
+
+══════════════════════════════════════════════════════════════════ inline-snapshot ═══════════════════════════════════════════════════════════════════
+INFO: CI run was detected because environment variable "CI" was defined. inline-snapshot runs with --inline-snapshot=disable by default in CI. This
+means that tests with snapshots will continue to run, but snapshot(x) will only return x and inline-snapshot will not be able to fix snapshots or
+generate reports. You can change this by using --inline-snapshot=report for example.
+
+====================================================================== FAILURES ======================================================================
+_________________________________________________________ test_v1_hypothesis_plugin_imports __________________________________________________________
+
+    def test_v1_hypothesis_plugin_imports() -> None:
+        """The plugin must import cleanly under Pydantic V2."""
+        pytest.importorskip('hypothesis')
+
+>       import pydantic.v1._hypothesis_plugin as plugin
+
+tests/test_v1_hypothesis_plugin.py:19:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+pydantic/v1/_hypothesis_plugin.py:67: in <module>
+    st.register_type_strategy(pydantic.EmailStr, st.emails().filter(is_valid_email))  # type: ignore[arg-type]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/hypothesis/strategies/_internal/core.py:2474: in register_type_strategy
+    and issubclass(custom_type, sys.modules["pydantic.generics"].GenericModel)
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+name = 'GenericModel'
+
+    def wrapper(name: str) -> object:
+        """Raise an error if the object is not found, or warn if it was moved.
+
+        In case it was moved, it still returns the object.
+
+        Args:
+            name: The object name.
+
+        Returns:
+            The object.
+        """
+        if name == '__path__':
+            raise AttributeError(f'module {module!r} has no attribute {name!r}')
+
+        import warnings
+
+        from ._internal._validators import import_string
+
+        import_path = f'{module}:{name}'
+        if import_path in MOVED_IN_V2:
+            new_location = MOVED_IN_V2[import_path]
+>           warnings.warn(
+                f'`{import_path}` has been moved to `{new_location}`.',
+                category=PydanticDeprecatedSince20,
+                stacklevel=2,
+            )
+E           pydantic.warnings.PydanticDeprecatedSince20: `pydantic.generics:GenericModel` has been moved to `pydantic.BaseModel`. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.14/migration/
+
+pydantic/_migration.py:286: PydanticDeprecatedSince20
+___________________________________________________ test_v1_hypothesis_plugin_registers_strategies ___________________________________________________
+
+    def test_v1_hypothesis_plugin_registers_strategies() -> None:
+        """The strategies the plugin registers must still resolve under Pydantic V2."""
+        st = pytest.importorskip('hypothesis.strategies')
+        given = pytest.importorskip('hypothesis').given
+        settings = pytest.importorskip('hypothesis').settings
+
+        pytest.importorskip('pydantic.v1._hypothesis_plugin')
+
+        @settings(max_examples=5, deadline=None)
+        @given(st.from_type(StrictBool))
+        def check_bool(value: bool) -> None:
+            assert isinstance(value, bool)
+
+        check_bool()
+
+        @settings(max_examples=5, deadline=None)
+>       @given(st.from_type(conint(gt=5)))
+                            ^^^^^^^^^^^^
+
+tests/test_v1_hypothesis_plugin.py:40:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+pydantic/v1/types.py:239: in conint
+    return type('ConstrainedIntValue', (ConstrainedInt,), namespace)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pydantic/v1/types.py:166: in __new__
+    return _registered(new_cls)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^
+pydantic/v1/_hypothesis_plugin.py:201: in _registered
+    st.register_type_strategy(typ, resolver(typ))  # type: ignore
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/hypothesis/strategies/_internal/core.py:2474: in register_type_strategy
+    and issubclass(custom_type, sys.modules["pydantic.generics"].GenericModel)
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+name = 'GenericModel'
+
+    def wrapper(name: str) -> object:
+        """Raise an error if the object is not found, or warn if it was moved.
+
+        In case it was moved, it still returns the object.
+
+        Args:
+            name: The object name.
+
+        Returns:
+            The object.
+        """
+        if name == '__path__':
+            raise AttributeError(f'module {module!r} has no attribute {name!r}')
+
+        import warnings
+
+        from ._internal._validators import import_string
+
+        import_path = f'{module}:{name}'
+        if import_path in MOVED_IN_V2:
+            new_location = MOVED_IN_V2[import_path]
+>           warnings.warn(
+                f'`{import_path}` has been moved to `{new_location}`.',
+                category=PydanticDeprecatedSince20,
+                stacklevel=2,
+            )
+E           pydantic.warnings.PydanticDeprecatedSince20: `pydantic.generics:GenericModel` has been moved to `pydantic.BaseModel`. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.14/migration/
+
+pydantic/_migration.py:286: PydanticDeprecatedSince20
+================================================================ slowest 10 durations ================================================================
+3.12s call     tests/benchmarks/test_model_schema_generation.py::test_lots_of_models_with_lots_of_fields
+1.98s call     tests/pydantic_core/test_hypothesis.py::test_urls_text
+1.81s call     tests/pydantic_core/test_garbage_collection.py::test_gc_enum_validator_lookup
+1.50s call     tests/test_generics.py::test_generics_work_with_many_parametrized_base_models
+1.45s call     tests/pydantic_core/test_garbage_collection.py::test_gc_enum_serializer_class
+1.09s call     tests/pydantic_core/test_garbage_collection.py::test_gc_schema_serializer
+1.06s call     tests/pydantic_core/test_hypothesis.py::test_datetime_datetime
+1.06s call     tests/pydantic_core/test_garbage_collection.py::test_gc_schema_validator
+1.00s call     tests/pydantic_core/test_garbage_collection.py::test_gc_field_exclude_if
+0.74s call     tests/test_json_schema.py::test_multiple_parametrization_of_generic_model
+                                                                 Summary of Failures
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃  File                                ┃  Function                                    ┃  Function Line  ┃  Error Line  ┃  Error                      ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│  tests/test_v1_hypothesis_plugin.py  │  test_v1_hypothesis_plugin_imports           │  15             │  19          │  PydanticDeprecatedSince20  │
+│  tests/test_v1_hypothesis_plugin.py  │  test_v1_hypothesis_plugin_registers_strat…  │  24             │  40          │  PydanticDeprecatedSince20  │
+└──────────────────────────────────────┴──────────────────────────────────────────────┴─────────────────┴──────────────┴─────────────────────────────┘
+Results (101.06s):
+         2 failed
+     12834 passed
+       483 skipped
+        36 xfailed
+make: *** [Makefile:75: test] Error 1

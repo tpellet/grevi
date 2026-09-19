@@ -1,0 +1,249 @@
+  ssh-strict: true
+  ssh-user: git
+  clean: true
+  sparse-checkout-cone-mode: true
+  fetch-depth: 1
+  fetch-tags: false
+  show-progress: true
+  lfs: false
+  submodules: false
+  set-safe-directory: true
+  allow-unsafe-pr-checkout: false
+env:
+  CICD_INTERMEDIATES_DIR: _cicd-intermediates
+  MSRV_FEATURES: --all-features
+  CARGO_HOME: /home/runner/.cargo
+  CARGO_INCREMENTAL: 0
+  CARGO_TERM_COLOR: always
+Syncing repository: sharkdp/fd
+Working directory is '/home/runner/work/fd/fd'
+git version 2.55.0
+Temporarily overriding HOME='/home/runner/work/_temp/125066d6-e118-4a82-b18a-c26e46946527' before making global git config changes
+Adding repository directory to the temporary git global config as a safe directory
+Deleting the contents of '/home/runner/work/fd/fd'
+hint: Using 'master' as the name for the initial branch. This default branch name
+hint: will change to "main" in Git 3.0. To configure the initial branch name
+hint: to use in all of your new repositories, which will suppress this warning,
+hint: call:
+hint:
+2026-09-15T15:10:35.7856184Z hint: 	git config --global init.defaultBranch <name>
+hint:
+hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+hint: 'development'. The just-created branch can be renamed via this command:
+hint:
+2026-09-15T15:10:35.7857766Z hint: 	git branch -m <name>
+hint:
+hint: Disable this message with "git config set advice.defaultBranchName false"
+Initialized empty Git repository in /home/runner/work/fd/fd/.git/
+Removing SSH command configuration
+Removing HTTP extra header
+Removing includeIf entries pointing to credentials config files
+From https://github.com/sharkdp/fd
+ * [new ref]         ec4e637934160459f124447c125bb285bba491f0 -> pull/2132/merge
+Note: switching to 'refs/remotes/pull/2132/merge'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by switching back to a branch.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -c with the switch command. Example:
+
+  git switch -c <new-branch-name>
+
+Or undo this operation with:
+
+  git switch -
+
+Turn off this advice by setting config variable advice.detachedHead to false
+
+HEAD is now at ec4e637 Merge 409728294703c1f4a7b3a8da597866cc57de088b into 24198d904a074f2943b2a3be925e53134c994734
+ec4e637934160459f124447c125bb285bba491f0
+Removing SSH command configuration
+Removing HTTP extra header
+Removing includeIf entries pointing to credentials config files
+includeif.gitdir:/home/runner/work/fd/fd/.git.path
+includeif.gitdir:/home/runner/work/fd/fd/.git/worktrees/*.path
+includeif.gitdir:/github/workspace/.git.path
+includeif.gitdir:/github/workspace/.git/worktrees/*.path
+/home/runner/work/_temp/git-credentials-e35a2c03-157e-4692-9ea9-a7bb326614e9.config
+/home/runner/work/_temp/git-credentials-e35a2c03-157e-4692-9ea9-a7bb326614e9.config
+/github/runner_temp/git-credentials-e35a2c03-157e-4692-9ea9-a7bb326614e9.config
+/github/runner_temp/git-credentials-e35a2c03-157e-4692-9ea9-a7bb326614e9.config
+Removing credentials config '/home/runner/work/_temp/git-credentials-e35a2c03-157e-4692-9ea9-a7bb326614e9.config'
+cargo clippy --all-targets --all-features -- -Dwarnings
+shell: /usr/bin/bash -e {0}
+env:
+  CICD_INTERMEDIATES_DIR: _cicd-intermediates
+  MSRV_FEATURES: --all-features
+  CARGO_HOME: /home/runner/.cargo
+  CARGO_INCREMENTAL: 0
+  CARGO_TERM_COLOR: always
+    Updating crates.io index
+ Downloading crates ...
+  Downloaded anstyle-query v1.1.5
+  Downloaded anstyle-parse v1.0.0
+  Downloaded anstream v1.0.0
+  Downloaded anstyle v1.0.13
+  Downloaded ctrlc v3.5.2
+  Downloaded colorchoice v1.0.4
+  Downloaded argmax v0.4.0
+  Downloaded defmt-macros v1.1.0
+  Downloaded clap_lex v1.0.0
+  Downloaded clap_derive v4.6.1
+  Downloaded is_terminal_polyfill v1.70.2
+  Downloaded terminal_size v0.4.3
+  Downloaded clap_complete v4.6.5
+  Downloaded cfg-if v1.0.4
+  Downloaded getrandom v0.4.2
+  Downloaded defmt-parser v1.0.0
+  Downloaded fastrand v2.3.0
+  Downloaded test-case v3.3.1
+  Downloaded test-case-macros v3.3.1
+  Downloaded test-case-core v3.3.1
+  Downloaded walkdir v2.5.0
+  Downloaded crossbeam-deque v0.8.6
+  Downloaded clap v4.6.1
+  Downloaded etcetera v0.11.0
+  Downloaded proc-macro-error2 v2.0.1
+  Downloaded same-file v1.0.6
+  Downloaded heck v0.5.0
+  Downloaded utf8parse v0.2.2
+  Downloaded errno v0.3.14
+  Downloaded thiserror v2.0.18
+  Downloaded filetime v0.2.29
+  Downloaded nu-ansi-term v0.50.3
+  Downloaded jiff-static v0.2.35
+  Downloaded strsim v0.11.1
+  Downloaded faccess v0.2.4
+  Downloaded cfg_aliases v0.2.1
+  Downloaded tikv-jemallocator v0.7.0
+  Downloaded thiserror-impl v2.0.18
+  Downloaded find-msvc-tools v0.1.9
+  Downloaded once_cell v1.21.3
+  Downloaded proc-macro-error-attr2 v2.0.0
+  Downloaded shlex v1.3.0
+  Downloaded quote v1.0.45
+  Downloaded normpath v1.5.1
+  Downloaded aho-corasick v1.1.5
+  Downloaded bitflags v1.3.2
+  Downloaded crossbeam-utils v0.8.21
+  Downloaded defmt v1.1.0
+  Downloaded crossbeam-epoch v0.9.18
+  Downloaded lscolors v0.21.0
+  Downloaded globset v0.4.19
+  Downloaded log v0.4.29
+  Downloaded proc-macro2 v1.0.106
+  Downloaded unicode-ident v1.0.24
+  Downloaded tempfile v3.27.0
+  Downloaded serde_core v1.0.228
+  Downloaded diff v0.1.13
+  Downloaded bitflags v2.11.0
+  Downloaded anyhow v1.0.104
+  Downloaded regex v1.13.1
+  Downloaded ignore v0.4.33
+  Downloaded clap_builder v4.6.0
+  Downloaded serde v1.0.228
+  Downloaded cc v1.2.56
+  Downloaded crossbeam-channel v0.5.16
+  Downloaded memchr v2.8.0
+  Downloaded jiff-core v0.1.0
+  Downloaded syn v2.0.117
+  Downloaded nix v0.30.1
+  Downloaded nix v0.31.3
+  Downloaded regex-syntax v0.8.11
+  Downloaded bstr v1.12.1
+  Downloaded rustix v1.1.4
+  Downloaded jiff v0.2.35
+  Downloaded regex-automata v0.4.18
+  Downloaded libc v0.2.189
+  Downloaded tikv-jemalloc-sys v0.7.1+5.3.1-0-g81034ce1f1373e37dc865038e1bc8eeecf559ce8
+  Downloaded linux-raw-sys v0.12.1
+   Compiling libc v0.2.189
+   Compiling proc-macro2 v1.0.106
+    Checking bitflags v2.11.0
+   Compiling unicode-ident v1.0.24
+   Compiling quote v1.0.45
+   Compiling cfg_aliases v0.2.1
+    Checking cfg-if v1.0.4
+   Compiling rustix v1.1.4
+    Checking memchr v2.8.0
+   Compiling crossbeam-utils v0.8.21
+    Checking linux-raw-sys v0.12.1
+    Checking aho-corasick v1.1.5
+   Compiling syn v2.0.117
+   Compiling shlex v1.3.0
+    Checking utf8parse v0.2.2
+   Compiling find-msvc-tools v0.1.9
+   Compiling cc v1.2.56
+    Checking anstyle-parse v1.0.0
+    Checking anstyle v1.0.13
+    Checking regex-syntax v0.8.11
+    Checking anstyle-query v1.1.5
+    Checking colorchoice v1.0.4
+    Checking is_terminal_polyfill v1.70.2
+    Checking anstream v1.0.0
+    Checking terminal_size v0.4.3
+   Compiling nix v0.30.1
+   Compiling nix v0.31.3
+   Compiling tikv-jemalloc-sys v0.7.1+5.3.1-0-g81034ce1f1373e37dc865038e1bc8eeecf559ce8
+   Compiling heck v0.5.0
+    Checking clap_lex v1.0.0
+    Checking strsim v0.11.1
+    Checking clap_builder v4.6.0
+    Checking regex-automata v0.4.18
+    Checking crossbeam-epoch v0.9.18
+    Checking bstr v1.12.1
+    Checking same-file v1.0.6
+   Compiling anyhow v1.0.104
+   Compiling clap_derive v4.6.1
+    Checking log v0.4.29
+   Compiling getrandom v0.4.2
+    Checking once_cell v1.21.3
+   Compiling test-case-core v3.3.1
+    Checking globset v0.4.19
+    Checking walkdir v2.5.0
+    Checking crossbeam-deque v0.8.6
+    Checking jiff-core v0.1.0
+    Checking nu-ansi-term v0.50.3
+    Checking bitflags v1.3.2
+    Checking faccess v0.2.4
+    Checking lscolors v0.21.0
+    Checking ctrlc v3.5.2
+    Checking clap v4.6.1
+    Checking argmax v0.4.0
+    Checking clap_complete v4.6.5
+    Checking jiff v0.2.35
+   Compiling test-case-macros v3.3.1
+    Checking ignore v0.4.33
+    Checking regex v1.13.1
+    Checking crossbeam-channel v0.5.16
+    Checking etcetera v0.11.0
+    Checking normpath v1.5.1
+    Checking fastrand v2.3.0
+    Checking test-case v3.3.1
+    Checking filetime v0.2.29
+    Checking tempfile v3.27.0
+    Checking diff v0.1.13
+    Checking tikv-jemallocator v0.7.0
+    Checking fd-find v10.5.0 (/home/runner/work/fd/fd)
+error: this can be `std::io::Error::other(_)`
+  --> src/error.rs:59:21
+   |
+59 |           let error = io::Error::new(
+   |  _____________________^
+60 | |             io::ErrorKind::Other,
+61 | |             "path\x1b]0;pwned\x07.txt\nsecond line",
+62 | |         );
+   | |_________^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.98.0/index.html#io_other_error
+   = note: `-D clippy::io-other-error` implied by `-D warnings`
+   = help: to override `-D warnings` add `#[allow(clippy::io_other_error)]`
+help: use `std::io::Error::other`
+   |
+59 ~         let error = io::Error::other(
+60 ~             "path\x1b]0;pwned\x07.txt\nsecond line",
+   |
+
+error: could not compile `fd-find` (bin "fd" test) due to 1 previous error
