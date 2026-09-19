@@ -113,6 +113,7 @@ pub enum Cmd {
         /// Directory whose files (not recursive, not hidden) are sorted
         dir: std::path::PathBuf,
         /// Root whose sub-folders (depth <= 2) are the destinations (default: <DIR>)
+        #[allow(rustdoc::invalid_html_tags)]
         #[arg(long)]
         into: Option<std::path::PathBuf>,
         /// Move the files (dry-run otherwise) and write an undo log
