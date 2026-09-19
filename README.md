@@ -2,9 +2,17 @@
 
 **Point at the right line, file or tool from your shell, and hear "nothing fits" when nothing does.**
 
-hunch is the semantic toolkit for your shell: small, composable commands that bring judgment to ordinary Unix pipelines. Pick a filename from a description, find the error that broke a build, check whether an email asks for a refund, or match a request to an installed tool. Powered by TypeSafe’s Jev, hunch selects from your actual input, tools, and man pages rather than generating free-form answers. Pipes and exit codes make it fit into the scripts you already write; structured JSON makes the same commands usable by agents. Uncertainty has its own exit code, so your workflow can handle “unsure” explicitly.
+hunch is the semantic toolkit for your shell: small, composable commands that bring judgment to ordinary Unix pipelines. Pick a filename from a description, find the error that broke a build, check whether an email asks for a refund, or match a request to an installed tool. Powered by TypeSafe's Jev, hunch selects from your actual input, tools and man pages rather than generating free-form answers. Pipes and exit codes make it fit into the scripts you already write; structured JSON makes the same commands usable by agents. Uncertainty has its own exit code, so your workflow can handle "unsure" explicitly.
+
+One binary for macOS and Linux. The 0.1.0 release ships four verbs, `pick`, `why`, `is` and `run`, plus a `,` shell alias for `run`; two more, `add` and `sort`, are on `main` and unreleased. Every command takes `--json` and prints one envelope with the answer, a calibrated probability, the request count and its cost.
+
+The evidence is in the repo. [benchmarks/](benchmarks/README.md) holds the latency runs behind the Numbers section, [evals/](evals/) the routing and root-cause sets behind the accuracy tables, and [PRIVACY.md](PRIVACY.md) says, verb by verb, what leaves your machine.
+
+The user guide, from install to the agent envelope, is in [docs/guide/](docs/guide/README.md).
 
 [![CI](https://github.com/tpellet/hunch/actions/workflows/ci.yml/badge.svg)](https://github.com/tpellet/hunch/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/tpellet/hunch)](https://github.com/tpellet/hunch/releases)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 `cargo build 2>&1 | hunch why` points at the line that broke the build: the line itself, with its number and a probability, not a paraphrase of it.
 
@@ -65,7 +73,7 @@ hunch health
 cargo build 2>&1 | hunch why
 ```
 
-## Get a key
+### Get a key
 
 hunch is an independent open-source client of TypeSafe's hosted Jev API; you need your own key from https://console.typesafe.ai. Requests are billed to your key.
 
@@ -77,6 +85,10 @@ Each verb makes at least one API request; `-v` prints how many, and what they co
 export TYPESAFE_API_KEY=...            # or TYPESAFE_API_KEY_FILE=/path/to/key
 hunch health                           # ok: key accepted, API reachable in 286 ms
 ```
+
+Every verb below also takes `--json` for one machine-readable envelope, `-t` to move the decision threshold, `-v` to print probabilities and timing, and `--no-cache` to skip the answer cache. The full flag list per verb is in [docs/guide/verbs.md](docs/guide/verbs.md).
+
+## Verbs
 
 ### pick: the line that matches
 
@@ -123,7 +135,9 @@ eval "$(hunch init zsh)"      # or bash
 
 Quote requests that contain an apostrophe: an unquoted `, what's using port 8080` opens a quote in both zsh and bash.
 
-### hunch add
+### add: the hunks about a topic
+
+New in 0.2.0, unreleased: install from source to try it.
 
 ```sh
 hunch add --dry-run "the auth fix"
@@ -132,7 +146,9 @@ hunch add --yes "the auth fix" && git commit
 
 `add` scores each unstaged hunk against your topic and stages the ones that are about it. `--dry-run` only scores; `--yes` skips the question. Tracked files only; stages into the index, never commits; binary changes are never staged.
 
-### hunch sort
+### sort: a folder for each file
+
+New in 0.2.0, unreleased: install from source to try it.
 
 ```sh
 hunch sort ~/Downloads                      # dry run: proposes a folder per file
@@ -151,6 +167,17 @@ Jev, TypeSafe's model, answers two kinds of question. "Which one?" is a choice o
 The API takes at most 255 options per question. Past that, `pick` and `why` run a tournament: windows of 200 lines plus NONE, 3 finalists per window, then one finals round. A window's items share a 60,000-character budget (each clipped to 200–2,000 characters), which keeps a request under the model's 32k-token state limit for typical text. Every verb finishes in at most 2 rounds of parallel requests; `run` takes 3 (route, fit, arguments).
 
 Answers are cached on disk for 7 days, keyed by a hash of the request; `--no-cache` bypasses the cache. The model is pinned to `jev-1.13.0`, the release the 0.5 threshold was calibrated on. `jev-latest` moves with each TypeSafe release, so the same input would start answering differently without any change here; `--model jev-latest` is allowed and documented as moving.
+
+The longer version, with the `why` prefilter and the retry rules, is in [docs/guide/how-it-works.md](docs/guide/how-it-works.md).
+
+### Why not an LLM shell?
+
+- No invented flags: every flag comes from the man page of a tool that is installed.
+- It abstains with a number (exit 3, and `p` in `--json`) instead of guessing.
+- Latency is measured per verb, p50 and p95, in the table below.
+- Cost is measured per call, in `meta.cost_usd`.
+- It runs only what exists on your PATH, via argv, and never the tools on the never-execute list.
+- What an LLM does better: composing a long, exact command from scratch. hunch points at one tool and its flags; it does not write pipelines.
 
 ## Numbers
 
@@ -211,7 +238,7 @@ The 20-request spot check (`evals/run_args.json`), run without `--no-args`: tool
 
 `data.any`, the absolute "does this log hold a failure" answer that the threshold gates, was 0.17 at the minimum and 0.77 at the median over the 20 cases; the 3 abstentions sat at 0.17, 0.43 and 0.46. Every case holds a failure, so all three are misses.
 
-## For agents
+## Agents
 
 ```sh
 hunch capabilities --json      # commands, flags, exit codes, env, limits, safety rules
@@ -227,11 +254,11 @@ Every command accepts `--json` (alias `--robot`) or `--format json|jsonl|toon` a
 
 Branch on `exit_code`: 0 ok, 1 no, 2 usage, 3 abstain, 4 unavailable, 5 auth, 6 input, 7 child failed, 130 declined. In machine mode `run` never executes unless `--exec --yes` is given, and the child's stdout goes to stderr so stdout stays one envelope. `data.blocked` names a tool hunch refuses to run; `data.argv` is still there for you to run under your own rules. Errors carry `error.example`, a corrected command to try next.
 
-## Privacy
+The per-verb `data` fields and the workflows are in [docs/guide/agents.md](docs/guide/agents.md).
+
+## Privacy and safety
 
 What leaves your machine, verb by verb: [PRIVACY.md](PRIVACY.md). Requests go only to the TypeSafe API. Before sending, hunch masks obvious secrets (`token=…`, `Bearer …`, `sk-…`, `ghp_…`, `AKIA…`, JWTs) as `[REDACTED]`. That is best effort, not a guarantee: do not pipe secrets into hunch.
-
-## Safety
 
 `run` executes only after a confirmation on the terminal or `--yes`; without a TTY and without `--yes` it prints the command and stops. Commands run via argv, never through a shell. Flags come from man pages; no binary is ever probed with `--help`.
 
@@ -248,15 +275,6 @@ Some tools are never executed, whatever the confidence or the flags: `rm`, `rmdi
 - Identical requests replay the cached answer for 7 days. Without the cache, `p` moves by up to 0.06 between runs (measured on `jev-1.13.0`), so a decision within 0.06 of the threshold can flip. `is --band` is the one dead band; the other verbs have none.
 - hunch points at things. It does not judge quality, count, do arithmetic or dates, so an `is` condition of that kind is unreliable.
 
-## Why not an LLM shell?
-
-- No invented flags: every flag comes from the man page of a tool that is installed.
-- It abstains with a number (exit 3, and `p` in `--json`) instead of guessing.
-- Latency is measured per verb, p50 and p95, in the table above.
-- Cost is measured per call, in `meta.cost_usd`.
-- It runs only what exists on your PATH, via argv, and never the tools on the never-execute list.
-- What an LLM does better: composing a long, exact command from scratch. hunch points at one tool and its flags; it does not write pipelines.
-
 ## What it is bad at
 
 Every item below is a failure row of the eval run above (`evals/out/*.json` after a run).
@@ -266,6 +284,16 @@ Every item below is a failure row of the eval run above (`evals/out/*.json` afte
 - Argument pointing drops flags: all required flags present in 5 of 20, an extra flag in 0 of 20. `tar -x` without `-f foo.tar.gz` never names the archive. Use `--no-args` and write the flags yourself.
 - `why` treats some failures as not failures: a Go `--- FAIL` block whose message is "still exists" (`any` 0.43), a `WARNING: DATA RACE` from `go test -race` (0.46) and a ruff `D200` docstring finding under pre-commit (0.17) all exited 3. In a Python traceback it pointed at a library frame 27 lines above the exception line. When a log quotes another failure, as vitest's snapshot diff of the runner's own output does, the quoted failure was pointed at first (a hit@3, not a hit@1).
 - Anything within 0.06 of the threshold: 20 of the 169 routing decisions above sit there, and a `--no-cache` re-run can flip them.
+
+## Docs
+
+- [Getting started](docs/guide/getting-started.md): install, key, first commands, the `,` alias.
+- [Verbs](docs/guide/verbs.md): every verb with its flags, exit codes, `data` fields and examples.
+- [Agents](docs/guide/agents.md): the JSON envelope, exit codes, `capabilities`, `robot-docs`.
+- [How it works](docs/guide/how-it-works.md): select-not-generate, NONE, the one threshold, the tournament, the cache, the pinned model.
+- [Configuration](docs/guide/configuration.md): every environment variable and global flag.
+- [FAQ](docs/guide/faq.md): cost, privacy, why not an LLM, why exit 3.
+- Reference: [robot mode](docs/ROBOT_MODE.md), [what leaves your machine](PRIVACY.md), [changelog](CHANGELOG.md), [benchmarks](benchmarks/README.md), [`why` eval cases](evals/why/README.md).
 
 ## License
 
