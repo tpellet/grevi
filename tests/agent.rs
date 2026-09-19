@@ -18,13 +18,20 @@ fn capabilities_lists_verbs_exit_codes_env() {
             "{verb}"
         );
     }
-    // Wave 2 changes this contract: Task 14 narrows it to `sort` only, Task 15 deletes it.
+    // Wave 2: Task 14 lists `add`; `sort` stays unlisted until Task 15 lands.
+    assert!(
+        d["commands"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|c| c["name"] == "add")
+    );
     assert!(
         !d["commands"]
             .as_array()
             .unwrap()
             .iter()
-            .any(|c| c["name"] == "add" || c["name"] == "sort")
+            .any(|c| c["name"] == "sort")
     );
     assert_eq!(d["exit_codes"].as_array().unwrap().len(), 9);
     assert!(

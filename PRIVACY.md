@@ -8,6 +8,7 @@ hunch sends requests only to the TypeSafe API (`HUNCH_BASE_URL`), authenticated 
 | why | your stdin (or the `--` command's output) after local filtering (≤ 4,000 lines, each clipped) | lines filtered out locally |
 | is | your condition and stdin (≤ ~96k chars, head+tail) | — |
 | run | your intent, names and one-line descriptions of installed tools, man-page excerpts of ≤ 12 finalists, the chosen tool's option list, and only those file names in the current directory that contain a word of your request (never contents) | other file names, file contents, environment, history |
+| add | your topic and each unstaged hunk of tracked files (header + body, clipped to 3,000 characters) | untracked files, file contents outside the diff |
 
 Before sending, hunch masks obvious secrets (`token=…`, `Bearer …`, `sk-…`, `ghp_…`, `AKIA…`,
 JWTs) as `[REDACTED]`. This is best effort, not a guarantee: do not pipe secrets into hunch.

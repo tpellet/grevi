@@ -121,6 +121,15 @@ eval "$(hunch init zsh)"      # or bash
 
 Quote requests that contain an apostrophe: an unquoted `, what's using port 8080` opens a quote in both zsh and bash.
 
+### hunch add
+
+```sh
+hunch add --dry-run "the auth fix"
+hunch add --yes "the auth fix" && git commit
+```
+
+`add` scores each unstaged hunk against your topic and stages the ones that are about it. `--dry-run` only scores; `--yes` skips the question. Tracked files only; stages into the index, never commits; binary changes are never staged.
+
 ## How it works
 
 hunch points, it does not generate. Every token it prints comes from your stdin, a tool on your PATH, that tool's man page, or your own request. A flag that is not in the man page cannot appear.

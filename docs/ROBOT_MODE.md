@@ -21,6 +21,7 @@ Branch on `exit_code` (0 ok, 1 no, 2 usage, 3 abstain, 4 unavailable, 5 auth, 6 
   python*/perl*/ruby*/node*/php*/lua* that take program text, ...): run `argv` yourself under
   your own rules. Use `--dry-run` to route only. `complete=false` means `<VALUE>` placeholders remain.
 - `is "<condition>"` (stdin) → `data.p, verdict`; exit 0 yes, 1 no, 3 unsure.
+- `add "<topic>"` → `data.hunks[{file, header, p, staged}]`; stages only unstaged hunks of tracked files, index only, never commits; machine mode stages only with `--yes` (else exit 130); exit 3 = no hunk is about the topic.
 
 ## Rules for agents
 - Treat `p` as calibrated: 0.8 ≈ right 80% of the time across many calls. Raise `-t` for costly actions.

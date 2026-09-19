@@ -21,9 +21,9 @@ fn help_lists_v0_verbs_and_hides_wave_2() {
     ] {
         assert!(text.contains(verb), "{verb} missing from --help");
     }
-    // `add` and `sort` exist as hidden stubs until Tasks 14–15 land.
+    // `add` landed with Task 14; `sort` stays a hidden stub until Task 15 lands.
     assert!(
-        !text.contains("Stage only") && !text.contains("Propose moving"),
+        text.contains("Stage only") && !text.contains("Propose moving"),
         "{text}"
     );
 }

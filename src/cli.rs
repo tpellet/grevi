@@ -96,8 +96,7 @@ pub enum Cmd {
         #[arg(long, default_value_t = 0.15)]
         band: f64,
     },
-    /// Stage only the git hunks about a topic (wave 2; hidden until Task 14 lands)
-    #[command(hide = true)]
+    /// Stage only the git hunks about a topic
     Add {
         topic: String,
         /// Stage without asking
