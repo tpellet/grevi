@@ -11,7 +11,7 @@ cargo install grevi --locked
 Or the shell installer, macOS and Linux:
 
 ```sh
-curl --proto '=https' --tlsv1.2 -LsSf https://github.com/tpellet/grevi/releases/download/v0.2.0/grevi-installer.sh | sh
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/tpellet/grevi/releases/latest/download/grevi-installer.sh | sh
 ```
 
 To build the unreleased `main` instead: `cargo install --git https://github.com/tpellet/grevi --locked grevi`.
