@@ -10,13 +10,13 @@
     .stay { fill: #d29922; }
     .folder { fill: #79c0ff; }
     .a { animation-duration: 16s; animation-iteration-count: infinite; animation-timing-function: ease-in-out; }
-    #cover { animation: type 16s steps(24) infinite; }
+    .cmd { font-size: 17px; font-weight: 700; }
+    .verb { fill: #3fb950; }
     #all { animation-name: all; } #panes { animation-name: panes; }
     #f1 { animation-name: f1; } #f2 { animation-name: f2; } #f3 { animation-name: f3; }
     #s1 { animation-name: s1; } #s2 { animation-name: s2; } #s3 { animation-name: s3; } #s4 { animation-name: s4; } #s5 { animation-name: s5; }
     #p1 { animation-name: p1; } #p2 { animation-name: p2; } #p3 { animation-name: p3; } #p4 { animation-name: p4; } #p5 { animation-name: p5; }
     #foot { animation-name: foot; }
-    @keyframes type { 0% { transform: translateX(0); } 7%, 100% { transform: translateX(240px); } }
     @keyframes all { 0% { opacity: 0; } 2%, 96% { opacity: 1; } 100% { opacity: 0; } }
     @keyframes panes { 0%, 7% { opacity: 0; } 10%, 100% { opacity: 1; } }
     /* s = what grevi read in the file; shown, then gone once the file has an answer */
@@ -36,13 +36,14 @@
     @keyframes p4 { 0%, 68% { opacity: 0; } 70%, 100% { opacity: 1; } }
     @keyframes p5 { 0%, 80% { opacity: 0; } 82%, 100% { opacity: 1; } }
     @keyframes foot { 0%, 85% { opacity: 0; } 88%, 100% { opacity: 1; } }
-    @media (prefers-reduced-motion: reduce) { .a, #cover { animation: none !important; } #cover, .snip { display: none; } }
+    @media (prefers-reduced-motion: reduce) { .a { animation: none !important; } .snip { display: none; } }
   </style>
 
   <rect width="960" height="430" rx="10" fill="#0d1117"/>
+  <!-- the command stays visible for the whole loop: it is the point of the picture -->
+  <rect x="16" y="16" width="928" height="36" rx="6" fill="#161b22" stroke="#30363d"/>
+  <text x="28" y="40" class="cmd"><tspan class="dim">$ </tspan><tspan class="verb">grevi sort</tspan> ~/Downloads</text>
   <g id="all" class="a">
-    <text x="24" y="40"><tspan class="dim">$ </tspan>grevi sort ~/Downloads</text>
-    <rect id="cover" x="42" y="22" width="260" height="26" fill="#0d1117"/>
 
     <g id="panes" class="a">
       <text x="24" y="84" class="label">~/DOWNLOADS: NAMES THAT SAY NOTHING</text>
