@@ -48,7 +48,11 @@ impl Client {
         Ok(Self {
             http,
             backend: cfg.backend,
-            base: cfg.base_url.clone(),
+            base: reqwest::Url::parse(&cfg.base_url)
+                .map_err(|_| GreviError::Usage("invalid API endpoint URL".into()))?
+                .as_str()
+                .trim_end_matches('/')
+                .to_string(),
             key,
             model: cfg.model.clone(),
             sem: Arc::new(Semaphore::new(cfg.concurrency)),
@@ -97,23 +101,51 @@ impl Client {
         state: &serde_json::Value,
         questions: &Questions,
     ) -> Result<Response, GreviError> {
+        let state = crate::input::redact_value(state);
+        let mut questions = questions.clone();
+        for question in questions.values_mut() {
+            match question {
+                super::Question::Noul {
+                    instructions,
+                    criteria,
+                } => {
+                    *instructions = crate::input::redact(instructions);
+                    if let Some(c) = criteria {
+                        c.yes = crate::input::redact(&c.yes);
+                        c.no = crate::input::redact(&c.no);
+                    }
+                }
+                super::Question::Choice {
+                    instructions,
+                    criteria,
+                } => {
+                    *instructions = crate::input::redact(instructions);
+                    for text in criteria.values_mut().flatten() {
+                        *text = crate::input::redact(text);
+                    }
+                }
+            }
+        }
         // The cache key names the backend: the same questions get the same model but a
         // different wire shape, and an entry must never cross from one to the other.
         let canonical = serde_json::json!({
+            "decision_contract": 2, "endpoint": self.base,
             "backend": self.backend.as_str(), "model": self.model, "state": state, "questions": questions
         });
         let k = cache_key(
             &serde_json::to_vec(&canonical).map_err(|e| GreviError::Protocol(e.to_string()))?,
         );
         if let Some(hit) = self.cache.as_ref().and_then(|c| c.get(&k)) {
+            hit.validate(&questions)?;
             self.stats.cache_hits.fetch_add(1, Ordering::Relaxed);
             *self.stats.model.lock().unwrap() = Some(hit.model.clone());
             return Ok(hit);
         }
         let resp = match self.backend {
-            Backend::Typesafe => self.ask_typesafe(state, questions).await?,
-            Backend::Classifier => self.ask_classifier(state, questions).await?,
+            Backend::Typesafe => self.ask_typesafe(&state, &questions).await?,
+            Backend::Classifier => self.ask_classifier(&state, &questions).await?,
         };
+        resp.validate(&questions)?;
         self.stats
             .input_tokens
             .fetch_add(resp.usage.input_tokens, Ordering::Relaxed);
@@ -153,13 +185,17 @@ impl Client {
             answers: std::collections::BTreeMap::new(),
             usage: super::Usage::default(),
         };
+        let mut prepared = Vec::new();
         for chunk in ids.chunks(classifier::MAX_DIMENSIONS) {
             let part: Questions = chunk
                 .iter()
                 .map(|id| ((*id).clone(), questions[*id].clone()))
                 .collect();
-            let bytes = serde_json::to_vec(&classifier::request_body(state, &part))
+            let bytes = serde_json::to_vec(&classifier::request_body(state, &part)?)
                 .map_err(|e| GreviError::Protocol(e.to_string()))?;
+            prepared.push((part, bytes));
+        }
+        for (part, bytes) in prepared {
             let raw = self.post(&url, bytes).await?;
             let r = classifier::parse(&raw, &part)?;
             merged.model = r.model;
@@ -181,6 +217,7 @@ impl Client {
                 let backoff = Duration::from_millis(250 * 2u64.pow(attempt - 1));
                 tokio::time::sleep(wait.take().unwrap_or(backoff)).await;
             }
+            self.stats.requests.fetch_add(1, Ordering::Relaxed);
             let res = self
                 .auth(self.http.post(url))
                 .header("content-type", "application/json")
@@ -223,7 +260,6 @@ impl Client {
                         .bytes()
                         .await
                         .map_err(|e| GreviError::Protocol(e.to_string()))?;
-                    self.stats.requests.fetch_add(1, Ordering::Relaxed);
                     return Ok(body.to_vec());
                 }
                 401 | 403 => return Err(GreviError::BadKey(status)),

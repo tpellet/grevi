@@ -17,6 +17,7 @@ use clap::Parser;
 use cli::{Cli, Cmd};
 use exit::{Exit, GreviError};
 use output::{Envelope, ErrorBody, Format, Meta};
+use std::io::Write;
 use std::time::Instant;
 
 const VERBS: [&str; 10] = [
@@ -81,7 +82,13 @@ pub fn main_exit() -> i32 {
                     );
                 }
             }
-            let _ = e.print();
+            if let Err(error) = e.print() {
+                return if e.use_stderr() {
+                    Exit::Usage.code()
+                } else {
+                    stdout_error(error)
+                };
+            }
             return if e.use_stderr() {
                 Exit::Usage.code()
             } else {
@@ -147,8 +154,8 @@ async fn run_cli(cli: Cli) -> i32 {
     match result {
         Ok(out) => {
             if format == Format::Human {
-                if !out.human.is_empty() {
-                    print!("{}", out.human);
+                if let Err(e) = std::io::stdout().lock().write_all(out.human.as_bytes()) {
+                    return stdout_error(e);
                 }
                 if cli.g.verbose {
                     eprintln!("grevi: {}", out.data);
@@ -167,7 +174,13 @@ async fn run_cli(cli: Cli) -> i32 {
                     meta,
                     error: None,
                 };
-                println!("{}", output::render(format, &env).expect("render envelope"));
+                if let Err(e) = writeln!(
+                    std::io::stdout().lock(),
+                    "{}",
+                    output::render(format, &env).expect("render envelope")
+                ) {
+                    return stdout_error(e);
+                }
             }
             out.exit.code()
         }
@@ -200,9 +213,24 @@ fn report_error(format: Format, name: &str, e: &GreviError, meta: Meta) -> i32 {
                 example: e.example(),
             }),
         };
-        println!("{}", output::render(format, &env).expect("render envelope"));
+        if let Err(e) = writeln!(
+            std::io::stdout().lock(),
+            "{}",
+            output::render(format, &env).expect("render envelope")
+        ) {
+            return stdout_error(e);
+        }
     }
     e.exit().code()
+}
+
+fn stdout_error(error: std::io::Error) -> i32 {
+    if error.kind() == std::io::ErrorKind::BrokenPipe {
+        Exit::Ok.code()
+    } else {
+        let _ = writeln!(std::io::stderr().lock(), "grevi: output error: {error}");
+        Exit::Input.code()
+    }
 }
 
 /// Every verb is wired here once (Task 1). Later tasks replace stub bodies in `cmd/*.rs`
@@ -258,6 +286,11 @@ async fn dispatch(cli: &Cli, ctx: &config::Config) -> Result<cmd::Outcome, Grevi
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn output_errors_only_succeed_for_broken_pipe() {
+        assert_eq!(stdout_error(std::io::ErrorKind::BrokenPipe.into()), 0);
+        assert_eq!(stdout_error(std::io::ErrorKind::PermissionDenied.into()), 6);
+    }
     fn args(a: &[&str]) -> Vec<String> {
         a.iter().map(|s| s.to_string()).collect()
     }

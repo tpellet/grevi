@@ -10,7 +10,7 @@ grevi never writes text of its own. Every token it prints comes from your stdin,
 - `add` stages changes that are in your working tree.
 - `sort` returns a folder that exists.
 
-A flag that is not in the man page cannot appear, and a tool that is not installed cannot be proposed. This is why you can use the output with `$( )` and `&&`: grevi wrote nothing, so there is nothing to sanitize.
+A proposed flag comes from a man page and a tool from the inventory. Existing text can still contain shell metacharacters or describe an invalid invocation: validate it before acting. `run` executes argv directly and quotes its human display; selecting existing text is not a shell-safety guarantee.
 
 ## Two kinds of question, and NONE
 
@@ -18,7 +18,7 @@ Jev, TypeSafe's model, answers two kinds of question, and grevi keeps them apart
 
 **"Which one?"** is a choice over a list of options plus NONE. grevi adds NONE to every list, so the model can say that no line matches, no tool fits, no folder is right. A candidate only has to beat NONE to be returned. If NONE wins, grevi exits 3. The probabilities of a choice are relative to the list, so a "which one" answer is reliable at the top only. That is why the tournament (below) takes 3 per window, and why `-n` past 3 lists candidates without a ranking claim.
 
-**"Is it?"** is an absolute yes/no with a calibrated probability. grevi asks it in five places:
+**"Is it?"** uses an absolute Noul on TypeSafe. Classifier translates it to a binary Choice; grevi does not assume the scores share calibration. These questions appear in five places:
 
 - `is`: your condition.
 - `why`: "does this log hold a failure at all" (`data.any`).
@@ -30,11 +30,11 @@ Every prompt asks what a thing is: "is this command a correct, direct way to do 
 
 ## One threshold
 
-`-t` (default 0.5, env `GREVI_THRESHOLD`) gates the absolute answers only. TypeSafe documents that the two kinds of question are not on one scale, so the threshold never touches a "which one" answer. Exit 3 therefore means one of two things: nothing beat NONE, or the yes/no answer fell under the threshold.
+`-t` (default 0.5, env `GREVI_THRESHOLD`) gates yes/no fit scores, not the relative candidate Choice used for ranking. On classifier, that fit score comes from a binary Choice translation whose calibration needs separate evidence. Exit 3 means no fit, ambiguity, or insufficient input evidence; oversized `is` input abstains without a model call.
 
 `is` adds a dead band around the threshold, `--band` (default 0.15): yes at or above 0.65, no below 0.35, unsure in between. It is the only verb with one. The reason is measured: without the cache, identical requests move `p` by up to 0.06 between runs on `jev-1.13.0`, so a decision within 0.06 of the threshold can flip on a re-run. The other verbs report `p` and leave the margin to you.
 
-The 0.5 default is backed by the reliability table in [README, Numbers](../../README.md#numbers): over the routes `run` acted on, fits of 0.8 and above were right 37 times in 42, and the bin just above the threshold was right 12 times in 17. The same section says what the data does not show: fits below 0.5 were not scored.
+The [routing reliability table](../../README.md#numbers) records 37 correct routes in 42 fits at or above 0.8, and 12 in 17 in the bin above the threshold. It covers the measured TypeSafe routing task. Fits below 0.5 were not scored, and this is not evidence of calibration for every verb, threshold or backend.
 
 ## Order is canonical
 
@@ -66,15 +66,17 @@ Nothing else about your files, environment or history is sent ([PRIVACY.md](../.
 
 ## The cache
 
-Answers are cached on disk (`GREVI_CACHE_DIR`, default the platform cache directory) for 7 days, keyed by the blake3 hash of the serialized request (model, prompt and the options in order). The cache holds answers (option ids and probabilities). It does not hold your text. A repeated question is answered in milliseconds (`pick warm`, 6 ms at p50) and costs nothing. `meta.cache_hits` counts the hits. `--no-cache` or `GREVI_NO_CACHE=1` bypasses it.
+Answers are cached for 7 days under `GREVI_CACHE_DIR`, keyed by endpoint, backend, decision-contract version, model and serialized redacted request. Cached decision fields are validated before use. The cache holds answers, not input text; expiry does not reclaim old files. `meta.cache_hits` counts hits. `--no-cache` or `GREVI_NO_CACHE=1` bypasses it.
 
 ## The pinned model
 
-The default model is `jev-1.13.0`, the release the 0.5 threshold was calibrated on. TypeSafe's `jev-latest` alias moves with each release, so the same input would start answering differently without any change in grevi. `--model jev-latest` (or `GREVI_MODEL`) is allowed and documented as moving. When grevi moves its default, the threshold evidence moves with it.
+TypeSafe defaults to `jev-1.13.0`; `--model jev-latest` (or `GREVI_MODEL`) opts into its moving alias. Classifier selects its model server-side and rejects explicit overrides. The response's model is reported when available. A model or prompt change requires fresh calibration evidence; the old threshold evidence does not automatically transfer.
 
 ## Retries and limits
 
 grevi retries a request up to 3 times on 408, 429, 5xx and timeouts. It honours the server's `retry-after` (or `retry-after-ms`) header in place of its own backoff, capped at ten seconds. When retries run out it exits 4. A 413 or 422 means the API refused the request itself, usually because dense text (hashes, paths, JSON, CJK) tokenized past the budget. grevi reports that as an input error, `api_rejected_request`, exit 6. The fix is to filter the input first. TypeSafe's rate limits are 1,200 requests per minute and 250k tokens per second.
+
+`meta.requests` counts attempted inference POSTs, including retries and failures, but excludes health/prewarm GETs. There is no overall command deadline; each HTTP attempt has its own timeout. HTTP-date Retry-After and longer server delays are not fully honored by the capped policy. Deadline and quota work is tracked in the implementation plan. Classifier field and label limits are checked locally before sending.
 
 ## Redaction
 

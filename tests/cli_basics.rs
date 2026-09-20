@@ -1,4 +1,27 @@
 use assert_cmd::Command;
+use assert_cmd::cargo::CommandCargoExt;
+
+#[test]
+fn closed_stdout_is_normal_for_output_and_json_errors() {
+    for args in [vec!["capabilities"], vec!["--json", "pick", "--nope"]] {
+        let (reader, writer) = std::io::pipe().unwrap();
+        drop(reader);
+        let out = std::process::Command::cargo_bin("grevi")
+            .unwrap()
+            .args(args)
+            .stdout(writer)
+            .stderr(std::process::Stdio::piped())
+            .output()
+            .unwrap();
+        assert_eq!(
+            out.status.code(),
+            Some(0),
+            "{}",
+            String::from_utf8_lossy(&out.stderr)
+        );
+        assert!(!String::from_utf8_lossy(&out.stderr).contains("panicked"));
+    }
+}
 
 #[test]
 fn help_lists_every_verb() {

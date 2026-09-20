@@ -1,6 +1,6 @@
 {
   "name": "grevi",
-  "description": "Agent skill for the grevi CLI: point at the right line, tool, hunk or file with calibrated confidence.",
+  "description": "Agent skill for the grevi CLI: select a line, tool, hunk or file with backend-specific confidence and explicit abstention.",
   "author": {
     "name": "tpellet",
     "url": "https://github.com/tpellet"

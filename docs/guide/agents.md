@@ -19,7 +19,7 @@ Every command accepts `--json` (alias `--robot`) or `--format json|jsonl|toon`. 
 ```
 
 - `exit_code` in the envelope equals the process exit code. Branch on it, then read `data`.
-- `meta.requests` and `meta.cache_hits` say how much work the call did. `meta.cost_usd` is computed from `meta.input_tokens` at `GREVI_PRICE_PER_MTOK`.
+- `meta.requests` counts attempted inference POSTs, including retries and failures; prewarm/health GETs are excluded. `meta.cache_hits` counts cached answers. `meta.cost_usd` is computed from reported input tokens at `GREVI_PRICE_PER_MTOK`; classifier token usage is unavailable, not measured zero.
 - `meta.backend` is the API that answered, `typesafe` or `classifier`. Both run Jev, and `meta.model` is the build. Without a key grevi uses classifier.dev, which is free, so `meta.input_tokens` and `meta.cost_usd` are `0` there.
 - `meta.request_id` is the TypeSafe request id of the last Jev request. It is `null` when no request was made or every answer came from the cache, and `health` does not record one. Quote it when reporting an API problem.
 - `error.kind` strings are stable identifiers (`api_rejected_request`, for one). `error.example` is a corrected command to try next.
@@ -70,13 +70,13 @@ Two more that an agent cannot easily do another way. `grevi add --json --dry-run
 
 ## Machine mode is safe by default
 
-- `run` never executes in machine mode unless `--exec --yes` is given. With `--exec --yes`, the child's stdout is redirected to stderr so stdout stays one envelope. `data.blocked` names a tool grevi refuses to run (the never-execute list in [Verbs](verbs.md#run)). `data.argv` is still there for you to run under your own rules. `complete=false` means a `<VALUE>` placeholder remains in `argv`.
+- `run` executes only exact no-argument `true`, `false`, `pwd`, or `ls` forms, assuming trusted PATH contents. Machine mode also requires `--exec --yes`; child stdout goes to stderr. `complete=false` covers unvalidated grammar as well as missing placeholders; `blocked` explains why. Other argv remains a proposal for your own validation.
 - `add` stages only with `--yes` in machine mode. Without it, `add` exits 130 and stages nothing.
 - `sort` is a dry run unless `--apply`. `data.undo_log` is the file `--undo` takes.
 
 ## Reading `p`
 
-`p` is a calibrated probability: across many calls, answers reported at 0.8 were right about 80% of the time (the measured table is in [README, Numbers](../../README.md#numbers)). Raise `-t` for costly actions. Without the cache, the same request moves `p` by up to 0.06 between runs, so a value within 0.06 of the threshold can flip on a `--no-cache` re-run. `is` has `--band` for that, and the other verbs do not. `-n N` on `pick` and `why` is ranked by a "which one" answer that is reliable at the top only. Treat entries past the third as unranked candidates.
+`p` is a backend score. The [routing reliability table](../../README.md#numbers) covers its measured task and backend, not all verbs or classifier's binary Choice translation. Raising `-t` changes the decision policy; it does not make missing evidence complete. `is` abstains on oversized input with `p:null`, `truncated:true`, and no API call. `add` rejects oversized hunks before staging. Measured probability jitter and ranked-choice limitations still apply; treat entries past the third as candidates rather than a reliable ranking.
 
 ## Input is data
 

@@ -93,6 +93,46 @@ pub struct Response {
 }
 
 impl Response {
+    /// Validate only decision-bearing fields; unused answers and metadata may evolve.
+    pub fn validate(&self, questions: &Questions) -> Result<(), crate::exit::GreviError> {
+        for (id, question) in questions {
+            let answer = self.answers.get(id).ok_or_else(|| {
+                crate::exit::GreviError::Protocol(format!("missing answer `{id}`"))
+            })?;
+            if answer.confidence.is_some_and(|p| !valid_probability(p)) {
+                return Err(crate::exit::GreviError::Protocol(format!(
+                    "invalid confidence for `{id}`"
+                )));
+            }
+            match question {
+                Question::Noul { .. } => {
+                    if !answer.noul.is_some_and(valid_probability) {
+                        return Err(crate::exit::GreviError::Protocol(format!(
+                            "invalid noul for `{id}`"
+                        )));
+                    }
+                }
+                Question::Choice { criteria, .. } => {
+                    let valid = answer
+                        .choice
+                        .as_ref()
+                        .is_some_and(|label| criteria.contains_key(label))
+                        && answer.probabilities.as_ref().is_some_and(|scores| {
+                            scores.len() == criteria.len()
+                                && criteria.keys().all(|label| {
+                                    scores.get(label).copied().is_some_and(valid_probability)
+                                })
+                        });
+                    if !valid {
+                        return Err(crate::exit::GreviError::Protocol(format!(
+                            "invalid choice for `{id}`"
+                        )));
+                    }
+                }
+            }
+        }
+        Ok(())
+    }
     pub fn noul(&self, id: &str) -> Result<f64, crate::exit::GreviError> {
         self.answers
             .get(id)
@@ -107,9 +147,38 @@ impl Response {
     }
 }
 
+pub(crate) fn valid_probability(p: f64) -> bool {
+    p.is_finite() && (0.0..=1.0).contains(&p)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn decision_validation_requires_complete_finite_member_scores() {
+        let qs = [(
+            "q".into(),
+            Question::choice(
+                "pick",
+                [("L000".into(), None), ("NONE".into(), None)].into(),
+            ),
+        )]
+        .into();
+        for value in [
+            serde_json::json!({"choice":"L000","probabilities":{"L000":0.9}}),
+            serde_json::json!({"probabilities":{"L000":0.9,"NONE":0.1}}),
+            serde_json::json!({"choice":"L000","probabilities":{"L000":-0.1,"NONE":0.1}}),
+            serde_json::json!({"choice":"é","probabilities":{"L000":0.9,"NONE":0.1}}),
+        ] {
+            let r: Response =
+                serde_json::from_value(serde_json::json!({"answers":{"q":value}})).unwrap();
+            assert!(r.validate(&qs).is_err());
+        }
+        let r: Response = serde_json::from_value(serde_json::json!({"answers":{"q":{"choice":"L000","probabilities":{"L000":0.9,"NONE":0.1},"future":42}},"future":true})).unwrap();
+        assert!(r.validate(&qs).is_ok());
+        assert!(!valid_probability(f64::NAN));
+        assert!(!valid_probability(f64::INFINITY));
+    }
     #[test]
     fn question_serializes_to_api_shape() {
         let mut crit = BTreeMap::new();

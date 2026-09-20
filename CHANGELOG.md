@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.3.3 — 2026-09-20
+
+Fixed:
+
+- Sort apply and undo use atomic no-replace operations. Unique, durable JSONL journals preserve absolute filename bytes and file identity, recover interrupted moves, and report partial failures. Symlink entries are excluded; old TSV journals are rejected. Concurrent source replacement remains unsupported.
+- Malformed API decisions return protocol errors instead of panics or false abstentions. Decision-bearing fields are validated before caching and consumption; cache identity includes endpoint and decision-contract version.
+- Classifier requests check constructed input, instruction, label and dimension limits locally. Oversized requests fail explicitly rather than silently losing evidence. Clipping includes its marker within the requested limit. Explicit model overrides on classifier are rejected.
+- Outbound semantic state and question text share a redaction boundary. Non-secret token-related identifiers retain their meaning. Request telemetry counts attempted inference POSTs, including retries and failures.
+- Command displays quote argv for POSIX shells. Closed stdout pipes exit normally instead of panicking.
+
+Changed:
+
+- `run` executes only exact no-argument `true`, `false`, `pwd`, and `ls` forms under the existing confirmation policy. Other grammar stays a proposal with `complete:false` and a blocked reason; trusted PATH is required.
+- Oversized `is` input abstains without an API call, with `p:null` and an evidence reason. `add` rejects oversized hunks or batches before classification or staging.
+- Documentation and capabilities scope calibration to backend and task. The governing plan separates these repairs from candidate-survival, calibration, recipe, recovery, deadline and record-mode work.
+
 ## 0.3.2 — 2026-09-20
 
 Changed:

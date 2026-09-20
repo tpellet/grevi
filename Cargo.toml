@@ -1,6 +1,6 @@
 [package]
 name = "grevi"
-version = "0.3.2"
+version = "0.3.3"
 edition = "2024"
 rust-version = "1.87"
 license = "MIT"
@@ -36,6 +36,7 @@ directories = "6"
 futures = "0.3"
 regex = "1"
 reqwest = { version = "0.13", features = ["json"] }
+rustix = { version = "1.1.5", features = ["fs"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror = "2"

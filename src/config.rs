@@ -6,8 +6,8 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
 
-/// Which service answers the questions. Both run the same Jev model: classifier.dev is a free
-/// front end to it, so the two backends differ in wire format and limits, never in semantics.
+/// Which service answers the questions. classifier.dev translates Noul into a two-label
+/// Choice; its relative scores and TypeSafe's absolute Noul have different semantics.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Backend {
@@ -121,6 +121,12 @@ impl Config {
                 )));
             }
         };
+        if backend == Backend::Classifier && g.model.is_some() {
+            return Err(GreviError::Usage(
+                "--model/GREVI_MODEL requires the typesafe backend; classifier chooses its model"
+                    .into(),
+            ));
+        }
         Ok(Self {
             backend,
             key,
@@ -129,8 +135,8 @@ impl Config {
                 .unwrap_or_else(|| backend.default_base_url().into())
                 .trim_end_matches('/')
                 .to_string(),
-            // Pinned: the 0.5 threshold was calibrated on this version, and TypeSafe documents
-            // that `jev-latest` moves with each release (answers change without a change here).
+            // TypeSafe requests pin this model. classifier.dev chooses its own model and the
+            // resolved response identity is reported in meta.model.
             model: g.model.clone().unwrap_or_else(|| "jev-1.13.0".into()),
             threshold,
             // 16 in flight at ~0.4 s each is ~40 req/s, twice the 1,200/min budget; 8 stays under it.

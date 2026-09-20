@@ -1,13 +1,16 @@
 # AGENTS.md — grevi
 
 A fast Rust CLI that points at the right thing among real things — a line, a tool, a hunk, a
-file — using TypeSafe's Jev model, with calibrated confidence and an honest "nothing fits".
+file — using TypeSafe's Jev model, with confidence scores and an honest "nothing fits".
 
 - Spec: `docs/superpowers/specs/2026-09-18-hunch-v0-design.md`
 - Plan: `docs/superpowers/plans/2026-09-18-hunch-v0.md` (source of truth for tasks; beads transcribe it)
 
-Principles: point, never generate · at most two rounds of parallel Jev calls per verb · one
-calibrated threshold · Unix-first human output, one machine envelope · safe by default.
+Principles: point, never generate · at most two rounds of parallel Jev calls per verb (the
+documented `run` argument pass permits a third) · one decision threshold, with calibration
+claims scoped to backend and task · Unix-first human output, one machine envelope · safe by
+default. Incomplete evidence cannot authorize whole-input verdicts or larger actions;
+unvalidated command grammar remains a proposal. See the remediation section of the plan.
 
 ---
 

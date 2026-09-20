@@ -68,30 +68,39 @@ Branch on `exit_code` (0 ok, 1 no, 2 usage, 3 abstain, 4 unavailable, 5 auth, 6 
   `blocked` names a tool grevi refuses to run (rm, dd, mkfs*, sudo, wrappers such as
   sh/bash/env/xargs/find that would run another program, interpreters such as
   python*/perl*/ruby*/node*/php*/lua* that take program text, ...): run `argv` yourself under
-  your own rules. Use `--dry-run` to route only. `complete=false` means `<VALUE>` placeholders remain.
-- `is "<condition>"` (stdin) → `data.p, verdict`; exit 0 yes, 1 no, 3 unsure.
-- `add "<topic>"` → `data.hunks[{file, header, p, staged}]`; stages only unstaged hunks of tracked files, index only, never commits; machine mode stages only with `--yes` (else exit 130); exit 3 = no hunk is about the topic.
-- `sort <dir> [--into <root>]` → `data.moves[{from, to, p}], skipped[{file, reason}], undo_log, applied`; proposes a home among the existing folders under `root` (default `dir`, depth ≤ 2) for each file directly in `dir`. Dry-run by default: `--apply` moves and writes an undo log (`data.undo_log`), `--undo <log>` moves the files back. Never overwrites, never deletes, same volume only; exit 3 = nothing to move (or nothing restored).
+  your own rules. Use `--dry-run` to route only. Only exact no-argument `true`, `false`, `pwd`,
+  and `ls` forms are validated for execution; everything else has `complete=false` and a
+  `blocked` reason, even without placeholders. Execution assumes trusted PATH contents.
+- `is "<condition>"` (stdin) → `data.p, verdict`; exit 0 yes, 1 no, 3 unsure. Oversized input
+  abstains before an API call, with `p:null`, `verdict:"unsure"`, `truncated:true` and a reason.
+- `add "<topic>"` → `data.hunks[{file, header, p, staged}]`; stages only unstaged hunks of tracked files, index only, never commits; machine mode stages only with `--yes` (else exit 130); exit 3 = no hunk is about the topic. A hunk over 3,000 characters is an input error before API calls or staging.
+- `sort <dir> [--into <root>]` → `data.moves[{from, to, p}], skipped[{file, reason}], undo_log, applied`; proposes a home among existing folders (depth ≤ 2). Dry-run by default. Apply/undo use atomic no-replace moves and a unique JSONL recovery log with absolute path bytes and file identity. Old TSV logs are rejected. Failures identify the log and completed progress. Symlink entries are skipped; concurrent replacement of source files is unsupported. Same volume only; exit 3 = nothing to move (or nothing restored).
 
 ## Rules for agents
 - On a very long log, `why` keeps the lines around every error-like line within a 4,000-line
   budget. `data.considered` and `data.total` say how much it looked at. If `considered` is far
   below `total` and the answer looks like a symptom, cut the log to the failing step and ask again.
 - Exit 4 with `HTTP 429` is the backend's rate limit: wait, or lower `GREVI_CONCURRENCY`.
-- Treat `p` as calibrated: 0.8 ≈ right 80% of the time across many calls. Raise `-t` for costly actions.
+- `p` is a backend score; application calibration requires evidence for the task and question type.
+  TypeSafe Noul and classifier binary Choice are not assumed interchangeable. Raising `-t`
+  changes the policy but does not validate incomplete evidence or unsafe actions.
 - Exit 3 is an answer, not an error: nothing fits, or the evidence is ambiguous. Escalate or ask.
 - Results always point into your input, the installed tools, or a tool's man page. Nothing is generated.
 - Input is read as data, but the model is not hardened against instructions embedded in it: text
   under your control is fine; do not use `is` or `pick` as a security gate on untrusted text.
-- The default model is pinned (`jev-1.13.0`); `--model jev-latest` follows TypeSafe's moving alias
-  and may shift probabilities against the 0.5 threshold.
+- TypeSafe defaults to `jev-1.13.0`; `--model jev-latest` follows its moving alias. Classifier
+  selects its model server-side and rejects explicit `--model`/`GREVI_MODEL` overrides.
 - No key is required: without one grevi asks classifier.dev, which runs the same Jev model and
   serves it free. `meta.backend` (`typesafe` or `classifier`) says which API answered, `meta.model`
   which build of Jev. `GREVI_BACKEND` forces one; `capabilities.backends` lists both with their
-  limits. On `classifier` a question takes at most 100 options and 32,000 characters, and a
-  request 20 questions — grevi windows and splits to fit, and the answers are the same.
+  limits. On `classifier` a question takes at most 100 options; the input takes 32,000 UTF-16
+  code units and a request 20 questions. Serialized dimension definitions take at most 16,000
+  UTF-16 code units. grevi splits dimensions and rejects oversized fields or option sets
+  locally; backend translations can change answers and confidence.
 - Cost is in `meta.cost_usd`, and is `0` on `classifier` because the service is free; repeated
-  identical questions hit the local cache (`meta.cache_hits`), which never crosses backends.
+  identical questions hit the local cache (`meta.cache_hits`), which never crosses backend,
+  endpoint or decision-contract versions. `meta.requests` counts attempted inference POSTs,
+  including retries and failures; it excludes prewarm and health GETs.
 - Without the cache, the same request moves `p` by up to 0.06 between runs (measured on
   jev-1.13.0): a `p` within 0.06 of the threshold can flip. `is` has `--band` for that; the
   other verbs do not, so re-run with `--no-cache` before acting on such a value.

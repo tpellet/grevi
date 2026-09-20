@@ -16,8 +16,11 @@ const WINDOW_CHARS: usize = 60_000;
 
 /// Truncates on a char boundary; long log/JSON lines would otherwise overflow the token budget.
 pub fn clip(s: &str, max: usize) -> String {
+    if max == 0 {
+        return String::new();
+    }
     match s.char_indices().nth(max) {
-        Some((i, _)) => format!("{}…", &s[..i]),
+        Some(_) => format!("{}…", s.chars().take(max - 1).collect::<String>()),
         None => s.to_string(),
     }
 }
@@ -79,9 +82,10 @@ async fn window(
         .iter()
         .filter(|(k, _)| k.as_str() != "NONE")
         .filter_map(|(k, p)| {
-            k[1..]
+            k.strip_prefix('L')?
                 .parse::<usize>()
                 .ok()
+                .filter(|i| id(*i) == *k)
                 .and_then(|i| items.get(i))
                 .map(|(g, _)| Candidate { index: *g, p: *p })
         })
@@ -168,7 +172,9 @@ mod tests {
     use super::*;
     #[test]
     fn clip_cuts_on_char_boundaries() {
-        assert_eq!(clip("héllo wörld", 3), "hél…");
+        assert_eq!(clip("héllo wörld", 3), "hé…");
+        assert_eq!(clip("éé", 0), "");
+        assert_eq!(clip("éé", 1), "…");
         assert_eq!(clip("short", 10), "short");
     }
 }

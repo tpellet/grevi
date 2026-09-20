@@ -10,8 +10,8 @@ grevi has no config file. Every setting is a flag or an environment variable. `g
 | `TYPESAFE_API_KEY_FILE` | | Path to a file holding the key; read only when a request needs a key. Use it to keep the key out of your environment and shell history: `TYPESAFE_API_KEY_FILE=/path/to/key`. |
 | `GREVI_BACKEND` | `typesafe` with a key, `classifier` without one | `typesafe` or `classifier`: which API answers. See [Backends](#backends). |
 | `GREVI_BASE_URL` | the active backend's own URL | The API endpoint. grevi sends requests nowhere else. |
-| `GREVI_MODEL` | `jev-1.13.0` | Model or alias. The default is pinned; `jev-latest` moves with each TypeSafe release and may shift probabilities against the threshold. |
-| `GREVI_THRESHOLD` | `0.5` | Decision threshold on absolute yes/no answers. |
+| `GREVI_MODEL` | `jev-1.13.0` on TypeSafe | TypeSafe model or alias; explicit overrides on classifier are usage errors because the service selects its model. `jev-latest` moves with TypeSafe releases. |
+| `GREVI_THRESHOLD` | `0.5` | Decision threshold on backend yes/no scores; calibration is task- and backend-specific. |
 | `GREVI_CONCURRENCY` | `8` on `typesafe`, `4` on `classifier` | Parallel requests within one round (the windows of a tournament). |
 | `GREVI_CACHE_DIR` | platform cache dir, `grevi` sub-directory | Where answers, the tool inventory and `sort`'s undo logs live. |
 | `GREVI_NO_CACHE` | | Set to `1` to disable the answer cache (entries expire after 7 days anyway). |
@@ -32,18 +32,20 @@ grevi asks one of two APIs, and both run the same model, Jev.
 
 `GREVI_BACKEND=typesafe|classifier` forces a backend. `typesafe` without a key is exit 5. `meta.backend` in the JSON output and `grevi health` both name the backend that answered, and `meta.model` names the build of Jev behind it.
 
-The free service has tighter limits than TypeSafe, so two internals change with it, shown in the table. The meaning of the answers and the threshold stay the same.
+The free service has tighter limits and maps TypeSafe Nouls to binary Choice questions. The same threshold is exposed, but its calibration and the resulting answers are not assumed equivalent across backends. Constructed fields and label counts are checked locally; unsupported requests fail without silently dropping candidates.
 
 | | `typesafe` | `classifier` |
 |:---|---:|---:|
 | options per question | 255 | 100 |
 | tournament window | 200 | 99 + NONE |
-| input per request | 32,000 tokens | 32,000 characters |
+| input per request | 32,000 tokens | 32,000 UTF-16 code units |
 | questions per request | no limit in practice | 20 (grevi splits bigger asks) |
 | rate limit | 1,200 requests/min | 3,000 classifications/min, 20,000/day, per IP |
-| `meta.input_tokens`, `meta.cost_usd` | real | `0`: the service is free |
+| `meta.input_tokens`, `meta.cost_usd` | reported tokens, estimated cost | `0`: token usage is unavailable and inference is free; zero is not a measured token count |
 
-On the routing and root-cause evals the two score the same. The measurements are in [evals/](../../evals/).
+Classifier also limits each instruction to 4,000 UTF-16 code units, each label to 200, and each dimension name to 64. The compact JSON of all dimension definitions must fit 16,000 UTF-16 code units, including JSON escaping. An emoji outside the basic multilingual plane counts as two units. grevi checks the complete constructed request before sending it.
+
+Recorded routing and root-cause comparisons are in [evals/](../../evals/). Equal aggregate scores do not establish interchangeable probabilities. `meta.model` names the model reported by the service, when available.
 
 ## Global flags
 
@@ -51,7 +53,7 @@ On the routing and root-cause evals the two score the same. The measurements are
 |:---|:---|:---|
 | `--json` (alias `--robot`) | | One JSON envelope on stdout, usage errors included |
 | `--format human\|json\|jsonl\|toon` | | Output format; overrides `--json` |
-| `-t, --threshold <0..1>` | `GREVI_THRESHOLD` | Decision threshold on calibrated probability |
+| `-t, --threshold <0..1>` | `GREVI_THRESHOLD` | Decision threshold on backend yes/no scores |
 | `--model <id>` | `GREVI_MODEL` | TypeSafe model or alias |
 | `--no-cache` | `GREVI_NO_CACHE` | Skip the local answer cache |
 | `-v, --verbose` | | Probabilities, request count, tokens, cost and timing on stderr |

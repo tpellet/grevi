@@ -51,6 +51,8 @@ impl Respond for FakeClassifier {
     fn respond(&self, req: &Request) -> ResponseTemplate {
         let body: Value = serde_json::from_slice(&req.body).unwrap();
         let text = body["items"][0].as_str().unwrap_or_default();
+        assert!(!text.is_empty() && text.encode_utf16().count() <= 32_000);
+        assert!(body["dimensions"].to_string().encode_utf16().count() <= 16_000);
         // grevi serializes a non-string state as compact JSON and sends a string state as
         // itself; this reverses that so the shared `choose`/`noul` closures see the state.
         let state = match serde_json::from_str::<Value>(text) {
@@ -59,13 +61,20 @@ impl Respond for FakeClassifier {
         };
         let mut dims = serde_json::Map::new();
         for (id, d) in body["dimensions"].as_object().unwrap() {
+            assert!(!id.trim().is_empty() && id.encode_utf16().count() <= 64);
             let instr = d["instructions"].as_str().unwrap_or_default();
+            assert!(instr.encode_utf16().count() <= 4_000);
             let labels: Vec<String> = d["labels"]
                 .as_array()
                 .unwrap()
                 .iter()
                 .map(|l| l.as_str().unwrap().to_string())
                 .collect();
+            assert!(
+                labels
+                    .iter()
+                    .all(|label| !label.trim().is_empty() && label.encode_utf16().count() <= 200)
+            );
             assert!(
                 labels.len() >= 2 && labels.len() <= 100,
                 "classifier.dev takes 2..=100 labels, got {}",

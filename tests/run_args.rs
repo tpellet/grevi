@@ -1,6 +1,46 @@
 mod common;
 use common::FakeJev;
 
+#[tokio::test(flavor = "multi_thread")]
+async fn unsupported_cp_grammar_never_executes_even_without_placeholders() {
+    let server = common::mock(FakeJev {
+        choose: |_, s, o| common::option_containing(s, o, "cp"),
+        noul: |_, _| 0.95,
+    })
+    .await;
+    let dir = tempfile::tempdir().unwrap();
+    let mut c = common::grevi(&server);
+    c.env(
+        "GREVI_INVENTORY_FILE",
+        inv(&dir, r#"[{"name":"cp","summary":"copy files"}]"#),
+    )
+    .current_dir(dir.path());
+    let out = tokio::task::spawn_blocking(move || {
+        c.args([
+            "--json",
+            "run",
+            "--no-args",
+            "--exec",
+            "--yes",
+            "copy source.txt to destination.txt",
+        ])
+        .output()
+        .unwrap()
+    })
+    .await
+    .unwrap();
+    let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+    assert_eq!(out.status.code(), Some(0));
+    assert_eq!(v["data"]["complete"], false);
+    assert_eq!(v["data"]["executed"], false);
+    assert!(
+        v["data"]["blocked"]
+            .as_str()
+            .unwrap()
+            .contains("unvalidated command grammar")
+    );
+}
+
 fn inv(dir: &tempfile::TempDir, json: &str) -> std::path::PathBuf {
     let p = dir.path().join("inv.json");
     std::fs::write(&p, json).unwrap();

@@ -3,22 +3,34 @@ use crate::config::Config;
 use crate::exit::{Exit, GreviError};
 use crate::jev::client::Client;
 use crate::jev::{Question, Questions};
+use rustix::fs::{Mode, OFlags, RenameFlags, openat, renameat_with};
 use std::collections::BTreeMap;
+use std::fs::File;
+use std::io::{self, Write};
+use std::os::unix::ffi::{OsStrExt, OsStringExt};
+use std::os::unix::fs::{MetadataExt, OpenOptionsExt};
 use std::path::{Path, PathBuf};
 
 const BATCH: usize = 10;
 
-fn folders(root: &Path) -> Vec<PathBuf> {
+fn folders(root: &Path, skipped: &mut Vec<serde_json::Value>) -> Vec<PathBuf> {
     let mut out = vec![];
     let mut stack = vec![(root.to_path_buf(), 0)];
     while let Some((d, depth)) = stack.pop() {
-        let Ok(rd) = std::fs::read_dir(&d) else {
+        let Ok(handle) = open_dir(&d) else {
+            skipped.push(serde_json::json!({"file": d.to_string_lossy(), "reason": "destination unavailable or symlink parent"}));
+            continue;
+        };
+        let Ok(rd) = rustix::fs::Dir::read_from(&handle) else {
             continue;
         };
         for e in rd.flatten() {
-            let p = e.path();
-            let hidden = e.file_name().to_string_lossy().starts_with('.');
-            if p.is_dir() && !hidden {
+            let name = std::ffi::OsStr::from_bytes(e.file_name().to_bytes());
+            let p = d.join(name);
+            let hidden = name.as_bytes().starts_with(b".");
+            if e.file_type() == rustix::fs::FileType::Symlink {
+                skipped.push(serde_json::json!({"file": p.to_string_lossy(), "reason": "symlink destination ignored"}));
+            } else if e.file_type() == rustix::fs::FileType::Directory && !hidden {
                 out.push(p.clone());
                 if depth < 1 {
                     stack.push((p, depth + 1));
@@ -39,7 +51,7 @@ fn excerpt(p: &Path) -> String {
         .unwrap_or_default();
     // Read at most 8 KiB: `read_to_string` would load a multi-GB video before failing UTF-8.
     let mut head = Vec::new();
-    if let Ok(f) = std::fs::File::open(p) {
+    if let Ok(f) = open_regular(p) {
         let _ = f.take(8192).read_to_end(&mut head);
     }
     let text = match std::str::from_utf8(&head) {
@@ -54,42 +66,251 @@ fn excerpt(p: &Path) -> String {
         );
     }
     if p.extension().is_some_and(|e| e.eq_ignore_ascii_case("pdf")) {
-        if let Ok(o) = std::process::Command::new("pdftotext")
-            .args(["-l", "2"])
-            .arg(p)
-            .arg("-")
-            .output()
-        {
-            if o.status.success() {
-                return format!(
-                    "{name}: {}",
-                    crate::input::redact(
-                        &String::from_utf8_lossy(&o.stdout)
-                            .chars()
-                            .take(2000)
-                            .collect::<String>()
-                    )
-                );
-            }
+        let pdf = pdf_text(p);
+        if let Some(text) = pdf {
+            return format!("{name}: {}", crate::input::redact(&text));
         }
     }
     name
+}
+
+fn pdf_text(path: &Path) -> Option<String> {
+    let file = open_regular(path).ok()?;
+    let output = std::process::Command::new("pdftotext")
+        .args(["-l", "2", "-", "-"])
+        .stdin(file)
+        .output()
+        .ok()?;
+    output.status.success().then(|| {
+        String::from_utf8_lossy(&output.stdout)
+            .chars()
+            .take(2000)
+            .collect()
+    })
+}
+
+// Walk every component without following links. Once opened, directory handles anchor
+// reads/renames even if an ancestor path is replaced. Roots are canonicalized once.
+fn open_dir(path: &Path) -> io::Result<File> {
+    let mut dir = File::open("/")?;
+    for component in path.components() {
+        match component {
+            std::path::Component::RootDir => (),
+            std::path::Component::Normal(name) => {
+                dir = openat(
+                    &dir,
+                    name,
+                    OFlags::RDONLY | OFlags::DIRECTORY | OFlags::NOFOLLOW | OFlags::CLOEXEC,
+                    Mode::empty(),
+                )?
+                .into();
+            }
+            _ => return Err(io::Error::other("expected absolute normalized path")),
+        }
+    }
+    Ok(dir)
+}
+
+fn open_regular(path: &Path) -> io::Result<File> {
+    let parent = open_dir(
+        path.parent()
+            .ok_or_else(|| io::Error::other("missing parent"))?,
+    )?;
+    let file: File = openat(
+        &parent,
+        path.file_name()
+            .ok_or_else(|| io::Error::other("missing name"))?,
+        OFlags::RDONLY | OFlags::NOFOLLOW | OFlags::NONBLOCK | OFlags::CLOEXEC,
+        Mode::empty(),
+    )?
+    .into();
+    if !file.metadata()?.is_file() {
+        return Err(io::Error::other("not a regular file"));
+    }
+    Ok(file)
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+struct Intent {
+    from: Vec<u8>,
+    to: Vec<u8>,
+    dev: u64,
+    ino: u64,
+}
+
+impl Intent {
+    fn new(from: &Path, to: &Path) -> io::Result<Self> {
+        let m = open_regular(from)?.metadata()?;
+        Ok(Self {
+            from: from.as_os_str().as_bytes().to_vec(),
+            to: to.as_os_str().as_bytes().to_vec(),
+            dev: m.dev(),
+            ino: m.ino(),
+        })
+    }
+    fn paths(&self) -> (PathBuf, PathBuf) {
+        (
+            std::ffi::OsString::from_vec(self.from.clone()).into(),
+            std::ffi::OsString::from_vec(self.to.clone()).into(),
+        )
+    }
+    fn matches(&self, path: &Path) -> bool {
+        open_regular(path)
+            .and_then(|f| f.metadata())
+            .is_ok_and(|m| m.dev() == self.dev && m.ino() == self.ino)
+    }
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+#[serde(tag = "event", rename_all = "snake_case")]
+enum Record {
+    Intent { id: usize, file: Intent },
+    Complete { id: usize },
+}
+
+fn record(log: &mut File, event: &Record) -> io::Result<()> {
+    let mut bytes = serde_json::to_vec(event)?;
+    bytes.push(b'\n');
+    log.write_all(&bytes)?;
+    log.sync_all()
+}
+
+fn journal(dir: &Path) -> io::Result<(PathBuf, File)> {
+    std::fs::create_dir_all(dir)?;
+    let dir = dir.canonicalize()?;
+    let stamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_nanos();
+    for n in 0..1000 {
+        let path = dir.join(format!(
+            "sort-undo-{stamp}-{}-{n}.jsonl",
+            std::process::id()
+        ));
+        match File::options()
+            .write(true)
+            .create_new(true)
+            .mode(0o600)
+            .open(&path)
+        {
+            Ok(file) => {
+                file.sync_all()?;
+                open_dir(&dir)?.sync_all()?;
+                return Ok((path, file));
+            }
+            Err(e) if e.kind() == io::ErrorKind::AlreadyExists => continue,
+            Err(e) => return Err(e),
+        }
+    }
+    Err(io::Error::other("cannot create unique undo journal"))
+}
+
+fn move_file(from: &Path, to: &Path, identity: &Intent) -> io::Result<()> {
+    let source_dir = open_dir(
+        from.parent()
+            .ok_or_else(|| io::Error::other("missing source parent"))?,
+    )?;
+    let target_dir = open_dir(
+        to.parent()
+            .ok_or_else(|| io::Error::other("missing target parent"))?,
+    )?;
+    let source_name = from
+        .file_name()
+        .ok_or_else(|| io::Error::other("missing source name"))?;
+    let target_name = to
+        .file_name()
+        .ok_or_else(|| io::Error::other("missing target name"))?;
+    let source: File = openat(
+        &source_dir,
+        source_name,
+        OFlags::RDONLY | OFlags::NOFOLLOW | OFlags::NONBLOCK,
+        Mode::empty(),
+    )?
+    .into();
+    let metadata = source.metadata()?;
+    if !metadata.is_file() || metadata.dev() != identity.dev || metadata.ino() != identity.ino {
+        return Err(io::Error::other("source identity changed"));
+    }
+    if target_dir.metadata()?.dev() != metadata.dev() {
+        return Err(io::Error::other(
+            "--into must be on the same volume as the files",
+        ));
+    }
+    // Atomic target exclusion; never fall back to replacing rename. The source name
+    // can still be swapped after this check: concurrent source writers are unsupported.
+    renameat_with(
+        &source_dir,
+        source_name,
+        &target_dir,
+        target_name,
+        RenameFlags::NOREPLACE,
+    )?;
+    source_dir.sync_all()?;
+    target_dir.sync_all()?;
+    Ok(())
+}
+
+fn partial_error(log: &Path, completed: usize, error: impl std::fmt::Display) -> GreviError {
+    GreviError::Input(format!(
+        "{error}; confirmed completed {completed} move(s); recovery journal: {}; undo reconciles any pending intent by file identity",
+        log.display()
+    ))
+}
+
+fn apply_moves(moves: &[Intent], log: &Path, writer: &mut File) -> Result<(), GreviError> {
+    for (id, intent) in moves.iter().enumerate() {
+        let (from, to) = intent.paths();
+        record(
+            writer,
+            &Record::Intent {
+                id,
+                file: intent.clone(),
+            },
+        )
+        .map_err(|e| partial_error(log, id, e))?;
+        move_file(&from, &to, intent).map_err(|e| partial_error(log, id, e))?;
+        record(writer, &Record::Complete { id }).map_err(|e| partial_error(log, id + 1, e))?;
+    }
+    Ok(())
 }
 
 fn undo(log: &Path) -> Result<Outcome, GreviError> {
     let text =
         std::fs::read_to_string(log).map_err(|e| GreviError::Input(format!("undo log: {e}")))?;
     let (mut restored, mut skipped) = (vec![], vec![]);
-    for line in text.lines() {
-        let Some((to, from)) = line.split_once('\t') else {
-            continue;
+    // Parse the complete journal before mutating. A torn trailing completion record
+    // is recoverable from its durable intent and filesystem identity.
+    let mut intents = Vec::new();
+    for line in text.split_inclusive('\n') {
+        let event: Record = match serde_json::from_str(line) {
+            Ok(event) => event,
+            Err(_) if !line.ends_with('\n') && !intents.is_empty() => break,
+            Err(e) => return Err(partial_error(log, 0, format!("invalid journal: {e}"))),
         };
-        if Path::new(from).exists() || !Path::new(to).exists() {
-            skipped.push(
-                serde_json::json!({ "file": to, "reason": "original path taken or file missing" }),
+        if let Record::Intent { id, file } = event {
+            if id != intents.len() {
+                return Err(partial_error(log, 0, "invalid intent order"));
+            }
+            let (from, to) = file.paths();
+            if !from.is_absolute() || !to.is_absolute() {
+                return Err(partial_error(log, 0, "relative journal path"));
+            }
+            intents.push(file);
+        }
+    }
+    for intent in intents.iter().rev() {
+        let (from, to) = intent.paths();
+        if std::fs::symlink_metadata(&from).is_ok() {
+            skipped.push(serde_json::json!({ "file": to.to_string_lossy(), "reason": "original path occupied or intent not performed" }));
+        } else if !intent.matches(&to) {
+            skipped.push(serde_json::json!({ "file": to.to_string_lossy(), "reason": "destination missing or identity changed; not restored" }));
+        } else {
+            move_file(&to, &from, intent).map_err(|e| {
+                partial_error(log, restored.len(), format!("undo move failed: {e}"))
+            })?;
+            restored.push(
+                serde_json::json!({ "from": to.to_string_lossy(), "to": from.to_string_lossy() }),
             );
-        } else if std::fs::rename(to, from).is_ok() {
-            restored.push(serde_json::json!({ "from": to, "to": from }));
         }
     }
     Ok(Outcome {
@@ -113,20 +334,31 @@ pub async fn run(
     if let Some(l) = undo_log {
         return undo(l);
     }
-    let root = into.unwrap_or(dir);
-    let dests = folders(root);
+    let dir = dir
+        .canonicalize()
+        .map_err(|e| GreviError::Input(e.to_string()))?;
+    let root = into
+        .unwrap_or(&dir)
+        .canonicalize()
+        .map_err(|e| GreviError::Input(e.to_string()))?;
+    let mut skipped = vec![];
+    let dests = folders(&root, &mut skipped);
     if dests.is_empty() {
         return Err(GreviError::Input(format!(
             "no folders under {} to sort into",
             root.display()
         )));
     }
-    let mut files: Vec<PathBuf> = std::fs::read_dir(dir)
+    let mut files: Vec<PathBuf> = std::fs::read_dir(&dir)
         .map_err(|e| GreviError::Input(e.to_string()))?
         .flatten()
         .map(|e| e.path())
         .filter(|p| {
-            p.is_file()
+            if std::fs::symlink_metadata(p).is_ok_and(|m| m.file_type().is_symlink()) {
+                skipped.push(serde_json::json!({"file": p.to_string_lossy(), "reason": "symlink source ignored"}));
+                return false;
+            }
+            open_regular(p).is_ok()
                 && !p
                     .file_name()
                     .is_some_and(|n| n.to_string_lossy().starts_with('.'))
@@ -138,11 +370,16 @@ pub async fn run(
     if files.is_empty() {
         return Err(GreviError::EmptyInput("no files to sort"));
     }
+    let identities: BTreeMap<PathBuf, Intent> = files
+        .iter()
+        .map(|f| Intent::new(f, f).map(|identity| (f.clone(), identity)))
+        .collect::<io::Result<_>>()
+        .map_err(|e| GreviError::Input(e.to_string()))?;
     let client = Client::new(ctx)?;
     let folder_items: Vec<String> = dests
         .iter()
         .enumerate()
-        .map(|(i, d)| format!("[D{i:03}] {}", d.strip_prefix(root).unwrap_or(d).display()))
+        .map(|(i, d)| format!("[D{i:03}] {}", d.strip_prefix(&root).unwrap_or(d).display()))
         .collect();
     let mut crit: BTreeMap<String, Option<String>> = (0..dests.len())
         .map(|i| (format!("D{i:03}"), None))
@@ -183,7 +420,7 @@ pub async fn run(
         .into_iter()
         .flatten()
         .collect();
-    let (mut moves, mut skipped) = (vec![], vec![]);
+    let mut moves = vec![];
     for (f, (c, p, none, any)) in files.iter().zip(&picks) {
         let Some(d) = c
             .strip_prefix('D')
@@ -198,7 +435,7 @@ pub async fn run(
         let target = d.join(f.file_name().unwrap());
         if *any < ctx.threshold || *p <= *none {
             skipped.push(serde_json::json!({ "file": f.display().to_string(), "reason": format!("low confidence (any {any:.2}, folder {p:.2})") }));
-        } else if target.exists() {
+        } else if std::fs::symlink_metadata(&target).is_ok() {
             skipped.push(
                 serde_json::json!({ "file": f.display().to_string(), "reason": "target exists" }),
             );
@@ -208,38 +445,19 @@ pub async fn run(
     }
     let mut undo_path = None;
     if apply && !moves.is_empty() {
-        let dir = ctx.cache_dir.clone().unwrap_or_else(std::env::temp_dir);
-        std::fs::create_dir_all(&dir).map_err(|e| GreviError::Input(e.to_string()))?;
-        let log = dir.join(format!(
-            "sort-undo-{}.tsv",
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .map(|d| d.as_secs())
-                .unwrap_or(0)
-        ));
-        let mut lines = String::new();
-        for (from, to, _) in &moves {
-            // Re-check right before the rename: `rename` would silently replace a file that
-            // appeared since the dry run, and "never overwrites" must hold.
-            if to.exists() {
-                return Err(GreviError::Input(format!(
-                    "{} appeared meanwhile; nothing overwritten, stopping (undo log: {})",
-                    to.display(),
-                    log.display()
-                )));
-            }
-            std::fs::rename(from, to).map_err(|e| {
-                // EXDEV: rename never copies across volumes.
-                let hint = if e.raw_os_error() == Some(18) {
-                    " (--into must be on the same volume as the files)"
-                } else {
-                    ""
-                };
-                GreviError::Input(format!("move {}: {e}{hint}", from.display()))
-            })?;
-            lines.push_str(&format!("{}\t{}\n", to.display(), from.display()));
-            std::fs::write(&log, &lines).map_err(|e| GreviError::Input(e.to_string()))?;
-        }
+        let cache = ctx.cache_dir.clone().unwrap_or_else(std::env::temp_dir);
+        let (log, mut writer) = journal(&cache).map_err(|e| {
+            GreviError::Input(format!("create recovery journal before moving: {e}"))
+        })?;
+        let intents: Vec<_> = moves
+            .iter()
+            .map(|(from, to, _)| {
+                let mut intent = identities[from].clone();
+                intent.to = to.as_os_str().as_bytes().to_vec();
+                intent
+            })
+            .collect();
+        apply_moves(&intents, &log, &mut writer)?;
         undo_path = Some(log.display().to_string());
     }
     let human: String = moves
@@ -263,24 +481,20 @@ mod tests {
     #[test]
     fn undo_moves_back_only_when_the_original_path_is_free() {
         let d = tempfile::tempdir().unwrap();
-        std::fs::create_dir(d.path().join("Finance")).unwrap();
-        let (a_from, a_to) = (d.path().join("a.txt"), d.path().join("Finance/a.txt"));
-        let (b_from, b_to) = (d.path().join("b.txt"), d.path().join("Finance/b.txt"));
+        let root = d.path().canonicalize().unwrap();
+        std::fs::create_dir(root.join("Finance")).unwrap();
+        let (a_from, a_to) = (root.join("a.txt"), root.join("Finance/a.txt"));
+        let (b_from, b_to) = (root.join("b.txt"), root.join("Finance/b.txt"));
         std::fs::write(&a_to, "a").unwrap();
         std::fs::write(&b_to, "b").unwrap();
         std::fs::write(&b_from, "taken").unwrap();
-        let log = d.path().join("undo.tsv");
-        std::fs::write(
-            &log,
-            format!(
-                "{}\t{}\n{}\t{}\nnot a log line\n",
-                a_to.display(),
-                a_from.display(),
-                b_to.display(),
-                b_from.display()
-            ),
-        )
-        .unwrap();
+        let (log, mut writer) = journal(&root).unwrap();
+        for (id, (from, to)) in [(&a_from, &a_to), (&b_from, &b_to)].into_iter().enumerate() {
+            let mut file = Intent::new(to, to).unwrap();
+            file.from = from.as_os_str().as_bytes().to_vec();
+            record(&mut writer, &Record::Intent { id, file }).unwrap();
+            record(&mut writer, &Record::Complete { id }).unwrap();
+        }
         let out = undo(&log).unwrap();
         assert_eq!(out.exit, Exit::Ok);
         assert!(a_from.exists() && !a_to.exists());
@@ -296,5 +510,178 @@ mod tests {
                 .exit(),
             Exit::Input
         );
+    }
+
+    #[test]
+    fn atomic_move_rejects_regular_dangling_and_competing_targets() {
+        let d = tempfile::tempdir().unwrap();
+        let root = d.path().canonicalize().unwrap();
+        for (n, dangling) in [(0, false), (1, true), (2, false)] {
+            let from = root.join(format!("from{n}"));
+            let to = root.join(format!("to{n}"));
+            std::fs::write(&from, "source").unwrap();
+            let intent = Intent::new(&from, &to).unwrap();
+            assert!(!to.exists());
+            // Deterministic competing creation after preparation, before the syscall.
+            if dangling {
+                std::os::unix::fs::symlink("missing", &to).unwrap();
+            } else {
+                std::fs::write(&to, "occupied").unwrap();
+            }
+            assert!(move_file(&from, &to, &intent).is_err());
+            assert_eq!(std::fs::read_to_string(&from).unwrap(), "source");
+            if dangling {
+                assert!(
+                    std::fs::symlink_metadata(&to)
+                        .unwrap()
+                        .file_type()
+                        .is_symlink()
+                );
+            } else {
+                assert_eq!(std::fs::read_to_string(&to).unwrap(), "occupied");
+            }
+        }
+    }
+
+    #[test]
+    fn journals_are_unique_and_preserve_arbitrary_filename_bytes() {
+        let d = tempfile::tempdir().unwrap();
+        let root = d.path().canonicalize().unwrap();
+        let arbitrary = Intent {
+            from: b"/tab\tline\ninvalid\xff".to_vec(),
+            to: b"/to\xfe".to_vec(),
+            dev: 1,
+            ino: 2,
+        };
+        let decoded: Intent =
+            serde_json::from_slice(&serde_json::to_vec(&arbitrary).unwrap()).unwrap();
+        assert_eq!(decoded.paths().0.as_os_str().as_bytes(), arbitrary.from);
+        assert_eq!(decoded.paths().1.as_os_str().as_bytes(), arbitrary.to);
+        // APFS rejects invalid UTF-8 filenames; Linux exercises those bytes on disk.
+        #[cfg(target_os = "linux")]
+        let name = std::ffi::OsString::from_vec(b"tab\tline\ninvalid\xff".to_vec());
+        #[cfg(not(target_os = "linux"))]
+        let name = std::ffi::OsString::from("tab\tline\n");
+        let from = root.join(&name);
+        let target_dir = root.join("target");
+        std::fs::create_dir(&target_dir).unwrap();
+        let to = target_dir.join(name);
+        std::fs::write(&from, "contents").unwrap();
+        let (log, mut writer) = journal(&root).unwrap();
+        let (other, _) = journal(&root).unwrap();
+        assert_ne!(log, other);
+        let intent = Intent::new(&from, &to).unwrap();
+        apply_moves(&[intent], &log, &mut writer).unwrap();
+        assert_eq!(undo(&log).unwrap().exit, Exit::Ok);
+        assert_eq!(std::fs::read_to_string(from).unwrap(), "contents");
+    }
+
+    #[test]
+    fn durable_intent_recovers_missing_or_torn_completion_but_not_failed_move() {
+        let d = tempfile::tempdir().unwrap();
+        let root = d.path().canonicalize().unwrap();
+        let from = root.join("from");
+        let to = root.join("to");
+        std::fs::write(&from, "source").unwrap();
+        let intent = Intent::new(&from, &to).unwrap();
+        let (log, mut writer) = journal(&root).unwrap();
+        record(
+            &mut writer,
+            &Record::Intent {
+                id: 0,
+                file: intent.clone(),
+            },
+        )
+        .unwrap();
+        std::fs::write(&to, "unrelated").unwrap();
+        assert!(move_file(&from, &to, &intent).is_err());
+        assert_eq!(undo(&log).unwrap().exit, Exit::Abstain);
+        assert_eq!(std::fs::read_to_string(&to).unwrap(), "unrelated");
+        let to2 = root.join("to2");
+        let intent2 = Intent::new(&from, &to2).unwrap();
+        let (log2, mut writer2) = journal(&root).unwrap();
+        record(
+            &mut writer2,
+            &Record::Intent {
+                id: 0,
+                file: intent2.clone(),
+            },
+        )
+        .unwrap();
+        move_file(&from, &to2, &intent2).unwrap();
+        writer2.write_all(b"{\"event\":\"complete\"").unwrap();
+        writer2.sync_all().unwrap();
+        assert_eq!(undo(&log2).unwrap().exit, Exit::Ok);
+        assert_eq!(std::fs::read_to_string(&from).unwrap(), "source");
+    }
+
+    #[test]
+    fn failed_intent_write_moves_nothing_and_partial_failure_names_journal() {
+        let d = tempfile::tempdir().unwrap();
+        let root = d.path().canonicalize().unwrap();
+        let from = root.join("from");
+        let second = root.join("second");
+        std::fs::write(&from, "first").unwrap();
+        std::fs::write(&second, "second").unwrap();
+        let first = Intent::new(&from, &root.join("to")).unwrap();
+        let next = Intent::new(&second, &root.join("missing/second")).unwrap();
+        let (log, mut writer) = journal(&root).unwrap();
+        let mut readonly = File::open(&log).unwrap();
+        let error = apply_moves(std::slice::from_ref(&first), &log, &mut readonly)
+            .unwrap_err()
+            .to_string();
+        assert!(from.exists());
+        assert!(error.contains("completed 0"));
+        let error = apply_moves(&[first, next], &log, &mut writer)
+            .unwrap_err()
+            .to_string();
+        assert!(error.contains("completed 1"));
+        assert!(error.contains(log.to_str().unwrap()));
+        assert!(!from.exists());
+        assert!(second.exists());
+        assert_eq!(undo(&log).unwrap().exit, Exit::Ok);
+        assert!(from.exists());
+    }
+
+    #[test]
+    fn failed_undo_is_reported_and_symlink_parents_are_not_traversed() {
+        let d = tempfile::tempdir().unwrap();
+        let root = d.path().canonicalize().unwrap();
+        let parent = root.join("source");
+        std::fs::create_dir(&parent).unwrap();
+        let from = parent.join("file");
+        let to = root.join("to");
+        std::fs::write(&from, "source").unwrap();
+        let intent = Intent::new(&from, &to).unwrap();
+        let (log, mut writer) = journal(&root).unwrap();
+        apply_moves(&[intent], &log, &mut writer).unwrap();
+        std::fs::rename(&parent, root.join("renamed")).unwrap();
+        let error = undo(&log).err().unwrap().to_string();
+        assert!(error.contains("undo move failed"));
+        assert!(error.contains(log.to_str().unwrap()));
+        std::os::unix::fs::symlink(root.join("renamed"), &parent).unwrap();
+        assert!(open_regular(&from).is_err());
+        assert!(undo(&log).is_err());
+        assert!(to.exists());
+    }
+
+    #[test]
+    fn source_identity_change_and_malformed_journal_fail_closed() {
+        let d = tempfile::tempdir().unwrap();
+        let root = d.path().canonicalize().unwrap();
+        let from = root.join("from");
+        let to = root.join("to");
+        std::fs::write(&from, "original").unwrap();
+        let intent = Intent::new(&from, &to).unwrap();
+        std::fs::rename(&from, root.join("saved")).unwrap();
+        std::fs::write(&from, "replacement").unwrap();
+        assert!(move_file(&from, &to, &intent).is_err());
+        assert!(!to.exists());
+        assert_eq!(std::fs::read_to_string(&from).unwrap(), "replacement");
+        let (log, mut writer) = journal(&root).unwrap();
+        writer
+            .write_all(b"invalid legacy or damaged journal")
+            .unwrap();
+        assert!(undo(&log).is_err());
     }
 }

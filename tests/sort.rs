@@ -2,6 +2,99 @@ mod common;
 use common::FakeJev;
 
 #[tokio::test(flavor = "multi_thread")]
+async fn dangling_targets_and_outside_symlinks_are_not_followed() {
+    use std::os::unix::fs::symlink;
+    let server = common::mock(FakeJev {
+        choose: |_, s, o| {
+            common::option_containing(&serde_json::json!({"items": s["folders"]}), o, "Finance")
+        },
+        noul: |_, _| 0.9,
+    })
+    .await;
+    let d = tempfile::tempdir().unwrap();
+    let outside = tempfile::tempdir().unwrap();
+    let cache = tempfile::tempdir().unwrap();
+    std::fs::create_dir(d.path().join("Finance")).unwrap();
+    std::fs::write(d.path().join("invoice.txt"), "invoice").unwrap();
+    std::fs::write(outside.path().join("secret.txt"), "outside private text").unwrap();
+    symlink(
+        outside.path().join("secret.txt"),
+        d.path().join("secret.txt"),
+    )
+    .unwrap();
+    symlink(outside.path(), d.path().join("Outside")).unwrap();
+    symlink("missing", d.path().join("Finance/invoice.txt")).unwrap();
+    let out = common::grevi(&server)
+        .env("GREVI_CACHE_DIR", cache.path())
+        .env_remove("GREVI_NO_CACHE")
+        .args(["--json", "sort", d.path().to_str().unwrap(), "--apply"])
+        .output()
+        .unwrap();
+    let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+    assert!(d.path().join("invoice.txt").exists(), "{v}");
+    assert!(
+        std::fs::symlink_metadata(d.path().join("Finance/invoice.txt"))
+            .unwrap()
+            .file_type()
+            .is_symlink()
+    );
+    let requests = server.received_requests().await.unwrap();
+    for request in requests {
+        let body = String::from_utf8_lossy(&request.body);
+        assert!(!body.contains("outside private text"), "{body}");
+        assert!(!body.contains("Outside"), "{body}");
+    }
+    assert!(
+        v["data"]["skipped"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|s| s["reason"].as_str().unwrap().contains("symlink")),
+        "{v}"
+    );
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn relative_apply_journal_undo_is_independent_of_working_directory() {
+    let server = common::mock(FakeJev {
+        choose: |_, s, o| {
+            common::option_containing(&serde_json::json!({"items": s["folders"]}), o, "Finance")
+        },
+        noul: |_, _| 0.9,
+    })
+    .await;
+    let d = tempfile::tempdir().unwrap();
+    let elsewhere = tempfile::tempdir().unwrap();
+    let cache = tempfile::tempdir().unwrap();
+    std::fs::create_dir(d.path().join("Finance")).unwrap();
+    let filename = "invoice\twith\nlines.txt";
+    std::fs::write(d.path().join(filename), "invoice").unwrap();
+    let out = common::grevi(&server)
+        .current_dir(d.path())
+        .env("GREVI_CACHE_DIR", cache.path())
+        .env_remove("GREVI_NO_CACHE")
+        .args(["--json", "sort", ".", "--apply"])
+        .output()
+        .unwrap();
+    let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+    assert_eq!(v["exit_code"], 0, "{v}");
+    let log = v["data"]["undo_log"].as_str().unwrap();
+    assert!(std::path::Path::new(log).is_absolute());
+    assert!(d.path().join("Finance").join(filename).exists());
+    let out = common::bin()
+        .current_dir(elsewhere.path())
+        .args(["--json", "sort", ".", "--undo", log])
+        .output()
+        .unwrap();
+    let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+    assert_eq!(v["exit_code"], 0, "{v}");
+    assert_eq!(
+        std::fs::read_to_string(d.path().join(filename)).unwrap(),
+        "invoice"
+    );
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn dry_run_then_apply_then_undo() {
     let server = common::mock(FakeJev {
         choose: |i, s, o| {

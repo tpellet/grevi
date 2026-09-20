@@ -1,4 +1,26 @@
 mod common;
+
+#[tokio::test]
+async fn malformed_choice_labels_return_a_protocol_envelope() {
+    use wiremock::matchers::method;
+    use wiremock::{Mock, MockServer, ResponseTemplate};
+    for label in ["", "é", "X000", "L999"] {
+        let server = MockServer::start().await;
+        Mock::given(method("POST")).respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({"answers":{"any":{"noul":0.9},"pick":{"choice":label,"probabilities":{label:0.9,"NONE":0.1}}}}))).mount(&server).await;
+        let output = tokio::task::spawn_blocking(move || {
+            common::grevi(&server)
+                .args(["--json", "pick", "match"])
+                .write_stdin("item\n")
+                .output()
+                .unwrap()
+        })
+        .await
+        .unwrap();
+        assert_eq!(output.status.code(), Some(4));
+        let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+        assert_eq!(value["error"]["kind"], "api_protocol");
+    }
+}
 use common::{FakeJev, option_containing};
 
 #[tokio::test(flavor = "multi_thread")]

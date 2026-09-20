@@ -1,6 +1,7 @@
 # hunch v0 — design
 
-Date: 2026-09-18. Status: approved direction (Thomas), pre-implementation.
+Date: 2026-09-18. Status: approved direction (Thomas). The correctness remediation section in
+the implementation plan governs the action, evidence, backend and recovery contracts below.
 
 ## One sentence
 
@@ -40,13 +41,18 @@ Out of scope for the Rust CLI: tab bankruptcy (browser extension), clipboard rou
 ## Principles
 
 1. Point, never generate. Every output token comes from the input, the machine, or a tool's help.
-2. One wave. A command makes at most two sequential rounds of parallel Jev calls.
-3. Calibrated policy. One threshold (default 0.5) decides act/abstain; exit 3 = abstain.
+2. One wave. A command makes at most two sequential rounds of parallel Jev calls; `run` has
+   the documented third argument pass. Retries and HTTP chunks are distinct from semantic rounds.
+3. Decision policy. One threshold (default 0.5) gates fit; calibration claims require evidence
+   for the backend, question type and task. Exit 3 includes insufficient evidence.
 4. Unix first. Human mode prints raw results to stdout (pipe-friendly); diagnostics to stderr.
 5. Agent first. `--json`/`--format json|jsonl|toon` returns one envelope; stable exit codes;
    errors carry `kind`, `hint`, and a corrected `example` command; `capabilities` self-describes.
-6. Safe by default. `run` never executes without a TTY confirmation or `--yes`; robot mode never
-   executes without `--exec --yes`; `add` touches the index only; `sort` is dry-run by default.
+6. Safe by default. `run` requires a supported validated argv form plus TTY confirmation or
+   `--yes`; robot mode also requires `--exec --yes`. Unsupported grammar remains a proposal.
+   `add` touches the index only and rejects oversized hunks before staging. Oversized `is`
+   input abstains rather than judging a prefix. `sort` is dry-run by default, with atomic
+   no-replace apply/undo and durable, identity-aware recovery records.
 7. Fast. Local work < 20 ms (Rust, cached inventory); p50 < 0.5 s for `pick`/`is` on ≤ 200
    lines; `why` < 2 s on a 50k-line log; repeated questions ~5 ms from the disk cache.
 8. Private by design. Only the intent, the relevant lines or one-line tool descriptions leave the
@@ -64,6 +70,11 @@ Out of scope for the Rust CLI: tab bankruptcy (browser extension), clipboard rou
   gates absolute Nouls only (`is`, the "any" Noul of `pick`/`why`, `run`'s fit, `add`, `sort`);
   a Choice answer is relative and must beat `NONE`, never the threshold.
 - No arithmetic, dates, or counting in questions; code does those.
+
+The classifier backend translates Noul into a binary Choice and uses its service-selected
+model. Its score is not assumed calibrated on the TypeSafe Noul scale. Explicit model
+overrides are TypeSafe-only. Constructed classifier field/label limits are checked locally;
+meeting a limit by silently dropping candidate identities is not acceptable.
 
 ## Exit codes
 

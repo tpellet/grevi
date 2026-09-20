@@ -10,7 +10,7 @@ Every command accepts these, before or after the verb:
 |:---|:---|
 | `--json` | Machine output: one JSON envelope on stdout (alias `--robot`) |
 | `--format human\|json\|jsonl\|toon` | Output format; overrides `--json` |
-| `-t, --threshold <0..1>` | Decision threshold on the calibrated probability (default 0.5; env `GREVI_THRESHOLD`) |
+| `-t, --threshold <0..1>` | Decision threshold on the backend score (default 0.5; env `GREVI_THRESHOLD`) |
 | `--model <id>` | TypeSafe model or alias (default `jev-1.13.0`; `jev-latest` moves with each release; env `GREVI_MODEL`) |
 | `--no-cache` | Skip the local answer cache (env `GREVI_NO_CACHE`) |
 | `-v, --verbose` | Print probabilities, request count, tokens, cost and timing on stderr |
@@ -109,7 +109,7 @@ grevi is --band 0.05 "is a stack trace" < crash.log
 
 Write the statement literally. On the 24 support tickets in [benchmarks/agents/](../../benchmarks/agents/README.md), the first line above found the 6 churn risks and exited 3 on an employee who is leaving their company. The shorter "this customer is about to leave" says yes to that employee.
 
-Limits: about 96,000 characters of stdin are sent. When the input is longer, grevi sends the head and the tail, and `data.truncated` says so. The model reads input as data but is not hardened against instructions inside it, so do not use `is` as a security gate on text you do not control. `is` answers what a text is. It is unreliable on how many, how good or when: counting, arithmetic and dates.
+Limits: about 96,000 characters on TypeSafe and 30,000 on classifier. Longer input abstains before an API call: exit 3, `p:null`, `verdict:"unsure"`, `truncated:true`, and a reason; human mode warns on stderr. No verdict is inferred from a partial text. The model is not hardened against embedded instructions, so do not use `is` as a security gate on untrusted text. Counting, arithmetic, dates and general quality judgments are unreliable.
 
 ## run
 
@@ -144,7 +144,7 @@ A run has three steps, each one round of requests:
 2. **Fit.** It asks whether the proposed command is a correct, direct way to do the request. This is the answer that `-t` gates.
 3. **Arguments.** It picks flags from that tool's man page, and file names in the current directory that contain a word of the request.
 
-`--no-args` stops after step 2. In human mode `run` prints the command and asks. Without a TTY and without `--yes` it prints the command and stops.
+`--no-args` stops after step 2. Human mode prints a shell-quoted proposal. Only exact no-argument `true`, `false`, `pwd`, and `ls` forms can proceed to confirmation and execution; every other argv remains an unvalidated proposal. Without a TTY and without `--yes`, nothing executes.
 
 Safety, always on:
 
@@ -152,7 +152,7 @@ Safety, always on:
 - Some tools are never executed, whatever the confidence: the destructive set (`rm`, `rmdir`, `dd`, `mkfs*`, `newfs*`, `fdisk`, `diskutil`, `shred`, `srm`, `wipefs`, `sudo`, `su`, `doas`, `kill`, `killall`, `pkill`, `reboot`, `halt`, `shutdown`, `poweroff`, `init`, `telinit`, `launchctl`, `systemctl`), the wrappers that would run another program named in their arguments (`sh`, `bash`, `zsh`, `dash`, `ksh`, `fish`, `env`, `xargs`, `nohup`, `nice`, `timeout`, `time`, `exec`, `eval`, `command`, `find`, `watch`, `parallel`, `osascript`) and the interpreters that take program text as a flag value (`python*`, `perl*`, `ruby*`, `node*`, `php*`, `lua*`, versioned names included). grevi shows the command, sets `data.blocked`, and leaves it to you. The list is by tool name only: `chmod -R` is not on it.
 - In machine mode (`--json`) nothing executes unless `--exec --yes` is given, and the child's stdout goes to stderr so stdout stays one envelope.
 
-`complete=false` in `data` means the argv still holds a `<VALUE>` placeholder the man page could not fill. Argument pointing is measured at 5 of 20 for "all required flags present" ([README, Numbers](../../README.md#numbers)), so read `argv` as a proposal and prefer `--no-args` when you can write the flags yourself.
+`complete=false` means the argv has missing values or lacks a supported grammar; `blocked` explains the execution restriction. `--yes` and `--exec` do not bypass validation. The small supported set assumes trusted executables on PATH. Argument pointing is measured at 5 of 20 for "all required flags present" ([README, Numbers](../../README.md#numbers)); broader commands require your own operand, option and effect validation.
 
 ## add
 
@@ -174,7 +174,7 @@ grevi add --dry-run "the token expiry fix"
 grevi add --yes "the token expiry fix" && git commit
 ```
 
-Each unstaged hunk of a tracked file is scored against the topic as an absolute yes/no, and hunks at or above the threshold are staged. `add` stages single hunks, so it can split the changes of one file. It works from any subdirectory of the repo. It touches the index only: it never commits, never stages untracked files and never stages binary changes. In machine mode it stages only with `--yes`. Without it, `add` exits 130 and stages nothing. Each hunk (header plus body) is clipped to 3,000 characters before it is sent.
+Each full unstaged hunk of a tracked file is scored against the topic, and hunks at or above the threshold are staged. `add` can split changes in one file and works from any repository subdirectory. It touches the index only: no commits, untracked files or binary changes. Machine mode requires `--yes`; otherwise exit 130. A hunk over 3,000 characters (header plus body) is an input error before API calls or staging. Backend request budgets are also enforced; no unseen suffix is staged.
 
 ## sort
 
@@ -203,9 +203,9 @@ grevi sort ~/Desktop --into ~/Documents     # files from one place, folders from
 
 `sort` looks at the files directly in `<dir>`. It does not go into subfolders and it skips hidden files. For each file it asks Jev which of the existing folders under the root, up to two levels deep, the file belongs in. A file that the model cannot place, or places below the threshold, stays where it is and appears in `skipped`.
 
-`sort` is a dry run by default. `--apply` renames the files and appends to an undo log (`sort-undo-<timestamp>.tsv` in the cache directory) after every move, so an interrupted run is still undoable. `--undo <log>` restores every file whose original path is still free.
+`sort` is a dry run by default. Apply/undo use atomic no-replace moves. A unique JSONL journal records durable intent before a move and completion afterward, retaining absolute Unix path bytes and file identity. Undo restores only a matching file to a free original path. Old TSV logs are rejected. Mid-run failures identify the recovery log and completed progress; undo failures are reported rather than silently omitted.
 
-`sort` never overwrites a file and never deletes one. It moves files within one volume only, so `--into` must be on the same volume as `<dir>`. It sends the file names, the folder names under the root, and the first 2,000 characters of each text file, all after secret masking. For a PDF it sends the first 2,000 characters of the first two pages, when `pdftotext` is installed.
+`sort` never replaces an occupied destination and never deletes files. It requires one volume and filesystem support for atomic no-replace operations. Source and destination symlink entries are skipped. Concurrent replacement of source files is unsupported. It sends eligible file/folder names and the first 2,000 characters of each text file after masking; PDFs use the first two pages through `pdftotext` when installed. This excerpt-based placement is not a claim to have read an entire document.
 
 ## Utility commands
 

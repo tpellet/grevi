@@ -8,8 +8,7 @@ use std::io::Write;
 use std::process::{Command, Stdio};
 
 const BATCH: usize = 20;
-/// Hunk text sent in the API state (never the patch that gets staged) is clipped so 20 hunks of
-/// lockfile or generated code cannot push one request past the 32k-token limit.
+/// Reject oversized hunks rather than staging evidence the model did not see.
 const HUNK_CHARS: usize = 3_000;
 
 pub async fn run(
@@ -58,10 +57,7 @@ pub async fn run(
                 (
                     fi,
                     hi,
-                    crate::tournament::clip(
-                        &crate::input::redact(&format!("{}{}", h.header, h.body)),
-                        HUNK_CHARS,
-                    ),
+                    crate::input::redact(&format!("{}{}", h.header, h.body)),
                 )
             })
         })
@@ -70,6 +66,11 @@ pub async fn run(
         return Err(GreviError::EmptyInput(
             "no unstaged changes to tracked files (untracked files are never staged by add)",
         ));
+    }
+    if flat.iter().any(|(_, _, h)| h.chars().count() > HUNK_CHARS) {
+        return Err(GreviError::InputTooLarge(format!(
+            "hunk exceeds the {HUNK_CHARS}-character evidence budget; no hunks were classified or staged"
+        )));
     }
     let client = Client::new(ctx)?;
     let file_name = |fi: usize| {
@@ -83,20 +84,33 @@ pub async fn run(
             .unwrap_or_default()
             .to_string()
     };
-    let batches = flat.chunks(BATCH).map(|chunk| {
-        let state = serde_json::json!({ "topic": topic, "hunks": chunk.iter().map(|(fi, _, h)| format!("file {}\n{}", file_name(*fi), h)).collect::<Vec<_>>() });
+    let states: Vec<_> = flat.chunks(BATCH).map(|chunk| {
+        serde_json::json!({ "topic": topic, "hunks": chunk.iter().map(|(fi, _, h)| format!("file {}\n{}", file_name(*fi), h)).collect::<Vec<_>>() })
+    }).collect();
+    if states
+        .iter()
+        .any(|state| state.to_string().chars().count() > client.backend().max_state_chars())
+    {
+        return Err(GreviError::InputTooLarge("complete hunk batch exceeds the backend evidence budget; no hunks were classified or staged".into()));
+    }
+    let batches = flat.chunks(BATCH).zip(states).map(|(chunk, state)| {
         let mut qs = Questions::new();
         for i in 0..chunk.len() {
-            qs.insert(format!("h{i:02}"), Question::noul_with(
-                format!("Is the change in `hunks[{i}]` part of the work described by `topic`?"),
-                "this hunk implements or directly supports the described work",
-                "this hunk is about something else",
-            ));
+            qs.insert(
+                format!("h{i:02}"),
+                Question::noul_with(
+                    format!("Is the change in `hunks[{i}]` part of the work described by `topic`?"),
+                    "this hunk implements or directly supports the described work",
+                    "this hunk is about something else",
+                ),
+            );
         }
         let client = &client;
         async move {
             let r = client.ask(&state, &qs).await?;
-            (0..chunk.len()).map(|i| r.noul(&format!("h{i:02}"))).collect::<Result<Vec<f64>, GreviError>>()
+            (0..chunk.len())
+                .map(|i| r.noul(&format!("h{i:02}")))
+                .collect::<Result<Vec<f64>, GreviError>>()
         }
     });
     let ps: Vec<f64> = futures::future::try_join_all(batches)

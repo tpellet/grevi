@@ -26,14 +26,14 @@ use std::collections::BTreeMap;
 pub const MAX_DIMENSIONS: usize = 20;
 /// Labels per dimension (`maxItems: 100`).
 pub const MAX_LABELS: usize = 100;
-/// Characters per input (`maxLength: 32000` on `items[]`).
+/// UTF-16 code units per input (the service applies JavaScript `string.length`).
 pub const MAX_INPUT_CHARS: usize = 32_000;
-/// Characters per dimension's `instructions` (`maxLength: 4000`).
+/// UTF-16 code units per dimension's `instructions`.
 const MAX_INSTRUCTIONS_CHARS: usize = 4_000;
 /// The two labels a Noul becomes when its criteria cannot be labels themselves.
 const YES: &str = "yes";
 const NO: &str = "no";
-/// Label length limit (`maxLength: 200` on a dimension's labels).
+/// Label length limit in UTF-16 code units.
 const MAX_LABEL_CHARS: usize = 200;
 
 /// The two labels a Noul is asked as, `true` first. A Noul's criteria are two sentences
@@ -43,8 +43,9 @@ const MAX_LABEL_CHARS: usize = 200;
 /// equal, blank, or past the 200-character limit) fall back to `yes`/`no`, with the sentences
 /// in the instructions instead.
 fn noul_labels(criteria: Option<&super::NoulCriteria>) -> (String, String) {
-    let usable =
-        |s: &str| !s.trim().is_empty() && s.chars().count() <= MAX_LABEL_CHARS && !s.contains('\n');
+    let usable = |s: &str| {
+        !s.trim().is_empty() && s.encode_utf16().count() <= MAX_LABEL_CHARS && !s.contains('\n')
+    };
     match criteria {
         Some(c) if usable(&c.yes) && usable(&c.no) && c.yes != c.no => {
             (c.yes.clone(), c.no.clone())
@@ -54,19 +55,17 @@ fn noul_labels(criteria: Option<&super::NoulCriteria>) -> (String, String) {
 }
 
 /// The state as the one text classifier.dev classifies. A string state is its own text (that
-/// is what `is` sends); anything else is compact JSON. Clipped to the API's input limit so an
-/// oversized state is truncated the way grevi truncates everywhere else, not rejected.
+/// is what `is` sends); anything else is compact JSON. Preflight rejects oversized items.
 pub fn item_text(state: &serde_json::Value) -> String {
-    let raw = match state {
+    match state {
         serde_json::Value::String(s) => s.clone(),
         other => other.to_string(),
-    };
-    crate::tournament::clip(&raw, MAX_INPUT_CHARS)
+    }
 }
 
 /// One question as a dimension definition: the labels it may answer with, and the instructions
 /// that carry everything Jev would read from `criteria`.
-fn dimension(q: &Question) -> serde_json::Value {
+fn dimension(q: &Question) -> Result<serde_json::Value, GreviError> {
     let (labels, instructions) = match q {
         Question::Noul {
             instructions,
@@ -97,19 +96,69 @@ fn dimension(q: &Question) -> serde_json::Value {
             (criteria.keys().cloned().collect(), text)
         }
     };
-    serde_json::json!({
+    if !(2..=MAX_LABELS).contains(&labels.len())
+        || labels
+            .iter()
+            .any(|label| label.trim().is_empty() || label.encode_utf16().count() > MAX_LABEL_CHARS)
+    {
+        return Err(GreviError::InputTooLarge(
+            "classifier requires 2..=100 nonempty labels of at most 200 characters".into(),
+        ));
+    }
+    if instructions.encode_utf16().count() > MAX_INSTRUCTIONS_CHARS {
+        return Err(GreviError::InputTooLarge(
+            "classifier instructions exceed 4000 characters".into(),
+        ));
+    }
+    Ok(serde_json::json!({
         "labels": labels,
-        "instructions": crate::tournament::clip(&instructions, MAX_INSTRUCTIONS_CHARS),
-    })
+        "instructions": instructions,
+    }))
 }
 
 /// The body of one `POST /v1/classify`: one item, one dimension per question.
-pub fn request_body(state: &serde_json::Value, questions: &Questions) -> serde_json::Value {
+pub fn request_body(
+    state: &serde_json::Value,
+    questions: &Questions,
+) -> Result<serde_json::Value, GreviError> {
+    let item = item_text(state);
+    if item.trim().is_empty() {
+        return Err(GreviError::Usage(
+            "classifier item must not be empty".into(),
+        ));
+    }
+    if item.encode_utf16().count() > MAX_INPUT_CHARS {
+        return Err(GreviError::InputTooLarge(
+            "classifier item exceeds 32000 characters".into(),
+        ));
+    }
+    if questions.is_empty() || questions.len() > MAX_DIMENSIONS {
+        return Err(GreviError::InputTooLarge(
+            "classifier requires 1..=20 dimensions".into(),
+        ));
+    }
+    if questions
+        .keys()
+        .any(|id| id.trim().is_empty() || id.encode_utf16().count() > 64)
+    {
+        return Err(GreviError::Usage(
+            "classifier dimension names require 1..=64 characters and non-whitespace text".into(),
+        ));
+    }
     let dimensions: serde_json::Map<String, serde_json::Value> = questions
         .iter()
-        .map(|(id, q)| (id.clone(), dimension(q)))
-        .collect();
-    serde_json::json!({ "items": [item_text(state)], "dimensions": dimensions })
+        .map(|(id, q)| dimension(q).map(|d| (id.clone(), d)))
+        .collect::<Result<_, _>>()?;
+    // The service's readDimensions checks JSON.stringify(dimensions).length: compact JSON
+    // including escaping and wrapper fields, measured in JavaScript UTF-16 code units.
+    let definitions =
+        serde_json::to_string(&dimensions).map_err(|e| GreviError::Protocol(e.to_string()))?;
+    if definitions.encode_utf16().count() > 16_000 {
+        return Err(GreviError::InputTooLarge(
+            "classifier dimension definitions exceed 16000 UTF-16 code units".into(),
+        ));
+    }
+    Ok(serde_json::json!({ "items": [item], "dimensions": dimensions }))
 }
 
 #[derive(Deserialize, Debug, Default)]
@@ -156,15 +205,39 @@ pub fn parse(body: &[u8], questions: &Questions) -> Result<Response, GreviError>
     let mut answers = BTreeMap::new();
     let mut model = parsed.model;
     for (id, q) in questions {
-        let Some(r) = item.dimensions.get(id) else {
-            continue;
-        };
+        let r = item
+            .dimensions
+            .get(id)
+            .ok_or_else(|| GreviError::Protocol(format!("missing dimension `{id}`")))?;
+        if r.confidence.is_some_and(|p| !super::valid_probability(p)) {
+            return Err(GreviError::Protocol(format!(
+                "invalid confidence for `{id}`"
+            )));
+        }
         if let Some(m) = &r.model {
             model = m.clone();
         }
         let answer = match q {
             Question::Noul { criteria, .. } => {
                 let (yes, no) = noul_labels(criteria.as_ref());
+                if !r
+                    .label
+                    .as_ref()
+                    .is_some_and(|label| label == &yes || label == &no)
+                    || r.scores.as_ref().is_some_and(|scores| {
+                        scores.len() != 2
+                            || [&yes, &no].iter().any(|label| {
+                                !scores
+                                    .get(*label)
+                                    .copied()
+                                    .is_some_and(super::valid_probability)
+                            })
+                    })
+                {
+                    return Err(GreviError::Protocol(format!(
+                        "invalid noul labels or scores for `{id}`"
+                    )));
+                }
                 let p = match (&r.scores, &r.label, r.confidence) {
                     (Some(s), _, _) => s
                         .get(&yes)
@@ -196,13 +269,15 @@ pub fn parse(body: &[u8], questions: &Questions) -> Result<Response, GreviError>
         };
         answers.insert(id.clone(), answer);
     }
-    Ok(Response {
+    let response = Response {
         model,
         answers,
         // classifier.dev counts classifications, not tokens: it is free, and `meta.cost_usd`
         // stays 0 because nothing was spent.
         usage: Usage::default(),
-    })
+    };
+    response.validate(questions)?;
+    Ok(response)
 }
 
 /// The readable part of a classifier.dev error body, `{"error": "...", "code": "..."}`.
@@ -235,7 +310,7 @@ mod tests {
 
     #[test]
     fn a_choice_becomes_a_dimension_whose_labels_are_its_options() {
-        let body = request_body(&serde_json::json!({ "items": ["a", "b"] }), &questions());
+        let body = request_body(&serde_json::json!({ "items": ["a", "b"] }), &questions()).unwrap();
         let pick = &body["dimensions"]["pick"];
         assert_eq!(
             pick["labels"],
@@ -269,7 +344,7 @@ mod tests {
             Question::noul_with("Is it?", "y".repeat(201), "n"),
         );
         qs.insert("same".into(), Question::noul_with("Is it?", "x", "x"));
-        let body = request_body(&serde_json::Value::String("text".into()), &qs);
+        let body = request_body(&serde_json::Value::String("text".into()), &qs).unwrap();
         for id in ["q", "long", "same"] {
             let d = &body["dimensions"][id];
             assert_eq!(d["labels"], serde_json::json!(["yes", "no"]), "{id}");
@@ -284,25 +359,155 @@ mod tests {
     }
 
     #[test]
-    fn instructions_and_input_are_clipped_to_the_api_limits() {
+    fn instructions_and_input_are_rejected_over_the_api_limits() {
         let mut qs = Questions::new();
         qs.insert("q".into(), Question::noul("x".repeat(9_000)));
-        let body = request_body(
-            &serde_json::Value::String("y".repeat(MAX_INPUT_CHARS * 2)),
-            &qs,
+        assert_eq!(
+            request_body(
+                &serde_json::Value::String("y".repeat(MAX_INPUT_CHARS * 2)),
+                &qs,
+            )
+            .unwrap_err()
+            .exit()
+            .code(),
+            6
         );
         assert_eq!(
-            body["dimensions"]["q"]["instructions"]
-                .as_str()
-                .unwrap()
-                .chars()
-                .count(),
-            MAX_INSTRUCTIONS_CHARS + 1, // clip appends an ellipsis
+            request_body(&serde_json::json!("small"), &qs)
+                .unwrap_err()
+                .exit()
+                .code(),
+            6
         );
+    }
+
+    #[test]
+    fn constructed_fields_accept_exact_limits_and_reject_one_over() {
+        let choice = |n, instructions: String| {
+            Question::choice(
+                instructions,
+                (0..n).map(|i| (format!("L{i}"), None)).collect(),
+            )
+        };
+        let mut qs: Questions = [("q".into(), choice(100, "é".repeat(4000)))].into();
+        assert!(request_body(&serde_json::json!("é".repeat(32_000)), &qs).is_ok());
+        assert!(request_body(&serde_json::json!("é".repeat(32_001)), &qs).is_err());
+        qs.insert("q".into(), choice(101, "x".into()));
+        assert!(request_body(&serde_json::json!("x"), &qs).is_err());
+        qs.insert("q".into(), choice(2, "x".repeat(4001)));
+        assert!(request_body(&serde_json::json!("x"), &qs).is_err());
+        for n in [200, 201] {
+            qs.insert(
+                "q".into(),
+                Question::choice("x", [("é".repeat(n), None), ("NONE".into(), None)].into()),
+            );
+            assert_eq!(request_body(&serde_json::json!("x"), &qs).is_ok(), n == 200);
+        }
+        for n in [20, 21] {
+            qs = (0..n)
+                .map(|i| (format!("q{i}"), choice(2, "x".into())))
+                .collect();
+            assert_eq!(request_body(&serde_json::json!("x"), &qs).is_ok(), n == 20);
+        }
+        for n in [64, 65] {
+            qs = [("é".repeat(n), choice(2, "x".into()))].into();
+            assert_eq!(request_body(&serde_json::json!("x"), &qs).is_ok(), n == 64);
+        }
+        assert!(request_body(&serde_json::json!(""), &questions()).is_err());
+    }
+
+    #[test]
+    fn aggregate_definition_limit_counts_serialized_utf16_including_escapes() {
+        let mut qs: Questions = (0..4)
+            .map(|i| {
+                (
+                    format!("q{i}"),
+                    Question::noul_with("😀".repeat(1800), "matches", "different"),
+                )
+            })
+            .collect();
+        let body = request_body(&serde_json::json!("x"), &qs).unwrap();
+        let remaining = 16_000 - body["dimensions"].to_string().encode_utf16().count();
+        // Newlines count as two characters in compact JSON because they are escaped.
+        for i in 0..remaining / 2 {
+            let Question::Noul { instructions, .. } = qs.get_mut(&format!("q{}", i % 4)).unwrap()
+            else {
+                unreachable!()
+            };
+            instructions.push('\n');
+        }
+        if !remaining.is_multiple_of(2) {
+            let Question::Noul { instructions, .. } = qs.get_mut("q0").unwrap() else {
+                unreachable!()
+            };
+            instructions.push('x');
+        }
+        let body = request_body(&serde_json::json!("x"), &qs).unwrap();
         assert_eq!(
-            body["items"][0].as_str().unwrap().chars().count(),
-            MAX_INPUT_CHARS + 1
+            body["dimensions"].to_string().encode_utf16().count(),
+            16_000
         );
+        let Question::Noul { instructions, .. } = qs.get_mut("q0").unwrap() else {
+            unreachable!()
+        };
+        instructions.push('x');
+        assert_eq!(
+            request_body(&serde_json::json!("x"), &qs)
+                .unwrap_err()
+                .exit()
+                .code(),
+            6
+        );
+    }
+
+    #[test]
+    fn classifier_limits_count_astral_characters_as_two_utf16_units() {
+        for n in [16_000, 16_001] {
+            assert_eq!(
+                request_body(&serde_json::json!("😀".repeat(n)), &questions()).is_ok(),
+                n == 16_000
+            );
+        }
+        for n in [2_000, 2_001] {
+            let qs = [(
+                "q".into(),
+                Question::noul_with("😀".repeat(n), "matches", "different"),
+            )]
+            .into();
+            assert_eq!(
+                request_body(&serde_json::json!("x"), &qs).is_ok(),
+                n == 2_000
+            );
+        }
+        for n in [100, 101] {
+            let qs = [(
+                "q".into(),
+                Question::choice("x", [("😀".repeat(n), None), ("NONE".into(), None)].into()),
+            )]
+            .into();
+            assert_eq!(request_body(&serde_json::json!("x"), &qs).is_ok(), n == 100);
+        }
+        for n in [32, 33] {
+            let qs = [("😀".repeat(n), Question::noul("x"))].into();
+            assert_eq!(request_body(&serde_json::json!("x"), &qs).is_ok(), n == 32);
+        }
+    }
+
+    #[test]
+    fn malformed_noul_labels_scores_and_confidences_fail() {
+        let qs = [("q".into(), Question::noul("is it?"))].into();
+        for value in [
+            serde_json::json!({"label":"wrong","confidence":0.8,"scores":null}),
+            serde_json::json!({"label":"yes","confidence":1.1,"scores":null}),
+            serde_json::json!({"label":"yes","scores":{"yes":1.1,"no":0.0}}),
+            serde_json::json!({"label":"yes","scores":{"yes":0.8}}),
+            serde_json::json!({"scores":{"yes":0.8,"no":0.2}}),
+        ] {
+            let body =
+                serde_json::to_vec(&serde_json::json!({"results":[{"dimensions":{"q":value}}]}))
+                    .unwrap();
+            assert_eq!(parse(&body, &qs).unwrap_err().exit().code(), 4);
+        }
     }
 
     #[test]
@@ -367,15 +572,12 @@ mod tests {
             parse(b"not json", &questions()).unwrap_err().exit().code(),
             4
         );
-        // An answer grevi did not ask for is ignored; a question with no answer is simply
-        // absent, and reading it fails where it is read.
+        // Unknown answers are harmless, but a missing requested dimension fails immediately.
         let r = parse(
             br#"{"results":[{"dimensions":{"other":{"label":"x","scores":{"x":1.0}}}}]}"#,
             &questions(),
-        )
-        .unwrap();
-        assert!(r.answers.is_empty());
-        assert_eq!(r.noul("any").unwrap_err().exit().code(), 4);
+        );
+        assert_eq!(r.unwrap_err().exit().code(), 4);
     }
 
     #[test]

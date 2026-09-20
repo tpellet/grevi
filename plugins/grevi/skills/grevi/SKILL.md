@@ -7,7 +7,8 @@ description: Use the grevi CLI when a question is about meaning and grep or keyw
 
 grevi answers a question about text that already exists: your input, the installed tools, a man
 page, the folders on disk. It selects and never generates, so an answer is always something you
-can check. Every answer has a calibrated `p`, and "nothing fits" is a real answer.
+can check. Scores depend on the backend and task; "nothing fits" and insufficient evidence
+are real answers, not permission to invent a match.
 
 ## When it beats what you already have
 
@@ -15,13 +16,13 @@ You have `grep` and you can read files. Reach for grevi when those two run out:
 
 - **A long log, or a grep that found the symptom.** `grep -iE "error|fail"` finds the line that
   says something failed. The line that says why often holds none of those words (an assertion's
-  `left:`/`right:` values, "could not match actual sql"). `why` reads the whole log, thousands of
-  lines included, and returns that line with its number and context. Call it before you read a
+  `left:`/`right:` values, "could not match actual sql"). `why` filters long logs into bounded
+  evidence and returns a selected line with its number and context. Call it before you read a
   log of more than a few hundred lines, and whenever your grep named a failing test but not the
   reason.
 - **Many texts, one question.** Do not read 200 tickets to find the 10 that matter. Loop `is`
-  over them and read only the exit codes. Your cost is one short line per text, whatever its
-  length. Then read the few that said yes or unsure.
+  over them and read the exit codes. Oversized texts abstain without a model call; read or
+  scope those separately. Then read the few that said yes or unsure.
 - **One item out of many, described and not named.** "The commit where we changed the pricing",
   "the branch with the timeout fix", "the process that is draining the battery". `pick` matches
   by meaning, so the description and the line need no word in common. Use `-n 3` to see the
@@ -112,11 +113,18 @@ whatever you pipe (a shell history, a log with credentials) goes to the API.
 
 - `run`: use `--dry-run`, then run `data.argv` yourself under your own rules. Never pass
   `--exec --yes` unless the user asked for grevi to execute. `data.blocked` names a tool grevi
-  refuses to run; `complete=false` means a `<VALUE>` placeholder remains.
+  refuses to run or whose grammar is unvalidated. Only exact no-argument `true`, `false`,
+  `pwd`, and `ls` forms can be complete and execute, assuming trusted PATH contents.
+  Other flags/operands/commands remain proposals even with `--exec --yes`.
 - `add`: stages single hunks, not whole files, so it can split one file's changes. `--dry-run`
-  first; `--yes` stages (index only, never commits) only with the user's say-so.
-- `sort`: dry run by default; `--apply` moves files and writes `data.undo_log` for `--undo`.
-- Raise `-t` for costly actions. A `p` within 0.06 of the threshold can flip on a re-run.
+  first; `--yes` stages (index only, never commits) only with the user's say-so. Hunks above
+  3,000 characters are rejected before classification or staging; evidence is never clipped.
+- `sort`: dry run by default; `--apply` uses atomic no-replace moves and a JSONL recovery log.
+  Symlink entries are skipped; concurrent source replacement is unsupported. On failure,
+  retain the journal path and reported progress for recovery.
+- `is`: oversized input returns exit 3, `p:null`, `truncated:true`, without an API call.
+- A higher threshold does not make incomplete evidence or unvalidated actions safe. TypeSafe
+  Noul and classifier binary Choice scores do not share established application calibration.
 
 ## Source of truth
 

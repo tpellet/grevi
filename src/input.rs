@@ -10,8 +10,21 @@ static ANSI: LazyLock<Regex> = LazyLock::new(|| {
 });
 
 static SECRET: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r#"(?i)((?:api[_-]?key|token|secret|passw(?:or)?d|authorization|bearer)["']?\s*[:=]?\s*["']?)[^\s"',;]{8,}|\b(?:sk-[A-Za-z0-9_-]{16,}|gh[pousr]_[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}|xox[baprs]-[A-Za-z0-9-]{10,}|eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,})"#).unwrap()
+    Regex::new(r#"(?i)((?:(?:api[_-]?key|token|secret|passw(?:or)?d|authorization)\b["']?\s*[:=]\s*["']?|\bbearer\s+))[^\s"',;]{8,}|\b(?:sk-[A-Za-z0-9_-]{16,}|gh[pousr]_[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}|xox[baprs]-[A-Za-z0-9-]{10,}|eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,})"#).unwrap()
 });
+
+/// Redact semantic text while preserving object keys and non-text values.
+pub fn redact_value(value: &serde_json::Value) -> serde_json::Value {
+    match value {
+        serde_json::Value::String(s) => serde_json::Value::String(redact(s)),
+        serde_json::Value::Array(values) => values.iter().map(redact_value).collect(),
+        serde_json::Value::Object(values) => values
+            .iter()
+            .map(|(key, value)| (key.clone(), redact_value(value)))
+            .collect(),
+        other => other.clone(),
+    }
+}
 
 pub fn strip_ansi(s: &str) -> String {
     ANSI.replace_all(s, "").into_owned()
@@ -80,6 +93,10 @@ mod tests {
     }
     #[test]
     fn redacts_obvious_secrets_only() {
+        assert_eq!(
+            redact("token_expiry_seconds = 3600"),
+            "token_expiry_seconds = 3600"
+        );
         assert_eq!(
             redact("export GITHUB_TOKEN=ghp_abcdefghijklmnopqrstuvwxyz0123"),
             "export GITHUB_TOKEN=[REDACTED]"

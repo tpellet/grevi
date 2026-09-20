@@ -20,7 +20,7 @@ It works like any Unix tool. It reads stdin, prints lines, and answers yes-or-no
 | [`add`](#add-stage-only-the-changes-that-belong-to-one-topic) | Stages only the git changes that belong to one topic |
 | [`sort`](#sort-tidy-a-messy-folder) | Tidies a folder: reads each file and proposes which of your folders it belongs in |
 
-grevi selects and never generates. Every answer is a line of your input, a command on your PATH, a flag from a man page or a folder on your disk, and it comes with a calibrated probability. When nothing fits, grevi says so and exits 3.
+grevi selects and never generates. Every answer is a line of your input, a command on your PATH, a flag from a man page or a folder on your disk, with a model confidence score. When nothing fits or the evidence is insufficient, grevi says so and exits 3. Probability calibration depends on the backend and task.
 
 Agents call the same commands. Every command takes `--json` and prints one JSON object with the answer, the probability and the cost, and [`grevi capabilities --json`](#agents) describes the whole interface. A [Claude Code and Codex skill](#agents) is included.
 
@@ -91,7 +91,7 @@ cargo build 2>&1 | grevi why
 
 ### No key needed
 
-Without a key, grevi asks [classifier.dev](https://classifier.dev). It runs the same Jev model and serves it free, with no account. Every verb, probability and exit code works the same way. `meta.backend` in the JSON envelope says `classifier`, and so does `grevi health`.
+Without a key, grevi asks [classifier.dev](https://classifier.dev). It serves Jev free, with no account. Both backends use the same verbs and exit codes, but classifier translates yes/no questions into binary choices; their scores are not assumed interchangeable with TypeSafe Nouls. `meta.backend` in the JSON envelope says `classifier`, and so does `grevi health`.
 
 With a TypeSafe key, grevi uses your own quota: the limits are higher, and `meta.cost_usd` shows what each call cost you.
 
@@ -102,7 +102,7 @@ export TYPESAFE_API_KEY=...
 
 You get a key at https://console.typesafe.ai, and TypeSafe bills you for the requests made with it. grevi is an independent open-source client of their API. `GREVI_BACKEND=typesafe|classifier` forces a backend.
 
-The free service has two tighter limits. A question takes 100 options, so grevi ranks in windows of 99 plus "nothing fits" instead of 200. A request takes 32,000 characters of input. The model is the same, and the two backends score the same on the routing and root-cause evals in [evals/](evals/).
+The free service has tighter limits: 100 labels per question and 32,000 UTF-16 code units of input. Tournaments use windows of 99 plus "nothing fits". Unsupported constructed requests fail locally instead of dropping candidates or instructions. See [configuration](docs/guide/configuration.md#backends) for the other field and aggregate limits. The recorded routing and root-cause comparisons are in [evals/](evals/); equal aggregate scores do not establish identical answers or calibration.
 
 Each verb makes at least one API request; `-v` prints how many, and what they cost.
 
@@ -159,16 +159,18 @@ On the 24 support tickets in [benchmarks/agents/](benchmarks/agents/README.md), 
 
 Yes at or above 0.65, no below 0.35, unsure in between (`--band` sets the width around the 0.5 threshold).
 
+Oversized input produces exit 3 without a model call: `p:null`, `verdict:"unsure"`, `truncated:true`. Human mode warns on stderr. The evidence limit is about 96,000 characters on TypeSafe and 30,000 on classifier; grevi does not judge an omitted middle section.
+
 ### run: describe a task, get the command for it
 
-Say what you want to do in plain English. `run` finds a tool on your machine that does it, takes the flags from that tool's man page, shows you the command, and asks before it runs it.
+Say what you want to do in plain English. `run` finds a tool on your machine, takes proposed flags from its man page, and shows a shell-quoted proposal. Execution is limited to the exact no-argument forms `true`, `false`, `pwd`, and `ls`, after confirmation. Other commands, flags and operands remain proposals with `complete:false` and a reason in `blocked`.
 
 ```sh
 grevi run "burn a dvd from this iso"
 grevi run --dry-run "count the lines in notes.txt"
 ```
 
-`--dry-run` only shows the command; `--yes` skips the question. With the comma alias you type a comma, then your request:
+`--dry-run` only shows the command; `--yes` skips confirmation for a supported argv form. It does not enable unsupported commands. With the comma alias you type a comma, then your request:
 
 ```sh
 eval "$(grevi init zsh)"      # or bash
@@ -198,9 +200,9 @@ grevi sort ~/Downloads --apply              # moves, writes an undo log
 grevi sort ~/Downloads --undo <log>         # moves them back
 ```
 
-`sort` looks at the files directly in the folder. It does not go into subfolders and it skips hidden files. The folders it can propose are the ones that already exist under that folder, up to two levels deep; `--into <root>` takes them from another root instead. A file that the model cannot place with confidence stays where it is.
+`sort` looks at the files directly in the folder. It does not go into subfolders and it skips hidden files. It considers the first 200 sorted destination folders, up to two levels deep; `--into <root>` takes them from another root instead. Classifier's lower label limit can require a smaller scope. A file that the model cannot place with confidence stays where it is.
 
-`--apply` moves the files and writes an undo log (`sort-undo-<timestamp>.tsv` in the cache directory) after every move. `--undo <log>` moves each file back if its original path is still free. `sort` never overwrites a file and never deletes one. It only moves files within one volume, so `--into` must be on the same volume.
+`--apply` uses atomic no-replace moves and writes a unique JSONL recovery log in the cache directory. Durable intent records precede moves; completion records follow them. `--undo <log>` restores a matching file only if its original path is free. Recovery preserves absolute path bytes and file identity; old TSV logs are rejected. Failures report the log path and completed progress. `sort` never replaces an occupied destination and never deletes files. It requires one volume and filesystem support for atomic no-replace operations. Symlink entries are skipped; do not concurrently replace source files while sorting.
 
 grevi sends the file names and the first 2,000 characters of each text file, redacted. For a PDF it sends the first 2,000 characters of the first two pages, when `pdftotext` is installed.
 
@@ -212,7 +214,7 @@ Jev, TypeSafe's model, answers two kinds of question. "Which one?" is a choice o
 
 The API takes at most 255 options per question. Past that, `pick` and `why` run a tournament: windows of 200 lines plus NONE, 3 finalists per window, then one finals round. A window's items share a 60,000-character budget (each clipped to 200–2,000 characters), which keeps a request under the model's 32k-token state limit for typical text. Every verb finishes in at most 2 rounds of parallel requests; `run` takes 3 (route, fit, arguments).
 
-Answers are cached on disk for 7 days, keyed by a hash of the request; `--no-cache` bypasses the cache. The model is pinned to `jev-1.13.0`, the release the 0.5 threshold was calibrated on. `jev-latest` moves with each TypeSafe release, so the same input would start answering differently without any change here; `--model jev-latest` is allowed and documented as moving.
+Answers are cached on disk for 7 days, keyed by endpoint, backend, decision-contract version, model and request; `--no-cache` bypasses the cache. TypeSafe defaults to `jev-1.13.0`; `--model jev-latest` opts into its moving alias. Classifier selects its own model and rejects explicit model overrides. `meta.model` reports the service's model when supplied. The routing reliability table supports only its measured task and backend, not universal calibration.
 
 The longer version, with the `why` prefilter and the retry rules, is in [docs/guide/how-it-works.md](docs/guide/how-it-works.md).
 
@@ -325,14 +327,16 @@ The third case is a job that has no non-interactive command. An agent cannot sta
 
 What leaves your machine, verb by verb: [PRIVACY.md](PRIVACY.md). Requests go only to the active backend's API: classifier.dev without a key, TypeSafe with one. Before sending, grevi masks obvious secrets (`token=…`, `Bearer …`, `sk-…`, `ghp_…`, `AKIA…`, JWTs) as `[REDACTED]`. The masking is a regex, so it is best effort: do not pipe secrets into grevi.
 
-`run` executes only after a confirmation on the terminal or `--yes`; without a TTY and without `--yes` it prints the command and stops. Commands run via argv, never through a shell. Flags come from man pages; no binary is ever probed with `--help`.
+`run` executes only a supported argv form after terminal confirmation or `--yes`; machine mode requires `--exec --yes`. It assumes your PATH is trusted. Unsupported grammar stays a proposal even with those flags. Commands run via argv, never through a shell. Flags come from man pages; no binary is ever probed with `--help`.
 
 Some tools are never executed, whatever the confidence or the flags: `rm`, `rmdir`, `dd`, `mkfs*`, `newfs*`, `fdisk`, `diskutil`, `shred`, `srm`, `wipefs`, `sudo`, `su`, `doas`, `kill`, `killall`, `pkill`, `reboot`, `halt`, `shutdown`, `poweroff`, `init`, `telinit`, `launchctl`, `systemctl`; the wrappers that would run another program named in their arguments (`sh`, `bash`, `zsh`, `dash`, `ksh`, `fish`, `env`, `xargs`, `nohup`, `nice`, `timeout`, `time`, `exec`, `eval`, `command`, `find`, `watch`, `parallel`, `osascript`); and the interpreters that take program text as a flag value (`python*`, `perl*`, `ruby*`, `node*`, `php*`, `lua*`, versioned names included). grevi shows the command and leaves it to you. The list is by tool name only: `chmod -R` is not on it.
 
 ## Limits
 
 - Hosted API. No network, no grevi (a key is optional). Rate limits are the backend's: TypeSafe's 1,200 requests per minute and 250k tokens per second, or classifier.dev's free 3,000 classifications per minute and 20,000 per day, per IP. grevi retries with the server's `retry-after` and exits 4 when they run out.
-- On classifier.dev a question takes at most 100 options (grevi windows at 99 plus NONE) and 32,000 characters of input; a request carries at most 20 questions, so grevi splits bigger ones. Same model, same answers.
+- On classifier.dev a question takes at most 100 labels, 4,000 instruction UTF-16 code units and 32,000 input UTF-16 code units; a request carries at most 20 questions. grevi splits dimensions and rejects unsupported fields locally. Sort/file-option lists exceeding the backend label cap require a smaller scope; they are not silently pruned to fit.
+- `add` rejects a hunk over 3,000 characters before requesting a decision or staging; it never stages an unseen suffix. A constructed request that exceeds the backend budget also fails before staging.
+- Tournament pruning can discard a relevant candidate before final verification; confidence does not prove exhaustive search. Candidate-survival and calibration work is tracked in the [implementation plan](docs/superpowers/plans/2026-09-18-hunch-v0.md#correctness-repair-and-deeper-implementation-plan).
 - English works best. Ask literal questions: "the line with the failing test", not "what should I do".
 - `pick` caps stdin at 20,000 lines; filter first (`rg`, `head`) or split the list.
 - The byte budget assumes ~4 characters per token. Dense logs (hashes, paths, JSON) and CJK text tokenize denser and can be refused by the API: exit 6, `api_rejected_request`. Filter the input first.

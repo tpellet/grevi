@@ -2,6 +2,38 @@ mod common;
 use common::FakeJev;
 
 #[tokio::test(flavor = "multi_thread")]
+async fn oversized_input_abstains_without_judging_either_predicate() {
+    let server = common::mock(FakeJev {
+        choose: |_, _, o| o[0].clone(),
+        noul: |_, _| 0.95,
+    })
+    .await;
+    for condition in ["contains a refund", "contains no refund"] {
+        let mut c = common::grevi(&server);
+        let input = format!(
+            "{}\nrefund\n{}",
+            "ordinary text ".repeat(4000),
+            "ordinary text ".repeat(4000)
+        );
+        let out = tokio::task::spawn_blocking(move || {
+            c.args(["--json", "is", condition])
+                .write_stdin(input)
+                .output()
+                .unwrap()
+        })
+        .await
+        .unwrap();
+        assert_eq!(out.status.code(), Some(3));
+        let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+        assert!(v["data"]["p"].is_null());
+        assert_eq!(v["data"]["verdict"], "unsure");
+        assert_eq!(v["data"]["truncated"], true);
+        assert!(String::from_utf8_lossy(&out.stderr).contains("not judged"));
+    }
+    assert!(server.received_requests().await.unwrap().is_empty());
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn exit_codes_follow_band() {
     let server = common::mock(FakeJev {
         choose: |_, _, o| o[0].clone(),

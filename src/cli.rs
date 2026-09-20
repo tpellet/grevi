@@ -5,7 +5,7 @@ use clap::{Args, Parser, Subcommand, ValueEnum};
 #[command(
     name = "grevi",
     version,
-    about = "Answer questions about text you already have: find a line, an error, a command or a folder by meaning. grevi selects and never generates, and every answer has a calibrated probability.",
+    about = "Answer questions about text you already have: find a line, an error, a command or a folder by meaning. grevi selects and never generates, with backend-specific decision scores.",
     after_help = "Examples:\n  gh run view --log-failed | grevi why\n  git branch | grevi pick \"the payment timeout fix\"\n  grevi is \"the customer asks for a refund\" < mail.txt && ./refund\n  grevi run --dry-run \"keep my mac awake for an hour\"\n  grevi add --dry-run \"the token expiry fix\"\n  grevi sort ~/Downloads\n\nExit codes: 0 ok, 1 no (is), 2 usage, 3 nothing fits or unsure, 4 API unavailable, 5 auth, 6 input, 7 child failed, 130 declined.\nAgents: grevi capabilities --json | grevi robot-docs"
 )]
 pub struct Cli {
@@ -23,10 +23,10 @@ pub struct GlobalOpts {
     /// Output format (overrides --json)
     #[arg(long, global = true, value_enum)]
     pub format: Option<Format>,
-    /// Decision threshold on calibrated probability
+    /// Decision threshold on the backend's score (calibration depends on task and backend)
     #[arg(short = 't', long, global = true, env = "GREVI_THRESHOLD")]
     pub threshold: Option<f64>,
-    /// Jev model or alias (default jev-1.13.0; `jev-latest` moves with each release)
+    /// TypeSafe model or alias (default jev-1.13.0); unsupported by classifier.dev
     #[arg(long, global = true, env = "GREVI_MODEL")]
     pub model: Option<String>,
     /// Skip the local answer cache
@@ -78,18 +78,18 @@ pub enum Cmd {
         #[arg(last = true)]
         cmd: Vec<String>,
     },
-    /// Describe a task in plain English, get the installed command that does it; asks before it runs
+    /// Describe a task in plain English and get a command proposal; only validated recipes can run
     #[command(
-        after_help = "Examples:\n  grevi run --dry-run \"keep my mac awake for an hour\"\n  grevi run --json --dry-run --no-args \"test how fast my connection is\"\n\nSearches every command on the PATH by what its man page says it does. Flags come from the man page; check them before you run.\nExit: 0 found (or ran), 3 no tool fits, 7 the command failed, 130 declined. --json data: tool, fit, argv[], flags[], complete, blocked, executed, child_exit, alternatives[]."
+        after_help = "Examples:\n  grevi run --dry-run \"keep my mac awake for an hour\"\n  grevi run --json --dry-run --no-args \"test how fast my connection is\"\n\nSearches commands on PATH by their man pages. Flags form proposals to check yourself. Only exact zero-argument true, false, pwd, and ls recipes are complete and eligible to execute; all other argv have complete=false and a blocked reason. Human proposals use POSIX shell quoting.\nExit: 0 found (or ran), 3 no tool fits, 7 the command failed, 130 declined. --json data: tool, fit, argv[], flags[], complete, blocked, executed, child_exit, alternatives[]."
     )]
     Run {
         /// The task, e.g. "count the lines in notes.txt"; flags may follow it (`grevi run burn a dvd --dry-run`)
         #[arg(required = true, num_args = 1..)]
         intent: Vec<String>,
-        /// Run without asking
+        /// Run a validated recipe without asking (only zero-argument true, false, pwd, ls)
         #[arg(short, long)]
         yes: bool,
-        /// Allow execution in machine mode (requires --yes)
+        /// Allow validated recipes in machine mode (requires --yes)
         #[arg(long)]
         exec: bool,
         /// Only route and propose; never execute
@@ -101,7 +101,7 @@ pub enum Cmd {
     },
     /// Ask a yes-or-no question about the text on stdin; the answer is the exit code (0 yes, 1 no, 3 unsure)
     #[command(
-        after_help = "Examples:\n  grevi is \"the customer asks for a refund\" < mail.txt && ./refund\n  for f in mail/*; do grevi is \"asks for a refund\" < \"$f\"; echo \"$f $?\"; done\n\nWrite the statement literally: it is judged word for word. No counting, arithmetic, dates or quality judgments.\nPrints nothing in human mode. Exit: 0 yes, 1 no, 3 unsure. --json data: p, verdict, truncated."
+        after_help = "Examples:\n  grevi is \"the customer asks for a refund\" < mail.txt && ./refund\n  for f in mail/*; do grevi is \"asks for a refund\" < \"$f\"; echo \"$f $?\"; done\n\nWrite the statement literally: it is judged word for word. No counting, arithmetic, dates or quality judgments. Oversized input is not judged: no API call, exit 3, p=null, verdict=unsure, truncated=true, and a reason.\nPrints nothing on human stdout; oversized input warns on stderr. Exit: 0 yes, 1 no, 3 unsure. --json data: p, verdict, truncated, reason (when oversized)."
     )]
     Is {
         /// A statement that must be true of the text, e.g. "the customer asks for a refund"
@@ -112,7 +112,7 @@ pub enum Cmd {
     },
     /// Stage only the git changes that belong to one topic, like `git add -p` without the questions
     #[command(
-        after_help = "Examples:\n  grevi add --dry-run \"the token expiry fix\"\n  grevi add --yes \"the token expiry fix\" && git commit\n\nStages single hunks of tracked files, so it can split the changes of one file. Index only, never commits.\nExit: 0 staged (or scored with --dry-run), 3 no change is about the topic, 6 nothing unstaged, 130 declined. --json data: hunks[{file, header, p, staged}]."
+        after_help = "Examples:\n  grevi add --dry-run \"the token expiry fix\"\n  grevi add --yes \"the token expiry fix\" && git commit\n\nStages single hunks of tracked files, so it can split the changes of one file. Index only, never commits. Rejects hunks above 3000 characters and batches above the backend evidence budget before API requests or staging; no hunk evidence is clipped.\nExit: 0 staged (or scored with --dry-run), 3 no change is about the topic, 6 empty or oversized input, 130 declined. --json data: hunks[{file, header, p, staged}]."
     )]
     Add {
         /// The topic of the changes to stage, e.g. "the token expiry fix"

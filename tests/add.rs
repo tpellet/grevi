@@ -2,6 +2,99 @@ mod common;
 use common::FakeJev;
 use std::process::Command as P;
 
+#[tokio::test(flavor = "multi_thread")]
+async fn oversized_complete_batch_is_rejected_without_dropping_hunks() {
+    let server = common::mock_classifier(FakeJev {
+        choose: |_, _, o| o[0].clone(),
+        noul: |_, _| 0.95,
+    })
+    .await;
+    let d = tempfile::tempdir().unwrap();
+    git(d.path(), &["init", "-q"]);
+    for i in 0..20 {
+        std::fs::write(d.path().join(format!("f{i}.txt")), "original\n").unwrap();
+    }
+    git(d.path(), &["add", "."]);
+    for i in 0..20 {
+        std::fs::write(
+            d.path().join(format!("f{i}.txt")),
+            "ordinary words ".repeat(150),
+        )
+        .unwrap();
+    }
+    let before = P::new("git")
+        .args(["diff", "--cached"])
+        .current_dir(d.path())
+        .output()
+        .unwrap()
+        .stdout;
+    let mut c = common::grevi_classifier(&server);
+    c.current_dir(d.path());
+    let out = tokio::task::spawn_blocking(move || {
+        c.args(["--json", "add", "--yes", "ordinary words"])
+            .output()
+            .unwrap()
+    })
+    .await
+    .unwrap();
+    let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+    assert_eq!(out.status.code(), Some(6), "{v}");
+    assert_eq!(v["error"]["kind"], "input_too_large");
+    assert!(v["error"]["message"].as_str().unwrap().contains("batch"));
+    assert!(server.received_requests().await.unwrap().is_empty());
+    let after = P::new("git")
+        .args(["diff", "--cached"])
+        .current_dir(d.path())
+        .output()
+        .unwrap()
+        .stdout;
+    assert_eq!(before, after);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn oversized_hunk_is_rejected_before_any_staging_or_request() {
+    let server = common::mock(FakeJev {
+        choose: |_, _, o| o[0].clone(),
+        noul: |_, _| 0.95,
+    })
+    .await;
+    let d = tempfile::tempdir().unwrap();
+    git(d.path(), &["init", "-q"]);
+    std::fs::write(d.path().join("f.txt"), "original\n").unwrap();
+    git(d.path(), &["add", "f.txt"]);
+    let changed = format!(
+        "AUTH fix\n{}\nUNRELATED trailing change\n",
+        "ordinary words ".repeat(300)
+    );
+    std::fs::write(d.path().join("f.txt"), changed).unwrap();
+    let before = P::new("git")
+        .args(["diff", "--cached"])
+        .current_dir(d.path())
+        .output()
+        .unwrap()
+        .stdout;
+    let mut c = common::grevi(&server);
+    c.current_dir(d.path());
+    let out = tokio::task::spawn_blocking(move || {
+        c.args(["--json", "add", "--yes", "AUTH fix"])
+            .output()
+            .unwrap()
+    })
+    .await
+    .unwrap();
+    assert_eq!(out.status.code(), Some(6));
+    let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+    assert!(v["error"]["message"].as_str().unwrap().contains("hunk"));
+    assert!(server.received_requests().await.unwrap().is_empty());
+    let after = P::new("git")
+        .args(["diff", "--cached"])
+        .current_dir(d.path())
+        .output()
+        .unwrap()
+        .stdout;
+    assert_eq!(before, after);
+}
+
 fn git(dir: &std::path::Path, args: &[&str]) {
     assert!(
         P::new("git")

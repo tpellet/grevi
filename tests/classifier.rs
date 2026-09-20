@@ -1,5 +1,24 @@
 //! The classifier.dev backend: same verbs, same envelope, same exit codes, no key.
 mod common;
+
+#[test]
+fn explicit_classifier_model_overrides_are_usage_errors() {
+    for via_env in [false, true] {
+        let mut command = common::bin();
+        command
+            .env("GREVI_BACKEND", "classifier")
+            .args(["--json", "capabilities"]);
+        if via_env {
+            command.env("GREVI_MODEL", "jev-1.13.0");
+        } else {
+            command.args(["--model", "jev-1.13.0"]);
+        }
+        let output = command.output().unwrap();
+        assert_eq!(output.status.code(), Some(2));
+        let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+        assert_eq!(value["error"]["kind"], "usage");
+    }
+}
 use common::{FakeJev, option_containing};
 use grevi::config::Backend;
 use grevi::jev::client::Client;

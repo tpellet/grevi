@@ -234,9 +234,10 @@ pub async fn run(ctx: &Config, intent: &str, flags: RunFlags) -> Result<Outcome,
             );
         }
     }
-    let shown = argv.join(" ");
-    let complete = placeholders == 0;
-    let blocked = blocked_reason(&tool.name);
+    let shown = shell_display(&argv);
+    let complete = placeholders == 0 && validated_argv(&argv);
+    let blocked = blocked_reason(&tool.name)
+        .or_else(|| (!complete).then(|| "unvalidated command grammar; proposal only".to_string()));
     if !flags.machine {
         if flags.dry_run {
             eprintln!("grevi: {} ({:.2}) — {}", tool.name, r.fit, tool.summary);
@@ -245,9 +246,7 @@ pub async fn run(ctx: &Config, intent: &str, flags: RunFlags) -> Result<Outcome,
         for f in parsed.iter().filter(|f| chosen.contains(&f.flag)) {
             eprintln!("  {}  {}", f.flag, f.desc);
         }
-        if !complete {
-            eprintln!("grevi: fill the <VALUE> placeholders and run it yourself:");
-        } else if let Some(why) = &blocked {
+        if let Some(why) = &blocked {
             eprintln!("grevi: not offering to run this ({why}); check it and run it yourself:");
         }
     }
@@ -301,7 +300,20 @@ pub async fn run(ctx: &Config, intent: &str, flags: RunFlags) -> Result<Outcome,
     })
 }
 
-/// Why a proposal is only shown, never offered for execution (None = it may be offered).
+/// Explicit zero-argument recipes: no flags, operands, subcommands, or values are accepted.
+/// In particular a leading-dash filename cannot become an option in an executable proposal.
+fn validated_argv(argv: &[String]) -> bool {
+    matches!(argv, [name] if matches!(name.as_str(), "true" | "false" | "pwd" | "ls"))
+}
+
+fn shell_display(argv: &[String]) -> String {
+    argv.iter()
+        .map(|arg| format!("'{}'", arg.replace('\'', "'\\''")))
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
+/// Name-based denylist; passing this check alone does not validate the command grammar.
 pub fn blocked_reason(tool: &str) -> Option<String> {
     let base = tool.rsplit('/').next().unwrap_or(tool);
     (NEVER_EXEC.contains(&base) || NEVER_EXEC_PREFIX.iter().any(|p| base.starts_with(p)))
@@ -333,6 +345,40 @@ pub fn relevant_files(intent: &str, cwd: &[String]) -> Vec<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn presentation_quotes_each_posix_shell_token() {
+        assert_eq!(
+            shell_display(&[
+                "cp".into(),
+                "report copy.txt".into(),
+                "it's;$HOME".into(),
+                "".into()
+            ]),
+            "'cp' 'report copy.txt' 'it'\\''s;$HOME' ''"
+        );
+    }
+    #[test]
+    fn execution_grammar_accepts_only_explicit_zero_argument_recipes() {
+        for name in ["true", "false", "pwd", "ls"] {
+            assert!(validated_argv(&[name.into()]));
+            for operand in ["file", "-rf", "--", "<VALUE>"] {
+                assert!(!validated_argv(&[name.into(), operand.into()]));
+            }
+        }
+        assert!(!validated_argv(&[]));
+        assert!(!validated_argv(&["cp".into()]));
+        assert!(!validated_argv(&[
+            "cp".into(),
+            "source".into(),
+            "destination".into()
+        ]));
+        assert!(!validated_argv(&[
+            "sips".into(),
+            "-z".into(),
+            "100".into(),
+            "200".into()
+        ]));
+    }
     #[test]
     fn never_exec_list_blocks_by_name_and_prefix() {
         assert!(blocked_reason("rm").is_some());

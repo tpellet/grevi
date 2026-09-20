@@ -14,18 +14,22 @@ below is the same for both.
 |---|---|---|
 | pick | your intent and the stdin lines (each clipped to 200–2,000 characters; ≤ 20,000 lines) | anything else |
 | why | your stdin (or the `--` command's output) after local filtering (≤ 4,000 lines, each clipped) | lines filtered out locally |
-| is | your condition and stdin (≤ ~96k chars on `typesafe`, ≤ 30k on `classifier`, head+tail) | — |
+| is | your condition and complete supported stdin (≤ ~96k chars on `typesafe`, ≤ 30k on `classifier`) | oversized stdin: the command abstains before sending |
 | run | your intent, names and one-line descriptions of installed tools, man-page excerpts of ≤ 12 finalists, the chosen tool's option list, and only those file names in the current directory that contain a word of your request (never contents) | other file names, file contents, environment, history |
-| add | your topic and each unstaged hunk of tracked files (header + body, clipped to 3,000 characters) | untracked files, file contents outside the diff |
-| sort | the names of the files directly in the directory, the first 2,000 characters of each text file (or of a PDF's first two pages via `pdftotext`, when installed), and the folder names under the root | hidden files, files in sub-folders, the rest of each file, binary contents |
+| add | your topic and each full unstaged hunk of tracked files (header + body, at most 3,000 characters; larger hunks are rejected) | untracked files, file contents outside the diff |
+| sort | the names of regular files directly in the directory, the first 2,000 characters of each text file (or of a PDF's first two pages via `pdftotext`, when installed), and eligible folder names under the root | hidden files, symlink entries, files in sub-folders, the rest of each file, binary contents |
 
 Before sending, grevi masks obvious secrets (`token=…`, `Bearer …`, `sk-…`, `ghp_…`, `AKIA…`,
-JWTs) as `[REDACTED]`. This is best effort, not a guarantee: do not pipe secrets into grevi.
+JWTs) in semantic state, requests, conditions and question descriptions as `[REDACTED]`.
+Opaque option IDs remain stable. This is best effort, not a guarantee: do not pipe secrets into grevi.
 
 Answers are cached on disk in your cache directory (`GREVI_CACHE_DIR`), keyed by a hash of the
 request, for 7 days; the cache holds answers (option ids and probabilities), not your text.
-`--no-cache` or `GREVI_NO_CACHE=1` disables it; a cache entry never crosses from one backend to
-the other. grevi never logs or prints your key.
+`--no-cache` or `GREVI_NO_CACHE=1` disables it; cache identity includes backend, endpoint and
+decision-contract version. Sort recovery logs are separate: they retain local absolute path
+bytes and file identity so undo can verify what it restores. They are not sent to the model.
+Do not concurrently replace source files while sorting; excluding symlink entries is not a
+general sandbox against a hostile local writer. grevi never logs or prints your key.
 
 Each service's own data handling: TypeSafe, https://docs.typesafe.ai/legal; classifier.dev,
 https://classifier.dev/privacy and https://classifier.dev/terms. On classifier.dev the requests
