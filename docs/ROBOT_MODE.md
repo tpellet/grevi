@@ -52,11 +52,50 @@ Start here for the contract: `grevi capabilities --json`. Every command accepts 
 `--format json|jsonl|toon` and then prints exactly one envelope on stdout, usage errors included:
 
     { ok, command, version, exit_code, data, meta{backend, model, elapsed_ms, requests,
-      cache_hits, input_tokens, cost_usd, threshold, request_id},
+      cache_hits, input_tokens, cost_usd, threshold, request_id, telemetry},
       error{kind, message, hint, example} | null }
 
 Branch on `exit_code` (0 ok, 1 no, 2 usage, 3 abstain, 4 unavailable, 5 auth, 6 input,
 7 child failed, 130 declined), then read `data`. Never parse human output.
+
+`meta.telemetry` separates inference POSTs, health GETs, prewarm GETs, and semantic calls.
+Each of `inference_posts`, `health_gets`, `prewarm_gets`, and `semantic_calls` has
+`attempted`, `succeeded`, `failed`, `cancelled`, and `in_flight` counters, with:
+
+    attempted = succeeded + failed + cancelled + in_flight
+
+A transport attempt starts immediately before an HTTP send. Waiting for an inference
+concurrency permit does not start a transport attempt. Transport success means HTTP 200
+and a fully received body; malformed JSON or invalid decisions can therefore count as a
+successful transport attempt and a failed semantic call. Dropped futures count as cancelled;
+prewarm work that is still running at the snapshot remains in flight. A semantic call is one
+`ask`, including cache hits and local validation failures. `semantic_questions` counts the
+questions in those calls. `logical_rounds` is `null`: HTTP traffic cannot establish logical
+rounds or stage counts.
+
+`retry_sends` counts sends after the initial attempt, not planned retries. `retry_sleep_ms`
+sums elapsed retry waits when each wait completes or is interrupted; an unfinished wait is
+not included until it ends. It does not count semaphore waits, HTTP time, or proposed backoff.
+
+`usage.input_tokens` and `usage.output_tokens` each contain `reported_subtotal`,
+`reported_attempts`, `unknown_attempts`, and `complete`. Only service-reported unsigned
+token counts enter subtotals, including usage received before semantic validation fails.
+Missing fields, unrepresentable subtotals, malformed bodies, transport failures, cancellation, and pending attempts
+remain unknown. For each token field:
+
+    reported_attempts + unknown_attempts = inference_posts.attempted
+
+`complete` means no inference attempt has unknown usage for that token field. A zero
+subtotal with unknown attempts does not mean zero consumption. Cache hits add no service
+usage or inference attempts. `meta.input_tokens` is `null` unless input usage is complete.
+
+`cost_estimate` records `basis`, `input_price_per_mtok`, `reported_input_subtotal_usd`, and
+`complete`. The estimate covers input tokens only at the configured `GREVI_PRICE_PER_MTOK`
+price; it is not a billing receipt. `meta.cost_usd` is `null` when this input-token basis is
+incomplete, except that a configured zero price gives zero cost regardless of usage.
+Classifier defaults to zero with basis `free_service`; other configured pricing uses
+`configured_input_token_price`. Output token usage is reported independently, without
+inventing an output-token price. These counters contain no request payloads or credentials.
 
 ## Verbs
 - `pick "<intent>"` (stdin lines) → `data.matches[{line, text, p}]`; exit 3 = nothing fits.
@@ -97,7 +136,7 @@ Branch on `exit_code` (0 ok, 1 no, 2 usage, 3 abstain, 4 unavailable, 5 auth, 6 
   code units and a request 20 questions. Serialized dimension definitions take at most 16,000
   UTF-16 code units. grevi splits dimensions and rejects oversized fields or option sets
   locally; backend translations can change answers and confidence.
-- Cost is in `meta.cost_usd`, and is `0` on `classifier` because the service is free; repeated
+- Cost is in `meta.cost_usd`, and is `0` at classifier's default zero price; repeated
   identical questions hit the local cache (`meta.cache_hits`), which never crosses backend,
   endpoint or decision-contract versions. `meta.requests` counts attempted inference POSTs,
   including retries and failures; it excludes prewarm and health GETs.

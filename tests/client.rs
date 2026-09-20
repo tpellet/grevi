@@ -59,6 +59,21 @@ async fn failed_posts_count_every_attempt() {
             .is_err()
     );
     assert_eq!(cfg.meta().requests, 4);
+    let meta = serde_json::to_value(cfg.meta()).unwrap();
+    assert_eq!(
+        meta["telemetry"]["inference_posts"],
+        serde_json::json!({
+            "attempted":4,"succeeded":0,"failed":4,"cancelled":0,"in_flight":0
+        })
+    );
+    assert_eq!(meta["telemetry"]["retry_sends"], 3);
+    assert_eq!(
+        meta["telemetry"]["usage"]["input_tokens"]["unknown_attempts"],
+        4
+    );
+    assert_eq!(meta["telemetry"]["semantic_calls"]["failed"], 1);
+    assert_eq!(meta["input_tokens"], serde_json::Value::Null);
+    assert_eq!(meta["cost_usd"], serde_json::Value::Null);
 }
 
 #[tokio::test]
@@ -253,6 +268,372 @@ async fn retries_429_then_succeeds_and_caches() {
         0.7
     );
     assert_eq!(c.meta().cache_hits, 1);
+    let meta = serde_json::to_value(c.meta()).unwrap();
+    assert_eq!(meta["telemetry"]["inference_posts"]["attempted"], 2);
+    assert_eq!(meta["telemetry"]["inference_posts"]["succeeded"], 1);
+    assert_eq!(meta["telemetry"]["semantic_calls"]["succeeded"], 2);
+    assert_eq!(meta["telemetry"]["semantic_questions"], 2);
+    assert_eq!(meta["telemetry"]["retry_sends"], 1);
+    assert!(meta["telemetry"]["retry_sleep_ms"].as_u64().unwrap() >= 250);
+    assert_eq!(
+        meta["telemetry"]["usage"]["input_tokens"]["reported_subtotal"],
+        5
+    );
+    assert_eq!(
+        meta["telemetry"]["usage"]["input_tokens"]["unknown_attempts"],
+        1
+    );
+}
+
+#[tokio::test]
+async fn usage_survives_semantic_failure_and_missing_usage_stays_unknown() {
+    for (body, input, output, reported) in [
+        (
+            serde_json::json!({"answers":{},"usage":{"input_tokens":7,"output_tokens":3}}),
+            7,
+            3,
+            1,
+        ),
+        (serde_json::json!({"answers":{}}), 0, 0, 0),
+        (
+            serde_json::json!({"usage":{"input_tokens":7,"output_tokens":3}}),
+            7,
+            3,
+            1,
+        ),
+        (
+            serde_json::json!({"answers":{},"usage":{"input_tokens":0,"output_tokens":0}}),
+            0,
+            0,
+            1,
+        ),
+    ] {
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(body))
+            .mount(&server)
+            .await;
+        let cfg = common::config(&server);
+        assert!(
+            Client::new(&cfg)
+                .unwrap()
+                .ask(&serde_json::json!("x"), &one_noul())
+                .await
+                .is_err()
+        );
+        let meta = serde_json::to_value(cfg.meta()).unwrap();
+        assert_eq!(meta["telemetry"]["inference_posts"]["succeeded"], 1);
+        assert_eq!(meta["telemetry"]["semantic_calls"]["failed"], 1);
+        for (field, subtotal) in [("input_tokens", input), ("output_tokens", output)] {
+            assert_eq!(
+                meta["telemetry"]["usage"][field]["reported_subtotal"],
+                subtotal
+            );
+            assert_eq!(
+                meta["telemetry"]["usage"][field]["reported_attempts"],
+                reported
+            );
+            assert_eq!(
+                meta["telemetry"]["usage"][field]["unknown_attempts"],
+                1 - reported
+            );
+            assert_eq!(meta["telemetry"]["usage"][field]["complete"], reported == 1);
+        }
+    }
+}
+
+#[tokio::test]
+async fn cancellation_preserves_attempt_conservation() {
+    let server = MockServer::start().await;
+    Mock::given(method("POST"))
+        .respond_with(ResponseTemplate::new(200).set_delay(std::time::Duration::from_secs(2)))
+        .mount(&server)
+        .await;
+    let cfg = common::config(&server);
+    let client = Client::new(&cfg).unwrap();
+    let state = serde_json::json!("x");
+    let qs = one_noul();
+    let mut ask = Box::pin(client.ask(&state, &qs));
+    tokio::select! {
+        _ = &mut ask => panic!("response must remain pending"),
+        _ = tokio::time::sleep(std::time::Duration::from_millis(30)) => {}
+    }
+    let pending = serde_json::to_value(cfg.meta()).unwrap();
+    assert_eq!(pending["telemetry"]["inference_posts"]["in_flight"], 1);
+    drop(ask);
+    let meta = serde_json::to_value(cfg.meta()).unwrap();
+    for field in ["inference_posts", "semantic_calls"] {
+        assert_eq!(
+            meta["telemetry"][field],
+            serde_json::json!({
+                "attempted":1,"succeeded":0,"failed":0,"cancelled":1,"in_flight":0
+            })
+        );
+    }
+    assert_eq!(
+        meta["telemetry"]["usage"]["input_tokens"]["unknown_attempts"],
+        1
+    );
+}
+
+#[tokio::test]
+async fn health_and_prewarm_have_separate_attempt_counters() {
+    let server = common::mock(common::FakeJev {
+        choose: |_, _, _| "NONE".into(),
+        noul: |_, _| 0.8,
+    })
+    .await;
+    let cfg = common::config(&server);
+    grevi::cmd::agent::health(&cfg).await.unwrap();
+    Client::new(&cfg).unwrap().prewarm();
+    for _ in 0..100 {
+        let meta = serde_json::to_value(cfg.meta()).unwrap();
+        if meta["telemetry"]["prewarm_gets"]["succeeded"] == 1 {
+            break;
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(5)).await;
+    }
+    let meta = serde_json::to_value(cfg.meta()).unwrap();
+    for field in ["health_gets", "prewarm_gets"] {
+        assert_eq!(
+            meta["telemetry"][field],
+            serde_json::json!({
+                "attempted":1,"succeeded":1,"failed":0,"cancelled":0,"in_flight":0
+            })
+        );
+    }
+    assert_eq!(meta["requests"], 0);
+}
+
+#[tokio::test]
+async fn classifier_partial_failure_retains_each_physical_attempt() {
+    let server = MockServer::start().await;
+    Mock::given(method("POST"))
+        .respond_with(common::FakeClassifier(common::FakeJev {
+            choose: |_, _, _| "NONE".into(),
+            noul: |_, _| 0.8,
+        }))
+        .up_to_n_times(1)
+        .with_priority(1)
+        .mount(&server)
+        .await;
+    Mock::given(method("POST"))
+        .respond_with(ResponseTemplate::new(401))
+        .with_priority(2)
+        .mount(&server)
+        .await;
+    let mut cfg = common::config(&server);
+    cfg.backend = grevi::config::Backend::Classifier;
+    cfg.price_per_mtok = 0.0;
+    let qs = (0..21)
+        .map(|i| (format!("q{i:02}"), Question::noul("is it?")))
+        .collect();
+    assert!(
+        Client::new(&cfg)
+            .unwrap()
+            .ask(&serde_json::json!("x"), &qs)
+            .await
+            .is_err()
+    );
+    let meta = serde_json::to_value(cfg.meta()).unwrap();
+    assert_eq!(
+        meta["telemetry"]["inference_posts"],
+        serde_json::json!({
+            "attempted":2,"succeeded":1,"failed":1,"cancelled":0,"in_flight":0
+        })
+    );
+    assert_eq!(meta["telemetry"]["semantic_questions"], 21);
+    assert_eq!(meta["telemetry"]["semantic_calls"]["failed"], 1);
+    assert_eq!(
+        meta["telemetry"]["usage"]["input_tokens"]["unknown_attempts"],
+        2
+    );
+    assert_eq!(meta["input_tokens"], serde_json::Value::Null);
+    assert_eq!(meta["cost_usd"], 0.0);
+    assert_eq!(meta["telemetry"]["cost_estimate"]["basis"], "free_service");
+}
+
+#[tokio::test]
+async fn malformed_json_counts_transport_success_with_unknown_usage() {
+    let server = MockServer::start().await;
+    Mock::given(method("POST"))
+        .respond_with(ResponseTemplate::new(200).set_body_string("not json"))
+        .mount(&server)
+        .await;
+    let cfg = common::config(&server);
+    assert!(
+        Client::new(&cfg)
+            .unwrap()
+            .ask(&serde_json::json!("x"), &one_noul())
+            .await
+            .is_err()
+    );
+    let meta = serde_json::to_value(cfg.meta()).unwrap();
+    assert_eq!(meta["telemetry"]["inference_posts"]["succeeded"], 1);
+    assert_eq!(meta["telemetry"]["semantic_calls"]["failed"], 1);
+    assert_eq!(
+        meta["telemetry"]["usage"]["input_tokens"]["complete"],
+        false
+    );
+    assert_eq!(meta["input_tokens"], serde_json::Value::Null);
+}
+
+#[tokio::test]
+async fn cancelled_retry_sleep_records_elapsed_time_without_another_send() {
+    let server = MockServer::start().await;
+    Mock::given(method("POST"))
+        .respond_with(ResponseTemplate::new(503).insert_header("retry-after-ms", "1000"))
+        .mount(&server)
+        .await;
+    let cfg = common::config(&server);
+    let client = Client::new(&cfg).unwrap();
+    let state = serde_json::json!("x");
+    let qs = one_noul();
+    let mut ask = Box::pin(client.ask(&state, &qs));
+    tokio::select! {
+        _ = &mut ask => panic!("retry must remain pending"),
+        _ = tokio::time::sleep(std::time::Duration::from_millis(100)) => {}
+    }
+    drop(ask);
+    let meta = serde_json::to_value(cfg.meta()).unwrap();
+    assert_eq!(
+        meta["telemetry"]["inference_posts"],
+        serde_json::json!({
+            "attempted":1,"succeeded":0,"failed":1,"cancelled":0,"in_flight":0
+        })
+    );
+    assert_eq!(meta["telemetry"]["retry_sends"], 0);
+    let slept = meta["telemetry"]["retry_sleep_ms"].as_u64().unwrap();
+    assert!(
+        (1..1000).contains(&slept),
+        "actual interrupted sleep: {slept}"
+    );
+    assert_eq!(meta["telemetry"]["semantic_calls"]["cancelled"], 1);
+}
+
+#[tokio::test]
+async fn complete_input_usage_prices_only_the_reported_input_tokens() {
+    let server = common::mock(common::FakeJev {
+        choose: |_, _, _| "NONE".into(),
+        noul: |_, _| 0.8,
+    })
+    .await;
+    let cfg = common::config(&server);
+    Client::new(&cfg)
+        .unwrap()
+        .ask(&serde_json::json!("x"), &one_noul())
+        .await
+        .unwrap();
+    let meta = cfg.meta();
+    assert_eq!(meta.input_tokens, Some(100));
+    assert!((meta.cost_usd.unwrap() - 0.0000042).abs() < 1e-12);
+    let value = serde_json::to_value(meta).unwrap();
+    assert_eq!(
+        value["telemetry"]["usage"]["output_tokens"]["reported_subtotal"],
+        10
+    );
+    assert_eq!(
+        value["telemetry"]["cost_estimate"]["input_price_per_mtok"],
+        0.042
+    );
+    assert_eq!(
+        value["telemetry"]["cost_estimate"]["basis"],
+        "configured_input_token_price"
+    );
+}
+
+#[tokio::test]
+async fn token_subtotal_overflow_remains_unknown_without_wrapping() {
+    let server = MockServer::start().await;
+    Mock::given(method("POST"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "answers":{"q":{"noul":0.8}}, "usage":{"input_tokens":u64::MAX,"output_tokens":0}
+        })))
+        .mount(&server)
+        .await;
+    let cfg = common::config(&server);
+    let client = Client::new(&cfg).unwrap();
+    for _ in 0..2 {
+        client
+            .ask(&serde_json::json!("x"), &one_noul())
+            .await
+            .unwrap();
+    }
+    let meta = serde_json::to_value(cfg.meta()).unwrap();
+    assert_eq!(meta["input_tokens"], serde_json::Value::Null);
+    assert_eq!(
+        meta["telemetry"]["usage"]["input_tokens"]["reported_subtotal"],
+        u64::MAX
+    );
+    assert_eq!(
+        meta["telemetry"]["usage"]["input_tokens"]["reported_attempts"],
+        1
+    );
+    assert_eq!(
+        meta["telemetry"]["usage"]["input_tokens"]["unknown_attempts"],
+        1
+    );
+    assert_eq!(meta["telemetry"]["inference_posts"]["succeeded"], 2);
+}
+
+#[tokio::test]
+async fn failed_health_and_prewarm_do_not_become_inference_attempts() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .respond_with(ResponseTemplate::new(401))
+        .mount(&server)
+        .await;
+    let cfg = common::config(&server);
+    assert!(grevi::cmd::agent::health(&cfg).await.is_err());
+    Client::new(&cfg).unwrap().prewarm();
+    for _ in 0..100 {
+        if serde_json::to_value(cfg.meta()).unwrap()["telemetry"]["prewarm_gets"]["failed"] == 1 {
+            break;
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(5)).await;
+    }
+    let meta = serde_json::to_value(cfg.meta()).unwrap();
+    for field in ["health_gets", "prewarm_gets"] {
+        assert_eq!(
+            meta["telemetry"][field],
+            serde_json::json!({
+                "attempted":1,"succeeded":0,"failed":1,"cancelled":0,"in_flight":0
+            })
+        );
+    }
+    assert_eq!(meta["requests"], 0);
+    assert_eq!(meta["input_tokens"], 0);
+}
+
+#[tokio::test]
+async fn cancelling_while_waiting_for_a_permit_does_not_start_an_attempt() {
+    let server = MockServer::start().await;
+    Mock::given(method("POST"))
+        .respond_with(ResponseTemplate::new(200).set_delay(std::time::Duration::from_secs(2)))
+        .mount(&server)
+        .await;
+    let mut cfg = common::config(&server);
+    cfg.concurrency = 1;
+    let client = Client::new(&cfg).unwrap();
+    let state = serde_json::json!("x");
+    let qs = one_noul();
+    let mut first = Box::pin(client.ask(&state, &qs));
+    let mut second = Box::pin(client.ask(&state, &qs));
+    tokio::select! {
+        _ = &mut first => panic!("first request must remain pending"),
+        _ = &mut second => panic!("second request must remain pending"),
+        _ = tokio::time::sleep(std::time::Duration::from_millis(30)) => {}
+    }
+    drop(first);
+    drop(second);
+    let meta = serde_json::to_value(cfg.meta()).unwrap();
+    assert_eq!(
+        meta["telemetry"]["inference_posts"],
+        serde_json::json!({
+            "attempted":1,"succeeded":0,"failed":0,"cancelled":1,"in_flight":0
+        })
+    );
+    assert_eq!(meta["telemetry"]["semantic_calls"]["cancelled"], 2);
 }
 
 #[tokio::test]
@@ -269,6 +650,54 @@ async fn rejected_key_maps_to_auth_exit() {
         .await
         .unwrap_err();
     assert_eq!(err.exit().code(), 5);
+}
+
+#[tokio::test]
+async fn incomplete_error_body_preserves_the_http_error_classification() {
+    use std::io::{Read, Write};
+    let server = MockServer::start().await;
+    let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+    let mut cfg = common::config(&server);
+    cfg.base_url = format!("http://{}", listener.local_addr().unwrap());
+    let responder = std::thread::spawn(move || {
+        let (mut stream, _) = listener.accept().unwrap();
+        stream
+            .set_read_timeout(Some(std::time::Duration::from_secs(5)))
+            .unwrap();
+        let mut request = Vec::new();
+        let mut byte = [0];
+        while !request.ends_with(b"\r\n\r\n") {
+            stream.read_exact(&mut byte).unwrap();
+            request.push(byte[0]);
+        }
+        let headers = String::from_utf8(request).unwrap();
+        let length = headers
+            .lines()
+            .find_map(|line| {
+                let (name, value) = line.split_once(':')?;
+                name.eq_ignore_ascii_case("content-length")
+                    .then(|| value.trim().parse::<usize>().unwrap())
+            })
+            .unwrap();
+        stream.read_exact(&mut vec![0; length]).unwrap();
+        stream
+            .write_all(
+                b"HTTP/1.1 401 Unauthorized\r\nContent-Length: 100\r\nConnection: close\r\n\r\nx",
+            )
+            .unwrap();
+    });
+    let result = Client::new(&cfg)
+        .unwrap()
+        .ask(&serde_json::json!("x"), &one_noul())
+        .await;
+    responder.join().unwrap();
+    assert_eq!(result.unwrap_err().exit().code(), 5);
+    let meta = serde_json::to_value(cfg.meta()).unwrap();
+    assert_eq!(meta["telemetry"]["inference_posts"]["failed"], 1);
+    assert_eq!(
+        meta["telemetry"]["usage"]["input_tokens"]["unknown_attempts"],
+        1
+    );
 }
 
 #[tokio::test]

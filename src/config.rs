@@ -142,7 +142,14 @@ impl Config {
             // 16 in flight at ~0.4 s each is ~40 req/s, twice the 1,200/min budget; 8 stays under it.
             concurrency: parse("GREVI_CONCURRENCY", backend.default_concurrency())?.max(1),
             cache_dir,
-            price_per_mtok: parse("GREVI_PRICE_PER_MTOK", 0.042f64)?,
+            price_per_mtok: parse(
+                "GREVI_PRICE_PER_MTOK",
+                if backend == Backend::Classifier {
+                    0.0
+                } else {
+                    0.042f64
+                },
+            )?,
             stats: Arc::new(Stats::default()),
         })
     }
@@ -167,17 +174,33 @@ impl Config {
 
     pub fn meta(&self) -> Meta {
         let s = &self.stats;
-        let tokens = s.input_tokens.load(Ordering::Relaxed);
+        let mut telemetry = s.telemetry();
+        let usage = &telemetry.usage.input_tokens;
+        let tokens = usage.reported_subtotal;
+        let cost = tokens as f64 * self.price_per_mtok / 1_000_000.0;
+        let cost_complete = usage.complete || self.price_per_mtok == 0.0;
+        let input_tokens = usage.complete.then_some(tokens);
+        telemetry.cost_estimate = Some(crate::output::CostEstimate {
+            basis: if self.backend == Backend::Classifier && self.price_per_mtok == 0.0 {
+                "free_service"
+            } else {
+                "configured_input_token_price"
+            },
+            input_price_per_mtok: self.price_per_mtok,
+            reported_input_subtotal_usd: cost,
+            complete: cost_complete,
+        });
         Meta {
             backend: self.backend.as_str(),
             model: s.model.lock().unwrap().clone(),
             elapsed_ms: 0,
-            requests: s.requests.load(Ordering::Relaxed),
+            requests: telemetry.inference_posts.attempted,
             cache_hits: s.cache_hits.load(Ordering::Relaxed),
-            input_tokens: tokens,
-            cost_usd: tokens as f64 * self.price_per_mtok / 1_000_000.0,
+            input_tokens,
+            cost_usd: cost_complete.then_some(cost),
             threshold: self.threshold,
             request_id: s.request_id.lock().unwrap().clone(),
+            telemetry,
         }
     }
 }
@@ -214,10 +237,10 @@ mod tests {
         );
     }
     #[test]
-    fn meta_prices_input_tokens_and_names_the_backend() {
+    fn meta_without_inference_has_zero_usage_and_names_the_backend() {
         let c = cfg(None, None);
-        c.stats.input_tokens.fetch_add(1_000_000, Ordering::Relaxed);
-        assert!((c.meta().cost_usd - 0.042).abs() < 1e-9);
+        assert_eq!(c.meta().input_tokens, Some(0));
+        assert_eq!(c.meta().cost_usd, Some(0.0));
         assert_eq!(c.meta().backend, "typesafe");
     }
     #[test]

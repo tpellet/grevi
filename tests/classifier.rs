@@ -61,9 +61,13 @@ async fn pick_works_with_no_key_at_all() {
     // The envelope says which API answered, and with which model.
     assert_eq!(v["meta"]["backend"], "classifier");
     assert_eq!(v["meta"]["model"], "jev-fake");
-    // Free: no tokens billed, so no cost claimed.
-    assert_eq!(v["meta"]["input_tokens"], 0);
+    // Free pricing is explicit; missing usage is not measured zero.
+    assert_eq!(v["meta"]["input_tokens"], serde_json::Value::Null);
     assert_eq!(v["meta"]["cost_usd"], 0.0);
+    assert_eq!(
+        v["meta"]["telemetry"]["cost_estimate"]["basis"],
+        "free_service"
+    );
 }
 
 #[tokio::test(flavor = "multi_thread")]

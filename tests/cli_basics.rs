@@ -1,5 +1,64 @@
 use assert_cmd::Command;
 use assert_cmd::cargo::CommandCargoExt;
+mod common;
+
+#[tokio::test(flavor = "multi_thread")]
+async fn health_json_reports_get_attempts_and_no_inference() {
+    let server = common::mock(common::FakeJev {
+        choose: |_, _, _| "NONE".into(),
+        noul: |_, _| 0.8,
+    })
+    .await;
+    let out = tokio::task::spawn_blocking(move || {
+        common::grevi(&server)
+            .args(["health", "--json"])
+            .output()
+            .unwrap()
+    })
+    .await
+    .unwrap();
+    assert_eq!(out.status.code(), Some(0));
+    let value: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+    assert_eq!(value["meta"]["requests"], 0);
+    assert_eq!(value["meta"]["telemetry"]["health_gets"]["succeeded"], 1);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn missing_usage_is_null_in_json_and_unknown_in_verbose_output() {
+    use wiremock::{Mock, MockServer, ResponseTemplate};
+    let server = MockServer::start().await;
+    Mock::given(wiremock::matchers::method("POST"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(serde_json::json!({"answers":{"is":{"noul":0.8}}})),
+        )
+        .mount(&server)
+        .await;
+    tokio::task::spawn_blocking(move || {
+        let out = common::grevi(&server)
+            .args(["is", "condition", "--json"])
+            .write_stdin("x")
+            .output()
+            .unwrap();
+        assert_eq!(out.status.code(), Some(0));
+        let value: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+        assert_eq!(value["meta"]["input_tokens"], serde_json::Value::Null);
+        assert_eq!(value["meta"]["cost_usd"], serde_json::Value::Null);
+        assert_eq!(
+            value["meta"]["telemetry"]["usage"]["input_tokens"]["unknown_attempts"],
+            1
+        );
+        let out = common::grevi(&server)
+            .args(["is", "condition", "-v"])
+            .write_stdin("x")
+            .output()
+            .unwrap();
+        assert_eq!(out.status.code(), Some(0));
+        assert!(String::from_utf8_lossy(&out.stderr).contains("cost unknown"));
+    })
+    .await
+    .unwrap();
+}
 
 #[test]
 fn closed_stdout_is_normal_for_output_and_json_errors() {

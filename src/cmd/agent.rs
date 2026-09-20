@@ -47,10 +47,20 @@ pub fn capabilities() -> Outcome {
         ],
         "limits": { "choice_options": 255, "window": crate::tournament::WINDOW, "state_tokens": 32000, "request_tokens": 64000, "requests_per_minute": 1200, "tokens_per_second": 250000, "stdin_bytes": crate::input::MAX_BYTES, "pick_lines": crate::cmd::pick::MAX_LINES },
         "backends": [
-            { "name": "typesafe", "key": "required", "model": "Jev", "window": Backend::Typesafe.window(), "choice_options": 255, "state_chars": "32k tokens", "requests_per_minute": 1200, "meta": "input_tokens is service-reported when available; cost_usd is estimated from configured price" },
-            { "name": "classifier", "key": "none", "model": "service-controlled Jev; explicit model overrides unsupported", "decision_semantics": "two-label Choice substitutes for Noul; scores and thresholds are not assumed interchangeable with TypeSafe Noul", "window": Backend::Classifier.window(), "choice_options": crate::jev::classifier::MAX_LABELS, "state_chars": crate::jev::classifier::MAX_INPUT_CHARS, "questions_per_request": crate::jev::classifier::MAX_DIMENSIONS, "classifications_per_minute": 3000, "meta": "input_tokens is 0 because usage is unavailable, not measured zero; cost_usd is 0 because inference is free" }
+            { "name": "typesafe", "key": "required", "model": "Jev", "window": Backend::Typesafe.window(), "choice_options": 255, "state_chars": "32k tokens", "requests_per_minute": 1200, "meta": "input_tokens is null unless every inference attempt reports usage; cost_usd estimates input-token cost at the configured price and is null when that basis is incomplete" },
+            { "name": "classifier", "key": "none", "model": "service-controlled Jev; explicit model overrides unsupported", "decision_semantics": "two-label Choice substitutes for Noul; scores and thresholds are not assumed interchangeable with TypeSafe Noul", "window": Backend::Classifier.window(), "choice_options": crate::jev::classifier::MAX_LABELS, "state_chars": crate::jev::classifier::MAX_INPUT_CHARS, "questions_per_request": crate::jev::classifier::MAX_DIMENSIONS, "classifications_per_minute": 3000, "meta": "input_tokens is null when token usage is unavailable; cost_usd is 0 at the default zero service price, with an explicit telemetry.cost_estimate basis" }
         ],
-        "envelope": { "fields": ["ok", "command", "version", "exit_code", "data", "meta{backend,model,elapsed_ms,requests,cache_hits,input_tokens,cost_usd,threshold,request_id}", "error{kind,message,hint,example}"] },
+        "envelope": { "fields": ["ok", "command", "version", "exit_code", "data", "meta{backend,model,elapsed_ms,requests,cache_hits,input_tokens,cost_usd,threshold,request_id,telemetry}", "error{kind,message,hint,example}"] },
+        "telemetry": {
+            "attempt_groups": ["inference_posts", "health_gets", "prewarm_gets", "semantic_calls"],
+            "conservation": "attempted = succeeded + failed + cancelled + in_flight",
+            "transport_success": "HTTP 200 with the full response body received; semantic parsing and validation are counted separately",
+            "semantic_questions": "questions submitted to ask, including cache hits and locally rejected calls",
+            "retries": "retry_sends counts sends after the initial attempt; retry_sleep_ms counts elapsed completed or interrupted retry waits",
+            "usage": "input_tokens and output_tokens each expose reported_subtotal, reported_attempts, unknown_attempts, complete; reported_attempts + unknown_attempts = inference_posts.attempted; cache hits add no service usage",
+            "logical_rounds": "null: client-level accounting cannot infer logical rounds",
+            "cost_estimate": "configured input price and reported input subtotal; complete is false for unknown input usage unless the configured price is zero"
+        },
         "phrasing": [
             "write what must be true of the text, literally: the statement is judged word for word (\"the customer is about to stop being a customer\" beats \"this customer is about to leave\", which also matches an employee who is leaving their company)",
             "describe the thing, not what you will do with it: \"the line with the failing assertion\", not \"what should I fix\"",
@@ -121,15 +131,27 @@ pub async fn health(ctx: &Config) -> Result<Outcome, GreviError> {
         req = req.bearer_auth(k);
     }
     let start = std::time::Instant::now();
-    let r = req
-        .send()
-        .await
-        .map_err(|e| GreviError::Unavailable(e.to_string()))?;
+    let mut attempt = ctx.stats.start(crate::jev::client::AttemptKind::Health);
+    let r = match req.send().await {
+        Ok(r) => r,
+        Err(e) => {
+            attempt.finish(false);
+            return Err(GreviError::Unavailable(e.to_string()));
+        }
+    };
     let ms = start.elapsed().as_millis();
     let backend = ctx.backend.as_str();
     match r.status().as_u16() {
         200 => {
-            let body: serde_json::Value = r.json().await.unwrap_or_default();
+            let bytes = match r.bytes().await {
+                Ok(bytes) => bytes,
+                Err(e) => {
+                    attempt.finish(false);
+                    return Err(GreviError::Unavailable(e.to_string()));
+                }
+            };
+            attempt.finish(true);
+            let body: serde_json::Value = serde_json::from_slice(&bytes).unwrap_or_default();
             let key_state = if key.is_some() {
                 "present"
             } else {
@@ -148,8 +170,14 @@ pub async fn health(ctx: &Config) -> Result<Outcome, GreviError> {
                 }),
             })
         }
-        401 | 403 => Err(GreviError::BadKey(r.status().as_u16())),
-        s => Err(GreviError::Unavailable(format!("HTTP {s}"))),
+        401 | 403 => {
+            attempt.finish(false);
+            Err(GreviError::BadKey(r.status().as_u16()))
+        }
+        s => {
+            attempt.finish(false);
+            Err(GreviError::Unavailable(format!("HTTP {s}")))
+        }
     }
 }
 

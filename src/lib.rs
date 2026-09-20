@@ -160,8 +160,13 @@ async fn run_cli(cli: Cli) -> i32 {
                 if cli.g.verbose {
                     eprintln!("grevi: {}", out.data);
                     eprintln!(
-                        "grevi: {} ms, {} requests, {} cached, ${:.5}",
-                        meta.elapsed_ms, meta.requests, meta.cache_hits, meta.cost_usd
+                        "grevi: {} ms, {} requests, {} cached, {}",
+                        meta.elapsed_ms,
+                        meta.requests,
+                        meta.cache_hits,
+                        meta.cost_usd
+                            .map(|cost| format!("${cost:.5}"))
+                            .unwrap_or_else(|| "cost unknown".into())
                     );
                 }
             } else {

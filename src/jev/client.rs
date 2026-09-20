@@ -1,14 +1,124 @@
 use std::sync::Mutex;
-use std::sync::atomic::{AtomicU32, AtomicU64};
+use std::sync::atomic::AtomicU32;
 
 #[derive(Default, Debug)]
 pub struct Stats {
-    pub requests: AtomicU32,
     pub cache_hits: AtomicU32,
-    pub input_tokens: AtomicU64,
     pub model: Mutex<Option<String>>,
     /// `x-typesafe-request-id` of the last response seen, success or failure (surfaced in `meta`).
     pub request_id: Mutex<Option<String>>,
+    telemetry: Mutex<crate::output::Telemetry>,
+}
+
+#[derive(Clone, Copy)]
+pub(crate) enum AttemptKind {
+    Inference,
+    Health,
+    Prewarm,
+    Semantic,
+}
+
+impl AttemptKind {
+    fn counts(self, t: &mut crate::output::Telemetry) -> &mut crate::output::AttemptCounts {
+        match self {
+            Self::Inference => &mut t.inference_posts,
+            Self::Health => &mut t.health_gets,
+            Self::Prewarm => &mut t.prewarm_gets,
+            Self::Semantic => &mut t.semantic_calls,
+        }
+    }
+}
+
+impl Stats {
+    pub fn telemetry(&self) -> crate::output::Telemetry {
+        self.telemetry.lock().unwrap().clone()
+    }
+
+    pub(crate) fn start(self: &Arc<Self>, kind: AttemptKind) -> AttemptGuard {
+        let mut t = self.telemetry.lock().unwrap();
+        let counts = kind.counts(&mut t);
+        counts.attempted += 1;
+        counts.in_flight += 1;
+        if matches!(kind, AttemptKind::Inference) {
+            let usage = &mut t.usage;
+            for usage in [&mut usage.input_tokens, &mut usage.output_tokens] {
+                usage.unknown_attempts += 1;
+                usage.complete = false;
+            }
+        }
+        AttemptGuard {
+            stats: self.clone(),
+            kind,
+            finished: false,
+        }
+    }
+
+    fn record_usage(&self, raw: &[u8]) {
+        let value: serde_json::Value = serde_json::from_slice(raw).unwrap_or_default();
+        let mut t = self.telemetry.lock().unwrap();
+        for field in ["input_tokens", "output_tokens"] {
+            let Some(tokens) = value["usage"][field].as_u64() else {
+                continue;
+            };
+            let usage = if field == "input_tokens" {
+                &mut t.usage.input_tokens
+            } else {
+                &mut t.usage.output_tokens
+            };
+            // An unrepresentable subtotal must not wrap or poison the cancellation ledger.
+            let Some(subtotal) = usage.reported_subtotal.checked_add(tokens) else {
+                continue;
+            };
+            usage.reported_subtotal = subtotal;
+            usage.reported_attempts += 1;
+            usage.unknown_attempts -= 1;
+            usage.complete = usage.unknown_attempts == 0;
+        }
+    }
+}
+
+/// Dropping an unfinished future accounts for cancellation, including sibling cancellation.
+pub(crate) struct AttemptGuard {
+    stats: Arc<Stats>,
+    kind: AttemptKind,
+    finished: bool,
+}
+
+impl AttemptGuard {
+    pub(crate) fn finish(&mut self, succeeded: bool) {
+        let mut t = self.stats.telemetry.lock().unwrap();
+        let counts = self.kind.counts(&mut t);
+        counts.in_flight -= 1;
+        if succeeded {
+            counts.succeeded += 1;
+        } else {
+            counts.failed += 1;
+        }
+        self.finished = true;
+    }
+}
+
+impl Drop for AttemptGuard {
+    fn drop(&mut self) {
+        if !self.finished {
+            let mut t = self.stats.telemetry.lock().unwrap();
+            let counts = self.kind.counts(&mut t);
+            counts.in_flight -= 1;
+            counts.cancelled += 1;
+        }
+    }
+}
+
+struct RetrySleep<'a> {
+    stats: &'a Stats,
+    start: std::time::Instant,
+}
+
+impl Drop for RetrySleep<'_> {
+    fn drop(&mut self) {
+        self.stats.telemetry.lock().unwrap().retry_sleep_ms +=
+            self.start.elapsed().as_millis().min(u64::MAX as u128) as u64;
+    }
 }
 
 use super::cache::{DiskCache, key as cache_key};
@@ -79,12 +189,19 @@ impl Client {
                 Backend::Classifier => "/v1/health",
             }
         )));
+        let stats = self.stats.clone();
         tokio::spawn(async move {
+            let mut attempt = stats.start(AttemptKind::Prewarm);
             // Read the body too: hyper returns an HTTP/1.1 connection to the pool only once the
             // response is consumed, and the point of prewarm is that `ask` reuses it.
-            if let Ok(r) = req.send().await {
-                let _ = r.bytes().await;
-            }
+            let succeeded = match req.send().await {
+                Ok(r) => {
+                    let ok = r.status().as_u16() == 200;
+                    r.bytes().await.is_ok() && ok
+                }
+                Err(_) => false,
+            };
+            attempt.finish(succeeded);
         });
     }
 
@@ -97,6 +214,18 @@ impl Client {
     }
 
     pub async fn ask(
+        &self,
+        state: &serde_json::Value,
+        questions: &Questions,
+    ) -> Result<Response, GreviError> {
+        let mut attempt = self.stats.start(AttemptKind::Semantic);
+        self.stats.telemetry.lock().unwrap().semantic_questions += questions.len() as u64;
+        let result = self.ask_inner(state, questions).await;
+        attempt.finish(result.is_ok());
+        result
+    }
+
+    async fn ask_inner(
         &self,
         state: &serde_json::Value,
         questions: &Questions,
@@ -146,9 +275,6 @@ impl Client {
             Backend::Classifier => self.ask_classifier(&state, &questions).await?,
         };
         resp.validate(&questions)?;
-        self.stats
-            .input_tokens
-            .fetch_add(resp.usage.input_tokens, Ordering::Relaxed);
         *self.stats.model.lock().unwrap() = Some(resp.model.clone());
         if let Some(c) = &self.cache {
             c.put(&k, &resp);
@@ -215,9 +341,15 @@ impl Client {
             if attempt > 0 {
                 // The server's `retry-after(-ms)` replaces the backoff; it never adds to it.
                 let backoff = Duration::from_millis(250 * 2u64.pow(attempt - 1));
+                let sleep = RetrySleep {
+                    stats: &self.stats,
+                    start: std::time::Instant::now(),
+                };
                 tokio::time::sleep(wait.take().unwrap_or(backoff)).await;
+                drop(sleep);
+                self.stats.telemetry.lock().unwrap().retry_sends += 1;
             }
-            self.stats.requests.fetch_add(1, Ordering::Relaxed);
+            let mut accounting = self.stats.start(AttemptKind::Inference);
             let res = self
                 .auth(self.http.post(url))
                 .header("content-type", "application/json")
@@ -227,6 +359,7 @@ impl Client {
             let r = match res {
                 Ok(r) => r,
                 Err(e) => {
+                    accounting.finish(false);
                     last = e.to_string();
                     if e.is_timeout() || e.is_connect() {
                         continue;
@@ -246,6 +379,19 @@ impl Client {
                 *self.stats.request_id.lock().unwrap() = rid.clone();
             }
             let status = r.status().as_u16();
+            let response_wait = retry_after(r.headers());
+            let body = match r.bytes().await {
+                Ok(body) => body.to_vec(),
+                Err(e) if status == 200 => {
+                    accounting.finish(false);
+                    return Err(GreviError::Protocol(e.to_string()));
+                }
+                // An unreadable error body cannot replace the status's auth/input/retry
+                // classification. Its usage remains unknown.
+                Err(_) => Vec::new(),
+            };
+            self.stats.record_usage(&body);
+            accounting.finish(status == 200);
             // 413/422 = the request body was rejected: in practice state over the token budget,
             // occasionally a malformed request (a grevi bug). An input problem (exit 6), not an
             // outage (exit 4); the error kind and hint keep the two readings apart.
@@ -256,15 +402,11 @@ impl Client {
                 || (status == 400 && matches!(self.backend, Backend::Classifier));
             match status {
                 200 => {
-                    let body = r
-                        .bytes()
-                        .await
-                        .map_err(|e| GreviError::Protocol(e.to_string()))?;
-                    return Ok(body.to_vec());
+                    return Ok(body);
                 }
                 401 | 403 => return Err(GreviError::BadKey(status)),
                 _ if body_rejected => {
-                    let text = r.text().await.unwrap_or_default();
+                    let text = String::from_utf8_lossy(&body);
                     if rid.is_some() {
                         *self.stats.request_id.lock().unwrap() = rid;
                     }
@@ -276,11 +418,11 @@ impl Client {
                 // 408 request timeout, 429 rate limit, 5xx (incl. 529 overloaded): retry after the
                 // server's wait if it named one, else with backoff.
                 408 | 429 | 500..=599 => {
-                    wait = retry_after(r.headers());
+                    wait = response_wait;
                     last = format!("HTTP {status}");
                 }
                 _ => {
-                    let text = r.text().await.unwrap_or_default();
+                    let text = String::from_utf8_lossy(&body);
                     if rid.is_some() {
                         *self.stats.request_id.lock().unwrap() = rid;
                     }
