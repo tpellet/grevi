@@ -1,6 +1,6 @@
 # grevi
 
-**`grep` for meaning.**
+**`grep` for meaning.** Powered by [Jev](https://docs.typesafe.ai) from [TypeSafe AI](https://typesafe.ai).
 
 [![CI](https://github.com/tpellet/grevi/actions/workflows/ci.yml/badge.svg)](https://github.com/tpellet/grevi/actions/workflows/ci.yml)
 [![crates.io](https://img.shields.io/crates/v/grevi)](https://crates.io/crates/grevi)
