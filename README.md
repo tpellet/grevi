@@ -50,20 +50,17 @@ $ grevi is "asks for a refund" < mail.txt; echo $?
 
 ## Install
 
-Shell installer, macOS and Linux:
-
-<!-- v0.1.0 assets are still named hunch-*; the next release will publish grevi-* -->
-```sh
-curl --proto '=https' --tlsv1.2 -LsSf https://github.com/tpellet/grevi/releases/download/v0.1.0/hunch-installer.sh | sh
-```
-
-From source, with Rust 1.87 or newer:
+With Rust 1.87 or newer:
 
 ```sh
-cargo install --git https://github.com/tpellet/grevi --locked grevi
+cargo install grevi --locked
 ```
 
-`grevi` is not published to crates.io yet, so there is no `cargo install grevi`.
+Or the shell installer, macOS and Linux:
+
+```sh
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/tpellet/grevi/releases/download/v0.2.0/grevi-installer.sh | sh
+```
 
 Then point grevi at a key and try it:
 

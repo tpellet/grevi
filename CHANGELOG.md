@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.0 (unreleased)
+## 0.2.0 — 2026-09-19
 
 Wave 2: two verbs that act on real things, each safe by default. macOS and Linux.
 

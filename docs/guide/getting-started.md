@@ -2,21 +2,19 @@
 
 ## Install
 
-Shell installer, macOS and Linux:
-
-<!-- v0.1.0 assets are still named hunch-*; the next release will publish grevi-* -->
+With Rust 1.87 or newer:
 
 ```sh
-curl --proto '=https' --tlsv1.2 -LsSf https://github.com/tpellet/grevi/releases/download/v0.1.0/hunch-installer.sh | sh
+cargo install grevi --locked
 ```
 
-From source, with Rust 1.87 or newer:
+Or the shell installer, macOS and Linux:
 
 ```sh
-cargo install --git https://github.com/tpellet/grevi --locked grevi
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/tpellet/grevi/releases/download/v0.2.0/grevi-installer.sh | sh
 ```
 
-The crates.io name `grevi` is taken, so there is no `cargo install grevi`. The source build is also the only way to get `add` and `sort` today: they are on `main` and not in the 0.1.0 binaries.
+To build the unreleased `main` instead: `cargo install --git https://github.com/tpellet/grevi --locked grevi`.
 
 ## Get a key
 

@@ -1,6 +1,6 @@
 [package]
 name = "grevi"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 rust-version = "1.87"
 license = "MIT"
@@ -10,7 +10,20 @@ homepage = "https://github.com/tpellet/grevi"
 readme = "README.md"
 keywords = ["cli", "llm", "semantic", "pointer", "jev"]
 categories = ["command-line-utilities"]
-publish = false
+# Ship the program and its user docs. Everything else lives in the repo.
+exclude = [
+    ".beads/",
+    ".claude-plugin/",
+    ".github/",
+    "AGENTS.md",
+    "benchmarks/",
+    "demo-record.sh",
+    "demo.cast",
+    "demo.tape",
+    "docs/superpowers/",
+    "evals/",
+    "scripts/",
+]
 
 [package.metadata.dist]
 dist = true
