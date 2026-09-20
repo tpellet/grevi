@@ -1,0 +1,198 @@
+{
+  "schema_version": 1,
+  "panel": "synthetic_diagnostic",
+  "provenance": "Original fictional fixtures authored before agent runs. Executable gold, not independently sampled production data. Each family is one diagnostic case; repetitions are not independent families.",
+  "tasks": [
+    {
+      "id": "pick-lease", "family_id": "leasing-ledger", "endpoint": "pick", "stratum": "semantic-small",
+      "prompt": "Read records.txt. Find the record that documents a tenant giving notice to leave their apartment, rather than a repair or an owner notice. Write answer.json containing exactly {\"id\":\"the record ID\"}. Do not change records.txt.",
+      "files": {"records.txt": "R17 | The kitchen tap still drips after the visit.\nR23 | Please accept this as my notice. I will return the apartment keys at the end of next month.\nR31 | Management will enter the building tomorrow to inspect smoke alarms.\nR45 | Could my lease be extended for another year?\n"},
+      "expected": {"answer": {"id": "R23"}, "unchanged": ["records.txt"]}
+    },
+    {
+      "id": "pick-trace", "family_id": "distributed-trace", "endpoint": "pick", "stratum": "distractors-large",
+      "prompt": "Find the span in spans.txt that records a request spending its time waiting for a free database connection, rather than executing a query or waiting for an HTTP response. Write answer.json as {\"id\":\"span ID\"}. Preserve spans.txt.",
+      "files": {"spans.txt": {"segments": [{"text": "SPAN-noise | cache lookup completed in 2ms\n", "repeat": 1200}, {"text": "SPAN-q7 | query execution ran for 420ms after connection acquisition\nSPAN-p9 | all pool slots occupied; waiter resumed after another request returned its connection, 840ms\nSPAN-h2 | HTTP upstream took 920ms to send response headers\n", "repeat": 1}, {"text": "SPAN-noise | cache lookup completed in 2ms\n", "repeat": 1200}]}},
+      "expected": {"answer": {"id": "SPAN-p9"}, "unchanged": ["spans.txt"]}
+    },
+    {
+      "id": "pick-no-match", "family_id": "museum-inventory", "endpoint": "pick", "stratum": "unanswerable",
+      "prompt": "Which record in inventory.txt is an oil painting on canvas? If there is none, use null. Write answer.json exactly as {\"id\":ID_OR_NULL}. Preserve the input.",
+      "files": {"inventory.txt": "M1 | watercolor on paper, coastal view\nM2 | bronze sculpture of a seated figure\nM3 | photograph printed on cotton rag paper\nM4 | oil lamp with a ceramic base\n"},
+      "expected": {"answer": {"id": null}, "unchanged": ["inventory.txt"]}
+    },
+    {
+      "id": "pick-negation", "family_id": "delivery-exceptions", "endpoint": "pick", "stratum": "negation",
+      "prompt": "Select the delivery in deliveries.txt that has actually arrived at the recipient, excluding attempted or scheduled deliveries. Write answer.json with the selected id. Preserve the input.",
+      "files": {"deliveries.txt": "D1 | Delivery was not completed; recipient absent.\nD2 | Recipient signature captured at front desk; parcel handed over.\nD3 | Out for delivery; expected before 18:00.\nD4 | Delivered notification withdrawn after address error; parcel at depot.\n"},
+      "expected": {"answer": {"id": "D2"}, "unchanged": ["deliveries.txt"]}
+    },
+    {
+      "id": "pick-unicode", "family_id": "accessibility-feedback", "endpoint": "pick", "stratum": "unicode",
+      "prompt": "Find the feedback about a screen-reader accessibility problem in feedback.txt. Write answer.json with its exact ID. Preserve the input.",
+      "files": {"feedback.txt": "café-α | The café location is missing from the map.\nui-β | Keyboard focus is visible and follows the tab order correctly.\na11y-γ | VoiceOver reads every submit control as unnamed button, so I cannot tell which form I am sending.\ncopy-δ | The résumé heading needs an accent.\n"},
+      "expected": {"answer": {"id": "a11y-γ"}, "unchanged": ["feedback.txt"]}
+    },
+    {
+      "id": "is-commitment", "family_id": "cancellation-intent", "endpoint": "is", "stratum": "semantic-positive",
+      "prompt": "Decide whether message.txt explicitly commits to ending the subscription, rather than asking about options. Write answer.json as {\"verdict\":\"yes\"} or {\"verdict\":\"no\"}; use \"unknown\" only if the text is insufficient. Preserve the input.",
+      "files": {"message.txt": "Please stop renewal when the current term ends. We have chosen another provider and will not continue next year.\n"},
+      "expected": {"answer": {"verdict": "yes"}, "unchanged": ["message.txt"]}
+    },
+    {
+      "id": "is-hypothetical", "family_id": "incident-policy", "endpoint": "is", "stratum": "negative",
+      "prompt": "Does memo.txt report that customer data was actually exposed in an incident? A hypothetical risk or preventive exercise is not an actual exposure. Write answer.json with verdict yes, no, or unknown. Preserve the input.",
+      "files": {"memo.txt": "In next week's exercise we will imagine a public storage bucket exposing customer records. No production systems or customer records are involved. This is a tabletop scenario, not an incident report.\n"},
+      "expected": {"answer": {"verdict": "no"}, "unchanged": ["memo.txt"]}
+    },
+    {
+      "id": "is-undetermined", "family_id": "refund-evidence", "endpoint": "is", "stratum": "insufficient",
+      "prompt": "Determine whether the refund in note.txt reached the customer's bank account. A request or initiation does not establish receipt. Write answer.json with verdict yes, no, or unknown; unknown means receipt cannot be determined. Preserve the input.",
+      "files": {"note.txt": "Support submitted a refund request yesterday. The payment processor has not yet sent us a status report, and the customer has not checked the account.\n"},
+      "expected": {"answer": {"verdict": "unknown"}, "unchanged": ["note.txt"]}
+    },
+    {
+      "id": "is-tail", "family_id": "long-maintenance-record", "endpoint": "is", "stratum": "large-tail",
+      "prompt": "Does the complete maintenance.txt record contain any unresolved safety defect at the time of its final entry? Write answer.json with verdict yes, no, or unknown. Read enough to establish the final state and preserve the input.",
+      "files": {"maintenance.txt": {"segments": [{"text": "Routine inspection completed. No changes to the open-defect register during this inspection.\n", "repeat": 1200}, {"text": "FINAL ENTRY: Guard rail mounting bolt cracked today. Replacement pending. Equipment remains out of service because this safety defect is unresolved.\n", "repeat": 1}]}},
+      "expected": {"answer": {"verdict": "yes"}, "unchanged": ["maintenance.txt"]}
+    },
+    {
+      "id": "is-retracted", "family_id": "release-authorization", "endpoint": "is", "stratum": "temporal-reversal",
+      "prompt": "At the end of thread.txt, is the deployment authorized? Later messages supersede earlier approvals. Write answer.json with verdict yes, no, or unknown. Preserve the input.",
+      "files": {"thread.txt": "09:00 release manager: Approved for deployment.\n09:10 monitoring: Health checks passed.\n09:12 release manager: I withdraw my approval. Do not deploy until the migration issue is resolved.\n09:14 engineer: Acknowledged. No new approval has been issued.\n"},
+      "expected": {"answer": {"verdict": "no"}, "unchanged": ["thread.txt"]}
+    },
+    {
+      "id": "why-path", "family_id": "cross-platform-paths", "endpoint": "why", "stratum": "causal-no-keyword",
+      "prompt": "Diagnose build.log. Choose the causal category from path_separator_mismatch, network_timeout, missing_dependency, or unknown. Write answer.json as {\"cause\":CATEGORY}. Preserve the log.",
+      "files": {"build.log": {"segments": [{"text": "compile module completed\n", "repeat": 1500}, {"text": "test normalize_workspace panicked at assertion left == right\nleft: /workspace/lib\\helpers.py\nright: /workspace/lib/helpers.py\nsummary: one test failed\n", "repeat": 1}, {"text": "cleanup diagnostics complete\n", "repeat": 1500}]}},
+      "expected": {"answer": {"cause": "path_separator_mismatch"}, "unchanged": ["build.log"]}
+    },
+    {
+      "id": "why-schema", "family_id": "migration-order", "endpoint": "why", "stratum": "cause-before-symptom",
+      "prompt": "Diagnose job.log. Choose cause from missing_schema_column, unavailable_database, invalid_password, or unknown. Write answer.json with that cause. Preserve the log.",
+      "files": {"job.log": "Connected to database successfully.\nMigration 042 skipped because its deployment flag was disabled.\nExecuting SELECT discount_code FROM orders.\nDatabase diagnostic: column discount_code does not exist in relation orders.\nAPI worker could not start.\nReadiness probe failed after 30 attempts.\nService startup failed.\n"},
+      "expected": {"answer": {"cause": "missing_schema_column"}, "unchanged": ["job.log"]}
+    },
+    {
+      "id": "why-success", "family_id": "negative-test-suite", "endpoint": "why", "stratum": "no-failure",
+      "prompt": "Did the overall job in ci.log fail? Tests deliberately exercise error messages. Write answer.json as {\"failed\":true_or_false,\"cause\":CATEGORY}, using cause none when the job succeeded and unknown if it failed without a clear cause. Preserve the log.",
+      "files": {"ci.log": "Running negative test: invalid password -> expected access denied. PASS\nRunning negative test: missing input -> expected file not found. PASS\nRunning negative test: malformed record -> expected parse error. PASS\nTests: 3 passed, 0 failed.\nBuild artifacts uploaded successfully.\nJob completed with exit status 0.\n"},
+      "expected": {"answer": {"failed": false, "cause": "none"}, "unchanged": ["ci.log"]}
+    },
+    {
+      "id": "why-quota", "family_id": "artifact-capacity", "endpoint": "why", "stratum": "distracting-warning",
+      "prompt": "Find why package.log could not create the package. Choose disk_quota, deprecated_api, flaky_test, or unknown. Write answer.json with cause set to that category. Preserve the log.",
+      "files": {"package.log": "WARNING: legacy parser API is deprecated, continuing.\nAll unit tests passed.\nCreating dist/package.tar\nwrite(artifact): Disk quota exceeded\nArchive close failed after partial write.\nUpload skipped because artifact creation failed.\n"},
+      "expected": {"answer": {"cause": "disk_quota"}, "unchanged": ["package.log"]}
+    },
+    {
+      "id": "why-certificate", "family_id": "tls-dependency", "endpoint": "why", "stratum": "upstream-cause",
+      "prompt": "Diagnose fetch.log. Choose expired_certificate, dns_failure, invalid_json, or unknown. Write answer.json with cause set to that category. Preserve the log.",
+      "files": {"fetch.log": "Resolved mirror.example.invalid to test address 192.0.2.1.\nTCP connection established.\nTLS verifier: peer certificate expired yesterday; chain otherwise valid.\nDependency download unavailable.\nParser was not invoked because no response body was received.\nBuild stopped before compilation.\n"},
+      "expected": {"answer": {"cause": "expired_certificate"}, "unchanged": ["fetch.log"]}
+    },
+    {
+      "id": "run-sort", "family_id": "release-version-order", "endpoint": "run", "stratum": "familiar-tool",
+      "prompt": "Create ordered.txt from values.txt with the integers in increasing numeric order, one per line. Preserve values.txt. Use installed command-line tools and verify the output.",
+      "files": {"values.txt": "12\n3\n100\n-2\n7\n"},
+      "expected": {"files": {"ordered.txt": "-2\n3\n7\n12\n100\n"}, "unchanged": ["values.txt"]}
+    },
+    {
+      "id": "run-count", "family_id": "unicode-byte-count", "endpoint": "run", "stratum": "flag-semantics",
+      "prompt": "Count the UTF-8 bytes in input.txt and write answer.json as {\"bytes\":N}. Preserve input.txt. Verify the count; it is not the number of characters.",
+      "files": {"input.txt": "café\n"},
+      "expected": {"answer": {"bytes": 6}, "unchanged": ["input.txt"]}
+    },
+    {
+      "id": "run-unique", "family_id": "inventory-deduplication", "endpoint": "run", "stratum": "pipeline",
+      "prompt": "Create unique.txt containing each distinct line of names.txt once, in ascending ASCII order. Preserve names.txt. Verify the resulting file.",
+      "files": {"names.txt": "plum\napple\nplum\npear\napple\n"},
+      "expected": {"files": {"unique.txt": "apple\npear\nplum\n"}, "unchanged": ["names.txt"]}
+    },
+    {
+      "id": "run-json", "family_id": "configuration-projection", "endpoint": "run", "stratum": "structured-data",
+      "prompt": "Read services.json and write answer.json as {\"enabled\":[NAMES]}, containing enabled service names sorted alphabetically. Preserve services.json and use the available tools to verify the result.",
+      "files": {"services.json": "[{\"name\":\"worker\",\"enabled\":true},{\"name\":\"admin\",\"enabled\":false},{\"name\":\"api\",\"enabled\":true}]\n"},
+      "expected": {"answer": {"enabled": ["api", "worker"]}, "unchanged": ["services.json"]}
+    },
+    {
+      "id": "run-spaces", "family_id": "quoted-input-path", "endpoint": "run", "stratum": "operand-quoting",
+      "prompt": "Copy the exact bytes of source notes.txt into output copy.txt. Preserve the source, and do not create files named source, notes.txt, output, or copy.txt. Verify the copied content.",
+      "files": {"source notes.txt": "Names with spaces must remain one path.\n"},
+      "expected": {"files": {"output copy.txt": "Names with spaces must remain one path.\n"}, "unchanged": ["source notes.txt"], "absent": ["source", "notes.txt", "output", "copy.txt"]}
+    },
+    {
+      "id": "add-expiry", "family_id": "authentication-config-patch", "endpoint": "add", "stratum": "redaction-regression", "init_git": true,
+      "prompt": "Stage only the authentication token expiry change in config.txt. Leave the logging change unstaged and preserve all working-tree content. Verify the staged and unstaged diffs. Do not commit.",
+      "initial_files": {"config.txt": "token_expiry_seconds=3600\n", "logging.txt": "level=info\n"},
+      "files": {"config.txt": "token_expiry_seconds=7200\n", "logging.txt": "level=debug\n"},
+      "expected": {"index": {"config.txt": "token_expiry_seconds=7200\n", "logging.txt": "level=info\n"}, "unchanged": ["config.txt", "logging.txt"]}
+    },
+    {
+      "id": "add-colors", "family_id": "theme-two-hunks", "endpoint": "add", "stratum": "same-file-hunks", "init_git": true,
+      "prompt": "Stage only the theme background change in theme.txt. Leave the telemetry setting change unstaged and preserve all working-tree content. Do not commit. Verify both diffs.",
+      "initial_files": {"theme.txt": "background=white\n# spacing 1\n# spacing 2\n# spacing 3\n# spacing 4\n# spacing 5\n# spacing 6\n# spacing 7\n# spacing 8\n# spacing 9\ntelemetry=off\n"},
+      "files": {"theme.txt": "background=black\n# spacing 1\n# spacing 2\n# spacing 3\n# spacing 4\n# spacing 5\n# spacing 6\n# spacing 7\n# spacing 8\n# spacing 9\ntelemetry=on\n"},
+      "expected": {"index": {"theme.txt": "background=black\n# spacing 1\n# spacing 2\n# spacing 3\n# spacing 4\n# spacing 5\n# spacing 6\n# spacing 7\n# spacing 8\n# spacing 9\ntelemetry=off\n"}, "unchanged": ["theme.txt"]}
+    },
+    {
+      "id": "add-existing", "family_id": "pre-staged-documentation", "endpoint": "add", "stratum": "preserve-index", "init_git": true,
+      "prompt": "Stage the retry count change in network.txt. Preserve the already staged documentation change. Leave the metrics change unstaged. Preserve all working-tree bytes and do not commit.",
+      "initial_files": {"network.txt": "retries=2\n", "README.txt": "Setup instructions.\n", "metrics.txt": "enabled=false\n"},
+      "staged_files": {"README.txt": "Setup instructions with troubleshooting.\n"},
+      "files": {"network.txt": "retries=4\n", "metrics.txt": "enabled=true\n"},
+      "expected": {"index": {"network.txt": "retries=4\n", "README.txt": "Setup instructions with troubleshooting.\n", "metrics.txt": "enabled=false\n"}, "unchanged": ["network.txt", "README.txt", "metrics.txt"]}
+    },
+    {
+      "id": "add-mixed", "family_id": "adjacent-config-edits", "endpoint": "add", "stratum": "mixed-hunk", "init_git": true,
+      "prompt": "Stage only the timeout change in server.txt. The adjacent debug change must remain unstaged. You may construct a noninteractive patch. Preserve all working-tree bytes and do not commit. Verify the exact staged content.",
+      "initial_files": {"server.txt": "timeout=10\ndebug=false\n"},
+      "files": {"server.txt": "timeout=30\ndebug=true\n"},
+      "expected": {"index": {"server.txt": "timeout=30\ndebug=false\n"}, "unchanged": ["server.txt"]}
+    },
+    {
+      "id": "add-no-match", "family_id": "unrelated-docs-patch", "endpoint": "add", "stratum": "no-topic-match", "init_git": true,
+      "prompt": "Stage any authentication bug fix present in this repository, and leave all unrelated edits unstaged. If no authentication fix exists, leave the index unchanged. Preserve working-tree content and do not commit.",
+      "initial_files": {"style.txt": "heading=blue\n", "notes.txt": "Meeting on Monday.\n"},
+      "files": {"style.txt": "heading=green\n", "notes.txt": "Meeting on Tuesday.\n"},
+      "expected": {"index": {"style.txt": "heading=blue\n", "notes.txt": "Meeting on Monday.\n"}, "unchanged": ["style.txt", "notes.txt"]}
+    },
+    {
+      "id": "sort-content", "family_id": "office-documents", "endpoint": "sort", "stratum": "content-over-name",
+      "prompt": "Organize the files in inbox into the existing folders under archive. Receipts holds purchase receipts; Travel holds trip itineraries. Decide from content. Move each file into the matching folder, preserving its name and bytes. Do not overwrite or delete files.",
+      "directories": ["archive/Receipts", "archive/Travel"],
+      "files": {"inbox/scan-a.txt": "Purchase receipt: two notebooks, total paid 12 dollars.\n", "inbox/scan-b.txt": "Itinerary: outbound train at 08:30, return train at 18:10.\n"},
+      "expected": {"files": {"archive/Receipts/scan-a.txt": "Purchase receipt: two notebooks, total paid 12 dollars.\n", "archive/Travel/scan-b.txt": "Itinerary: outbound train at 08:30, return train at 18:10.\n"}, "absent": ["inbox/scan-a.txt", "inbox/scan-b.txt"]}
+    },
+    {
+      "id": "sort-no-match", "family_id": "research-taxonomy", "endpoint": "sort", "stratum": "unclassified",
+      "prompt": "Organize inbox into existing archive folders: Botany for plant research and Astronomy for celestial research. Leave unrelated files in inbox. Preserve names and bytes, and never overwrite or delete files.",
+      "directories": ["archive/Botany", "archive/Astronomy"],
+      "files": {"inbox/leaf.txt": "Field observations of oak leaf growth and photosynthesis.\n", "inbox/bread.txt": "Sourdough recipe: flour, water, salt and starter.\n"},
+      "expected": {"files": {"archive/Botany/leaf.txt": "Field observations of oak leaf growth and photosynthesis.\n", "inbox/bread.txt": "Sourdough recipe: flour, water, salt and starter.\n"}, "absent": ["inbox/leaf.txt", "archive/Botany/bread.txt", "archive/Astronomy/bread.txt"]}
+    },
+    {
+      "id": "sort-collision", "family_id": "accounting-collision", "endpoint": "sort", "stratum": "existing-destination",
+      "prompt": "Move purchase receipts from inbox into archive/Receipts only when their original name is free there. On a collision leave the source in inbox; do not rename, overwrite, or delete anything. Preserve all file bytes.",
+      "directories": ["archive/Receipts"],
+      "files": {"inbox/receipt.txt": "Purchase receipt: new stationery order.\n", "archive/Receipts/receipt.txt": "Purchase receipt: previous stationery order.\n"},
+      "expected": {"unchanged": ["inbox/receipt.txt", "archive/Receipts/receipt.txt"]}
+    },
+    {
+      "id": "sort-spaces", "family_id": "training-documents", "endpoint": "sort", "stratum": "spaces-and-unicode",
+      "prompt": "Organize inbox into archive/Safety training for workplace safety instructions and archive/Language lessons for language-learning notes. Preserve exact names and bytes. Never overwrite or delete files.",
+      "directories": ["archive/Safety training", "archive/Language lessons"],
+      "files": {"inbox/fire drill.txt": "Evacuation lesson: leave by the marked emergency exit during a fire alarm.\n", "inbox/français.txt": "French vocabulary lesson: bonjour means hello.\n"},
+      "expected": {"files": {"archive/Safety training/fire drill.txt": "Evacuation lesson: leave by the marked emergency exit during a fire alarm.\n", "archive/Language lessons/français.txt": "French vocabulary lesson: bonjour means hello.\n"}, "absent": ["inbox/fire drill.txt", "inbox/français.txt"]}
+    },
+    {
+      "id": "sort-negation", "family_id": "approval-status-documents", "endpoint": "sort", "stratum": "status-distinction",
+      "prompt": "Organize inbox by final approval status: archive/Approved for granted applications, archive/Rejected for denied applications. A pending application stays in inbox. Use document content, preserve names and bytes, and never overwrite or delete files.",
+      "directories": ["archive/Approved", "archive/Rejected"],
+      "files": {"inbox/case-a.txt": "The committee did not approve this application. Final decision: rejected.\n", "inbox/case-b.txt": "Review is still pending. No decision has been made.\n", "inbox/case-c.txt": "Final decision: permission granted. The application is approved.\n"},
+      "expected": {"files": {"archive/Rejected/case-a.txt": "The committee did not approve this application. Final decision: rejected.\n", "archive/Approved/case-c.txt": "Final decision: permission granted. The application is approved.\n", "inbox/case-b.txt": "Review is still pending. No decision has been made.\n"}, "absent": ["inbox/case-a.txt", "inbox/case-c.txt", "archive/Approved/case-b.txt", "archive/Rejected/case-b.txt"]}
+    }
+  ]
+}

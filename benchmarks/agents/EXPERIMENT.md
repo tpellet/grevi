@@ -9,6 +9,48 @@ ten current commands, with causal comparisons for the six semantic verbs and int
 comparisons for the four supporting commands. Run the pilot before funding a confirmatory
 experiment. Preserve losses and inconclusive results as carefully as wins.
 
+### Execution stages for the hardening effort
+
+The first execution panel is [tasks.json](tasks.json): 30 original fictional cases, five
+per semantic endpoint, with artifact or exact structured-answer checks. The panel spans
+30 named diagnostic scenarios. Those names do **not** establish independently sampled
+production families: all cases share one author and a small collection of task formats.
+It is development evidence, not the independent pilot or sealed confirmation described
+below. Repetitions estimate run variability; they do not enlarge the independent sample.
+
+Before outcomes are examined, the execution sequence is:
+
+The checked-in runner is freeze-only until an independently enforced OS boundary passes the
+containment canaries below. Its `--execute` mode fails closed. A Codex workspace permission
+profile did not isolate reads in two live canaries: both agents read a sibling sentinel, and
+both still received host skill metadata. Those attempts remain infrastructure evidence and
+cannot enter an A/B result.
+
+1. Validate every grader with a correct result and a deliberately incorrect result; have
+   a separate reviewer inspect prompts and gold. Freeze rendered input, taskset, skill,
+   harness and binary hashes. Verify that agents cannot read gold, other attempts, or
+   service credentials, and that the control cannot invoke grevi.
+2. Run a six-task, two-arm infrastructure smoke on Astra low. Keep these attempts even if
+   the harness needs repair; distinguish infrastructure failures from model decisions.
+3. When isolation and accounting pass, run all 30 cases in fresh paired sessions on
+   Astra low and Sol medium, one repetition each: 120 episodes. Balance order within
+   endpoint; record size and task-format strata. This estimates diagnostic workload
+   effects, adoption and resource requirements only. Exact resolved model identifiers
+   and unavailable usage/cost fields remain visible in the manifest and report.
+4. Repeat the same 120 assignments once to measure variability if the first tranche
+   completes without a harness-invalidating defect. Do not choose only winning tasks
+   for repetition. A changed harness or product creates a new versioned cohort.
+5. Use observed operational failures and costs to revise the implementation plan. Broader
+   effectiveness claims still require the independent source-family pilot and powered
+   sealed evaluation specified below. Do not extrapolate a percentage saving from this
+   synthetic panel into a sales claim.
+
+Utility endpoints receive a separate live contract matrix. Their integration correctness
+and elapsed times do not substitute for a randomized onboarding comparison. Classifier
+availability failures remain deployment failures in that matrix; they are not labels of
+semantic correctness. The main diagnostic A/B uses the reachable TypeSafe backend with
+the service credential confined to a host-side grevi process.
+
 ## 1. Questions and claims
 
 The primary question is: **for a fresh agent given a real task, does offering grevi improve
