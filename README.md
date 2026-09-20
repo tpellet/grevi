@@ -1,19 +1,30 @@
 # grevi
 
-grevi answers questions about text you already have, from the shell. Pipe it a 10,000-line CI log and it prints the line that made the build fail. Name a bug fix and it stages the changes that belong to that fix, and leaves your other edits alone. Ask whether a support ticket comes from a customer who is about to leave, and your script gets a yes, a no or an unsure as an exit code.
-
-It never writes text of its own. The model behind it, TypeSafe's Jev, only chooses among things that exist: the lines of your input, the tools on your PATH, the flags in a man page, the folders on your disk. A wrong answer is then a wrong line, which you can see, and a flag that is in no man page cannot appear. When nothing fits, grevi exits 3 and your script decides what to do with "unsure".
-
-One binary for macOS and Linux, and no key to get started. Six verbs, `pick`, `why`, `is`, `run`, `add` and `sort`, plus a `,` shell alias for `run`. Every command takes `--json` and prints one JSON object with the answer, a calibrated probability, the request count and its cost, so an agent can call the same commands you do.
-
-Latency is measured in [benchmarks/](benchmarks/README.md), routing and root-cause accuracy in [evals/](evals/), and grevi inside an agent harness in [benchmarks/agents/](benchmarks/agents/README.md). [PRIVACY.md](PRIVACY.md) says, verb by verb, what leaves your machine.
-
-The user guide, from install to the agent envelope, is in [docs/guide/](docs/guide/README.md).
+**`grep` for meaning.**
 
 [![CI](https://github.com/tpellet/grevi/actions/workflows/ci.yml/badge.svg)](https://github.com/tpellet/grevi/actions/workflows/ci.yml)
 [![crates.io](https://img.shields.io/crates/v/grevi)](https://crates.io/crates/grevi)
 [![Release](https://img.shields.io/github/v/release/tpellet/grevi)](https://github.com/tpellet/grevi/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+grevi is a command-line tool, written in Rust, that searches by meaning. You describe what you want in plain English, and it finds it: the line that made a 10,000-line build fail, the commit you half remember, the command on your machine that does a task, the git changes that belong to one fix, the right folder for a file called `document(3).txt`. Your words need not appear in what it finds.
+
+It works like any Unix tool. It reads stdin, prints lines, and answers yes-or-no questions with an exit code, so it fits into pipes, `&&` and `case`. It needs no API key.
+
+| Command | What it does |
+|:---|:---|
+| [`why`](#why-find-the-error-in-the-output-of-a-failed-command) | Finds the error in the output of a failed build, test or CI run, however long the log |
+| [`pick`](#pick-find-one-item-in-a-list-by-describing-it) | Finds one line in a list from a description: a branch, a commit, a file, a process |
+| [`is`](#is-ask-a-yes-or-no-question-about-a-text) | Answers a yes-or-no question about a text with its exit code: yes, no or unsure |
+| [`run`](#run-describe-a-task-get-the-command-for-it) | Turns a task in plain English into the installed command that does it, and asks before it runs it |
+| [`add`](#add-stage-only-the-changes-that-belong-to-one-topic) | Stages only the git changes that belong to one topic |
+| [`sort`](#sort-tidy-a-messy-folder) | Tidies a folder: reads each file and proposes which of your folders it belongs in |
+
+grevi selects and never generates. Every answer is a line of your input, a command on your PATH, a flag from a man page or a folder on your disk, and it comes with a calibrated probability. When nothing fits, grevi says so and exits 3.
+
+Agents call the same commands. Every command takes `--json` and prints one JSON object with the answer, the probability and the cost, and [`grevi capabilities --json`](#agents) describes the whole interface. A [Claude Code and Codex skill](#agents) is included.
+
+[Install](#install) · [Commands](#commands) · [How it works](#how-it-works) · [Numbers](#numbers) · [Agents](#agents) · [Privacy](#privacy-and-safety) · [Limits](#limits) · [User guide](docs/guide/README.md)
 
 ```sh
 gh run view --log-failed | grevi why                    # find the error in a failed CI run
@@ -105,9 +116,9 @@ grevi health                           # ok: typesafe reachable in 286 ms (key p
 
 ![grevi why, pick, is and run in a terminal](demo.gif)
 
-Every verb below also takes `--json` for one machine-readable envelope, `-t` to move the decision threshold, `-v` to print probabilities and timing, and `--no-cache` to skip the answer cache. The full flag list per verb is in [docs/guide/verbs.md](docs/guide/verbs.md).
+Every command takes `--json` for one machine-readable JSON object, `-t` to move the decision threshold, `-v` to print probabilities and timing, and `--no-cache` to skip the answer cache. The full flag list per command is in [docs/guide/verbs.md](docs/guide/verbs.md).
 
-## Verbs
+## Commands
 
 ### pick: find one item in a list by describing it
 
