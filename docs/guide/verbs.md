@@ -55,7 +55,7 @@ git switch $(git branch | grevi pick "payment timeout fix")
 ps -eo pid,comm,%cpu | grevi pick -n 3 "eating my battery"
 ```
 
-On a test history, the first line printed `ffmpeg -i screen.mov -vf "fps=12,scale=900:-1" -loop 0 demo.gif`. In zsh, write `history 1` to get the whole history. Whatever you pipe goes to the API, your shell history included ([PRIVACY.md](../../PRIVACY.md)).
+The first command prints a line such as `ffmpeg -i screen.mov -vf "fps=12,scale=900:-1" -loop 0 demo.gif`. In zsh, write `history 1` to get the whole history. Whatever you pipe goes to the API, your shell history included ([PRIVACY.md](../../PRIVACY.md)).
 
 Limits: `pick` takes 20,000 stdin lines and exits 6 past that, so filter with `rg` or `head` first. Each line is clipped to 200–2,000 characters before it is sent. Blank lines and repeated lines are sent once, and the first occurrence keeps its line number. Past 255 distinct lines the tournament runs (windows of 200). `-n` past 3 lists candidates without a ranking claim.
 
@@ -199,7 +199,7 @@ grevi sort ~/Downloads --undo <log>         # moves them back
 grevi sort ~/Desktop --into ~/Documents     # files from one place, folders from another
 ```
 
-In a test folder, a file named `document(3).txt` held a 1099 tax form, and `sort` proposed `Taxes/2025` for it at 0.69. Two files that fit no folder stayed where they were.
+`sort` reads the content, not the name. A file named `document(3).txt` that holds a 1099 tax form goes to `Taxes/2025`. A file that fits no folder stays where it is.
 
 `sort` looks at the files directly in `<dir>`. It does not go into subfolders and it skips hidden files. For each file it asks Jev which of the existing folders under the root, up to two levels deep, the file belongs in. A file that the model cannot place, or places below the threshold, stays where it is and appears in `skipped`.
 

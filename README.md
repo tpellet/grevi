@@ -6,7 +6,7 @@ It never writes text of its own. The model behind it, TypeSafe's Jev, only choos
 
 One binary for macOS and Linux, and no key to get started. Six verbs, `pick`, `why`, `is`, `run`, `add` and `sort`, plus a `,` shell alias for `run`. Every command takes `--json` and prints one JSON object with the answer, a calibrated probability, the request count and its cost, so an agent can call the same commands you do.
 
-The numbers below come from [benchmarks/](benchmarks/README.md) (latency), [evals/](evals/) (routing and root-cause accuracy) and [benchmarks/agents/](benchmarks/agents/README.md) (grevi inside an agent harness). [PRIVACY.md](PRIVACY.md) says, verb by verb, what leaves your machine.
+Latency is measured in [benchmarks/](benchmarks/README.md), routing and root-cause accuracy in [evals/](evals/), and grevi inside an agent harness in [benchmarks/agents/](benchmarks/agents/README.md). [PRIVACY.md](PRIVACY.md) says, verb by verb, what leaves your machine.
 
 The user guide, from install to the agent envelope, is in [docs/guide/](docs/guide/README.md).
 
@@ -31,9 +31,7 @@ It reads your files the same way. A name like `document(3).txt` says nothing; th
 
 ![grevi sort: three files with meaningless names go to Taxes/2025, Boarding passes and Papers; two files that fit no folder stay](docs/img/sort.svg)
 
-Both animations replay real output of grevi 0.3.0, captured 2026-09-19.
-
-Excerpts from a terminal, captured 2026-09-19 on `jev-1.13.0`, with no key. The first is a failed run of a public repository: 10,074 lines of log, 2.6 MB, 4.3 seconds. A search for "error" or "panicked" finds which test failed. grevi points at the line that says why: the test compares Windows paths with Unix ones.
+A failed CI run of a public repository leaves 10,074 lines of log, 2.6 MB. grevi reads it in 4.3 seconds, with no key. A search for "error" or "panicked" finds which test failed. grevi points at the line that says why: the test compares Windows paths with Unix ones.
 
 ```
 $ gh run view 33831723431 -R astral-sh/ruff --log-failed | grevi why
@@ -57,7 +55,7 @@ grevi: not offering to run this (rm is on grevi's never-execute list); check it 
 rm notes.txt
 ```
 
-The excerpts are shortened with `…`, and `sort` prints full paths. `add` staged the one change that fixes the expiry check. A leftover debug print in the same file and a refactor of `report.py` stayed unstaged. `document(3).txt` holds a 1099 tax form, which is why it goes to `Taxes/2025`. Two other files fit no folder and stayed where they were.
+`add` stages the one change that fixes the expiry check. It leaves a debug print in the same file and a refactor of `report.py` unstaged. `document(3).txt` holds a 1099 tax form, so it goes to `Taxes/2025`. A file that fits no folder stays where it is.
 
 ## Install
 
@@ -105,9 +103,7 @@ export TYPESAFE_API_KEY=...            # optional; or TYPESAFE_API_KEY_FILE=/pat
 grevi health                           # ok: typesafe reachable in 286 ms (key present)
 ```
 
-A terminal recording of `why`, `pick`, `is` and `run`:
-
-![demo](demo.gif)
+![grevi why, pick, is and run in a terminal](demo.gif)
 
 Every verb below also takes `--json` for one machine-readable envelope, `-t` to move the decision threshold, `-v` to print probabilities and timing, and `--no-cache` to skip the answer cache. The full flag list per verb is in [docs/guide/verbs.md](docs/guide/verbs.md).
 
@@ -124,7 +120,7 @@ git switch $(git branch | grevi pick "payment timeout fix")
 kill $(ps -eo pid,comm,%cpu | grevi pick "eating my battery" | awk '{print $1}')
 ```
 
-The first one printed `ffmpeg -i screen.mov -vf "fps=12,scale=900:-1" -loop 0 demo.gif`. In zsh, write `history 1` to get the whole history. Whatever you pipe goes to the API, your shell history included; see [Privacy and safety](#privacy-and-safety).
+The first command prints a line such as `ffmpeg -i screen.mov -vf "fps=12,scale=900:-1" -loop 0 demo.gif`. In zsh, write `history 1` to get the whole history. Whatever you pipe goes to the API, your shell history included; see [Privacy and safety](#privacy-and-safety).
 
 `-n 3` prints up to three lines, each ranked above "nothing fits"; `--index` prints line numbers instead of lines.
 
@@ -148,7 +144,7 @@ grevi is "the customer is about to stop being a customer" < ticket.txt && ./page
 grevi is "asks for a refund" < mail.txt; case $? in 0) ./refund;; 1) ./archive;; 3) ./ask;; esac
 ```
 
-On the 24 support tickets in [benchmarks/agents/](benchmarks/agents/README.md), the first line found the 6 churn risks, "how do I export all of our data" included. It said no to "please cancel order 88231" and to a furious customer who had just bought 20 more seats. It exited 3 on an employee who is leaving their company. The wording matters: "this customer is about to leave" says yes to that employee.
+On the 24 support tickets in [benchmarks/agents/](benchmarks/agents/README.md), the first line finds the 6 churn risks, "how do I export all of our data" included. It says no to "please cancel order 88231" and to a furious customer who has just bought 20 more seats. It exits 3 on an employee who is leaving their company. The wording matters: "this customer is about to leave" says yes to that employee.
 
 Yes at or above 0.65, no below 0.35, unsure in between (`--band` sets the width around the 0.5 threshold).
 
@@ -234,7 +230,7 @@ Latency, end to end, per verb. Measured 2026-09-19 on a typical macOS dev machin
 
 `is` is one request, so its p50 is close to the network round trip. `run cold full` is what you feel when you type `, <something>`: p50 is about 1.9 s, above 1 s. Route-only saves about 100 ms at p50, so the time is in routing over the tool inventory, not in argument pointing. `run` opens its connection to the API while it reads the tool inventory; that overlap is worth about 200 ms at p50 on this verb (measured in [benchmarks/](benchmarks/README.md)). `rg` sits under hyperfine's 5 ms floor; the row shows what a local tool costs on the same input, not a race grevi is running.
 
-Cost is computed from the request's input tokens at `GREVI_PRICE_PER_MTOK` (default 0.042 $/Mtok) and reported in `meta.cost_usd`. Three calls from the session that produced the excerpts above: `why` on the 12-line build log, 2 requests, 1,436 tokens, $0.00006; `is` on a 6-line mail, 1 request, 346 tokens, $0.000015; `pick` over 5 file names, 1 request, 487 tokens, $0.00002.
+Cost is computed from the request's input tokens at `GREVI_PRICE_PER_MTOK` (default 0.042 $/Mtok) and reported in `meta.cost_usd`. Three examples: `why` on the 12-line build log, 2 requests, 1,436 tokens, $0.00006; `is` on a 6-line mail, 1 request, 346 tokens, $0.000015; `pick` over 5 file names, 1 request, 487 tokens, $0.00002.
 
 Accuracy, measured 2026-09-19 on `jev-1.13.0` with the release build, an empty cache and the default threshold 0.5: `scripts/eval_run.py` and `scripts/eval_why.py` over the data in [evals/](evals/). The two scripts cost $0.43 in API requests together (`run`: $0.42, `why`: $0.01); errors 0 on every set. Every `run` request routes over the frozen inventory `evals/inventory.json` instead of the machine's PATH, so grevi and BM25 rank the same 1,693 tools. Of those, 1,261 have a man page; 432 undocumented names were kept because they live in a system-wide prefix, and 179 were dropped at freeze time because they came from personal directories.
 

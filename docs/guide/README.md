@@ -2,8 +2,6 @@
 
 grevi answers questions about text you already have, from the shell. You describe the line, the file, the tool or the change you want, and grevi finds it by meaning, even when your words do not appear in it. Each answer comes with a calibrated probability. When nothing fits, grevi says so and exits 3.
 
-This guide is the long form of the [README](../../README.md). Every fact here comes from the code, the `--help` text, `grevi capabilities --json` or the repo's own measurements.
-
 | Page | What it covers |
 |:---|:---|
 | [Getting started](getting-started.md) | Install, run `grevi health`, first commands, the optional key, the `,` alias |
