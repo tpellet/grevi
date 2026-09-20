@@ -1,5 +1,10 @@
 # grevi inside an agent harness: two spot checks
 
+For the next evaluation, see the [per-endpoint A/B protocol](EXPERIMENT.md) and the
+[bounded e2e audit](E2E_AUDIT.md). The protocol defines the comparisons, gold labels,
+measurement and claim criteria; the audit records operational checks and remaining gaps.
+Neither turns the spot checks below into confirmatory results.
+
 Does grevi help a coding agent that already has `grep`, can read files and knows the usual
 command-line tools? Two experiments. The first gives an agent one question about a text (`why`,
 `is`). The second gives it a seven-step job where it has to choose tools (`run`). Few runs per
