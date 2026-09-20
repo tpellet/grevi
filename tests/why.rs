@@ -9,7 +9,7 @@ async fn points_at_root_cause_with_context() {
     })
     .await;
     let log = "   Compiling foo v0.1.0\nerror[E0432]: unresolved import `bar`\n --> src/main.rs:1:5\nerror: could not compile `foo`\n";
-    let mut c = common::hunch(&server);
+    let mut c = common::grevi(&server);
     let out = tokio::task::spawn_blocking(move || {
         c.args(["--json", "why", "-C", "1"])
             .write_stdin(log)
@@ -27,7 +27,7 @@ async fn points_at_root_cause_with_context() {
     );
 }
 
-// `sh` here is the user's chosen command run via argv; hunch itself never uses a shell.
+// `sh` here is the user's chosen command run via argv; grevi itself never uses a shell.
 #[tokio::test(flavor = "multi_thread")]
 async fn why_runs_a_command_after_double_dash() {
     let server = common::mock(FakeJev {
@@ -35,7 +35,7 @@ async fn why_runs_a_command_after_double_dash() {
         noul: |_, _| 0.93,
     })
     .await;
-    let mut c = common::hunch(&server);
+    let mut c = common::grevi(&server);
     let out = tokio::task::spawn_blocking(move || {
         c.args([
             "--json",
@@ -68,7 +68,7 @@ async fn no_signal_on_stdin_hints_at_stderr() {
         noul: |_, _| 0.05,
     })
     .await;
-    let mut c = common::hunch(&server);
+    let mut c = common::grevi(&server);
     let out = tokio::task::spawn_blocking(move || {
         c.args(["--json", "why"])
             .write_stdin("   Compiling foo v0.1.0\n   Compiling bar v0.2.0\n")

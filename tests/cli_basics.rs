@@ -2,7 +2,7 @@ use assert_cmd::Command;
 
 #[test]
 fn help_lists_every_verb() {
-    let out = Command::cargo_bin("hunch")
+    let out = Command::cargo_bin("grevi")
         .unwrap()
         .arg("--help")
         .output()
@@ -30,7 +30,7 @@ fn help_lists_every_verb() {
 
 #[test]
 fn unknown_flag_is_usage_error() {
-    Command::cargo_bin("hunch")
+    Command::cargo_bin("grevi")
         .unwrap()
         .args(["pick", "--nope", "x"])
         .assert()
@@ -41,7 +41,7 @@ fn unknown_flag_is_usage_error() {
 // usage error for the life of the project (unlike a not-yet-implemented verb).
 #[test]
 fn json_error_envelope_has_kind_hint_example() {
-    let out = Command::cargo_bin("hunch")
+    let out = Command::cargo_bin("grevi")
         .unwrap()
         .args(["--json", "-t", "2", "is", "x"])
         .output()
@@ -50,13 +50,13 @@ fn json_error_envelope_has_kind_hint_example() {
     assert_eq!(v["ok"], false);
     assert_eq!(v["exit_code"], 2);
     assert_eq!(v["error"]["kind"], "usage");
-    assert!(v["error"]["example"].as_str().unwrap().contains("hunch"));
+    assert!(v["error"]["example"].as_str().unwrap().contains("grevi"));
 }
 
 // Clap fails before any Config exists; agents still get exactly one envelope on stdout.
 #[test]
 fn clap_usage_error_under_json_is_an_envelope() {
-    let out = Command::cargo_bin("hunch")
+    let out = Command::cargo_bin("grevi")
         .unwrap()
         .args(["--json", "pick", "--nope", "x"])
         .output()
@@ -65,7 +65,7 @@ fn clap_usage_error_under_json_is_an_envelope() {
     let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
     assert_eq!(v["error"]["kind"], "usage");
     assert_eq!(v["command"], "pick");
-    let out = Command::cargo_bin("hunch")
+    let out = Command::cargo_bin("grevi")
         .unwrap()
         .args(["pick", "--format", "toon", "--nope", "x"])
         .output()
@@ -75,7 +75,7 @@ fn clap_usage_error_under_json_is_an_envelope() {
 
 #[test]
 fn toon_format_renders() {
-    let out = Command::cargo_bin("hunch")
+    let out = Command::cargo_bin("grevi")
         .unwrap()
         .args(["--format", "toon", "-t", "2", "is", "x"])
         .output()
@@ -88,15 +88,15 @@ fn toon_format_renders() {
 #[test]
 fn run_flags_after_intent_are_flags() {
     use clap::{CommandFactory, FromArgMatches};
-    // In-process parse: clap would read `env = "HUNCH_THRESHOLD"` from this test's own
+    // In-process parse: clap would read `env = "GREVI_THRESHOLD"` from this test's own
     // environment, so the env fallbacks are cleared and only argv is parsed.
-    let cmd = hunch::cli::Cli::command().mut_args(|a| a.env(None));
+    let cmd = grevi::cli::Cli::command().mut_args(|a| a.env(None));
     let m = cmd
-        .try_get_matches_from(["hunch", "run", "burn", "a", "dvd", "--dry-run", "--json"])
+        .try_get_matches_from(["grevi", "run", "burn", "a", "dvd", "--dry-run", "--json"])
         .unwrap();
-    let c = hunch::cli::Cli::from_arg_matches(&m).unwrap();
+    let c = grevi::cli::Cli::from_arg_matches(&m).unwrap();
     assert!(c.g.json);
-    let hunch::cli::Cmd::Run {
+    let grevi::cli::Cmd::Run {
         intent, dry_run, ..
     } = c.cmd
     else {

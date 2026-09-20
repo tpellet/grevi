@@ -47,9 +47,9 @@ async fn dry_run_then_apply_then_undo() {
     std::fs::write(d.path().join("draft.txt"), "invoice? unsure, maybe a quote").unwrap();
     let cache = tempfile::tempdir().unwrap();
     let run = |args: Vec<String>| {
-        let mut c = common::hunch(&server);
-        c.env("HUNCH_CACHE_DIR", cache.path())
-            .env_remove("HUNCH_NO_CACHE");
+        let mut c = common::grevi(&server);
+        c.env("GREVI_CACHE_DIR", cache.path())
+            .env_remove("GREVI_NO_CACHE");
         let a = args.clone();
         async move {
             tokio::task::spawn_blocking(move || c.args(a).output().unwrap())

@@ -1,14 +1,14 @@
 {
-  "name": "hunch",
-  "description": "The hunch agent skill for Claude Code.",
+  "name": "grevi",
+  "description": "The grevi agent skill for Claude Code.",
   "owner": {
     "name": "tpellet",
     "url": "https://github.com/tpellet"
   },
   "plugins": [
     {
-      "name": "hunch",
-      "description": "Teaches agents to use the hunch CLI: pick, why, is, run, add, sort.",
+      "name": "grevi",
+      "description": "Teaches agents to use the grevi CLI: pick, why, is, run, add, sort.",
       "source": "./"
     }
   ]

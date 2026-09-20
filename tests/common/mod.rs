@@ -56,24 +56,24 @@ pub async fn mock(fake: FakeJev) -> MockServer {
     server
 }
 
-/// The binary with every hunch variable removed. A developer's shell may export them
-/// (`HUNCH_THRESHOLD=2` turns even `capabilities` into exit 2, since `Config::load` runs for
+/// The binary with every grevi variable removed. A developer's shell may export them
+/// (`GREVI_THRESHOLD=2` turns even `capabilities` into exit 2, since `Config::load` runs for
 /// every verb); the contract tests must not depend on it. Every raw binary invocation from
 /// Task 3 onward starts here; `cli_basics.rs` (Task 1, env-immune by construction) and
 /// `live.rs` (needs the inherited key) are the two raw `cargo_bin` exceptions.
 pub fn bin() -> assert_cmd::Command {
-    let mut c = assert_cmd::Command::cargo_bin("hunch").unwrap();
+    let mut c = assert_cmd::Command::cargo_bin("grevi").unwrap();
     for var in [
         "TYPESAFE_API_KEY",
         "TYPESAFE_API_KEY_FILE",
-        "HUNCH_BASE_URL",
-        "HUNCH_THRESHOLD",
-        "HUNCH_MODEL",
-        "HUNCH_CONCURRENCY",
-        "HUNCH_CACHE_DIR",
-        "HUNCH_NO_CACHE",
-        "HUNCH_PRICE_PER_MTOK",
-        "HUNCH_INVENTORY_FILE",
+        "GREVI_BASE_URL",
+        "GREVI_THRESHOLD",
+        "GREVI_MODEL",
+        "GREVI_CONCURRENCY",
+        "GREVI_CACHE_DIR",
+        "GREVI_NO_CACHE",
+        "GREVI_PRICE_PER_MTOK",
+        "GREVI_INVENTORY_FILE",
     ] {
         c.env_remove(var);
     }
@@ -81,17 +81,17 @@ pub fn bin() -> assert_cmd::Command {
 }
 
 /// The binary, pointed at the mock server, no cache, no key file.
-pub fn hunch(server: &MockServer) -> assert_cmd::Command {
+pub fn grevi(server: &MockServer) -> assert_cmd::Command {
     let mut c = bin();
-    c.env("HUNCH_BASE_URL", server.uri())
+    c.env("GREVI_BASE_URL", server.uri())
         .env("TYPESAFE_API_KEY", "test-key")
-        .env("HUNCH_NO_CACHE", "1");
+        .env("GREVI_NO_CACHE", "1");
     c
 }
 
 /// A library `Config` for in-process tests, built literally so no test touches the process env.
-pub fn config(server: &MockServer) -> hunch::config::Config {
-    hunch::config::Config {
+pub fn config(server: &MockServer) -> grevi::config::Config {
+    grevi::config::Config {
         key: Some("test-key".into()),
         key_file: None,
         base_url: server.uri(),
@@ -100,7 +100,7 @@ pub fn config(server: &MockServer) -> hunch::config::Config {
         concurrency: 8,
         cache_dir: None,
         price_per_mtok: 0.042,
-        stats: std::sync::Arc::new(hunch::jev::client::Stats::default()),
+        stats: std::sync::Arc::new(grevi::jev::client::Stats::default()),
     }
 }
 

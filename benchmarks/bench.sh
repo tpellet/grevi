@@ -2,19 +2,19 @@
 # Run as: TYPESAFE_API_KEY_FILE=/path/to/key benchmarks/bench.sh   (sandbox disabled)
 # Compares cold (no cache) and warm runs for each verb on fixed inputs.
 set -euo pipefail
-H=./target/release/hunch
+H=./target/release/grevi
 LS=$(mktemp); ls /usr/bin > "$LS"
 LOG=benchmarks/fixtures/cargo-fail.log
 J=$(mktemp)
 # --ignore-failure: exit 3 (abstain) and exit 1 (`is` no) are legitimate outcomes, and one
 # flaky network error must not abort the whole run; hyperfine records the failure and continues.
 hyperfine --ignore-failure --warmup 1 --runs 15 --export-markdown benchmarks/results.md --export-json "$J" \
-  -n "pick cold"            "HUNCH_NO_CACHE=1 $H pick 'compress files' < $LS" \
+  -n "pick cold"            "GREVI_NO_CACHE=1 $H pick 'compress files' < $LS" \
   -n "pick warm"            "$H pick 'compress files' < $LS" \
-  -n "is cold"              "HUNCH_NO_CACHE=1 $H is 'mentions compression' < $LS || true" \
-  -n "why cold"             "HUNCH_NO_CACHE=1 $H why < $LOG" \
-  -n "run cold route-only"  "HUNCH_NO_CACHE=1 $H run --dry-run --no-args extract a tar archive" \
-  -n "run cold full"        "HUNCH_NO_CACHE=1 $H run --dry-run burn a dvd from this iso" \
+  -n "is cold"              "GREVI_NO_CACHE=1 $H is 'mentions compression' < $LS || true" \
+  -n "why cold"             "GREVI_NO_CACHE=1 $H why < $LOG" \
+  -n "run cold route-only"  "GREVI_NO_CACHE=1 $H run --dry-run --no-args extract a tar archive" \
+  -n "run cold full"        "GREVI_NO_CACHE=1 $H run --dry-run burn a dvd from this iso" \
   -n "rg baseline"          "rg -c compress $LS || true"
 # hyperfine's markdown has mean/min/max only; the README quotes p50/p95, so append them from the
 # per-run times (linear interpolation between order statistics). "failed" counts non-zero exits.

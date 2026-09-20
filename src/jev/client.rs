@@ -14,7 +14,7 @@ pub struct Stats {
 use super::cache::{DiskCache, key as cache_key};
 use super::{Questions, Response};
 use crate::config::Config;
-use crate::exit::HunchError;
+use crate::exit::GreviError;
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
 use std::time::Duration;
@@ -31,15 +31,15 @@ pub struct Client {
 }
 
 impl Client {
-    pub fn new(cfg: &Config) -> Result<Self, HunchError> {
+    pub fn new(cfg: &Config) -> Result<Self, GreviError> {
         let key = cfg.api_key()?;
         let http = reqwest::Client::builder()
             .connect_timeout(Duration::from_secs(5))
             .timeout(Duration::from_secs(60))
             .pool_idle_timeout(Duration::from_secs(90))
-            .user_agent(concat!("hunch/", env!("CARGO_PKG_VERSION")))
+            .user_agent(concat!("grevi/", env!("CARGO_PKG_VERSION")))
             .build()
-            .map_err(|e| HunchError::Unavailable(e.to_string()))?;
+            .map_err(|e| GreviError::Unavailable(e.to_string()))?;
         Ok(Self {
             http,
             base: cfg.base_url.clone(),
@@ -74,10 +74,10 @@ impl Client {
         &self,
         state: &serde_json::Value,
         questions: &Questions,
-    ) -> Result<Response, HunchError> {
+    ) -> Result<Response, GreviError> {
         let body =
             serde_json::json!({ "model": self.model, "state": state, "questions": questions });
-        let bytes = serde_json::to_vec(&body).map_err(|e| HunchError::Protocol(e.to_string()))?;
+        let bytes = serde_json::to_vec(&body).map_err(|e| GreviError::Protocol(e.to_string()))?;
         let k = cache_key(&bytes);
         if let Some(hit) = self.cache.as_ref().and_then(|c| c.get(&k)) {
             self.stats.cache_hits.fetch_add(1, Ordering::Relaxed);
@@ -109,7 +109,7 @@ impl Client {
                     if e.is_timeout() || e.is_connect() {
                         continue;
                     }
-                    return Err(HunchError::Unavailable(last));
+                    return Err(GreviError::Unavailable(last));
                 }
             };
             // Stored now, and again by the two arms that await an error body before returning:
@@ -129,7 +129,7 @@ impl Client {
                     let resp: Response = r
                         .json()
                         .await
-                        .map_err(|e| HunchError::Protocol(e.to_string()))?;
+                        .map_err(|e| GreviError::Protocol(e.to_string()))?;
                     self.stats.requests.fetch_add(1, Ordering::Relaxed);
                     self.stats
                         .input_tokens
@@ -140,16 +140,16 @@ impl Client {
                     }
                     return Ok(resp);
                 }
-                401 | 403 => return Err(HunchError::BadKey(status)),
+                401 | 403 => return Err(GreviError::BadKey(status)),
                 // 413/422 = the request body was rejected: in practice state over the token budget,
-                // occasionally a malformed request (a hunch bug). An input problem (exit 6), not an
+                // occasionally a malformed request (a grevi bug). An input problem (exit 6), not an
                 // outage (exit 4); the error kind and hint keep the two readings apart.
                 413 | 422 => {
                     let text = r.text().await.unwrap_or_default();
                     if rid.is_some() {
                         *self.stats.request_id.lock().unwrap() = rid;
                     }
-                    return Err(HunchError::RejectedRequest(
+                    return Err(GreviError::RejectedRequest(
                         status,
                         rejection_message(&text),
                     ));
@@ -165,14 +165,14 @@ impl Client {
                     if rid.is_some() {
                         *self.stats.request_id.lock().unwrap() = rid;
                     }
-                    return Err(HunchError::Protocol(format!(
+                    return Err(GreviError::Protocol(format!(
                         "HTTP {status}: {}",
                         text.chars().take(300).collect::<String>()
                     )));
                 }
             }
         }
-        Err(HunchError::Unavailable(last))
+        Err(GreviError::Unavailable(last))
     }
 }
 

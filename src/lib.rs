@@ -15,7 +15,7 @@ pub mod tournament;
 
 use clap::Parser;
 use cli::{Cli, Cmd};
-use exit::{Exit, HunchError};
+use exit::{Exit, GreviError};
 use output::{Envelope, ErrorBody, Format, Meta};
 use std::time::Instant;
 
@@ -43,7 +43,7 @@ pub fn main_exit() -> i32 {
                     let name = args
                         .iter()
                         .find(|a| VERBS.contains(&a.as_str()))
-                        .map_or("hunch", String::as_str);
+                        .map_or("grevi", String::as_str);
                     let message = e
                         .to_string()
                         .lines()
@@ -54,7 +54,7 @@ pub fn main_exit() -> i32 {
                     return report_error(
                         format,
                         name,
-                        &HunchError::Usage(message),
+                        &GreviError::Usage(message),
                         Meta::default(),
                     );
                 }
@@ -129,9 +129,9 @@ async fn run_cli(cli: Cli) -> i32 {
                     print!("{}", out.human);
                 }
                 if cli.g.verbose {
-                    eprintln!("hunch: {}", out.data);
+                    eprintln!("grevi: {}", out.data);
                     eprintln!(
-                        "hunch: {} ms, {} requests, {} cached, ${:.5}",
+                        "grevi: {} ms, {} requests, {} cached, ${:.5}",
                         meta.elapsed_ms, meta.requests, meta.cache_hits, meta.cost_usd
                     );
                 }
@@ -153,10 +153,10 @@ async fn run_cli(cli: Cli) -> i32 {
     }
 }
 
-fn report_error(format: Format, name: &str, e: &HunchError, meta: Meta) -> i32 {
+fn report_error(format: Format, name: &str, e: &GreviError, meta: Meta) -> i32 {
     if format == Format::Human {
         eprintln!(
-            "hunch {name}: error: {e}\n  hint: {}\n  try:  {}",
+            "grevi {name}: error: {e}\n  hint: {}\n  try:  {}",
             e.hint(),
             e.example()
         );
@@ -185,7 +185,7 @@ fn report_error(format: Format, name: &str, e: &HunchError, meta: Meta) -> i32 {
 
 /// Every verb is wired here once (Task 1). Later tasks replace stub bodies in `cmd/*.rs`
 /// and never edit this function.
-async fn dispatch(cli: &Cli, ctx: &config::Config) -> Result<cmd::Outcome, HunchError> {
+async fn dispatch(cli: &Cli, ctx: &config::Config) -> Result<cmd::Outcome, GreviError> {
     let machine = cli.g.format() != Format::Human;
     match &cli.cmd {
         Cmd::Pick { intent, top, index } => cmd::pick::run(ctx, intent, *top, *index).await,

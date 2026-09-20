@@ -1,12 +1,12 @@
 [package]
-name = "hunch"
+name = "grevi"
 version = "0.1.0"
 edition = "2024"
 rust-version = "1.87"
 license = "MIT"
 description = "Point at the right thing: pick, why, run and is by meaning — fast CLI on TypeSafe Jev"
-repository = "https://github.com/tpellet/hunch"
-homepage = "https://github.com/tpellet/hunch"
+repository = "https://github.com/tpellet/grevi"
+homepage = "https://github.com/tpellet/grevi"
 readme = "README.md"
 keywords = ["cli", "llm", "semantic", "pointer", "jev"]
 categories = ["command-line-utilities"]

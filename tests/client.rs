@@ -1,6 +1,6 @@
 mod common;
-use hunch::jev::client::Client;
-use hunch::jev::{Question, Questions};
+use grevi::jev::client::Client;
+use grevi::jev::{Question, Questions};
 use wiremock::matchers::method;
 use wiremock::{Mock, MockServer, ResponseTemplate};
 

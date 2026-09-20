@@ -1,7 +1,7 @@
 # /// script
 # requires-python = ">=3.11"
 # ///
-"""Point at the root cause of every `evals/why/<id>.log` with `hunch why --json -n 3`; compare hit@1
+"""Point at the root cause of every `evals/why/<id>.log` with `grevi why --json -n 3`; compare hit@1
 and hit@3 with two free regex baselines on the same files; print where found cases' `any` sits."""
 import json
 import re
@@ -10,11 +10,11 @@ import subprocess
 import sys
 from pathlib import Path
 
-H = "./target/release/hunch"  # fixed: ubs's taint check rejects an argv-selected executable
-# Copied from src/cmd/why.rs (SIGNAL); the baselines use exactly what hunch's prefilter uses.
+H = "./target/release/grevi"  # fixed: ubs's taint check rejects an argv-selected executable
+# Copied from src/cmd/why.rs (SIGNAL); the baselines use exactly what grevi's prefilter uses.
 SIGNAL = re.compile(r"(?i)\b(error|err!|fail(ed|ure|s)?|fatal|panic(ked)?|exception|traceback|denied|not found|no such|cannot|can't|couldn't|undefined|unresolved|refused|timed? ?out|segmentation|abort(ed)?|killed|exit (code|status) [1-9]|assert)")
 cases = sorted(Path("evals/why").glob("*.log"))
-hit = {"hunch": [0, 0], "first SIGNAL match": [0, 0], "last SIGNAL match": [0, 0]}  # name -> [hit@1, hit@3]
+hit = {"grevi": [0, 0], "first SIGNAL match": [0, 0], "last SIGNAL match": [0, 0]}  # name -> [hit@1, hit@3]
 errors = 0; abstained = 0; anys = []; cost = 0.0; rows = []
 Path("evals/out").mkdir(exist_ok=True)
 def score(name, pointed, lo, hi):
@@ -25,7 +25,7 @@ for log in cases:
     exp = json.loads(log.with_suffix(".expect").read_text())
     lo, hi = exp["lines"]
     text = log.read_text()
-    # Same line numbering as hunch (Rust `str::lines`): split on "\n", no empty line after a final newline.
+    # Same line numbering as grevi (Rust `str::lines`): split on "\n", no empty line after a final newline.
     lines = text.split("\n")
     if lines and lines[-1] == "": lines.pop()
     sig = [i + 1 for i, l in enumerate(lines) if SIGNAL.search(l)]
@@ -43,7 +43,7 @@ for log in cases:
         errors += 1; print(f"error exit {v['exit_code']}: {v['error']['kind']} for {log.name}", file=sys.stderr)
     abstained += v["exit_code"] == 3
     pointed = [c["line"] for c in d.get("causes") or []]
-    score("hunch", pointed, lo, hi)
+    score("grevi", pointed, lo, hi)
     if "any" in d and d["any"] is not None: anys.append(d["any"])
     cost += v["meta"]["cost_usd"]
     rows.append({"case": log.stem, "pointed": pointed, "any": d.get("any"), "expect": [lo, hi], "exit": v["exit_code"]})

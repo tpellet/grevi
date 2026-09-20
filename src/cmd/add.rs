@@ -1,6 +1,6 @@
 use crate::cmd::Outcome;
 use crate::config::Config;
-use crate::exit::{Exit, HunchError};
+use crate::exit::{Exit, GreviError};
 use crate::gitdiff;
 use crate::jev::client::Client;
 use crate::jev::{Question, Questions};
@@ -18,15 +18,15 @@ pub async fn run(
     yes: bool,
     dry_run: bool,
     machine: bool,
-) -> Result<Outcome, HunchError> {
+) -> Result<Outcome, GreviError> {
     // From a subdirectory `git diff` lists the whole repo, but `git apply` silently skips paths
     // outside the cwd (exit 0): run both at the top level, or hunks are reported staged but are not.
     let top = Command::new("git")
         .args(["rev-parse", "--show-toplevel"])
         .output()
-        .map_err(|e| HunchError::Input(format!("git: {e}")))?;
+        .map_err(|e| GreviError::Input(format!("git: {e}")))?;
     if !top.status.success() {
-        return Err(HunchError::Input(
+        return Err(GreviError::Input(
             "not a git repository (or git failed)".into(),
         ));
     }
@@ -43,9 +43,9 @@ pub async fn run(
             "-U3",
         ])
         .output()
-        .map_err(|e| HunchError::Input(format!("git: {e}")))?;
+        .map_err(|e| GreviError::Input(format!("git: {e}")))?;
     if !out.status.success() {
-        return Err(HunchError::Input(
+        return Err(GreviError::Input(
             "not a git repository (or git failed)".into(),
         ));
     }
@@ -67,7 +67,7 @@ pub async fn run(
         })
         .collect();
     if flat.is_empty() {
-        return Err(HunchError::EmptyInput(
+        return Err(GreviError::EmptyInput(
             "no unstaged changes to tracked files (untracked files are never staged by add)",
         ));
     }
@@ -96,7 +96,7 @@ pub async fn run(
         let client = &client;
         async move {
             let r = client.ask(&state, &qs).await?;
-            (0..chunk.len()).map(|i| r.noul(&format!("h{i:02}"))).collect::<Result<Vec<f64>, HunchError>>()
+            (0..chunk.len()).map(|i| r.noul(&format!("h{i:02}"))).collect::<Result<Vec<f64>, GreviError>>()
         }
     });
     let ps: Vec<f64> = futures::future::try_join_all(batches)
@@ -141,7 +141,7 @@ pub async fn run(
                 Some(true)
             ))
     {
-        return Err(HunchError::Declined);
+        return Err(GreviError::Declined);
     }
     let keep = |fi: usize, hi: usize| {
         flat.iter()
@@ -154,19 +154,19 @@ pub async fn run(
         .args(["apply", "--cached", "--recount", "-"])
         .stdin(Stdio::piped())
         .spawn()
-        .map_err(|e| HunchError::Input(e.to_string()))?;
+        .map_err(|e| GreviError::Input(e.to_string()))?;
     child
         .stdin
         .take()
         .expect("stdin")
         .write_all(p.as_bytes())
-        .map_err(|e| HunchError::Input(e.to_string()))?;
+        .map_err(|e| GreviError::Input(e.to_string()))?;
     if !child
         .wait()
-        .map_err(|e| HunchError::Input(e.to_string()))?
+        .map_err(|e| GreviError::Input(e.to_string()))?
         .success()
     {
-        return Err(HunchError::Input(
+        return Err(GreviError::Input(
             "git apply --cached rejected the patch; nothing was staged".into(),
         ));
     }

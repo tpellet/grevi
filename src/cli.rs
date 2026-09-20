@@ -3,10 +3,10 @@ use clap::{Args, Parser, Subcommand, ValueEnum};
 
 #[derive(Parser, Debug)]
 #[command(
-    name = "hunch",
+    name = "grevi",
     version,
     about = "Point at the right thing among real things — by meaning, with calibrated confidence.",
-    after_help = "Examples:\n  ls ~/Downloads | hunch pick \"last month's electricity bill\"\n  cargo build 2>&1 | hunch why\n  hunch why -- cargo build\n  hunch run \"burn a dvd from this iso\"\n  hunch is \"asks for a refund\" < mail.txt && ./refund\n\nAgents: hunch capabilities --json | hunch robot-docs"
+    after_help = "Examples:\n  ls ~/Downloads | grevi pick \"last month's electricity bill\"\n  cargo build 2>&1 | grevi why\n  grevi why -- cargo build\n  grevi run \"burn a dvd from this iso\"\n  grevi is \"asks for a refund\" < mail.txt && ./refund\n\nAgents: grevi capabilities --json | grevi robot-docs"
 )]
 pub struct Cli {
     #[command(flatten)]
@@ -24,10 +24,10 @@ pub struct GlobalOpts {
     #[arg(long, global = true, value_enum)]
     pub format: Option<Format>,
     /// Decision threshold on calibrated probability
-    #[arg(short = 't', long, global = true, env = "HUNCH_THRESHOLD")]
+    #[arg(short = 't', long, global = true, env = "GREVI_THRESHOLD")]
     pub threshold: Option<f64>,
     /// TypeSafe model or alias (default jev-1.13.0; `jev-latest` moves with each release)
-    #[arg(long, global = true, env = "HUNCH_MODEL")]
+    #[arg(long, global = true, env = "GREVI_MODEL")]
     pub model: Option<String>,
     /// Skip the local answer cache
     #[arg(long, global = true)]
@@ -67,13 +67,13 @@ pub enum Cmd {
         /// Report up to N causes, each ranked above "no failure"
         #[arg(short = 'n', long, default_value_t = 1)]
         top: usize,
-        /// Run this command and read its stdout+stderr instead of stdin: `hunch why -- cargo build`
+        /// Run this command and read its stdout+stderr instead of stdin: `grevi why -- cargo build`
         #[arg(last = true)]
         cmd: Vec<String>,
     },
     /// Route an intent to an installed tool, point at flags from its man page, run on confirm
     Run {
-        /// The request; flags may follow it (`hunch run burn a dvd --dry-run`)
+        /// The request; flags may follow it (`grevi run burn a dvd --dry-run`)
         #[arg(required = true, num_args = 1..)]
         intent: Vec<String>,
         /// Run without asking
@@ -127,7 +127,7 @@ pub enum Cmd {
     RobotDocs { topic: Option<String> },
     /// Check the API key and TypeSafe reachability
     Health,
-    /// Print shell integration (`,` alias for `hunch run`)
+    /// Print shell integration (`,` alias for `grevi run`)
     Init { shell: Shell },
 }
 
@@ -143,7 +143,7 @@ mod tests {
     use clap::{CommandFactory, FromArgMatches};
 
     /// `try_parse_from` still reads the `env = ".."` fallbacks from the real process, so a
-    /// developer's exported `HUNCH_THRESHOLD=abc` would fail an argv-only test: clear them first.
+    /// developer's exported `GREVI_THRESHOLD=abc` would fail an argv-only test: clear them first.
     fn parse_without_env(args: &[&str]) -> Cli {
         let m = Cli::command()
             .mut_args(|a| a.env(None))
@@ -155,15 +155,15 @@ mod tests {
     #[test]
     fn format_flag_overrides_json_and_robot_is_an_alias() {
         let parse = |a: &[&str]| parse_without_env(a).g.format();
-        assert_eq!(parse(&["hunch", "is", "x"]), Format::Human);
-        assert_eq!(parse(&["hunch", "--robot", "is", "x"]), Format::Json);
+        assert_eq!(parse(&["grevi", "is", "x"]), Format::Human);
+        assert_eq!(parse(&["grevi", "--robot", "is", "x"]), Format::Json);
         assert_eq!(
-            parse(&["hunch", "--json", "--format", "toon", "is", "x"]),
+            parse(&["grevi", "--json", "--format", "toon", "is", "x"]),
             Format::Toon
         );
         // Global flags are accepted after the subcommand too.
         assert_eq!(
-            parse(&["hunch", "is", "x", "--format", "jsonl"]),
+            parse(&["grevi", "is", "x", "--format", "jsonl"]),
             Format::Jsonl
         );
     }

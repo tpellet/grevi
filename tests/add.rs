@@ -42,7 +42,7 @@ async fn stages_only_matching_hunks() {
         .replace("line 2\n", "line 2 AUTH fix\n")
         .replace("line 35\n", "line 35 typo\n");
     std::fs::write(d.path().join("f.txt"), changed).unwrap();
-    let mut c = common::hunch(&server);
+    let mut c = common::grevi(&server);
     c.current_dir(d.path());
     let out = tokio::task::spawn_blocking(move || {
         c.args(["add", "--yes", "the auth fix"]).output().unwrap()
@@ -83,7 +83,7 @@ async fn machine_mode_without_yes_is_declined() {
     git(d.path(), &["add", "."]);
     git(d.path(), &["commit", "-qm", "init"]);
     std::fs::write(d.path().join("f.txt"), "b\n").unwrap();
-    let mut c = common::hunch(&server);
+    let mut c = common::grevi(&server);
     c.current_dir(d.path());
     let out = tokio::task::spawn_blocking(move || {
         c.args(["--json", "add", "anything"]).output().unwrap()
@@ -112,7 +112,7 @@ async fn stages_from_a_subdirectory() {
     git(d.path(), &["add", "."]);
     git(d.path(), &["commit", "-qm", "init"]);
     std::fs::write(d.path().join("top.txt"), "b\n").unwrap();
-    let mut c = common::hunch(&server);
+    let mut c = common::grevi(&server);
     c.current_dir(d.path().join("sub"));
     let out =
         tokio::task::spawn_blocking(move || c.args(["add", "--yes", "anything"]).output().unwrap())
@@ -137,7 +137,7 @@ async fn stages_from_a_subdirectory() {
 }
 
 // A clean tree has nothing for `add` to stage: it must exit 6 (input) with a hint specific to
-// `add`, not the generic stdin hint ("pipe text into hunch") that fits `pick`/`why`/`sort` but
+// `add`, not the generic stdin hint ("pipe text into grevi") that fits `pick`/`why`/`sort` but
 // not `add` (which reads `git diff`, not stdin).
 #[tokio::test(flavor = "multi_thread")]
 async fn clean_tree_exits_with_an_add_specific_hint() {
@@ -154,7 +154,7 @@ async fn clean_tree_exits_with_an_add_specific_hint() {
     std::fs::write(d.path().join("f.txt"), "a\n").unwrap();
     git(d.path(), &["add", "."]);
     git(d.path(), &["commit", "-qm", "init"]);
-    let mut c = common::hunch(&server);
+    let mut c = common::grevi(&server);
     c.current_dir(d.path());
     let out = tokio::task::spawn_blocking(move || {
         c.args(["--json", "add", "anything"]).output().unwrap()
@@ -166,6 +166,6 @@ async fn clean_tree_exits_with_an_add_specific_hint() {
     assert_eq!(v["error"]["kind"], "empty_input");
     let hint = v["error"]["hint"].as_str().unwrap();
     assert!(hint.contains("git diff"), "{hint}");
-    assert!(!hint.contains("pipe text into hunch"), "{hint}");
-    assert_eq!(v["error"]["example"], "hunch add \"finish the login flow\"");
+    assert!(!hint.contains("pipe text into grevi"), "{hint}");
+    assert_eq!(v["error"]["example"], "grevi add \"finish the login flow\"");
 }

@@ -32,7 +32,7 @@ impl Exit {
 }
 
 #[derive(Debug, thiserror::Error)]
-pub enum HunchError {
+pub enum GreviError {
     #[error("no TypeSafe API key: set TYPESAFE_API_KEY or TYPESAFE_API_KEY_FILE")]
     MissingKey,
     #[error("TypeSafe rejected the API key (HTTP {0})")]
@@ -46,7 +46,7 @@ pub enum HunchError {
     #[error("input too large: {0}")]
     InputTooLarge(String),
     /// HTTP 413/422: the API rejected the request body. Usually the state is over the token
-    /// budget, sometimes the request is malformed (a hunch bug); an input error, not an outage.
+    /// budget, sometimes the request is malformed (a grevi bug); an input error, not an outage.
     #[error("TypeSafe rejected the request (HTTP {0}): {1}")]
     RejectedRequest(u16, String),
     #[error("{0}")]
@@ -57,7 +57,7 @@ pub enum HunchError {
     Declined,
 }
 
-impl HunchError {
+impl GreviError {
     pub fn exit(&self) -> Exit {
         match self {
             Self::MissingKey | Self::BadKey(_) => Exit::Auth,
@@ -87,37 +87,37 @@ impl HunchError {
     pub fn hint(&self) -> &'static str {
         match self {
             Self::MissingKey => {
-                "create a key at https://console.typesafe.ai/settings/keys and export it in your shell profile; hunch never prints it"
+                "create a key at https://console.typesafe.ai/settings/keys and export it in your shell profile; grevi never prints it"
             }
-            Self::BadKey(_) => "check the key in the TypeSafe console; `hunch health` verifies it",
-            Self::Unavailable(_) => "retry later, or lower HUNCH_CONCURRENCY if rate limited",
+            Self::BadKey(_) => "check the key in the TypeSafe console; `grevi health` verifies it",
+            Self::Unavailable(_) => "retry later, or lower GREVI_CONCURRENCY if rate limited",
             Self::Protocol(_) => {
-                "the TypeSafe API may have changed, or HUNCH_BASE_URL points at the wrong server; run `hunch health` and report the issue with `hunch --version`"
+                "the TypeSafe API may have changed, or GREVI_BASE_URL points at the wrong server; run `grevi health` and report the issue with `grevi --version`"
             }
             Self::EmptyInput(msg) if msg.starts_with("no unstaged changes") => {
                 "nothing to stage: `git diff` is empty (untracked files are never staged by add)"
             }
-            Self::EmptyInput(_) => "pipe text into hunch",
+            Self::EmptyInput(_) => "pipe text into grevi",
             Self::InputTooLarge(_) => "filter the input first, e.g. with rg or tail",
             Self::RejectedRequest(..) => {
-                "the input is probably over the API's token budget: filter it first, e.g. with rg or tail; if it is small, this is a hunch bug — report it with `hunch --version`"
+                "the input is probably over the API's token budget: filter it first, e.g. with rg or tail; if it is small, this is a grevi bug — report it with `grevi --version`"
             }
             Self::Input(_) => "check the input path and encoding",
-            Self::Usage(_) => "see `hunch --help` or `hunch capabilities --json`",
+            Self::Usage(_) => "see `grevi --help` or `grevi capabilities --json`",
             Self::Declined => "re-run with --yes to skip confirmation",
         }
     }
     pub fn example(&self) -> &'static str {
         match self {
-            Self::MissingKey => "export TYPESAFE_API_KEY=...; hunch health",
+            Self::MissingKey => "export TYPESAFE_API_KEY=...; grevi health",
             Self::EmptyInput(msg) if msg.starts_with("no unstaged changes") => {
-                "hunch add \"finish the login flow\""
+                "grevi add \"finish the login flow\""
             }
-            Self::EmptyInput(_) => "ls | hunch pick \"the invoice from March\"",
+            Self::EmptyInput(_) => "ls | grevi pick \"the invoice from March\"",
             Self::InputTooLarge(_) | Self::RejectedRequest(..) => {
-                "tail -n 20000 build.log | hunch why"
+                "tail -n 20000 build.log | grevi why"
             }
-            _ => "hunch capabilities --json",
+            _ => "grevi capabilities --json",
         }
     }
 }
@@ -133,16 +133,16 @@ mod tests {
     #[test]
     fn every_error_maps_to_a_stable_kind_and_exit() {
         let errors = [
-            HunchError::MissingKey,
-            HunchError::BadKey(401),
-            HunchError::Unavailable(String::new()),
-            HunchError::Protocol(String::new()),
-            HunchError::EmptyInput(""),
-            HunchError::InputTooLarge(String::new()),
-            HunchError::RejectedRequest(422, String::new()),
-            HunchError::Input(String::new()),
-            HunchError::Usage(String::new()),
-            HunchError::Declined,
+            GreviError::MissingKey,
+            GreviError::BadKey(401),
+            GreviError::Unavailable(String::new()),
+            GreviError::Protocol(String::new()),
+            GreviError::EmptyInput(""),
+            GreviError::InputTooLarge(String::new()),
+            GreviError::RejectedRequest(422, String::new()),
+            GreviError::Input(String::new()),
+            GreviError::Usage(String::new()),
+            GreviError::Declined,
         ];
         let expected = [
             ("missing_api_key", 5),
@@ -158,7 +158,7 @@ mod tests {
         ];
         for (e, (kind, code)) in errors.iter().zip(expected) {
             assert_eq!((e.kind(), e.exit().code()), (kind, code), "{e}");
-            assert!(!e.hint().is_empty() && e.example().contains("hunch"));
+            assert!(!e.hint().is_empty() && e.example().contains("grevi"));
         }
     }
 }

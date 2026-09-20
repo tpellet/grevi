@@ -1,4 +1,4 @@
-use crate::exit::HunchError;
+use crate::exit::GreviError;
 use crate::jev::client::Client;
 use crate::jev::{Question, Questions};
 use std::collections::BTreeMap;
@@ -52,7 +52,7 @@ async fn window(
     request: &str,
     items: &[(usize, String)],
     prompts: &Prompts,
-) -> Result<Ranking, HunchError> {
+) -> Result<Ranking, GreviError> {
     let per_item = (WINDOW_CHARS / items.len().max(1)).clamp(200, 2_000);
     let state = serde_json::json!({
         "request": request,
@@ -95,7 +95,7 @@ pub async fn rank(
     items: &[String],
     prompts: &Prompts,
     finalist_text: Option<&(dyn Fn(usize) -> String + Sync)>,
-) -> Result<Ranking, HunchError> {
+) -> Result<Ranking, GreviError> {
     let all: Vec<(usize, String)> = items.iter().cloned().enumerate().collect();
     if all.len() <= WINDOW && finalist_text.is_none() {
         return window(client, request, &all, prompts).await;
@@ -142,7 +142,7 @@ pub async fn shortlist(
     items: &[String],
     prompts: &Prompts,
     per_window: usize,
-) -> Result<Vec<Candidate>, HunchError> {
+) -> Result<Vec<Candidate>, GreviError> {
     let all: Vec<(usize, String)> = items.iter().cloned().enumerate().collect();
     let rounds = futures::future::try_join_all(
         all.chunks(WINDOW)

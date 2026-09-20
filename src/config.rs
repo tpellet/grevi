@@ -1,5 +1,5 @@
 use crate::cli::GlobalOpts;
-use crate::exit::HunchError;
+use crate::exit::GreviError;
 use crate::jev::client::Stats;
 use crate::output::Meta;
 use std::path::PathBuf;
@@ -27,34 +27,34 @@ fn env(name: &str) -> Option<String> {
         .filter(|v| !v.is_empty())
 }
 
-fn parse<T: std::str::FromStr>(name: &str, default: T) -> Result<T, HunchError> {
+fn parse<T: std::str::FromStr>(name: &str, default: T) -> Result<T, GreviError> {
     match env(name) {
         None => Ok(default),
         Some(v) => v
             .parse()
-            .map_err(|_| HunchError::Usage(format!("{name}={v} is not valid"))),
+            .map_err(|_| GreviError::Usage(format!("{name}={v} is not valid"))),
     }
 }
 
 impl Config {
-    pub fn load(g: &GlobalOpts) -> Result<Self, HunchError> {
+    pub fn load(g: &GlobalOpts) -> Result<Self, GreviError> {
         let threshold = g.threshold.unwrap_or(0.5);
         if !(0.0..=1.0).contains(&threshold) {
-            return Err(HunchError::Usage(format!(
+            return Err(GreviError::Usage(format!(
                 "threshold {threshold} must be within 0..=1"
             )));
         }
-        let cache_dir = if g.no_cache || env("HUNCH_NO_CACHE").is_some() {
+        let cache_dir = if g.no_cache || env("GREVI_NO_CACHE").is_some() {
             None
-        } else if let Some(d) = env("HUNCH_CACHE_DIR") {
+        } else if let Some(d) = env("GREVI_CACHE_DIR") {
             Some(PathBuf::from(d))
         } else {
-            directories::ProjectDirs::from("", "", "hunch").map(|p| p.cache_dir().to_path_buf())
+            directories::ProjectDirs::from("", "", "grevi").map(|p| p.cache_dir().to_path_buf())
         };
         Ok(Self {
             key: env("TYPESAFE_API_KEY"),
             key_file: env("TYPESAFE_API_KEY_FILE").map(PathBuf::from),
-            base_url: env("HUNCH_BASE_URL")
+            base_url: env("GREVI_BASE_URL")
                 .unwrap_or_else(|| "https://api.typesafe.ai".into())
                 .trim_end_matches('/')
                 .to_string(),
@@ -63,27 +63,27 @@ impl Config {
             model: g.model.clone().unwrap_or_else(|| "jev-1.13.0".into()),
             threshold,
             // 16 in flight at ~0.4 s each is ~40 req/s, twice the 1,200/min budget; 8 stays under it.
-            concurrency: parse("HUNCH_CONCURRENCY", 8usize)?.max(1),
+            concurrency: parse("GREVI_CONCURRENCY", 8usize)?.max(1),
             cache_dir,
-            price_per_mtok: parse("HUNCH_PRICE_PER_MTOK", 0.042f64)?,
+            price_per_mtok: parse("GREVI_PRICE_PER_MTOK", 0.042f64)?,
             stats: Arc::new(Stats::default()),
         })
     }
 
     /// The key from `TYPESAFE_API_KEY`, else the trimmed contents of `TYPESAFE_API_KEY_FILE`.
-    pub fn api_key(&self) -> Result<String, HunchError> {
+    pub fn api_key(&self) -> Result<String, GreviError> {
         if let Some(k) = &self.key {
             return Ok(k.clone());
         }
         let Some(p) = &self.key_file else {
-            return Err(HunchError::MissingKey);
+            return Err(GreviError::MissingKey);
         };
         let k = std::fs::read_to_string(p).map_err(|e| {
-            HunchError::Input(format!("TYPESAFE_API_KEY_FILE {}: {e}", p.display()))
+            GreviError::Input(format!("TYPESAFE_API_KEY_FILE {}: {e}", p.display()))
         })?;
         let k = k.trim().to_string();
         if k.is_empty() {
-            return Err(HunchError::MissingKey);
+            return Err(GreviError::MissingKey);
         }
         Ok(k)
     }
@@ -126,7 +126,7 @@ mod tests {
         assert_eq!(cfg(Some("k"), None).api_key().unwrap(), "k");
         assert_eq!(cfg(None, None).api_key().unwrap_err().exit().code(), 5);
         assert_eq!(
-            cfg(None, Some("/nonexistent/hunch-key"))
+            cfg(None, Some("/nonexistent/grevi-key"))
                 .api_key()
                 .unwrap_err()
                 .exit()

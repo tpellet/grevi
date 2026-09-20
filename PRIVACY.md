@@ -1,6 +1,6 @@
 # What leaves your machine
 
-hunch sends requests only to the TypeSafe API (`HUNCH_BASE_URL`), authenticated with your key.
+grevi sends requests only to the TypeSafe API (`GREVI_BASE_URL`), authenticated with your key.
 
 | Verb | Sent | Never sent |
 |---|---|---|
@@ -11,10 +11,10 @@ hunch sends requests only to the TypeSafe API (`HUNCH_BASE_URL`), authenticated 
 | add | your topic and each unstaged hunk of tracked files (header + body, clipped to 3,000 characters) | untracked files, file contents outside the diff |
 | sort | the names of the files directly in the directory, the first 2,000 characters of each text file (or of a PDF's first two pages via `pdftotext`, when installed), and the folder names under the root | hidden files, files in sub-folders, the rest of each file, binary contents |
 
-Before sending, hunch masks obvious secrets (`token=…`, `Bearer …`, `sk-…`, `ghp_…`, `AKIA…`,
-JWTs) as `[REDACTED]`. This is best effort, not a guarantee: do not pipe secrets into hunch.
+Before sending, grevi masks obvious secrets (`token=…`, `Bearer …`, `sk-…`, `ghp_…`, `AKIA…`,
+JWTs) as `[REDACTED]`. This is best effort, not a guarantee: do not pipe secrets into grevi.
 
-Answers are cached on disk in your cache directory (`HUNCH_CACHE_DIR`), keyed by a hash of the
+Answers are cached on disk in your cache directory (`GREVI_CACHE_DIR`), keyed by a hash of the
 request, for 7 days; the cache holds answers (option ids and probabilities), not your text.
-`--no-cache` or `HUNCH_NO_CACHE=1` disables it. hunch never logs or prints your key.
+`--no-cache` or `GREVI_NO_CACHE=1` disables it. grevi never logs or prints your key.
 TypeSafe's own data handling: https://docs.typesafe.ai/legal

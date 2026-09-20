@@ -1,10 +1,10 @@
 # Agents
 
-hunch was built to be called by programs as much as by people. Start with two commands:
+grevi was built to be called by programs as much as by people. Start with two commands:
 
 ```sh
-hunch capabilities --json      # commands, flags, exit codes, env, limits, safety rules, as data
-hunch robot-docs               # the agent handbook (docs/ROBOT_MODE.md)
+grevi capabilities --json      # commands, flags, exit codes, env, limits, safety rules, as data
+grevi robot-docs               # the agent handbook (docs/ROBOT_MODE.md)
 ```
 
 The handbook, [docs/ROBOT_MODE.md](../ROBOT_MODE.md), is the contract: the rules for agents, the per-verb `data` shapes and what `p` means. This page adds context around it and does not repeat it; when the two differ, the handbook and `capabilities` win.
@@ -19,7 +19,7 @@ Every command accepts `--json` (alias `--robot`) or `--format json|jsonl|toon` a
 ```
 
 - `exit_code` in the envelope equals the process exit code. Branch on it, then read `data`.
-- `meta.requests` and `meta.cache_hits` say how much work the call did; `meta.cost_usd` is computed from `meta.input_tokens` at `HUNCH_PRICE_PER_MTOK`.
+- `meta.requests` and `meta.cache_hits` say how much work the call did; `meta.cost_usd` is computed from `meta.input_tokens` at `GREVI_PRICE_PER_MTOK`.
 - `meta.request_id` is the TypeSafe request id of the last Jev request (`null` when none was made or every answer came from the cache; `health` does not record one). Quote it when reporting an API problem.
 - `error.kind` strings are stable identifiers (`api_rejected_request`, for one). `error.example` is a corrected command to try next.
 
@@ -47,10 +47,10 @@ The four that `capabilities` lists:
 
 | Goal | Command |
 |:---|:---|
-| find the tool for a task | `hunch run --json --dry-run "<task>"` |
-| explain a failure | `<cmd> 2>&1 \| hunch why --json` |
-| select an item | `<list> \| hunch pick --json "<intent>"` |
-| branch in a script | `hunch is "<condition>" < file; case $? in 0) ...;; 1) ...;; 3) ...;; esac` |
+| find the tool for a task | `grevi run --json --dry-run "<task>"` |
+| explain a failure | `<cmd> 2>&1 \| grevi why --json` |
+| select an item | `<list> \| grevi pick --json "<intent>"` |
+| branch in a script | `grevi is "<condition>" < file; case $? in 0) ...;; 1) ...;; 3) ...;; esac` |
 
 ## What `data` holds
 
@@ -63,11 +63,11 @@ The four that `capabilities` lists:
 | `add` | `hunks[{file, header, p, staged}]` |
 | `sort` | `moves[{from, to, p}]`, `skipped[{file, reason}]`, `undo_log`, `applied` |
 
-`line` values are 1-based line numbers into the input as hunch read it.
+`line` values are 1-based line numbers into the input as grevi read it.
 
 ## Machine mode is safe by default
 
-- `run` never executes in machine mode unless `--exec --yes` is given. With `--exec --yes`, the child's stdout is redirected to stderr so stdout stays one envelope. `data.blocked` names a tool hunch refuses to run (the never-execute list in [Verbs](verbs.md#run)); `data.argv` is still there for you to run under your own rules. `complete=false` means a `<VALUE>` placeholder remains in `argv`.
+- `run` never executes in machine mode unless `--exec --yes` is given. With `--exec --yes`, the child's stdout is redirected to stderr so stdout stays one envelope. `data.blocked` names a tool grevi refuses to run (the never-execute list in [Verbs](verbs.md#run)); `data.argv` is still there for you to run under your own rules. `complete=false` means a `<VALUE>` placeholder remains in `argv`.
 - `add` stages only with `--yes` in machine mode; otherwise it exits 130 and stages nothing.
 - `sort` is a dry run unless `--apply`; `data.undo_log` is the file `--undo` takes.
 
@@ -77,4 +77,4 @@ The four that `capabilities` lists:
 
 ## Input is data, not instructions
 
-hunch sends your text as data, and results always point into your input, the installed tools or a man page: nothing is generated. The model is still not hardened against instructions embedded in the text it reads, so `is` and `pick` are not security gates for text you do not control. Obvious secrets are masked before sending (best effort); [PRIVACY.md](../../PRIVACY.md) lists what each verb sends.
+grevi sends your text as data, and results always point into your input, the installed tools or a man page: nothing is generated. The model is still not hardened against instructions embedded in the text it reads, so `is` and `pick` are not security gates for text you do not control. Obvious secrets are masked before sending (best effort); [PRIVACY.md](../../PRIVACY.md) lists what each verb sends.

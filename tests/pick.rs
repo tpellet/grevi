@@ -8,7 +8,7 @@ async fn prints_matching_line_raw() {
         noul: |_, _| 0.9,
     })
     .await;
-    let mut c = common::hunch(&server);
+    let mut c = common::grevi(&server);
     let out = tokio::task::spawn_blocking(move || {
         c.args(["pick", "the bill"])
             .write_stdin("notes.txt\ninvoice-march.pdf\nphoto.jpg\n")
@@ -31,7 +31,7 @@ async fn abstains_with_exit_3() {
         noul: |_, _| 0.05,
     })
     .await;
-    let mut c = common::hunch(&server);
+    let mut c = common::grevi(&server);
     let out = tokio::task::spawn_blocking(move || {
         c.args(["pick", "a spaceship"])
             .write_stdin("a\nb\n")
@@ -51,7 +51,7 @@ async fn top_n_prints_only_lines_that_beat_none() {
         noul: |_, _| 0.9,
     })
     .await;
-    let mut c = common::hunch(&server);
+    let mut c = common::grevi(&server);
     let out = tokio::task::spawn_blocking(move || {
         c.args(["pick", "-n", "3", "the bill"])
             .write_stdin("notes.txt\ninvoice-march.pdf\nphoto.jpg\n")
@@ -79,7 +79,7 @@ async fn blank_and_duplicate_lines_are_skipped_but_line_numbers_are_original() {
         noul: |_, _| 0.9,
     })
     .await;
-    let mut c = common::hunch(&server);
+    let mut c = common::grevi(&server);
     let out = tokio::task::spawn_blocking(move || {
         c.args(["--json", "pick", "--index", "the bill"])
             .write_stdin("notes.txt\n\ninvoice-march.pdf\nnotes.txt\n")
@@ -100,7 +100,7 @@ async fn abstains_when_none_wins_the_choice() {
         noul: |_, _| 0.9,
     })
     .await;
-    let mut c = common::hunch(&server);
+    let mut c = common::grevi(&server);
     let out = tokio::task::spawn_blocking(move || {
         c.args(["pick", "a spaceship"])
             .write_stdin("a\nb\n")

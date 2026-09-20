@@ -1,3 +1,3 @@
 fn main() {
-    std::process::exit(hunch::main_exit());
+    std::process::exit(grevi::main_exit());
 }

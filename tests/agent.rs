@@ -43,7 +43,7 @@ fn capabilities_lists_verbs_exit_codes_env() {
             .as_array()
             .unwrap()
             .iter()
-            .find(|e| e["name"] == "HUNCH_MODEL")
+            .find(|e| e["name"] == "GREVI_MODEL")
             .unwrap()["default"],
         "jev-1.13.0"
     );
@@ -66,7 +66,7 @@ fn health_without_key_is_auth_error() {
 #[test]
 fn capabilities_work_with_an_unreadable_key_file() {
     common::bin()
-        .env("TYPESAFE_API_KEY_FILE", "/nonexistent/hunch-key")
+        .env("TYPESAFE_API_KEY_FILE", "/nonexistent/grevi-key")
         .args(["capabilities", "--json"])
         .assert()
         .success();

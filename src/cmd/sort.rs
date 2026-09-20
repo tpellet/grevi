@@ -1,6 +1,6 @@
 use crate::cmd::Outcome;
 use crate::config::Config;
-use crate::exit::{Exit, HunchError};
+use crate::exit::{Exit, GreviError};
 use crate::jev::client::Client;
 use crate::jev::{Question, Questions};
 use std::collections::BTreeMap;
@@ -76,9 +76,9 @@ fn excerpt(p: &Path) -> String {
     name
 }
 
-fn undo(log: &Path) -> Result<Outcome, HunchError> {
+fn undo(log: &Path) -> Result<Outcome, GreviError> {
     let text =
-        std::fs::read_to_string(log).map_err(|e| HunchError::Input(format!("undo log: {e}")))?;
+        std::fs::read_to_string(log).map_err(|e| GreviError::Input(format!("undo log: {e}")))?;
     let (mut restored, mut skipped) = (vec![], vec![]);
     for line in text.lines() {
         let Some((to, from)) = line.split_once('\t') else {
@@ -109,20 +109,20 @@ pub async fn run(
     into: Option<&Path>,
     apply: bool,
     undo_log: Option<&Path>,
-) -> Result<Outcome, HunchError> {
+) -> Result<Outcome, GreviError> {
     if let Some(l) = undo_log {
         return undo(l);
     }
     let root = into.unwrap_or(dir);
     let dests = folders(root);
     if dests.is_empty() {
-        return Err(HunchError::Input(format!(
+        return Err(GreviError::Input(format!(
             "no folders under {} to sort into",
             root.display()
         )));
     }
     let mut files: Vec<PathBuf> = std::fs::read_dir(dir)
-        .map_err(|e| HunchError::Input(e.to_string()))?
+        .map_err(|e| GreviError::Input(e.to_string()))?
         .flatten()
         .map(|e| e.path())
         .filter(|p| {
@@ -136,7 +136,7 @@ pub async fn run(
     // probability (up to 0.23 measured); sorted, the batches and the cache key are stable.
     files.sort();
     if files.is_empty() {
-        return Err(HunchError::EmptyInput("no files to sort"));
+        return Err(GreviError::EmptyInput("no files to sort"));
     }
     let client = Client::new(ctx)?;
     let folder_items: Vec<String> = dests
@@ -175,7 +175,7 @@ pub async fn run(
                 let p = probs.get(&c).copied().unwrap_or(0.0);
                 let none = probs.get("NONE").copied().unwrap_or(0.0);
                 Ok((c, p, none, r.noul(&format!("a{k:02}"))?))
-            }).collect::<Result<Vec<_>, HunchError>>()
+            }).collect::<Result<Vec<_>, GreviError>>()
         }
     });
     let picks: Vec<(String, f64, f64, f64)> = futures::future::try_join_all(jobs)
@@ -209,7 +209,7 @@ pub async fn run(
     let mut undo_path = None;
     if apply && !moves.is_empty() {
         let dir = ctx.cache_dir.clone().unwrap_or_else(std::env::temp_dir);
-        std::fs::create_dir_all(&dir).map_err(|e| HunchError::Input(e.to_string()))?;
+        std::fs::create_dir_all(&dir).map_err(|e| GreviError::Input(e.to_string()))?;
         let log = dir.join(format!(
             "sort-undo-{}.tsv",
             std::time::SystemTime::now()
@@ -222,7 +222,7 @@ pub async fn run(
             // Re-check right before the rename: `rename` would silently replace a file that
             // appeared since the dry run, and "never overwrites" must hold.
             if to.exists() {
-                return Err(HunchError::Input(format!(
+                return Err(GreviError::Input(format!(
                     "{} appeared meanwhile; nothing overwritten, stopping (undo log: {})",
                     to.display(),
                     log.display()
@@ -235,10 +235,10 @@ pub async fn run(
                 } else {
                     ""
                 };
-                HunchError::Input(format!("move {}: {e}{hint}", from.display()))
+                GreviError::Input(format!("move {}: {e}{hint}", from.display()))
             })?;
             lines.push_str(&format!("{}\t{}\n", to.display(), from.display()));
-            std::fs::write(&log, &lines).map_err(|e| HunchError::Input(e.to_string()))?;
+            std::fs::write(&log, &lines).map_err(|e| GreviError::Input(e.to_string()))?;
         }
         undo_path = Some(log.display().to_string());
     }

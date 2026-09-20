@@ -21,7 +21,7 @@ async fn exit_codes_follow_band() {
         ("hello there", 1),
         ("maybe something", 3),
     ] {
-        let mut c = common::hunch(&server);
+        let mut c = common::grevi(&server);
         let input = input.to_string();
         let out = tokio::task::spawn_blocking(move || {
             c.args(["is", "asks for a refund"])
@@ -42,7 +42,7 @@ async fn json_reports_probability() {
         noul: |_, _| 0.81,
     })
     .await;
-    let mut c = common::hunch(&server);
+    let mut c = common::grevi(&server);
     let out = tokio::task::spawn_blocking(move || {
         c.args(["--json", "is", "x"])
             .write_stdin("text")

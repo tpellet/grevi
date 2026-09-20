@@ -1,4 +1,4 @@
-use crate::exit::HunchError;
+use crate::exit::GreviError;
 use regex::Regex;
 use std::io::{IsTerminal, Read};
 use std::sync::LazyLock;
@@ -36,35 +36,35 @@ pub fn split_lines(text: &str) -> Vec<String> {
         .collect()
 }
 
-pub fn read_stdin() -> Result<Vec<String>, HunchError> {
+pub fn read_stdin() -> Result<Vec<String>, GreviError> {
     let mut stdin = std::io::stdin();
     if stdin.is_terminal() {
-        return Err(HunchError::EmptyInput("pipe text into hunch"));
+        return Err(GreviError::EmptyInput("pipe text into grevi"));
     }
     let mut buf = Vec::new();
     stdin
         .by_ref()
         .take(MAX_BYTES as u64 + 1)
         .read_to_end(&mut buf)
-        .map_err(|e| HunchError::Input(e.to_string()))?;
+        .map_err(|e| GreviError::Input(e.to_string()))?;
     if buf.len() > MAX_BYTES {
-        return Err(HunchError::InputTooLarge(format!(
+        return Err(GreviError::InputTooLarge(format!(
             "more than {} MiB on stdin",
             MAX_BYTES / 1024 / 1024
         )));
     }
     let lines = split_lines(&String::from_utf8_lossy(&buf));
     if lines.iter().all(|l| l.trim().is_empty()) {
-        return Err(HunchError::EmptyInput("stdin was empty"));
+        return Err(GreviError::EmptyInput("stdin was empty"));
     }
     Ok(lines)
 }
 
 /// Reads stdin on the blocking pool so a slow producer never stalls the runtime.
-pub async fn read_stdin_async() -> Result<Vec<String>, HunchError> {
+pub async fn read_stdin_async() -> Result<Vec<String>, GreviError> {
     tokio::task::spawn_blocking(read_stdin)
         .await
-        .map_err(|e| HunchError::Input(e.to_string()))?
+        .map_err(|e| GreviError::Input(e.to_string()))?
 }
 
 #[cfg(test)]

@@ -92,17 +92,17 @@ pub struct Response {
 }
 
 impl Response {
-    pub fn noul(&self, id: &str) -> Result<f64, crate::exit::HunchError> {
+    pub fn noul(&self, id: &str) -> Result<f64, crate::exit::GreviError> {
         self.answers
             .get(id)
             .and_then(|a| a.noul)
-            .ok_or_else(|| crate::exit::HunchError::Protocol(format!("missing noul `{id}`")))
+            .ok_or_else(|| crate::exit::GreviError::Protocol(format!("missing noul `{id}`")))
     }
-    pub fn probs(&self, id: &str) -> Result<&BTreeMap<String, f64>, crate::exit::HunchError> {
+    pub fn probs(&self, id: &str) -> Result<&BTreeMap<String, f64>, crate::exit::GreviError> {
         self.answers
             .get(id)
             .and_then(|a| a.probabilities.as_ref())
-            .ok_or_else(|| crate::exit::HunchError::Protocol(format!("missing choice `{id}`")))
+            .ok_or_else(|| crate::exit::GreviError::Protocol(format!("missing choice `{id}`")))
     }
 }
 
@@ -128,7 +128,7 @@ mod tests {
         let r: Response = serde_json::from_str(r#"{"model":"jev-1.13.0","answers":{"pick":{"type":"choice","choice":"L001","probabilities":{"L000":0.1,"L001":0.9},"confidence":0.8},"any":{"type":"noul","noul":0.97},"future":{"type":"score","score":3,"legend":{"1":"low"}}},"usage":{"input_tokens":120,"output_tokens":20}}"#).unwrap();
         assert_eq!(r.noul("any").unwrap(), 0.97);
         assert_eq!(r.probs("pick").unwrap()["L001"], 0.9);
-        // Forward compatibility: an answer type or field hunch does not know parses into an
+        // Forward compatibility: an answer type or field grevi does not know parses into an
         // `Answer` of `None`s; only reading it as a noul/choice fails, never the whole response.
         assert!(r.answers.contains_key("future"));
         assert_eq!(r.probs("future").unwrap_err().exit().code(), 4);

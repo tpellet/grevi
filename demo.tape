@@ -1,4 +1,4 @@
-# demo.tape — hunch v0 demo (hunch-task-13c-demo-jk1)
+# demo.tape — grevi v0 demo (grevi-task-13c-demo-jk1)
 # Fixture data only: no real home directory, no key material shown.
 # Run: TYPESAFE_API_KEY_FILE=/path/to/key vhs demo.tape
 Output demo.gif
@@ -12,13 +12,13 @@ Set Theme "Dracula"
 Set TypingSpeed 40ms
 
 Hide
-Type `REPO=$(pwd); D=$(mktemp -d "${TMPDIR:-/tmp}/hunch-demoXXXX"); cp -R "$REPO/benchmarks/fixtures/demo"/* "$D/"; export PATH="$REPO/target/release:$PATH"; cd "$D"; alias ,='hunch -v run'; export PS1='demo$ '; clear`
+Type `REPO=$(pwd); D=$(mktemp -d "${TMPDIR:-/tmp}/grevi-demoXXXX"); cp -R "$REPO/benchmarks/fixtures/demo"/* "$D/"; export PATH="$REPO/target/release:$PATH"; cd "$D"; alias ,='grevi -v run'; export PS1='demo$ '; clear`
 Enter
 Sleep 500ms
 Show
 
 # Scene 1: why — the line that broke the build, buried under 300 warnings.
-Type `cd buildfail && hunch -v why -- cargo build`
+Type `cd buildfail && grevi -v why -- cargo build`
 Enter
 Sleep 6s
 Type `cd ..`
@@ -26,12 +26,12 @@ Enter
 Sleep 500ms
 
 # Scene 2: pick — the fixture file name that matches the request.
-Type `ls fixtures/downloads | hunch -v pick "last month's electricity bill"`
+Type `ls fixtures/downloads | grevi -v pick "last month's electricity bill"`
 Enter
 Sleep 4s
 
 # Scene 3: is — a predicate on text, answered by exit code.
-Type `hunch -v is "asks for a refund" < mail.txt; echo $?`
+Type `grevi -v is "asks for a refund" < mail.txt; echo $?`
 Enter
 Sleep 4s
 

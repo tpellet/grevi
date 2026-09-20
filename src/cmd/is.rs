@@ -1,6 +1,6 @@
 use crate::cmd::Outcome;
 use crate::config::Config;
-use crate::exit::{Exit, HunchError};
+use crate::exit::{Exit, GreviError};
 use crate::jev::client::Client;
 use crate::jev::{Question, Questions};
 
@@ -8,10 +8,10 @@ use crate::jev::{Question, Questions};
 /// Denser text (non-Latin scripts) can exceed it and surfaces as `api_rejected_request` (exit 6).
 const MAX_CHARS: usize = 96_000;
 
-pub async fn run(ctx: &Config, condition: &str, band: f64) -> Result<Outcome, HunchError> {
+pub async fn run(ctx: &Config, condition: &str, band: f64) -> Result<Outcome, GreviError> {
     // Above 0.5 the "no" verdict becomes unreachable at the default threshold.
     if !(0.0..=0.5).contains(&band) {
-        return Err(HunchError::Usage(format!(
+        return Err(GreviError::Usage(format!(
             "--band {band} must be within 0..=0.5"
         )));
     }
@@ -31,7 +31,7 @@ pub async fn run(ctx: &Config, condition: &str, band: f64) -> Result<Outcome, Hu
             .into_iter()
             .rev()
             .collect();
-        text = format!("{head}\n[... truncated by hunch ...]\n{tail}");
+        text = format!("{head}\n[... truncated by grevi ...]\n{tail}");
     }
     let mut qs = Questions::new();
     qs.insert(

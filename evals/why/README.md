@@ -2,7 +2,7 @@
 
 Twenty real failing logs from public GitHub Actions runs of MIT/Apache-2.0 projects, four per
 ecosystem (cargo, npm/tsc, pytest, go, docker), each hand-labelled with the root-cause line range.
-`scripts/eval_why.py` runs `hunch why --json -n 3 < <id>.log` on every case and scores hit@1 and
+`scripts/eval_why.py` runs `grevi why --json -n 3 < <id>.log` on every case and scores hit@1 and
 hit@3 against `<id>.expect`, next to two regex baselines on the same files.
 
 Collected 2026-09-19. The runs were the most recent genuine tool failures on each repository's
@@ -35,7 +35,7 @@ Applied to the raw job log (`gh api repos/<owner>/<repo>/actions/jobs/<job>/logs
    `##[error]<line>`, so this rule dropped them too: the cases below were chosen where the tool's own
    output survived, which biases the sample toward test failures over compile errors for go and npm;
 4. runs of blank lines are collapsed to one;
-5. hunch's `input::redact` regex (`src/input.rs`) is applied. It fired on 3 files, every hit a false
+5. grevi's `input::redact` regex (`src/input.rs`) is applied. It fired on 3 files, every hit a false
    positive on `token...`/`tokenizer` in test ids and model warnings, none on the labelled lines;
 6. a window of at most 300 lines is kept, ending at or shortly after the failure (`window` below).
    Where the tail of the job included the checkout step's masked `token: ***` echo, the window was

@@ -1,9 +1,9 @@
 # Benchmarks
 
-Measured end-to-end latency of each `hunch` verb on fixed inputs, with `rg` as the local-tool
-baseline. Every latency number quoted anywhere for hunch (README, `--help`, launch posts) comes
+Measured end-to-end latency of each `grevi` verb on fixed inputs, with `rg` as the local-tool
+baseline. Every latency number quoted anywhere for grevi (README, `--help`, launch posts) comes
 from `results.md`, per verb, as p50 and p95, with the conditions below. There is no global
-"hunch takes N ms" claim: the verbs differ by an order of magnitude.
+"grevi takes N ms" claim: the verbs differ by an order of magnitude.
 
 ## How to run
 
@@ -23,13 +23,13 @@ Jev requests, so the numbers include the network.
 | Date | 2026-09-19 |
 | Machine | a typical macOS dev machine: Apple M4 Pro, 24 GB, macOS 26.6.2 |
 | Network | consumer Wi-Fi; to `api.typesafe.ai`: TCP connect ~80 ms, TLS done ~160 ms, empty HTTPS round trip ~240 ms (curl, 3 samples) |
-| Model | `jev-1.13.0` (hunch's pinned default) |
-| Toolchain | hunch 0.1.0, `cargo build --release`, rustc 1.93.1 |
+| Model | `jev-1.13.0` (grevi's pinned default) |
+| Toolchain | grevi 0.1.0, `cargo build --release`, rustc 1.93.1 |
 | hyperfine | 1.20.0, `--warmup 1 --runs 15 --ignore-failure` |
 | ripgrep | 15.2.0 |
 | Inputs | `pick`/`is`: `ls /usr/bin` (924 lines on this macOS); `why`: `fixtures/cargo-fail.log` (a real failing `cargo build`, 12 lines); `run`: the two requests in `bench.sh` |
 
-"cold" sets `HUNCH_NO_CACHE=1` (every answer is a live request); "warm" replays the answer cache.
+"cold" sets `GREVI_NO_CACHE=1` (every answer is a live request); "warm" replays the answer cache.
 `run` numbers include the installed-tool inventory read from its cache (the warm-up run built it);
 "route-only" is `--no-args`, "full" adds the argument round and the man-page renders.
 
@@ -56,14 +56,14 @@ run had `pick cold` 721/799 ms, `is cold` 434/512 ms, `why cold` 602/676 ms, `ru
 Reading the table:
 
 - `is` is one request: its p50 (~450 ms) is close to the network round trip above, so most of it
-  is the API, not hunch.
+  is the API, not grevi.
 - `pick` and `why` are two rounds (a window Choice, then finals) on a ~900-line input.
 - `run cold full` is the number people feel when they type `, <something>`: **p50 is about 1.9 s,
   above 1 s**, and the user-facing README must say so. Route-only saves only ~70–120 ms at p50
   (70 ms in the earlier run, 117 ms here): the time is in the routing rounds over the inventory,
   not in argument pointing.
 - `rg baseline` sits under hyperfine's 5 ms shell-calibration floor (hyperfine warns about it), so
-  read it as "a few milliseconds", not as a precise figure. hunch is not competing with `rg` on
+  read it as "a few milliseconds", not as a precise figure. grevi is not competing with `rg` on
   speed; the row shows what a local tool costs on the same input.
 - Warm `pick` (a cache hit) is ~7 ms: the cache makes a repeated question effectively free.
 
@@ -72,12 +72,12 @@ Reading the table:
 Connection prewarm: `Client::prewarm` spawns a `GET /v1/models` before the verb's local work so
 the first real request finds a pooled TLS connection. Decided twice, on the same day, on
 evidence: removed everywhere (Task 12, measured on `pick`), then re-added for `run` alone
-(bead hunch-n2h, measured on `run cold full`). Only `run` calls it today; there is no
-`HUNCH_NO_PREWARM` switch.
+(bead grevi-n2h, measured on `run cold full`). Only `run` calls it today; there is no
+`GREVI_NO_PREWARM` switch.
 
 ### Round 1 (Task 12): removed, measured on `pick`
 
-hunch used to open the connection early in every verb; `HUNCH_NO_PREWARM=1` disabled it. The
+grevi used to open the connection early in every verb; `GREVI_NO_PREWARM=1` disabled it. The
 decision rule (plan, Task 12 Step 4): keep prewarm only if `pick cold` is at least 50 ms faster
 at p50 than `pick cold no-prewarm`.
 
@@ -93,7 +93,7 @@ well under a millisecond, so the spawned GET had almost no local work to overlap
 is within run-to-run noise (σ ≈ 50–65 ms).
 
 Removed, in the same commit: `Client::prewarm`, the `prewarm` field of `Config`, the
-`HUNCH_NO_PREWARM` variable (also from `capabilities()`), the four call sites in `is`, `pick`,
+`GREVI_NO_PREWARM` variable (also from `capabilities()`), the four call sites in `is`, `pick`,
 `why` and `run`, and the "pick cold no-prewarm" line of `bench.sh`. The 8-row `results.md` that
 made that decision was replaced by the 7-row run above when round 2 landed.
 
@@ -103,7 +103,7 @@ Same day, same conditions, the rebuilt binary (prewarm code gone), 15 runs each,
 `pick cold` 709.6 ± 56.0 ms, `is cold` 405.0 ± 45.0 ms, `why cold` 603.2 ± 53.3 ms — unchanged
 within noise — but `run cold full` 2,252 ± 137 ms against 1,989 ± 81 ms in the decision run.
 
-An A/B on the pre-removal binary, `run cold full`, prewarm on vs `HUNCH_NO_PREWARM=1`, run in
+An A/B on the pre-removal binary, `run cold full`, prewarm on vs `GREVI_NO_PREWARM=1`, run in
 ABBA order so network drift cancels (15 runs per arm, means ± σ):
 
 | Arm | prewarm | mean ± σ |
@@ -122,10 +122,10 @@ by 10 ms in the same session, so 170 ms is well above the noise between arms.
 The decision rule is defined on `pick`, so prewarm was removed as the plan required, and the
 `run` finding was left for a follow-up decision on a `run cold full` A/B like the one above.
 
-### Round 2 (hunch-n2h): re-added for `run` only, measured on `run cold full`
+### Round 2 (grevi-n2h): re-added for `run` only, measured on `run cold full`
 
 Same day, same conditions (a typical macOS dev machine, consumer Wi-Fi, `jev-1.13.0`, hyperfine
-1.20.0, `--warmup 1 --runs 15 --ignore-failure`, `HUNCH_NO_CACHE=1`, the `bench.sh` "run cold
+1.20.0, `--warmup 1 --runs 15 --ignore-failure`, `GREVI_NO_CACHE=1`, the `bench.sh` "run cold
 full" command). Two release binaries built from the same tree: the incumbent (`main`, no prewarm)
 and the candidate (`Client::prewarm` re-added and called once, at the top of `run`, before the
 inventory `spawn_blocking`; no other verb calls it). ABBA order so network drift cancels; the

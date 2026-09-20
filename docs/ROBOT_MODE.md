@@ -1,6 +1,6 @@
-# hunch — robot mode
+# grevi — robot mode
 
-Start here: `hunch capabilities --json`. Every command accepts `--json` (alias `--robot`) or
+Start here: `grevi capabilities --json`. Every command accepts `--json` (alias `--robot`) or
 `--format json|jsonl|toon` and then prints exactly one envelope on stdout, usage errors included:
 
     { ok, command, version, exit_code, data, meta{model, elapsed_ms, requests, cache_hits,
@@ -16,7 +16,7 @@ Branch on `exit_code` (0 ok, 1 no, 2 usage, 3 abstain, 4 unavailable, 5 auth, 6 
   on output with no error-like line (usually stderr was not piped).
 - `run "<intent>"` → `data.tool, argv[], complete, blocked, executed`. Machine mode never executes
   unless `--exec --yes`; the child's stdout is redirected to stderr so stdout stays one envelope.
-  `blocked` names a tool hunch refuses to run (rm, dd, mkfs*, sudo, wrappers such as
+  `blocked` names a tool grevi refuses to run (rm, dd, mkfs*, sudo, wrappers such as
   sh/bash/env/xargs/find that would run another program, interpreters such as
   python*/perl*/ruby*/node*/php*/lua* that take program text, ...): run `argv` yourself under
   your own rules. Use `--dry-run` to route only. `complete=false` means `<VALUE>` placeholders remain.

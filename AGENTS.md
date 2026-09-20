@@ -1,4 +1,4 @@
-# AGENTS.md — hunch
+# AGENTS.md — grevi
 
 A fast Rust CLI that points at the right thing among real things — a line, a tool, a hunk, a
 file — using TypeSafe's Jev model, with calibrated confidence and an honest "nothing fits".
@@ -64,7 +64,7 @@ them as NOT RUN, never as passed.
 
 ---
 
-## hunch — This Project
+## grevi — This Project
 
 **`main` only.** No branches, no worktrees, no scratch clones, no PRs. One shared checkout.
 Parallel agents all work in it and coordinate through Agent Mail: each registers, reserves its
@@ -72,7 +72,7 @@ exact write paths before its first edit, and posts in the bead's thread (global 
 `~/.claude/AGENTS.md` RULE NUMBER 2). Tasks with a real dependency stay
 serial. If Agent Mail is down, run serially; never fall back to a worktree. Stage and commit only
 your own paths (`git commit -- <paths>`); the index is shared. Commits are SSH-signed; never bypass
-signing. Commit subject: semantic prefix + bead ID, e.g. `feat: add hunch pick (hunch-abc)`.
+signing. Commit subject: semantic prefix + bead ID, e.g. `feat: add grevi pick (grevi-abc)`.
 
 **Unattended runs: never trigger a confirmation prompt.** Agents run while Thomas is away; a
 prompt nobody answers stalls the whole run. If a destructive or mutating step seems needed
@@ -83,19 +83,19 @@ in place. Never use `rm` in any form (`rm -f`, `rm -rf`), `rmdir`, `unlink`, `gi
 your own scratch files: overwrite with the Write/Edit tool, write a new filename, or create a new
 directory instead. Use non-interactive flags (`-y`, `--yes`) for every command. `dcg` blocking a command is not a puzzle to route around.
 
-**Public repo: scan before every push.** `tpellet/hunch` is public; a push is publication. Before
+**Public repo: scan before every push.** `tpellet/grevi` is public; a push is publication. Before
 every `git push`: `gitleaks git . --log-opts="origin/main..HEAD" --redact -v` (no leaks; the repo's
 `.gitleaks.toml` applies), then read `git diff origin/main..HEAD` for keys, tokens, pasted API
 responses, absolute local paths, session URLs, personal details, other people's data. On a hit:
 fix forward in a new commit, never rewrite history, never force-push. Never commit communications
-drafts (tweet, Show HN, announcements): they live in `~/Projects/hunch-launch/`, outside the repo,
+drafts (tweet, Show HN, announcements): they live in `~/Projects/grevi-launch/`, outside the repo,
 and never go into bead fields or commit messages. User-facing docs say
 `TYPESAFE_API_KEY_FILE=/path/to/key` and "a typical macOS dev machine", never the real key path
 or personal tooling. Commit bodies stay technical: no `Co-Authored-By`, no `Claude-Session:`
 trailer. Global rule: `~/.claude/AGENTS.md` "Public Repositories — Push With Care".
 
-**Live API key.** Point hunch at the key with
-`TYPESAFE_API_KEY_FILE=$HOME/.ssh/typesafe-ai-key` in the command's environment — hunch reads
+**Live API key.** Point grevi at the key with
+`TYPESAFE_API_KEY_FILE=$HOME/.ssh/typesafe-ai-key` in the command's environment — grevi reads
 it, you never do. Never echo the variable or the key. Live commands need the sandbox disabled
 because `~/.ssh` is sandbox-denied.
 

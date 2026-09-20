@@ -25,8 +25,8 @@ async fn routes_to_the_tool() {
     })
     .await;
     let dir = tempfile::tempdir().unwrap();
-    let mut c = common::hunch(&server);
-    c.env("HUNCH_INVENTORY_FILE", inv(&dir));
+    let mut c = common::grevi(&server);
+    c.env("GREVI_INVENTORY_FILE", inv(&dir));
     let out = tokio::task::spawn_blocking(move || {
         c.args([
             "--json",
@@ -55,8 +55,8 @@ async fn abstains_when_nothing_installed_fits() {
     })
     .await;
     let dir = tempfile::tempdir().unwrap();
-    let mut c = common::hunch(&server);
-    c.env("HUNCH_INVENTORY_FILE", inv(&dir));
+    let mut c = common::grevi(&server);
+    c.env("GREVI_INVENTORY_FILE", inv(&dir));
     let out = tokio::task::spawn_blocking(move || {
         c.args(["run", "--dry-run", "make", "a", "qr", "code"])
             .output()

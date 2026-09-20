@@ -4,6 +4,10 @@
 
 Wave 2: two verbs that act on real things, each safe by default. macOS and Linux.
 
+Renamed:
+
+- The project is now `grevi`, not `hunch`: crate, library, binary, `GREVI_*` environment variables, cache directory, user agent, agent skill, and the GitHub repository (`github.com/tpellet/grevi`). The v0.1.0 release assets keep their `hunch-*` names; the next release publishes `grevi-*`.
+
 Verbs:
 
 - `add "<topic>"`: score each unstaged hunk of tracked files against a topic and stage the ones about it; `--dry-run` only scores, `--yes` skips the question; works from any subdirectory of the repo; exit 3 when no hunk is about the topic, exit 6 when there are no unstaged changes.
@@ -34,7 +38,7 @@ Agent surface:
 - `capabilities` (`--json`): commands, flags, exit codes, env, limits, safety rules.
 - `robot-docs [guide|commands|exit-codes|examples|privacy]`: the agent handbook.
 - `health`: key and API reachability.
-- `init zsh|bash`: the `,` alias for `hunch run`, plus an opt-in command-not-found hook (`HUNCH_CNF=1`).
+- `init zsh|bash`: the `,` alias for `grevi run`, plus an opt-in command-not-found hook (`GREVI_CNF=1`).
 - `--json` / `--robot` / `--format json|jsonl|toon`: exactly one envelope on stdout (`ok, command, version, exit_code, data, meta, error`), usage errors included.
 - Exit codes: 0 ok, 1 no, 2 usage, 3 abstain, 4 unavailable, 5 auth, 6 input, 7 child failed, 130 declined.
 
@@ -47,10 +51,10 @@ Safety:
 
 Model and answers:
 
-- Default model pinned to `jev-1.13.0`; the 0.5 threshold was calibrated on it. `--model jev-latest` / `HUNCH_MODEL` allowed and documented as moving.
-- One threshold (`-t`, `HUNCH_THRESHOLD`, default 0.5) on absolute yes/no answers; "which one" answers must beat NONE.
+- Default model pinned to `jev-1.13.0`; the 0.5 threshold was calibrated on it. `--model jev-latest` / `GREVI_MODEL` allowed and documented as moving.
+- One threshold (`-t`, `GREVI_THRESHOLD`, default 0.5) on absolute yes/no answers; "which one" answers must beat NONE.
 - Tournament past 255 options (windows of 200 + NONE, 3 finalists per window, one finals round), 60,000-character window budget, at most 2 rounds per verb (3 for `run`).
-- Disk cache of answers keyed by request hash, 7-day TTL; `--no-cache`, `HUNCH_NO_CACHE`.
+- Disk cache of answers keyed by request hash, 7-day TTL; `--no-cache`, `GREVI_NO_CACHE`.
 - Retries on 408/429/5xx/timeouts up to 3 times, honouring `retry-after`; 413/422 reported as input errors (`api_rejected_request`, exit 6).
 
 Benchmarks (`benchmarks/`): per-verb p50/p95 with conditions; the connection prewarm was measured (17 ms at p50 on `pick`) and removed.

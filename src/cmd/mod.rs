@@ -1,4 +1,4 @@
-use crate::exit::{Exit, HunchError};
+use crate::exit::{Exit, GreviError};
 
 pub mod add;
 pub mod agent;
@@ -17,7 +17,7 @@ pub struct Outcome {
 
 /// Asks on /dev/tty so it works when stdout is piped. `Ok(None)` means there is no TTY
 /// (never act); `Ok(Some(false))` means the user declined. Shared by `run` and `add`.
-pub fn confirm_tty(prompt: &str) -> Result<Option<bool>, HunchError> {
+pub fn confirm_tty(prompt: &str) -> Result<Option<bool>, GreviError> {
     use std::io::{BufRead, Write};
     let Ok(tty) = std::fs::OpenOptions::new()
         .read(true)
@@ -32,6 +32,6 @@ pub fn confirm_tty(prompt: &str) -> Result<Option<bool>, HunchError> {
     let mut line = String::new();
     std::io::BufReader::new(&tty)
         .read_line(&mut line)
-        .map_err(|e| HunchError::Input(e.to_string()))?;
+        .map_err(|e| GreviError::Input(e.to_string()))?;
     Ok(Some(matches!(line.trim(), "y" | "Y" | "yes")))
 }

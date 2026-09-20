@@ -19,10 +19,10 @@ pub fn live_key_present() -> bool {
 fn inventory_finds_many_tools_here() {
     let cache = tempfile::tempdir().unwrap();
     let t0 = std::time::Instant::now();
-    let tools = hunch::inventory::load(Some(cache.path())).unwrap();
+    let tools = grevi::inventory::load(Some(cache.path())).unwrap();
     let cold = t0.elapsed();
     let t1 = std::time::Instant::now();
-    let again = hunch::inventory::load(Some(cache.path())).unwrap();
+    let again = grevi::inventory::load(Some(cache.path())).unwrap();
     let warm = t1.elapsed();
     eprintln!(
         "{} tools; cold {cold:?}, cached {warm:?} (informational, not asserted)",
@@ -58,7 +58,7 @@ fn live_run_routes_tar() {
     if !live_key_present() {
         return;
     }
-    let out = assert_cmd::Command::cargo_bin("hunch")
+    let out = assert_cmd::Command::cargo_bin("grevi")
         .unwrap()
         .args([
             "--json",

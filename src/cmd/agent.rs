@@ -1,7 +1,7 @@
 use crate::cli::Shell;
 use crate::cmd::Outcome;
 use crate::config::Config;
-use crate::exit::{Exit, HunchError};
+use crate::exit::{Exit, GreviError};
 
 const GUIDE: &str = include_str!("../../docs/ROBOT_MODE.md");
 
@@ -11,44 +11,44 @@ pub fn capabilities() -> Outcome {
         .map(|(e, d)| serde_json::json!({ "code": e.code(), "name": e, "meaning": d }))
         .collect();
     let data = serde_json::json!({
-        "name": "hunch",
+        "name": "grevi",
         "version": env!("CARGO_PKG_VERSION"),
         "summary": "Point at the right thing among real things, by meaning, with calibrated confidence (TypeSafe Jev).",
         "global_flags": ["--json (alias --robot)", "--format human|json|jsonl|toon", "-t/--threshold <0..1>", "--model <id>", "--no-cache", "-v/--verbose"],
         "commands": [
-            { "name": "pick", "usage": "<stdin> | hunch pick \"<intent>\" [-n N] [--index]", "stdin": true, "exit": [0, 3], "data": "matches[{line,text,p}], any" },
-            { "name": "why", "usage": "<cmd> 2>&1 | hunch why [-C N] [-n N]  |  hunch why [-C N] -- <cmd...>", "stdin": true, "exit": [0, 3], "data": "causes[{line,text,p,context[]}], any, considered, total, hint, child_exit" },
-            { "name": "run", "usage": "hunch run [--dry-run|--yes|--exec --yes] [--no-args] <intent...>", "stdin": false, "exit": [0, 3, 7, 130], "data": "tool, fit, argv[], flags[], complete, blocked, executed, child_exit, alternatives[]" },
-            { "name": "is", "usage": "<stdin> | hunch is \"<condition>\" [--band 0.15]", "stdin": true, "exit": [0, 1, 3], "data": "p, verdict, truncated" },
-            { "name": "add", "usage": "hunch add [--dry-run|--yes] \"<topic>\"", "stdin": false, "exit": [0, 3, 130], "data": "hunks[{file,header,p,staged}]", "note": "tracked files only; index only, never commits; works from any subdirectory" },
-            { "name": "sort", "usage": "hunch sort <dir> [--into <root>] [--apply | --undo <log>]", "stdin": false, "exit": [0, 3], "data": "moves[], skipped[], undo_log, applied", "note": "dry-run by default; never overwrites, never deletes; same volume only" },
-            { "name": "capabilities", "usage": "hunch capabilities --json" },
-            { "name": "robot-docs", "usage": "hunch robot-docs [guide|commands|exit-codes|examples|privacy]" },
-            { "name": "health", "usage": "hunch health --json", "exit": [0, 4, 5] },
-            { "name": "init", "usage": "eval \"$(hunch init zsh|bash)\"" }
+            { "name": "pick", "usage": "<stdin> | grevi pick \"<intent>\" [-n N] [--index]", "stdin": true, "exit": [0, 3], "data": "matches[{line,text,p}], any" },
+            { "name": "why", "usage": "<cmd> 2>&1 | grevi why [-C N] [-n N]  |  grevi why [-C N] -- <cmd...>", "stdin": true, "exit": [0, 3], "data": "causes[{line,text,p,context[]}], any, considered, total, hint, child_exit" },
+            { "name": "run", "usage": "grevi run [--dry-run|--yes|--exec --yes] [--no-args] <intent...>", "stdin": false, "exit": [0, 3, 7, 130], "data": "tool, fit, argv[], flags[], complete, blocked, executed, child_exit, alternatives[]" },
+            { "name": "is", "usage": "<stdin> | grevi is \"<condition>\" [--band 0.15]", "stdin": true, "exit": [0, 1, 3], "data": "p, verdict, truncated" },
+            { "name": "add", "usage": "grevi add [--dry-run|--yes] \"<topic>\"", "stdin": false, "exit": [0, 3, 130], "data": "hunks[{file,header,p,staged}]", "note": "tracked files only; index only, never commits; works from any subdirectory" },
+            { "name": "sort", "usage": "grevi sort <dir> [--into <root>] [--apply | --undo <log>]", "stdin": false, "exit": [0, 3], "data": "moves[], skipped[], undo_log, applied", "note": "dry-run by default; never overwrites, never deletes; same volume only" },
+            { "name": "capabilities", "usage": "grevi capabilities --json" },
+            { "name": "robot-docs", "usage": "grevi robot-docs [guide|commands|exit-codes|examples|privacy]" },
+            { "name": "health", "usage": "grevi health --json", "exit": [0, 4, 5] },
+            { "name": "init", "usage": "eval \"$(grevi init zsh|bash)\"" }
         ],
         "common_exit": { "codes": [2, 4, 5, 6], "meaning": "any command: usage, API unavailable, auth, input" },
         "exit_codes": exit_codes,
         "env": [
             { "name": "TYPESAFE_API_KEY", "meaning": "API key (never printed)" },
             { "name": "TYPESAFE_API_KEY_FILE", "meaning": "path to a file holding the key (read only when a key is needed)" },
-            { "name": "HUNCH_BASE_URL", "default": "https://api.typesafe.ai" },
-            { "name": "HUNCH_MODEL", "default": "jev-1.13.0", "meaning": "pinned; `jev-latest` is an alias that moves with each release" },
-            { "name": "HUNCH_THRESHOLD", "default": 0.5 },
-            { "name": "HUNCH_CONCURRENCY", "default": 8 },
-            { "name": "HUNCH_CACHE_DIR", "default": "platform cache dir/hunch" },
-            { "name": "HUNCH_NO_CACHE", "meaning": "disable the answer cache (entries expire after 7 days anyway)" },
-            { "name": "HUNCH_PRICE_PER_MTOK", "default": 0.042 },
-            { "name": "HUNCH_INVENTORY_FILE", "meaning": "JSON array of {name, summary} replacing the PATH inventory (tests, evals)" },
-            { "name": "HUNCH_CNF", "meaning": "enable the command-not-found hook from `hunch init`" }
+            { "name": "GREVI_BASE_URL", "default": "https://api.typesafe.ai" },
+            { "name": "GREVI_MODEL", "default": "jev-1.13.0", "meaning": "pinned; `jev-latest` is an alias that moves with each release" },
+            { "name": "GREVI_THRESHOLD", "default": 0.5 },
+            { "name": "GREVI_CONCURRENCY", "default": 8 },
+            { "name": "GREVI_CACHE_DIR", "default": "platform cache dir/grevi" },
+            { "name": "GREVI_NO_CACHE", "meaning": "disable the answer cache (entries expire after 7 days anyway)" },
+            { "name": "GREVI_PRICE_PER_MTOK", "default": 0.042 },
+            { "name": "GREVI_INVENTORY_FILE", "meaning": "JSON array of {name, summary} replacing the PATH inventory (tests, evals)" },
+            { "name": "GREVI_CNF", "meaning": "enable the command-not-found hook from `grevi init`" }
         ],
         "limits": { "choice_options": 255, "window": crate::tournament::WINDOW, "state_tokens": 32000, "request_tokens": 64000, "requests_per_minute": 1200, "tokens_per_second": 250000, "stdin_bytes": crate::input::MAX_BYTES, "pick_lines": crate::cmd::pick::MAX_LINES },
         "envelope": { "fields": ["ok", "command", "version", "exit_code", "data", "meta{model,elapsed_ms,requests,cache_hits,input_tokens,cost_usd,threshold,request_id}", "error{kind,message,hint,example}"] },
         "workflows": [
-            { "goal": "find the tool for a task", "command": "hunch run --json --dry-run \"<task>\"" },
-            { "goal": "explain a failure", "command": "<cmd> 2>&1 | hunch why --json" },
-            { "goal": "select an item", "command": "<list> | hunch pick --json \"<intent>\"" },
-            { "goal": "branch in a script", "command": "hunch is \"<condition>\" < file; case $? in 0) ...;; 1) ...;; 3) ...;; esac" }
+            { "goal": "find the tool for a task", "command": "grevi run --json --dry-run \"<task>\"" },
+            { "goal": "explain a failure", "command": "<cmd> 2>&1 | grevi why --json" },
+            { "goal": "select an item", "command": "<list> | grevi pick --json \"<intent>\"" },
+            { "goal": "branch in a script", "command": "grevi is \"<condition>\" < file; case $? in 0) ...;; 1) ...;; 3) ...;; esac" }
         ],
         "safety": [
             "run executes only after TTY confirmation or --yes; in machine mode only with --exec --yes, and the child's stdout goes to stderr so stdout stays one envelope",
@@ -65,7 +65,7 @@ pub fn capabilities() -> Outcome {
     }
 }
 
-pub fn robot_docs(topic: Option<&str>) -> Result<Outcome, HunchError> {
+pub fn robot_docs(topic: Option<&str>) -> Result<Outcome, GreviError> {
     let caps = capabilities().data;
     let text = match topic.unwrap_or("guide") {
         "guide" => GUIDE.to_string(),
@@ -74,7 +74,7 @@ pub fn robot_docs(topic: Option<&str>) -> Result<Outcome, HunchError> {
         "examples" => serde_json::to_string_pretty(&caps["workflows"]).unwrap(),
         "privacy" => include_str!("../../PRIVACY.md").to_string(),
         other => {
-            return Err(HunchError::Usage(format!(
+            return Err(GreviError::Usage(format!(
                 "unknown topic `{other}`; topics: guide, commands, exit-codes, examples, privacy"
             )));
         }
@@ -86,7 +86,7 @@ pub fn robot_docs(topic: Option<&str>) -> Result<Outcome, HunchError> {
     })
 }
 
-pub async fn health(ctx: &Config) -> Result<Outcome, HunchError> {
+pub async fn health(ctx: &Config) -> Result<Outcome, GreviError> {
     let key = ctx.api_key()?;
     let start = std::time::Instant::now();
     let r = reqwest::Client::new()
@@ -95,7 +95,7 @@ pub async fn health(ctx: &Config) -> Result<Outcome, HunchError> {
         .timeout(std::time::Duration::from_secs(5))
         .send()
         .await
-        .map_err(|e| HunchError::Unavailable(e.to_string()))?;
+        .map_err(|e| GreviError::Unavailable(e.to_string()))?;
     let ms = start.elapsed().as_millis();
     match r.status().as_u16() {
         200 => {
@@ -106,31 +106,31 @@ pub async fn health(ctx: &Config) -> Result<Outcome, HunchError> {
                 data: serde_json::json!({ "key": "present", "api": "reachable", "latency_ms": ms, "models": models["models"] }),
             })
         }
-        401 | 403 => Err(HunchError::BadKey(r.status().as_u16())),
-        s => Err(HunchError::Unavailable(format!("HTTP {s}"))),
+        401 | 403 => Err(GreviError::BadKey(r.status().as_u16())),
+        s => Err(GreviError::Unavailable(format!("HTTP {s}"))),
     }
 }
 
 pub fn init(shell: Shell) -> Outcome {
     let body = match shell {
         Shell::Zsh => {
-            r#"# hunch shell integration — add to ~/.zshrc: eval "$(hunch init zsh)"
-alias ,='noglob hunch run'
-# Opt-in: route unknown commands of 3+ words to hunch (export HUNCH_CNF=1).
-if [[ -n $HUNCH_CNF ]] && ! (( $+functions[command_not_found_handler] )); then
+            r#"# grevi shell integration — add to ~/.zshrc: eval "$(grevi init zsh)"
+alias ,='noglob grevi run'
+# Opt-in: route unknown commands of 3+ words to grevi (export GREVI_CNF=1).
+if [[ -n $GREVI_CNF ]] && ! (( $+functions[command_not_found_handler] )); then
   command_not_found_handler() {
-    if (( $# >= 3 )); then hunch run "$*"; return $?; fi
+    if (( $# >= 3 )); then grevi run "$*"; return $?; fi
     print -u2 "zsh: command not found: $1"; return 127
   }
 fi
 "#
         }
         Shell::Bash => {
-            r#"# hunch shell integration — add to ~/.bashrc: eval "$(hunch init bash)"
-alias ,='hunch run'
-if [[ -n $HUNCH_CNF ]] && ! declare -F command_not_found_handle >/dev/null; then
+            r#"# grevi shell integration — add to ~/.bashrc: eval "$(grevi init bash)"
+alias ,='grevi run'
+if [[ -n $GREVI_CNF ]] && ! declare -F command_not_found_handle >/dev/null; then
   command_not_found_handle() {
-    if (( $# >= 3 )); then hunch run "$*"; return $?; fi
+    if (( $# >= 3 )); then grevi run "$*"; return $?; fi
     echo "bash: $1: command not found" >&2; return 127
   }
 fi

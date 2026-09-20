@@ -1,6 +1,6 @@
 use crate::cmd::Outcome;
 use crate::config::Config;
-use crate::exit::{Exit, HunchError};
+use crate::exit::{Exit, GreviError};
 use crate::jev::client::Client;
 use crate::tournament::{Prompts, rank};
 
@@ -12,9 +12,9 @@ pub async fn run(
     intent: &str,
     top: usize,
     index: bool,
-) -> Result<Outcome, HunchError> {
+) -> Result<Outcome, GreviError> {
     if top == 0 {
-        return Err(HunchError::Usage("-n must be at least 1".into()));
+        return Err(GreviError::Usage("-n must be at least 1".into()));
     }
     let client = Client::new(ctx)?;
     let lines = crate::input::read_stdin_async().await?;
@@ -26,7 +26,7 @@ pub async fn run(
         .filter(|&i| !lines[i].trim().is_empty() && seen.insert(lines[i].trim()))
         .collect();
     if kept.len() > MAX_LINES {
-        return Err(HunchError::InputTooLarge(format!(
+        return Err(GreviError::InputTooLarge(format!(
             "more than {MAX_LINES} lines; filter first (rg, head) or split the list"
         )));
     }
