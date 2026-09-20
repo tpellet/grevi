@@ -5,8 +5,9 @@ command-line tools? Two experiments. The first gives an agent one question about
 `is`). The second gives it a seven-step job where it has to choose tools (`run`). Few runs per
 cell: these are spot checks, not benchmarks. Read the direction, not the decimals.
 
-Short version: `why` and `is` helped where `grep` has nothing to hold on to. `run` did not help
-at all.
+Short version: `why` and `is` helped where `grep` has nothing to hold on to. The `run` pilot
+could not show anything either way: every tool it needed is one the model already knows by name.
+A test with tools the model cannot know is the open one.
 
 # Experiment 1: one question about a text
 
@@ -90,7 +91,7 @@ for, so the plain agent printed all 24 files into its context.
 - Not measured here: repeats, other models, other harnesses, latency, and a plain arm allowed
   more than one turn of effort. grevi's own accuracy on 20 logs is in the main README.
 
-# Experiment 2: a job where the agent chooses the tools
+# Experiment 2 (pilot): a job where the agent chooses the tools
 
 The first experiment scripted the grevi arm and needed one tool call per task, so it could say
 nothing about `run`. This one is a seven-step job where each step names an outcome, not a tool,
@@ -142,9 +143,11 @@ Three fresh subagents per arm, model alias `sonnet`, each in its own copy of the
   `plutil`, `afconvert` and `ffprobe`: all workable, none better than what the agents chose, and
   with no flags except `plutil -convert <VALUE>`. Flags are where the agents failed and where
   `run` is weakest (5 of 20 in the main README).
-- Not tested: tools the model cannot know, such as a company's internal CLIs with man pages, or
-  the long tail of a 1,700-tool PATH. That is the case where routing over what is installed could
-  save an agent a search. It needs its own experiment; this one does not support the claim.
+- The design flaw: the task only needed tools that a frontier model knows by name, so the agents
+  never had a reason to ask what is installed. This pilot therefore says nothing about `run` for
+  agents, for or against. The case to test is tools the model cannot know, such as a company's
+  internal CLIs with man pages, or the long tail of a 2,000-command PATH, where the alternative is
+  reading thousands of man-page summaries.
 
 # Skill check: staging one fix
 

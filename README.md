@@ -294,17 +294,13 @@ For Codex, copy or symlink `skills/grevi` into `~/.agents/skills/` (or `.agents/
 
 ### What it changes for an agent
 
-I expected a token story and mostly did not find one. Two spot checks with Claude Code subagents, a few runs per cell, all in [benchmarks/agents/](benchmarks/agents/README.md).
+An agent already has `grep` and can read files. grevi helps where those two run out. I gave Claude Code subagents the same task with and without grevi; the prompts, the runs and the limits of these spot checks are in [benchmarks/agents/](benchmarks/agents/README.md).
 
-An agent with `grep` does not need grevi on a 300-line log. Asked for the root cause of a failed CI job, every agent without grevi ran one `grep -iE "error|fail|…"`, found the right line, and used the same tokens as the agent that called `grevi why`.
-
-The difference appears when the line that explains a failure holds none of the words one greps for. In the 10,074-line log above, `grep` found the test that panicked. The agent reported that test and stopped. The cause is two lines below the panic: `left: [… "\\src\\helpers.py" …]`, a Windows path compared with a Unix one. The agent that called `grevi why` reported the cause, in 11,000 fewer tokens. The same thing happened on a 173-line Go log: "failed to update release" without grevi, the SQL statement that did not match with it.
+The first case is a failure whose explanation holds none of the words one greps for. Asked for the root cause of the 10,074-line log above, the agent without grevi ran `grep -iE "error|fail|…"`, found the test that panicked, reported that test and stopped. The cause is two lines below the panic: `left: [… "\\src\\helpers.py" …]`, a Windows path compared with a Unix one. The agent that called `grevi why` reported the cause, in 11,000 fewer tokens. The same thing happened on a 173-line Go log: "failed to update release" without grevi, the SQL statement that did not match with it. On short logs where the failing line says "error", both agents found it at the same cost.
 
 The second case is a question `grep` has no handle on. Routing the 24 support tickets, the agent without grevi printed them all into its context, found 5 of the 6 churn risks and was unsure about "how do I export all of our data". The agent with grevi ran `grevi is` in a loop and read 24 exit codes: 6 of 6, unsure about the employee who is leaving their company. Its cost grows with the number of tickets, not with their length.
 
-One job an agent cannot do with plain git is stage part of a working tree, because `git add -p` asks questions on a terminal. Given only the skill file and a repository with a bug fix, a debug print and a refactor mixed together, an agent ran `grevi add --dry-run`, then `--yes`, and staged the fix alone. One run, six tool calls.
-
-`run` did not help. I gave three Sonnet agents a seven-step conversion job, the grevi skill, and the advice to ask `grevi run` when unsure which installed tool does a step. None of them called it. The model already knew `textutil`, `sips`, `plutil` and `afconvert`, and one `which` told it what was installed. The steps that failed, one in each arm, failed on a flag (`sips` writes PNG data into a `.jpg` unless you pass `-s format jpeg`), and flags are what `run` is worst at. Tools the model cannot know, such as internal CLIs with a man page, are the case I have not tested.
+The third case is a job that has no non-interactive command. An agent cannot stage part of a working tree with plain git, because `git add -p` asks questions on a terminal. Given only the skill file and a repository with a bug fix, a debug print and a refactor mixed together, an agent ran `grevi add --dry-run`, then `--yes`, and staged the fix alone. One run, six tool calls.
 
 ## Privacy and safety
 
