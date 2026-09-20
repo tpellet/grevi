@@ -1,14 +1,14 @@
 [package]
 name = "grevi"
-version = "0.3.1"
+version = "0.3.2"
 edition = "2024"
 rust-version = "1.87"
 license = "MIT"
-description = "Ask questions about text from the shell: find the error in a long log, pick a line by description, stage one topic, tidy a folder. Selects, never generates."
+description = "grep for meaning: find the error in a 10,000-line log, a commit by description, the command for a task. A Unix CLI powered by Jev from TypeSafe AI; no key needed, thanks to classifier.dev."
 repository = "https://github.com/tpellet/grevi"
 homepage = "https://github.com/tpellet/grevi"
 readme = "README.md"
-keywords = ["cli", "llm", "semantic", "pointer", "jev"]
+keywords = ["cli", "grep", "semantic-search", "jev", "typesafe"]
 categories = ["command-line-utilities"]
 # Ship the program and its user docs. Everything else lives in the repo.
 exclude = [

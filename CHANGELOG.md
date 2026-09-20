@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.2 — 2026-09-20
+
+Changed:
+
+- Documentation only. The README opens with what grevi is ("`grep` for meaning"), a table of the six commands and a links row, credits Jev from TypeSafe AI and classifier.dev, and the README and guide describe the tool without meta or retrospective language. The package description and keywords match.
+
 ## 0.3.1 — 2026-09-20
 
 Changed:

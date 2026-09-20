@@ -9,7 +9,7 @@
 
 grevi is a command-line tool, written in Rust, that searches by meaning. You describe what you want in plain English, and it finds it: the line that made a 10,000-line build fail, the commit you half remember, the command on your machine that does a task, the git changes that belong to one fix, the right folder for a file called `document(3).txt`. Your words need not appear in what it finds.
 
-It works like any Unix tool. It reads stdin, prints lines, and answers yes-or-no questions with an exit code, so it fits into pipes, `&&` and `case`. It needs no API key.
+It works like any Unix tool. It reads stdin, prints lines, and answers yes-or-no questions with an exit code, so it fits into pipes, `&&` and `case`. It needs no API key, thanks to [classifier.dev](https://classifier.dev), which serves Jev free.
 
 | Command | What it does |
 |:---|:---|
