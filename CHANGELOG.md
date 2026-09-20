@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.0 — 2026-09-20
+
+Added:
+
+- `pick --files <DIR> "<intent>"`: choose among the files under a directory by what they are about, and print the path. The first round ranks the path names; the second reads the first 2,000 masked characters of at most 24 finalist files. Inside a git work tree `.gitignore` applies. Hidden entries, symlinks and names that are not UTF-8 are never candidates. `data.source` reports `stdin` or `files`.
+
+Changed:
+
+- The crate, the library, the binary, the `JEVIFY_*` environment variables, the cache directory, the user agent, the agent skill and the repository are named `jevify`. Install with `cargo install jevify --locked`.
+
 ## 0.3.4 — 2026-09-20
 
 Changed:
