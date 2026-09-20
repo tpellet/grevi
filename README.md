@@ -1,7 +1,5 @@
 # grevi
 
-**Point at the right line, file or tool from your shell, and hear "nothing fits" when nothing does.**
-
 grevi is the semantic toolkit for your shell: small, composable commands that bring judgment to ordinary Unix pipelines. Pick a filename from a description, find the error that broke a build, check whether an email asks for a refund, or match a request to an installed tool. Powered by TypeSafe's Jev, grevi selects from your actual input, tools and man pages rather than generating free-form answers. Pipes and exit codes make it fit into the scripts you already write; structured JSON makes the same commands usable by agents. Uncertainty has its own exit code, so your workflow can handle "unsure" explicitly.
 
 One binary for macOS and Linux. The 0.2.0 release ships six verbs — `pick`, `why`, `is`, `run`, `add` and `sort` — plus a `,` shell alias for `run`. Every command takes `--json` and prints one envelope with the answer, a calibrated probability, the request count and its cost.
