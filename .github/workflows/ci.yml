@@ -46,6 +46,11 @@ jobs:
       - run: cargo doc --locked --no-deps
         env:
           RUSTDOCFLAGS: "-D warnings"
+      - run: cargo publish --dry-run --locked
+      - name: Install pinned cargo-dist
+        shell: bash
+        run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.32.0/cargo-dist-installer.sh | sh
+      - run: dist plan
 
   cargo-deny:
     timeout-minutes: 20

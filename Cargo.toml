@@ -1,6 +1,6 @@
 [package]
 name = "grevi"
-version = "0.3.3"
+version = "0.3.4"
 edition = "2024"
 rust-version = "1.87"
 license = "MIT"
@@ -23,6 +23,7 @@ exclude = [
     "docs/superpowers/",
     "evals/",
     "scripts/",
+    "tests/release.rs",
 ]
 
 [package.metadata.dist]

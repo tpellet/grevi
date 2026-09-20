@@ -34,9 +34,9 @@ unvalidated command grammar remains a proposal. See the remediation section of t
 
 ```bash
 cargo fmt --check
-cargo check --all-targets
-cargo clippy --all-targets -- -D warnings
-cargo test -- --test-threads=1
+cargo check --locked --all-targets
+cargo clippy --locked --all-targets -- -D warnings
+cargo test --locked -- --test-threads=1
 ubs <changed files>          # exit 0 required; verify findings, fix root causes
 ```
 
@@ -68,6 +68,16 @@ them as NOT RUN, never as passed.
 ---
 
 ## grevi — This Project
+
+**Release:** review the outgoing release diff, then run `bash scripts/release.sh <full commit SHA>`
+for a successful `main` CI commit. The script reads the committed version and pushes its signed
+tag; cargo-dist builds GitHub assets and calls `publish-crates.yml` to publish from a clean
+checkout. Never publish the shared local working tree. Crates.io trusts the calling workflow
+`release.yml`, not the reusable workflow filename. If publishing fails, check whether the registry
+accepted the version before rerunning failed jobs. Never replace an existing tag. If only the
+tag push failed, inspect the retained signed tag and push that exact tag after the usual scan.
+CI validates the package with `cargo publish --dry-run --locked` and checks generated workflow
+consistency with the pinned cargo-dist `dist plan`; it keeps cancelling superseded branch runs.
 
 **`main` only.** No branches, no worktrees, no scratch clones, no PRs. One shared checkout.
 Parallel agents all work in it and coordinate through Agent Mail: each registers, reserves its

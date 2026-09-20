@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.4 — 2026-09-20
+
+Changed:
+
+- Releases select a committed version with successful branch CI, scan its changes, and push a signed tag. The shared working tree is never packaged for publication.
+- CI verifies the crates.io package and generated cargo-dist workflow. GitHub artifact publication precedes crates.io Trusted Publishing from the same release commit.
+
 ## 0.3.3 — 2026-09-20
 
 Fixed:
