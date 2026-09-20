@@ -41,7 +41,8 @@ Pipe `2>&1` into `why`: compilers write errors to stderr.
 - `run`: use `--dry-run`, then run `data.argv` yourself under your own rules. Never pass
   `--exec --yes` unless the user asked for grevi to execute. `data.blocked` names a tool grevi
   refuses to run; `complete=false` means a `<VALUE>` placeholder remains.
-- `add`: `--dry-run` first; `--yes` stages (index only, never commits) only with the user's say-so.
+- `add`: stages single hunks, not whole files, so it can split one file's changes. `--dry-run`
+  first; `--yes` stages (index only, never commits) only with the user's say-so.
 - `sort`: dry run by default; `--apply` moves files and writes `data.undo_log` for `--undo`.
 - Raise `-t` for costly actions. A `p` within 0.06 of the threshold can flip on a re-run.
 

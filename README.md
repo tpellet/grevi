@@ -1,10 +1,12 @@
 # grevi
 
-grevi is the semantic toolkit for your shell: small, composable commands that bring judgment to ordinary Unix pipelines. Pick a filename from a description, find the error that broke a build, check whether an email asks for a refund, or match a request to an installed tool. Powered by TypeSafe's Jev, grevi selects from your actual input, tools and man pages rather than generating free-form answers. Pipes and exit codes make it fit into the scripts you already write; structured JSON makes the same commands usable by agents. Uncertainty has its own exit code, so your workflow can handle "unsure" explicitly.
+grevi answers questions about text you already have, from the shell. Pipe it a 10,000-line CI log and it prints the line that made the build fail. Name a bug fix and it stages the changes that belong to that fix, and leaves your other edits alone. Ask whether a support ticket comes from a customer who is about to leave, and your script gets a yes, a no or an unsure as an exit code.
 
-One binary for macOS and Linux, and no key to get started. It ships six verbs — `pick`, `why`, `is`, `run`, `add` and `sort` — plus a `,` shell alias for `run`. Every command takes `--json` and prints one envelope with the answer, a calibrated probability, the request count and its cost.
+It never writes text of its own. The model behind it, TypeSafe's Jev, only chooses among things that exist: the lines of your input, the tools on your PATH, the flags in a man page, the folders on your disk. A wrong answer is then a wrong line, which you can see, and a flag that is in no man page cannot appear. When nothing fits, grevi exits 3 and your script decides what to do with "unsure".
 
-The evidence is in the repo. [benchmarks/](benchmarks/README.md) holds the latency runs behind the Numbers section, [evals/](evals/) the routing and root-cause sets behind the accuracy tables, and [PRIVACY.md](PRIVACY.md) says, verb by verb, what leaves your machine.
+One binary for macOS and Linux, and no key to get started. Six verbs, `pick`, `why`, `is`, `run`, `add` and `sort`, plus a `,` shell alias for `run`. Every command takes `--json` and prints one JSON object with the answer, a calibrated probability, the request count and its cost, so an agent can call the same commands you do.
+
+The numbers below come from [benchmarks/](benchmarks/README.md) (latency), [evals/](evals/) (routing and root-cause accuracy) and [benchmarks/agents/](benchmarks/agents/README.md) (grevi inside an agent harness). [PRIVACY.md](PRIVACY.md) says, verb by verb, what leaves your machine.
 
 The user guide, from install to the agent envelope, is in [docs/guide/](docs/guide/README.md).
 
@@ -13,39 +15,41 @@ The user guide, from install to the agent envelope, is in [docs/guide/](docs/gui
 [![Release](https://img.shields.io/github/v/release/tpellet/grevi)](https://github.com/tpellet/grevi/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-`cargo build 2>&1 | grevi why` points at the line that broke the build: the line itself, with its number and a probability, not a paraphrase of it.
-
 ```sh
-cargo build 2>&1 | grevi why
-ls | grevi pick "last month's electricity bill"
-grevi is "asks for a refund" < mail.txt && ./refund
+gh run view --log-failed | grevi why                    # find the error in a failed CI run
+grevi add --yes "the token expiry fix" && git commit    # stage only that fix, not your other edits
+history | grevi pick "how I made that gif from a screen recording"
+grevi is "the customer is about to stop being a customer" < ticket.txt && ./page-account-manager
+grevi sort ~/Downloads                                  # tidy a folder; it shows the plan first
 ```
 
 ![demo](demo.gif)
 
-Excerpts from a terminal, captured 2026-09-19 on `jev-1.13.0`:
+Excerpts from a terminal, captured 2026-09-19 on `jev-1.13.0`, with no key. The first is a failed run of a public repository: 10,074 lines of log, 2.6 MB, 4.3 seconds. A search for "error" or "panicked" finds which test failed. grevi points at the line that says why: the test compares Windows paths with Unix ones.
 
 ```
-$ cargo build 2>&1 | grevi why
->     2 │ error[E0425]: cannot find value `conifg` in this scope
-      3 │  --> src/main.rs:3:20
-      4 │   |
-      5 │ 3 |     println!("{}", conifg);
+$ gh run view 33831723431 -R astral-sh/ruff --log-failed | grevi why
+   8862 │ … thread '…::collects_function_aliases_and_imports' panicked at crates\ty_python_semantic\…\collection.rs:744:9:
+   8863 │ …     assertion `left == right` failed
+>  8864 │ …       left: [("test_imported", "check", "\\src\\helpers.py"), ("test_reexported", "check", "\\src\\helpers.py"), …
+   8865 │ …      right: [("test_imported", "check", "/src/helpers.py"), ("test_reexported", "check", "/src/helpers.py"), …
 
-$ grevi run --dry-run "count the lines in notes.txt"
-grevi: wc (0.95) — word, line, character, and byte count
-  -l  The number of lines in each input file is written to the standard output.
-wc -l notes.txt
+$ grevi add --yes "the token expiry fix"
++ 1.00 auth.py @@ -5,7 +5,8 @@ SESSION_TTL = 3600
+  0.02 auth.py @@ -14,3 +15,8 @@ def login(user, password):
+  0.00 report.py @@ -1,12 +1,6 @@
+
+$ grevi sort ~/Downloads
+0.89  1706.03762v7.txt → Papers/1706.03762v7.txt
+0.99  BP_UA1523.txt → Boarding passes/BP_UA1523.txt
+0.69  document(3).txt → Taxes/2025/document(3).txt
 
 $ grevi run --yes "remove the file notes.txt"
 grevi: not offering to run this (rm is on grevi's never-execute list); check it and run it yourself:
 rm notes.txt
-
-$ grevi is "asks for a refund" < mail.txt; echo $?
-0
 ```
 
-`is` prints nothing: the answer is the exit code (0 yes, 1 no, 3 unsure), so it composes with `&&`, `||` and `case`.
+The excerpts are shortened with `…`, and `sort` prints full paths. `add` staged the one change that fixes the expiry check. A leftover debug print in the same file and a refactor of `report.py` stayed unstaged. `document(3).txt` holds a 1099 tax form, which is why it goes to `Taxes/2025`. Two other files fit no folder and stayed where they were.
 
 ## Install
 
@@ -70,18 +74,18 @@ cargo build 2>&1 | grevi why
 
 ### No key needed
 
-Out of the box grevi asks [classifier.dev](https://classifier.dev), which runs the same Jev model and serves it free, with no key and no account. Same verbs, same probabilities, same exit codes; `meta.backend` in the JSON envelope says `classifier`, and `grevi health` names it too.
+Without a key, grevi asks [classifier.dev](https://classifier.dev). It runs the same Jev model and serves it free, with no account. Every verb, probability and exit code works the same way. `meta.backend` in the JSON envelope says `classifier`, and so does `grevi health`.
 
-Set a TypeSafe key and grevi uses your own quota instead — higher limits, and a `meta.cost_usd` that is not zero:
+With a TypeSafe key, grevi uses your own quota: the limits are higher, and `meta.cost_usd` shows what each call cost you.
 
 ```sh
 export TYPESAFE_API_KEY=...
 # or: export TYPESAFE_API_KEY_FILE=/path/to/key
 ```
 
-grevi is an independent open-source client of TypeSafe's hosted Jev API; a key is yours from https://console.typesafe.ai, and requests on it are billed to you. `GREVI_BACKEND=typesafe|classifier` forces either backend.
+You get a key at https://console.typesafe.ai, and TypeSafe bills you for the requests made with it. grevi is an independent open-source client of their API. `GREVI_BACKEND=typesafe|classifier` forces a backend.
 
-Two differences follow from the free service's own limits, not from the model: it takes 100 options per question (so grevi ranks in windows of 99 plus "nothing fits" instead of 200) and 32,000 characters of input per request. On the routing and root-cause evals the two backends score the same — see [evals/](evals/).
+The free service has two tighter limits. A question takes 100 options, so grevi ranks in windows of 99 plus "nothing fits" instead of 200. A request takes 32,000 characters of input. The model is the same, and the two backends score the same on the routing and root-cause evals in [evals/](evals/).
 
 Each verb makes at least one API request; `-v` prints how many, and what they cost.
 
@@ -97,18 +101,24 @@ Every verb below also takes `--json` for one machine-readable envelope, `-t` to 
 
 ## Verbs
 
-### pick: the line that matches
+### pick: find one item in a list by describing it
 
-Stdin lines in, the matching line out. Exit 3 when nothing fits.
+Pipe a list into `pick` and describe the item you want. It prints the line that fits your description, even when the two share no word. If no line fits, it prints nothing and exits 3.
 
 ```sh
-kill $(ps -eo pid,comm,%cpu | grevi pick "eating my battery" | awk '{print $1}')
+history | grevi pick "how I made that gif from a screen recording"
+git show $(git log --oneline | grevi pick "the commit that renamed the project" | cut -d' ' -f1)
 git switch $(git branch | grevi pick "payment timeout fix")
+kill $(ps -eo pid,comm,%cpu | grevi pick "eating my battery" | awk '{print $1}')
 ```
+
+The first one printed `ffmpeg -i screen.mov -vf "fps=12,scale=900:-1" -loop 0 demo.gif`. In zsh, write `history 1` to get the whole history. Whatever you pipe goes to the API, your shell history included; see [Privacy and safety](#privacy-and-safety).
 
 `-n 3` prints up to three lines, each ranked above "nothing fits"; `--index` prints line numbers instead of lines.
 
-### why: the line that broke it
+### why: find the error in the output of a failed command
+
+Pipe the output of a build, a test run or a CI job into `why`. It prints the line that caused the failure, with its line number and a few lines around it.
 
 ```sh
 cargo build 2>&1 | grevi why
@@ -117,23 +127,29 @@ grevi why -- cargo build
 
 Compilers write errors to stderr, so pipe `2>&1`, or let `grevi why -- <cmd>` run the command and capture both streams. `-C 5` widens the context, `-n 3` reports up to three causes. Stdin with no error-like line exits 3 with a hint about stderr.
 
-### is: a predicate on text
+### is: ask a yes-or-no question about a text
+
+Give `is` a statement and a text. It checks whether the statement is true of the text and answers with its exit code: 0 for yes, 1 for no, 3 for unsure. It prints nothing, so you can use it in a script like `test` or `grep -q`.
 
 ```sh
-grevi is "asks for a refund" < mail.txt && ./refund
+grevi is "the customer is about to stop being a customer" < ticket.txt && ./page-account-manager
 grevi is "asks for a refund" < mail.txt; case $? in 0) ./refund;; 1) ./archive;; 3) ./ask;; esac
 ```
 
+On the 24 support tickets in [benchmarks/agents/](benchmarks/agents/README.md), the first line found the 6 churn risks, "how do I export all of our data" included. It said no to "please cancel order 88231" and to a furious customer who had just bought 20 more seats. It exited 3 on an employee who is leaving their company. The wording matters: "this customer is about to leave" says yes to that employee.
+
 Yes at or above 0.65, no below 0.35, unsure in between (`--band` sets the width around the 0.5 threshold).
 
-### run: the installed tool that does it
+### run: describe a task, get the command for it
+
+Say what you want to do in plain English. `run` finds a tool on your machine that does it, takes the flags from that tool's man page, shows you the command, and asks before it runs it.
 
 ```sh
 grevi run "burn a dvd from this iso"
 grevi run --dry-run "count the lines in notes.txt"
 ```
 
-`run` routes the request to a tool installed on your machine, points at flags from that tool's man page, prints the command and asks before running it. `--dry-run` only proposes; `--yes` skips the question. A comma alias makes it a shell verb:
+`--dry-run` only shows the command; `--yes` skips the question. With the comma alias you type a comma, then your request:
 
 ```sh
 eval "$(grevi init zsh)"      # or bash
@@ -142,20 +158,20 @@ eval "$(grevi init zsh)"      # or bash
 
 Quote requests that contain an apostrophe: an unquoted `, what's using port 8080` opens a quote in both zsh and bash.
 
-### add: the hunks about a topic
+### add: stage only the changes that belong to one topic
 
-New in 0.2.0.
+You fixed a bug and also cleaned up three other things. Name the fix, and `add` runs `git add` on the changes that belong to it and leaves the others unstaged. It does the job of `git add -p` without the questions.
 
 ```sh
 grevi add --dry-run "the auth fix"
 grevi add --yes "the auth fix" && git commit
 ```
 
-`add` scores each unstaged hunk against your topic and stages the ones that are about it. `--dry-run` only scores; `--yes` skips the question. Tracked files only; stages into the index, never commits; binary changes are never staged.
+`--dry-run` shows the score of each change and stages nothing; `--yes` skips the question. `add` works on tracked files only. It stages and never commits, and it never stages a binary change.
 
-### sort: a folder for each file
+### sort: tidy a messy folder
 
-New in 0.2.0.
+Point `sort` at a folder such as `~/Downloads`. It reads each file and proposes which of your existing subfolders the file belongs in. It moves nothing until you add `--apply`, and `--undo` moves everything back.
 
 ```sh
 grevi sort ~/Downloads                      # dry run: proposes a folder per file
@@ -163,7 +179,11 @@ grevi sort ~/Downloads --apply              # moves, writes an undo log
 grevi sort ~/Downloads --undo <log>         # moves them back
 ```
 
-`sort` looks at each file directly in the directory (not recursive, hidden files skipped) and proposes one of the existing folders under it, up to two levels deep, as its home; `--into <root>` picks the folders from another root. Dry-run by default: `--apply` renames the files and writes an undo log (`sort-undo-<timestamp>.tsv` in the cache directory) after every move; `--undo <log>` restores whatever the original path is still free for. It never overwrites a file, never deletes one, and only moves within one volume (`--into` must be on the same volume). Only file names and the first 2,000 characters of text files (or of a PDF's first two pages, when `pdftotext` is installed) are sent, redacted; a file the model cannot place, or places without confidence, stays where it is.
+`sort` looks at the files directly in the folder. It does not go into subfolders and it skips hidden files. The folders it can propose are the ones that already exist under that folder, up to two levels deep; `--into <root>` takes them from another root instead. A file that the model cannot place with confidence stays where it is.
+
+`--apply` moves the files and writes an undo log (`sort-undo-<timestamp>.tsv` in the cache directory) after every move. `--undo <log>` moves each file back if its original path is still free. `sort` never overwrites a file and never deletes one. It only moves files within one volume, so `--into` must be on the same volume.
+
+grevi sends the file names and the first 2,000 characters of each text file, redacted. For a PDF it sends the first 2,000 characters of the first two pages, when `pdftotext` is installed.
 
 ## How it works
 
@@ -271,6 +291,20 @@ A short agent skill, [skills/grevi/SKILL.md](skills/grevi/SKILL.md), teaches Cla
 ```
 
 For Codex, copy or symlink `skills/grevi` into `~/.agents/skills/` (or `.agents/skills/` in a repository).
+
+### What it changes for an agent
+
+I expected a token story and mostly did not find one. Two spot checks with Claude Code subagents, a few runs per cell, all in [benchmarks/agents/](benchmarks/agents/README.md).
+
+An agent with `grep` does not need grevi on a 300-line log. Asked for the root cause of a failed CI job, every agent without grevi ran one `grep -iE "error|fail|…"`, found the right line, and used the same tokens as the agent that called `grevi why`.
+
+The difference appears when the line that explains a failure holds none of the words one greps for. In the 10,074-line log above, `grep` found the test that panicked. The agent reported that test and stopped. The cause is two lines below the panic: `left: [… "\\src\\helpers.py" …]`, a Windows path compared with a Unix one. The agent that called `grevi why` reported the cause, in 11,000 fewer tokens. The same thing happened on a 173-line Go log: "failed to update release" without grevi, the SQL statement that did not match with it.
+
+The second case is a question `grep` has no handle on. Routing the 24 support tickets, the agent without grevi printed them all into its context, found 5 of the 6 churn risks and was unsure about "how do I export all of our data". The agent with grevi ran `grevi is` in a loop and read 24 exit codes: 6 of 6, unsure about the employee who is leaving their company. Its cost grows with the number of tickets, not with their length.
+
+One job an agent cannot do with plain git is stage part of a working tree, because `git add -p` asks questions on a terminal. Given only the skill file and a repository with a bug fix, a debug print and a refactor mixed together, an agent ran `grevi add --dry-run`, then `--yes`, and staged the fix alone. One run, six tool calls.
+
+`run` did not help. I gave three Sonnet agents a seven-step conversion job, the grevi skill, and the advice to ask `grevi run` when unsure which installed tool does a step. None of them called it. The model already knew `textutil`, `sips`, `plutil` and `afconvert`, and one `which` told it what was installed. The steps that failed, one in each arm, failed on a flag (`sips` writes PNG data into a `.jpg` unless you pass `-s format jpeg`), and flags are what `run` is worst at. Tools the model cannot know, such as internal CLIs with a man page, are the case I have not tested.
 
 ## Privacy and safety
 

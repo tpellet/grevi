@@ -1,0 +1,24 @@
+{"id":"t01","churn":true,"text":"Subject: third outage this month\n\nOur checkout page was down again for 40 minutes on Friday. This is the third time since August. We are on the annual plan and I have started talking to two of your competitors. Unless someone can explain what is going on, we will not renew in November.\n\nDana"}
+{"id":"t02","churn":false,"text":"Subject: invoice copy\n\nHello, could you send me a PDF copy of our August invoice? Our accountant needs it. Thanks!"}
+{"id":"t03","churn":false,"text":"Subject: cancel order 88231\n\nI ordered the wrong size yesterday. Please cancel order 88231 before it ships, I will place a new one right after. Love the shop by the way."}
+{"id":"t04","churn":true,"text":"Subject: export\n\nHow do I export all of our data, including attachments and the audit trail? We need the full history in a format another vendor can import. Please also confirm the notice period in our contract."}
+{"id":"t05","churn":false,"text":"Subject: THIS IS RIDICULOUS\n\nThe new editor lost my draft AGAIN. I am furious. I had two hours of work in there. Fix your autosave. I need this working by Monday because the whole team depends on your tool and we just bought 20 more seats."}
+{"id":"t06","churn":false,"text":"Subject: SSO setup\n\nWe are rolling you out to the whole company next quarter. Can you share the SAML metadata and tell us whether SCIM provisioning is included in our plan?"}
+{"id":"t07","churn":true,"text":"Subject: pricing change\n\nI saw the email about the new pricing. At that price you are 3x what we pay today and frankly above what the alternatives quote us. I have a budget review on the 12th and right now I cannot defend keeping you in it."}
+{"id":"t08","churn":false,"text":"Subject: feature request\n\nIt would be great to filter the dashboard by region. Not urgent. Thanks for the great product."}
+{"id":"t09","churn":false,"text":"Subject: password reset not arriving\n\nI asked for a password reset three times and no email arrives. Checked spam. My address is the one on the account."}
+{"id":"t10","churn":false,"text":"Subject: webhook retries\n\nDo you retry webhooks on a 503? Our endpoint was down for maintenance last night and we want to know whether we missed events."}
+{"id":"t11","churn":true,"text":"Subject: Re: Re: Re: ticket 4471\n\nThree weeks and four agents later nobody has fixed the sync bug. My boss asked me this morning why we still pay for this. I did not have an answer. Do you?"}
+{"id":"t12","churn":false,"text":"Subject: leaving the company\n\nI am leaving Acme at the end of the month. Please transfer ownership of our workspace to my colleague Priya, she will be the admin from now on."}
+{"id":"t13","churn":false,"text":"Subject: refund for double charge\n\nMy card was charged twice for September. Please refund one of the two charges."}
+{"id":"t14","churn":false,"text":"Subject: API rate limit\n\nWe are hitting 429s during our nightly import. Can the limit be raised for our account, or should we batch differently?"}
+{"id":"t15","churn":true,"text":"Subject: downgrade\n\nPlease move us from Enterprise to the free tier at the end of this billing cycle and remove the card on file. We have moved the team to another tool and only need read access to old projects."}
+{"id":"t16","churn":false,"text":"Subject: typo on pricing page\n\nThe pricing page says 'anual'. Just letting you know."}
+{"id":"t17","churn":false,"text":"Subject: conference\n\nWill you have a booth at the summit in Lisbon? We would love to meet the team and talk about the roadmap."}
+{"id":"t18","churn":false,"text":"Subject: slow reports\n\nThe monthly report takes 90 seconds to load since last week. It used to take 5. Is something wrong on your side?"}
+{"id":"t19","churn":true,"text":"Subject: contract\n\nPer section 9.2 we hereby give 60 days written notice of non-renewal. Please acknowledge receipt."}
+{"id":"t20","churn":false,"text":"Subject: cancel my webinar registration\n\nI cannot make Thursday's webinar any more. Please cancel my registration and send the recording if there is one."}
+{"id":"t21","churn":false,"text":"Subject: add seats\n\nPlease add 5 seats to our plan, prorated."}
+{"id":"t22","churn":false,"text":"Subject: competitor comparison\n\nI am writing an internal wiki page on why we chose you over the alternatives two years ago. Do you have a public comparison page I can link?"}
+{"id":"t23","churn":false,"text":"Subject: GDPR\n\nPlease send your current DPA and the list of subprocessors. Our legal team does this review every year."}
+{"id":"t24","churn":false,"text":"Subject: mobile app crash\n\nThe iOS app crashes when I open a project with more than 500 tasks. iPhone 15, iOS 19.1."}
