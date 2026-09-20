@@ -1,10 +1,10 @@
 [package]
 name = "grevi"
-version = "0.3.0"
+version = "0.3.1"
 edition = "2024"
 rust-version = "1.87"
 license = "MIT"
-description = "Point at the right thing: pick, why, run and is by meaning — fast CLI on TypeSafe Jev"
+description = "Ask questions about text from the shell: find the error in a long log, pick a line by description, stage one topic, tidy a folder. Selects, never generates."
 repository = "https://github.com/tpellet/grevi"
 homepage = "https://github.com/tpellet/grevi"
 readme = "README.md"

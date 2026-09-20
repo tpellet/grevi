@@ -21,4 +21,4 @@ Reference documents elsewhere in the repo:
 - [benchmarks/README.md](../../benchmarks/README.md): latency per verb, with conditions, and the prewarm decision.
 - [evals/why/README.md](../../evals/why/README.md): the 20 root-cause cases and their provenance.
 
-Release state: 0.3.0 ships all six verbs, `pick`, `why`, `is`, `run`, `add` and `sort`, and works without a key.
+Release state: all six verbs ship, `pick`, `why`, `is`, `run`, `add` and `sort`, and grevi works without a key since 0.3.0.
