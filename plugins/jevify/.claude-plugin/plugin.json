@@ -1,0 +1,10 @@
+{
+  "name": "jevify",
+  "description": "Agent skill for the jevify CLI: select a line, tool, hunk or file with backend-specific confidence and explicit abstention.",
+  "author": {
+    "name": "tpellet",
+    "url": "https://github.com/tpellet"
+  },
+  "homepage": "https://github.com/tpellet/jevify",
+  "license": "MIT"
+}

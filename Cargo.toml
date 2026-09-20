@@ -1,12 +1,12 @@
 [package]
-name = "grevi"
+name = "jevify"
 version = "0.3.4"
 edition = "2024"
 rust-version = "1.87"
 license = "MIT"
 description = "grep for meaning: find the error in a 10,000-line log, a commit by description, the command for a task. A Unix CLI powered by Jev from TypeSafe AI; no key needed, thanks to classifier.dev."
-repository = "https://github.com/tpellet/grevi"
-homepage = "https://github.com/tpellet/grevi"
+repository = "https://github.com/tpellet/jevify"
+homepage = "https://github.com/tpellet/jevify"
 readme = "README.md"
 keywords = ["cli", "grep", "semantic-search", "jev", "typesafe"]
 categories = ["command-line-utilities"]

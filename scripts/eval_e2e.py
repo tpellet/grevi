@@ -4,7 +4,7 @@
 """Live CLI acceptance matrix on fictional inputs plus one attributed public CI log.
 
 Run with an explicit binary and a NEW output directory. The caller authorizes egress to
-TypeSafe/classifier; only grevi reads credentials. Never deletes fixtures or old results.
+TypeSafe/classifier; only jevify reads credentials. Never deletes fixtures or old results.
 This is operational acceptance/profiling, not a held-out agent A/B experiment.
 """
 
@@ -81,7 +81,7 @@ class Matrix:
     def __init__(self, binary, root, repository, repeats, offline):
         root.mkdir(parents=True, exist_ok=False)
         self.root, self.repository = root.resolve(), repository
-        self.binary = self.root / "grevi"
+        self.binary = self.root / "jevify"
         shutil.copyfile(binary, self.binary)
         self.binary.chmod(0o700)
         self.repeats, self.offline = repeats, offline
@@ -101,14 +101,14 @@ class Matrix:
         })
 
     def env(self, backend, cache=None, missing_key=False):
-        env = {k: v for k, v in os.environ.items() if not k.startswith("GREVI_")}
-        env.update(GREVI_BACKEND=backend, GREVI_BASE_URL={
+        env = {k: v for k, v in os.environ.items() if not k.startswith("JEVIFY_")}
+        env.update(JEVIFY_BACKEND=backend, JEVIFY_BASE_URL={
             "typesafe": "https://api.typesafe.ai", "classifier": "https://classifier.dev"
-        }[backend], GREVI_INVENTORY_FILE=str(self.inventory))
+        }[backend], JEVIFY_INVENTORY_FILE=str(self.inventory))
         if cache is None:
-            env["GREVI_NO_CACHE"] = "1"
+            env["JEVIFY_NO_CACHE"] = "1"
         else:
-            env["GREVI_CACHE_DIR"] = str(cache)
+            env["JEVIFY_CACHE_DIR"] = str(cache)
         if backend == "classifier" or missing_key:
             env.pop("TYPESAFE_API_KEY", None)
             env.pop("TYPESAFE_API_KEY_FILE", None)

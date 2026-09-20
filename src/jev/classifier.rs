@@ -1,9 +1,9 @@
 //! classifier.dev as a second backend.
 //!
-//! classifier.dev is a free, keyless front end to the same Jev model grevi asks through
+//! classifier.dev is a free, keyless front end to the same Jev model jevify asks through
 //! TypeSafe (its upstream error codes are literally `typesafe_<status>`, and a live call
 //! answers `model: "jev-1.13.0"`). So this module is a wire translation, not a second
-//! design: grevi's questions go out as *dimensions* on one item and the answers come back
+//! design: jevify's questions go out as *dimensions* on one item and the answers come back
 //! into the same [`Response`] every verb already reads.
 //!
 //! What the two wire formats do not share, and how it is bridged:
@@ -18,7 +18,7 @@
 //!   several requests by the client; this module maps one chunk.
 
 use super::{Answer, Question, Questions, Response, Usage};
-use crate::exit::GreviError;
+use crate::exit::JevifyError;
 use serde::Deserialize;
 use std::collections::BTreeMap;
 
@@ -65,7 +65,7 @@ pub fn item_text(state: &serde_json::Value) -> String {
 
 /// One question as a dimension definition: the labels it may answer with, and the instructions
 /// that carry everything Jev would read from `criteria`.
-fn dimension(q: &Question) -> Result<serde_json::Value, GreviError> {
+fn dimension(q: &Question) -> Result<serde_json::Value, JevifyError> {
     let (labels, instructions) = match q {
         Question::Noul {
             instructions,
@@ -101,12 +101,12 @@ fn dimension(q: &Question) -> Result<serde_json::Value, GreviError> {
             .iter()
             .any(|label| label.trim().is_empty() || label.encode_utf16().count() > MAX_LABEL_CHARS)
     {
-        return Err(GreviError::InputTooLarge(
+        return Err(JevifyError::InputTooLarge(
             "classifier requires 2..=100 nonempty labels of at most 200 characters".into(),
         ));
     }
     if instructions.encode_utf16().count() > MAX_INSTRUCTIONS_CHARS {
-        return Err(GreviError::InputTooLarge(
+        return Err(JevifyError::InputTooLarge(
             "classifier instructions exceed 4000 characters".into(),
         ));
     }
@@ -120,20 +120,20 @@ fn dimension(q: &Question) -> Result<serde_json::Value, GreviError> {
 pub fn request_body(
     state: &serde_json::Value,
     questions: &Questions,
-) -> Result<serde_json::Value, GreviError> {
+) -> Result<serde_json::Value, JevifyError> {
     let item = item_text(state);
     if item.trim().is_empty() {
-        return Err(GreviError::Usage(
+        return Err(JevifyError::Usage(
             "classifier item must not be empty".into(),
         ));
     }
     if item.encode_utf16().count() > MAX_INPUT_CHARS {
-        return Err(GreviError::InputTooLarge(
+        return Err(JevifyError::InputTooLarge(
             "classifier item exceeds 32000 characters".into(),
         ));
     }
     if questions.is_empty() || questions.len() > MAX_DIMENSIONS {
-        return Err(GreviError::InputTooLarge(
+        return Err(JevifyError::InputTooLarge(
             "classifier requires 1..=20 dimensions".into(),
         ));
     }
@@ -141,7 +141,7 @@ pub fn request_body(
         .keys()
         .any(|id| id.trim().is_empty() || id.encode_utf16().count() > 64)
     {
-        return Err(GreviError::Usage(
+        return Err(JevifyError::Usage(
             "classifier dimension names require 1..=64 characters and non-whitespace text".into(),
         ));
     }
@@ -152,9 +152,9 @@ pub fn request_body(
     // The service's readDimensions checks JSON.stringify(dimensions).length: compact JSON
     // including escaping and wrapper fields, measured in JavaScript UTF-16 code units.
     let definitions =
-        serde_json::to_string(&dimensions).map_err(|e| GreviError::Protocol(e.to_string()))?;
+        serde_json::to_string(&dimensions).map_err(|e| JevifyError::Protocol(e.to_string()))?;
     if definitions.encode_utf16().count() > 16_000 {
-        return Err(GreviError::InputTooLarge(
+        return Err(JevifyError::InputTooLarge(
             "classifier dimension definitions exceed 16000 UTF-16 code units".into(),
         ));
     }
@@ -179,7 +179,7 @@ struct Item {
     dimensions: BTreeMap<String, DimensionResult>,
 }
 
-/// Lenient for the same reason as [`Response`]: a field grevi does not read must not fail a
+/// Lenient for the same reason as [`Response`]: a field jevify does not read must not fail a
 /// command. `results` stays required.
 #[derive(Deserialize, Debug)]
 struct ClassifyResponse {
@@ -188,29 +188,29 @@ struct ClassifyResponse {
     results: Vec<Item>,
 }
 
-/// The classifier.dev answer for one chunk, read back into grevi's [`Response`].
+/// The classifier.dev answer for one chunk, read back into jevify's [`Response`].
 ///
 /// A Noul's probability is P(yes) from `scores`; with no scores (the API documents them as
 /// nullable) the verdict's own `confidence` stands in, mirrored for a `no`. A Choice keeps its
 /// scores as probabilities; with no scores there is no distribution to rank items by, which is
 /// a protocol error (exit 4), never a silently invented one.
-pub fn parse(body: &[u8], questions: &Questions) -> Result<Response, GreviError> {
+pub fn parse(body: &[u8], questions: &Questions) -> Result<Response, JevifyError> {
     let parsed: ClassifyResponse =
-        serde_json::from_slice(body).map_err(|e| GreviError::Protocol(e.to_string()))?;
+        serde_json::from_slice(body).map_err(|e| JevifyError::Protocol(e.to_string()))?;
     let item = parsed
         .results
         .into_iter()
         .next()
-        .ok_or_else(|| GreviError::Protocol("classify returned no result".into()))?;
+        .ok_or_else(|| JevifyError::Protocol("classify returned no result".into()))?;
     let mut answers = BTreeMap::new();
     let mut model = parsed.model;
     for (id, q) in questions {
         let r = item
             .dimensions
             .get(id)
-            .ok_or_else(|| GreviError::Protocol(format!("missing dimension `{id}`")))?;
+            .ok_or_else(|| JevifyError::Protocol(format!("missing dimension `{id}`")))?;
         if r.confidence.is_some_and(|p| !super::valid_probability(p)) {
-            return Err(GreviError::Protocol(format!(
+            return Err(JevifyError::Protocol(format!(
                 "invalid confidence for `{id}`"
             )));
         }
@@ -234,7 +234,7 @@ pub fn parse(body: &[u8], questions: &Questions) -> Result<Response, GreviError>
                             })
                     })
                 {
-                    return Err(GreviError::Protocol(format!(
+                    return Err(JevifyError::Protocol(format!(
                         "invalid noul labels or scores for `{id}`"
                     )));
                 }
@@ -242,11 +242,11 @@ pub fn parse(body: &[u8], questions: &Questions) -> Result<Response, GreviError>
                     (Some(s), _, _) => s
                         .get(&yes)
                         .copied()
-                        .ok_or_else(|| GreviError::Protocol(format!("no yes score for `{id}`")))?,
+                        .ok_or_else(|| JevifyError::Protocol(format!("no yes score for `{id}`")))?,
                     (None, Some(label), Some(c)) if *label == yes => c,
                     (None, Some(label), Some(c)) if *label == no => 1.0 - c,
                     _ => {
-                        return Err(GreviError::Protocol(format!(
+                        return Err(JevifyError::Protocol(format!(
                             "no probability for `{id}`; classifier.dev returned neither scores nor a confident verdict"
                         )));
                     }
@@ -256,16 +256,14 @@ pub fn parse(body: &[u8], questions: &Questions) -> Result<Response, GreviError>
                     ..Answer::default()
                 }
             }
-            Question::Choice { .. } => {
-                Answer {
-                    choice: r.label.clone(),
-                    probabilities: Some(r.scores.clone().ok_or_else(|| {
-                        GreviError::Protocol(format!("no scores for choice `{id}`"))
-                    })?),
-                    confidence: r.confidence,
-                    ..Answer::default()
-                }
-            }
+            Question::Choice { .. } => Answer {
+                choice: r.label.clone(),
+                probabilities: Some(r.scores.clone().ok_or_else(|| {
+                    JevifyError::Protocol(format!("no scores for choice `{id}`"))
+                })?),
+                confidence: r.confidence,
+                ..Answer::default()
+            },
         };
         answers.insert(id.clone(), answer);
     }

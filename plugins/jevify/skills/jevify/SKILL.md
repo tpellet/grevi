@@ -1,18 +1,18 @@
 ---
-name: grevi
-description: Use the grevi CLI when a question is about meaning and grep or keywords cannot ask it. Find the root cause in a long build, test or CI log, including when the line that explains it holds no word like "error". Triage many texts (tickets, mails, files, commits, search results) by a yes/no question without reading them. Pick one item from a list by description (a branch, a commit, a file, a process, a history line). Stage only the git changes that belong to one topic, which git add -p cannot do without a terminal. Find which installed tool does a task. Propose folders for files with meaningless names. Do not use to generate code or text, to count or judge quality, or as a security gate on untrusted input.
+name: jevify
+description: Use the jevify CLI when a question is about meaning and grep or keywords cannot ask it. Find the root cause in a long build, test or CI log, including when the line that explains it holds no word like "error". Triage many texts (tickets, mails, files, commits, search results) by a yes/no question without reading them. Pick one item from a list by description (a branch, a commit, a file, a process, a history line). Stage only the git changes that belong to one topic, which git add -p cannot do without a terminal. Find which installed tool does a task. Propose folders for files with meaningless names. Do not use to generate code or text, to count or judge quality, or as a security gate on untrusted input.
 ---
 
-# grevi
+# jevify
 
-grevi answers a question about text that already exists: your input, the installed tools, a man
+jevify answers a question about text that already exists: your input, the installed tools, a man
 page, the folders on disk. It selects and never generates, so an answer is always something you
 can check. Scores depend on the backend and task; "nothing fits" and insufficient evidence
 are real answers, not permission to invent a match.
 
 ## When it beats what you already have
 
-You have `grep` and you can read files. Reach for grevi when those two run out:
+You have `grep` and you can read files. Reach for jevify when those two run out:
 
 - **A long log, or a grep that found the symptom.** `grep -iE "error|fail"` finds the line that
   says something failed. The line that says why often holds none of those words (an assertion's
@@ -37,7 +37,7 @@ You have `grep` and you can read files. Reach for grevi when those two run out:
 - **Files whose names say nothing.** `sort` reads the content and proposes one of the existing
   folders for each file.
 
-Skip grevi when a literal search answers the question, when the input is short enough to read, or
+Skip jevify when a literal search answers the question, when the input is short enough to read, or
 when you already know the exact command.
 
 ## Ask literal questions
@@ -49,12 +49,12 @@ The model judges the statement you wrote, word for word. Write what must be true
 - Describe the thing, not what you will do with it: `"the line with the failing assertion"`, not
   `"what should I fix"`.
 - One question per call. For "A or B", make two calls.
-- English works best. grevi does not count, do arithmetic, compare dates or judge quality.
+- English works best. jevify does not count, do arithmetic, compare dates or judge quality.
 
 ## Check it is there
 
 ```sh
-grevi health --json        # exit 0: API reachable (data.backend names it); exit 5: bad or missing key
+jevify health --json        # exit 0: API reachable (data.backend names it); exit 5: bad or missing key
 ```
 
 ## Always machine mode
@@ -68,14 +68,14 @@ Pass `--json` and branch on `exit_code` (same as the process exit code), then re
 ## Verbs
 
 ```sh
-git branch | grevi pick --json "payment timeout fix"   # data.matches[{line, text, p}]
-grevi pick --files . --json "where retries back off"    # a file by what it is about; text = path
-cargo build 2>&1 | grevi why --json                     # data.causes[{line, text, p, context[]}]
-grevi why --json -- cargo test                          # runs it, captures stdout+stderr
-grevi is --json "asks for a refund" < mail.txt          # data.p, data.verdict
-grevi run --json --dry-run "count the lines in notes.txt"  # data.tool, data.argv[], data.blocked
-grevi add --json --dry-run "the auth fix"               # data.hunks[{file, header, p, staged}]
-grevi sort --json ~/Downloads                           # dry run: data.moves[{from, to, p}]
+git branch | jevify pick --json "payment timeout fix"   # data.matches[{line, text, p}]
+jevify pick --files . --json "where retries back off"    # a file by what it is about; text = path
+cargo build 2>&1 | jevify why --json                     # data.causes[{line, text, p, context[]}]
+jevify why --json -- cargo test                          # runs it, captures stdout+stderr
+jevify is --json "asks for a refund" < mail.txt          # data.p, data.verdict
+jevify run --json --dry-run "count the lines in notes.txt"  # data.tool, data.argv[], data.blocked
+jevify add --json --dry-run "the auth fix"               # data.hunks[{file, header, p, staged}]
+jevify sort --json ~/Downloads                           # dry run: data.moves[{from, to, p}]
 ```
 
 Pipe `2>&1` into `why`: compilers write errors to stderr. On a very long log, `why` keeps the
@@ -88,32 +88,32 @@ lines around every error-like line, from the top first, within a 4,000-line budg
 ```sh
 # Triage many texts and read none of them: one line per text comes back.
 for f in tickets/*.txt; do
-  grevi is "the customer is about to stop being a customer" < "$f" >/dev/null 2>&1
+  jevify is "the customer is about to stop being a customer" < "$f" >/dev/null 2>&1
   echo "$f $?"                                   # 0 yes · 1 no · 3 unsure
 done
 
 # Root cause of a CI run, however long the log is.
-gh run view --log-failed | grevi why --json
+gh run view --log-failed | jevify why --json
 
 # Feed the choice to the next command.
-git show "$(git log --oneline | grevi pick "the commit that renamed the project" | cut -d' ' -f1)"
+git show "$(git log --oneline | jevify pick "the commit that renamed the project" | cut -d' ' -f1)"
 
 # Stage one topic: look at the scores first. Stage only if the user asked you to stage.
-grevi add --json --dry-run "the token expiry fix"
-grevi add --json --yes "the token expiry fix"
+jevify add --json --dry-run "the token expiry fix"
+jevify add --json --yes "the token expiry fix"
 ```
 
 Treat exit 3 in a loop as "a human or a closer read decides", not as no. Exit 4 with HTTP 429
-means the free backend's rate limit: wait and continue, or lower `GREVI_CONCURRENCY`. Identical
+means the free backend's rate limit: wait and continue, or lower `JEVIFY_CONCURRENCY`. Identical
 requests are cached for 7 days, so a re-run of the same loop is free and fast.
 
-Never pipe secrets. grevi masks obvious tokens before sending, but that is best effort, and
+Never pipe secrets. jevify masks obvious tokens before sending, but that is best effort, and
 whatever you pipe (a shell history, a log with credentials) goes to the API.
 
 ## Safety
 
 - `run`: use `--dry-run`, then run `data.argv` yourself under your own rules. Never pass
-  `--exec --yes` unless the user asked for grevi to execute. `data.blocked` names a tool grevi
+  `--exec --yes` unless the user asked for jevify to execute. `data.blocked` names a tool jevify
   refuses to run or whose grammar is unvalidated. Only exact no-argument `true`, `false`,
   `pwd`, and `ls` forms can be complete and execute, assuming trusted PATH contents.
   Other flags/operands/commands remain proposals even with `--exec --yes`.
@@ -129,5 +129,5 @@ whatever you pipe (a shell history, a log with credentials) goes to the API.
 
 ## Source of truth
 
-`grevi capabilities --json` (commands, flags, exit codes, limits) and `grevi robot-docs guide`
+`jevify capabilities --json` (commands, flags, exit codes, limits) and `jevify robot-docs guide`
 (the agent handbook). When this file and those differ, they win.

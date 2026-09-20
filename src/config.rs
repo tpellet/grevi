@@ -1,5 +1,5 @@
 use crate::cli::GlobalOpts;
-use crate::exit::GreviError;
+use crate::exit::JevifyError;
 use crate::jev::client::Stats;
 use crate::output::Meta;
 use std::path::PathBuf;
@@ -29,7 +29,7 @@ impl Backend {
         }
     }
     /// How many items one Choice may offer, NONE excluded. TypeSafe accepts 255 options and
-    /// grevi windows at 200; classifier.dev caps a dimension at 100 labels, so NONE takes the
+    /// jevify windows at 200; classifier.dev caps a dimension at 100 labels, so NONE takes the
     /// hundredth slot. Only the number of windows changes, never what a window asks.
     pub const fn window(self) -> usize {
         match self {
@@ -46,7 +46,7 @@ impl Backend {
         }
     }
     /// 8 in flight is ~20 req/s, under TypeSafe's 1,200/min. classifier.dev is free and shared
-    /// per IP, so grevi stays at 4 there by default.
+    /// per IP, so jevify stays at 4 there by default.
     pub const fn default_concurrency(self) -> usize {
         match self {
             Self::Typesafe => 8,
@@ -77,35 +77,35 @@ fn env(name: &str) -> Option<String> {
         .filter(|v| !v.is_empty())
 }
 
-fn parse<T: std::str::FromStr>(name: &str, default: T) -> Result<T, GreviError> {
+fn parse<T: std::str::FromStr>(name: &str, default: T) -> Result<T, JevifyError> {
     match env(name) {
         None => Ok(default),
         Some(v) => v
             .parse()
-            .map_err(|_| GreviError::Usage(format!("{name}={v} is not valid"))),
+            .map_err(|_| JevifyError::Usage(format!("{name}={v} is not valid"))),
     }
 }
 
 impl Config {
-    pub fn load(g: &GlobalOpts) -> Result<Self, GreviError> {
+    pub fn load(g: &GlobalOpts) -> Result<Self, JevifyError> {
         let threshold = g.threshold.unwrap_or(0.5);
         if !(0.0..=1.0).contains(&threshold) {
-            return Err(GreviError::Usage(format!(
+            return Err(JevifyError::Usage(format!(
                 "threshold {threshold} must be within 0..=1"
             )));
         }
-        let cache_dir = if g.no_cache || env("GREVI_NO_CACHE").is_some() {
+        let cache_dir = if g.no_cache || env("JEVIFY_NO_CACHE").is_some() {
             None
-        } else if let Some(d) = env("GREVI_CACHE_DIR") {
+        } else if let Some(d) = env("JEVIFY_CACHE_DIR") {
             Some(PathBuf::from(d))
         } else {
-            directories::ProjectDirs::from("", "", "grevi").map(|p| p.cache_dir().to_path_buf())
+            directories::ProjectDirs::from("", "", "jevify").map(|p| p.cache_dir().to_path_buf())
         };
         let key = env("TYPESAFE_API_KEY");
         let key_file = env("TYPESAFE_API_KEY_FILE").map(PathBuf::from);
-        let backend = match env("GREVI_BACKEND").as_deref() {
+        let backend = match env("JEVIFY_BACKEND").as_deref() {
             None => {
-                // No key, no prompt and no signup path: grevi answers out of the box through
+                // No key, no prompt and no signup path: jevify answers out of the box through
                 // classifier.dev, and uses your own TypeSafe quota as soon as a key is there.
                 if key.is_some() || key_file.is_some() {
                     Backend::Typesafe
@@ -116,14 +116,14 @@ impl Config {
             Some("typesafe") => Backend::Typesafe,
             Some("classifier") => Backend::Classifier,
             Some(other) => {
-                return Err(GreviError::Usage(format!(
-                    "GREVI_BACKEND={other} is not valid; use typesafe or classifier"
+                return Err(JevifyError::Usage(format!(
+                    "JEVIFY_BACKEND={other} is not valid; use typesafe or classifier"
                 )));
             }
         };
         if backend == Backend::Classifier && g.model.is_some() {
-            return Err(GreviError::Usage(
-                "--model/GREVI_MODEL requires the typesafe backend; classifier chooses its model"
+            return Err(JevifyError::Usage(
+                "--model/JEVIFY_MODEL requires the typesafe backend; classifier chooses its model"
                     .into(),
             ));
         }
@@ -131,7 +131,7 @@ impl Config {
             backend,
             key,
             key_file,
-            base_url: env("GREVI_BASE_URL")
+            base_url: env("JEVIFY_BASE_URL")
                 .unwrap_or_else(|| backend.default_base_url().into())
                 .trim_end_matches('/')
                 .to_string(),
@@ -140,10 +140,10 @@ impl Config {
             model: g.model.clone().unwrap_or_else(|| "jev-1.13.0".into()),
             threshold,
             // 16 in flight at ~0.4 s each is ~40 req/s, twice the 1,200/min budget; 8 stays under it.
-            concurrency: parse("GREVI_CONCURRENCY", backend.default_concurrency())?.max(1),
+            concurrency: parse("JEVIFY_CONCURRENCY", backend.default_concurrency())?.max(1),
             cache_dir,
             price_per_mtok: parse(
-                "GREVI_PRICE_PER_MTOK",
+                "JEVIFY_PRICE_PER_MTOK",
                 if backend == Backend::Classifier {
                     0.0
                 } else {
@@ -155,19 +155,19 @@ impl Config {
     }
 
     /// The key from `TYPESAFE_API_KEY`, else the trimmed contents of `TYPESAFE_API_KEY_FILE`.
-    pub fn api_key(&self) -> Result<String, GreviError> {
+    pub fn api_key(&self) -> Result<String, JevifyError> {
         if let Some(k) = &self.key {
             return Ok(k.clone());
         }
         let Some(p) = &self.key_file else {
-            return Err(GreviError::MissingKey);
+            return Err(JevifyError::MissingKey);
         };
         let k = std::fs::read_to_string(p).map_err(|e| {
-            GreviError::Input(format!("TYPESAFE_API_KEY_FILE {}: {e}", p.display()))
+            JevifyError::Input(format!("TYPESAFE_API_KEY_FILE {}: {e}", p.display()))
         })?;
         let k = k.trim().to_string();
         if k.is_empty() {
-            return Err(GreviError::MissingKey);
+            return Err(JevifyError::MissingKey);
         }
         Ok(k)
     }
@@ -228,7 +228,7 @@ mod tests {
         assert_eq!(cfg(Some("k"), None).api_key().unwrap(), "k");
         assert_eq!(cfg(None, None).api_key().unwrap_err().exit().code(), 5);
         assert_eq!(
-            cfg(None, Some("/nonexistent/grevi-key"))
+            cfg(None, Some("/nonexistent/jevify-key"))
                 .api_key()
                 .unwrap_err()
                 .exit()

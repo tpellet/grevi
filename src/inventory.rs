@@ -1,4 +1,4 @@
-use crate::exit::GreviError;
+use crate::exit::JevifyError;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashSet};
@@ -99,7 +99,7 @@ fn fingerprint(dirs: &[PathBuf]) -> String {
     h.finalize().to_hex()[..16].to_string()
 }
 
-pub fn load(cache_dir: Option<&Path>) -> Result<Vec<Tool>, GreviError> {
+pub fn load(cache_dir: Option<&Path>) -> Result<Vec<Tool>, JevifyError> {
     let dirs = path_dirs();
     let cache_file = cache_dir.map(|c| c.join(format!("inventory-{}.json", fingerprint(&dirs))));
     if let Some(tools) = cache_file
@@ -151,7 +151,7 @@ pub fn load(cache_dir: Option<&Path>) -> Result<Vec<Tool>, GreviError> {
     }));
     tools.sort_by(|a, b| a.name.cmp(&b.name));
     if tools.is_empty() {
-        return Err(GreviError::Input("no executables found on PATH".into()));
+        return Err(JevifyError::Input("no executables found on PATH".into()));
     }
     if let Some(f) = cache_file.filter(|_| !names_only) {
         if let Some(p) = f.parent() {

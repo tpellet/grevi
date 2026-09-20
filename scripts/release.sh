@@ -5,7 +5,7 @@ fail() { printf '%s\n' "$*" >&2; exit 1; }
 
 [[ $# == 1 && $1 =~ ^[0-9a-f]{40}$ ]] || fail 'Usage: bash scripts/release.sh <full commit SHA>'
 sha=$1
-repo=tpellet/grevi
+repo=tpellet/jevify
 cd "$(git rev-parse --show-toplevel)"
 [[ $(gh repo view --json nameWithOwner --jq .nameWithOwner) == "$repo" ]] || fail "Expected repository $repo"
 git fetch origin main --tags
@@ -22,9 +22,9 @@ tag=v$version
 if git show-ref --verify --quiet "refs/tags/$tag"; then
   fail "Tag $tag already exists; inspect its release instead of retagging"
 fi
-registry_status=$(curl --silent --show-error --user-agent 'grevi-release (https://github.com/tpellet/grevi)' \
+registry_status=$(curl --silent --show-error --user-agent 'jevify-release (https://github.com/tpellet/jevify)' \
   --output /dev/null --write-out '%{http_code}' \
-  "https://crates.io/api/v1/crates/grevi/$version")
+  "https://crates.io/api/v1/crates/jevify/$version")
 [[ $registry_status == 404 ]] || fail "Registry version check returned $registry_status; expected unpublished version"
 
 conclusion=$(gh run list --repo "$repo" --workflow ci.yml --branch main --event push \

@@ -10,7 +10,7 @@
 set -uo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-D="$(mktemp -d "${TMPDIR:-/tmp}/grevi-demoXXXX")"
+D="$(mktemp -d "${TMPDIR:-/tmp}/jevify-demoXXXX")"
 cp -R "$REPO/benchmarks/fixtures/demo"/* "$D/"
 export PATH="$REPO/target/release:$PATH"
 export PS1='demo$ '
@@ -29,29 +29,29 @@ pause 1
 
 # Scene 1: why — the line that broke the build, buried under 300 warnings.
 cd buildfail
-prompt 'grevi -v why -- cargo build'
-grevi -v why -- cargo build
+prompt 'jevify -v why -- cargo build'
+jevify -v why -- cargo build
 cd ..
 pause 2
 
 # Scene 2: pick — the fixture file name that matches the request.
-prompt 'ls fixtures/downloads | grevi -v pick "last month'"'"'s electricity bill"'
-ls fixtures/downloads | grevi -v pick "last month's electricity bill"
+prompt 'ls fixtures/downloads | jevify -v pick "last month'"'"'s electricity bill"'
+ls fixtures/downloads | jevify -v pick "last month's electricity bill"
 pause 2
 
 # Scene 3: is — a predicate on text, answered by exit code.
-prompt 'grevi -v is "asks for a refund" < mail.txt; echo $?'
-grevi -v is "asks for a refund" < mail.txt
+prompt 'jevify -v is "asks for a refund" < mail.txt; echo $?'
+jevify -v is "asks for a refund" < mail.txt
 echo $?
 pause 2
 
-# Scene 4: run — a proposal, declined at the prompt. grevi reads the confirm
+# Scene 4: run — a proposal, declined at the prompt. jevify reads the confirm
 # answer from the controlling terminal, so `expect` drives the real pty
-# instead of piping stdin (which grevi would not see for the prompt).
+# instead of piping stdin (which jevify would not see for the prompt).
 prompt ', burn a dvd from this iso'
 expect -c '
     set timeout 15
-    spawn grevi -v run "burn a dvd from this iso"
+    spawn jevify -v run "burn a dvd from this iso"
     expect "Run it?"
     send "n\r"
     expect eof
@@ -60,7 +60,7 @@ pause 1
 
 # Scene 5: run — an honest abstention.
 prompt ', make a qr code'
-grevi -v run "make a qr code"
+jevify -v run "make a qr code"
 pause 2
 
 prompt 'echo done'

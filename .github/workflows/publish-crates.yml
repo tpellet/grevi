@@ -26,7 +26,7 @@ jobs:
       - name: Verify package and tag agree
         shell: bash
         run: |
-          version=$(cargo metadata --no-deps --format-version 1 --locked | jq -r '.packages[] | select(.name == "grevi") | .version')
+          version=$(cargo metadata --no-deps --format-version 1 --locked | jq -r '.packages[] | select(.name == "jevify") | .version')
           test "$GITHUB_REF_NAME" = "v$version"
       - uses: rust-lang/crates-io-auth-action@v1
         id: auth

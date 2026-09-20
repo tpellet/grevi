@@ -8,7 +8,7 @@ async fn malformed_choice_labels_return_a_protocol_envelope() {
         let server = MockServer::start().await;
         Mock::given(method("POST")).respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({"answers":{"any":{"noul":0.9},"pick":{"choice":label,"probabilities":{label:0.9,"NONE":0.1}}}}))).mount(&server).await;
         let output = tokio::task::spawn_blocking(move || {
-            common::grevi(&server)
+            common::jevify(&server)
                 .args(["--json", "pick", "match"])
                 .write_stdin("item\n")
                 .output()
@@ -30,7 +30,7 @@ async fn prints_matching_line_raw() {
         noul: |_, _| 0.9,
     })
     .await;
-    let mut c = common::grevi(&server);
+    let mut c = common::jevify(&server);
     let out = tokio::task::spawn_blocking(move || {
         c.args(["pick", "the bill"])
             .write_stdin("notes.txt\ninvoice-march.pdf\nphoto.jpg\n")
@@ -53,7 +53,7 @@ async fn abstains_with_exit_3() {
         noul: |_, _| 0.05,
     })
     .await;
-    let mut c = common::grevi(&server);
+    let mut c = common::jevify(&server);
     let out = tokio::task::spawn_blocking(move || {
         c.args(["pick", "a spaceship"])
             .write_stdin("a\nb\n")
@@ -73,7 +73,7 @@ async fn top_n_prints_only_lines_that_beat_none() {
         noul: |_, _| 0.9,
     })
     .await;
-    let mut c = common::grevi(&server);
+    let mut c = common::jevify(&server);
     let out = tokio::task::spawn_blocking(move || {
         c.args(["pick", "-n", "3", "the bill"])
             .write_stdin("notes.txt\ninvoice-march.pdf\nphoto.jpg\n")
@@ -101,7 +101,7 @@ async fn blank_and_duplicate_lines_are_skipped_but_line_numbers_are_original() {
         noul: |_, _| 0.9,
     })
     .await;
-    let mut c = common::grevi(&server);
+    let mut c = common::jevify(&server);
     let out = tokio::task::spawn_blocking(move || {
         c.args(["--json", "pick", "--index", "the bill"])
             .write_stdin("notes.txt\n\ninvoice-march.pdf\nnotes.txt\n")
@@ -122,7 +122,7 @@ async fn abstains_when_none_wins_the_choice() {
         noul: |_, _| 0.9,
     })
     .await;
-    let mut c = common::grevi(&server);
+    let mut c = common::jevify(&server);
     let out = tokio::task::spawn_blocking(move || {
         c.args(["pick", "a spaceship"])
             .write_stdin("a\nb\n")
@@ -166,7 +166,7 @@ async fn files_are_ranked_by_name_first_and_found_by_content_in_the_finals() {
         std::fs::write(dir.path().join(name), body).unwrap();
     }
     let root = dir.path().to_str().unwrap().to_string();
-    let mut c = common::grevi(&server);
+    let mut c = common::jevify(&server);
     let arg = root.clone();
     let out = tokio::task::spawn_blocking(move || {
         c.args(["--json", "pick", "--files", &arg, "the tax form"])
@@ -195,7 +195,7 @@ async fn files_mode_rejects_index_and_an_empty_directory_and_abstains_honestly()
     let dir = tempfile::tempdir().unwrap();
     let root = dir.path().to_str().unwrap().to_string();
     let run = |args: Vec<String>| {
-        let mut c = common::grevi(&server);
+        let mut c = common::jevify(&server);
         c.args(args).output().unwrap()
     };
     let v = |o: &std::process::Output| -> serde_json::Value {

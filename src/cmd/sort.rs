@@ -1,6 +1,6 @@
 use crate::cmd::Outcome;
 use crate::config::Config;
-use crate::exit::{Exit, GreviError};
+use crate::exit::{Exit, JevifyError};
 use crate::jev::client::Client;
 use crate::jev::{Question, Questions};
 use rustix::fs::{Mode, OFlags, RenameFlags, openat, renameat_with};
@@ -251,14 +251,14 @@ fn move_file(from: &Path, to: &Path, identity: &Intent) -> io::Result<()> {
     Ok(())
 }
 
-fn partial_error(log: &Path, completed: usize, error: impl std::fmt::Display) -> GreviError {
-    GreviError::Input(format!(
+fn partial_error(log: &Path, completed: usize, error: impl std::fmt::Display) -> JevifyError {
+    JevifyError::Input(format!(
         "{error}; confirmed completed {completed} move(s); recovery journal: {}; undo reconciles any pending intent by file identity",
         log.display()
     ))
 }
 
-fn apply_moves(moves: &[Intent], log: &Path, writer: &mut File) -> Result<(), GreviError> {
+fn apply_moves(moves: &[Intent], log: &Path, writer: &mut File) -> Result<(), JevifyError> {
     for (id, intent) in moves.iter().enumerate() {
         let (from, to) = intent.paths();
         record(
@@ -275,9 +275,9 @@ fn apply_moves(moves: &[Intent], log: &Path, writer: &mut File) -> Result<(), Gr
     Ok(())
 }
 
-fn undo(log: &Path) -> Result<Outcome, GreviError> {
+fn undo(log: &Path) -> Result<Outcome, JevifyError> {
     let text =
-        std::fs::read_to_string(log).map_err(|e| GreviError::Input(format!("undo log: {e}")))?;
+        std::fs::read_to_string(log).map_err(|e| JevifyError::Input(format!("undo log: {e}")))?;
     let (mut restored, mut skipped) = (vec![], vec![]);
     // Parse the complete journal before mutating. A torn trailing completion record
     // is recoverable from its durable intent and filesystem identity.
@@ -331,27 +331,27 @@ pub async fn run(
     into: Option<&Path>,
     apply: bool,
     undo_log: Option<&Path>,
-) -> Result<Outcome, GreviError> {
+) -> Result<Outcome, JevifyError> {
     if let Some(l) = undo_log {
         return undo(l);
     }
     let dir = dir
         .canonicalize()
-        .map_err(|e| GreviError::Input(e.to_string()))?;
+        .map_err(|e| JevifyError::Input(e.to_string()))?;
     let root = into
         .unwrap_or(&dir)
         .canonicalize()
-        .map_err(|e| GreviError::Input(e.to_string()))?;
+        .map_err(|e| JevifyError::Input(e.to_string()))?;
     let mut skipped = vec![];
     let dests = folders(&root, &mut skipped);
     if dests.is_empty() {
-        return Err(GreviError::Input(format!(
+        return Err(JevifyError::Input(format!(
             "no folders under {} to sort into",
             root.display()
         )));
     }
     if dests.len() > ctx.backend.window() {
-        return Err(GreviError::InputTooLarge(format!(
+        return Err(JevifyError::InputTooLarge(format!(
             "{} supports at most {} destination folders per sort; found {}",
             ctx.backend.as_str(),
             ctx.backend.window(),
@@ -359,7 +359,7 @@ pub async fn run(
         )));
     }
     let mut files: Vec<PathBuf> = std::fs::read_dir(&dir)
-        .map_err(|e| GreviError::Input(e.to_string()))?
+        .map_err(|e| JevifyError::Input(e.to_string()))?
         .flatten()
         .map(|e| e.path())
         .filter(|p| {
@@ -377,13 +377,13 @@ pub async fn run(
     // probability (up to 0.23 measured); sorted, the batches and the cache key are stable.
     files.sort();
     if files.is_empty() {
-        return Err(GreviError::EmptyInput("no files to sort"));
+        return Err(JevifyError::EmptyInput("no files to sort"));
     }
     let identities: BTreeMap<PathBuf, Intent> = files
         .iter()
         .map(|f| Intent::new(f, f).map(|identity| (f.clone(), identity)))
         .collect::<io::Result<_>>()
-        .map_err(|e| GreviError::Input(e.to_string()))?;
+        .map_err(|e| JevifyError::Input(e.to_string()))?;
     let client = Client::new(ctx)?;
     let folder_items: Vec<String> = dests
         .iter()
@@ -421,7 +421,7 @@ pub async fn run(
                 let p = probs.get(&c).copied().unwrap_or(0.0);
                 let none = probs.get("NONE").copied().unwrap_or(0.0);
                 Ok((c, p, none, r.noul(&format!("a{k:02}"))?))
-            }).collect::<Result<Vec<_>, GreviError>>()
+            }).collect::<Result<Vec<_>, JevifyError>>()
         }
     });
     let picks: Vec<(String, f64, f64, f64)> = futures::future::try_join_all(jobs)
@@ -456,7 +456,7 @@ pub async fn run(
     if apply && !moves.is_empty() {
         let cache = ctx.cache_dir.clone().unwrap_or_else(std::env::temp_dir);
         let (log, mut writer) = journal(&cache).map_err(|e| {
-            GreviError::Input(format!("create recovery journal before moving: {e}"))
+            JevifyError::Input(format!("create recovery journal before moving: {e}"))
         })?;
         let intents: Vec<_> = moves
             .iter()

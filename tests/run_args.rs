@@ -9,9 +9,9 @@ async fn unsupported_cp_grammar_never_executes_even_without_placeholders() {
     })
     .await;
     let dir = tempfile::tempdir().unwrap();
-    let mut c = common::grevi(&server);
+    let mut c = common::jevify(&server);
     c.env(
-        "GREVI_INVENTORY_FILE",
+        "JEVIFY_INVENTORY_FILE",
         inv(&dir, r#"[{"name":"cp","summary":"copy files"}]"#),
     )
     .current_dir(dir.path());
@@ -55,9 +55,9 @@ async fn machine_mode_never_executes_without_exec_and_yes() {
     })
     .await;
     let dir = tempfile::tempdir().unwrap();
-    let mut c = common::grevi(&server);
+    let mut c = common::jevify(&server);
     c.env(
-        "GREVI_INVENTORY_FILE",
+        "JEVIFY_INVENTORY_FILE",
         inv(
             &dir,
             r#"[{"name":"true","summary":"do nothing, successfully"}]"#,
@@ -89,9 +89,9 @@ async fn exec_and_yes_run_the_command_via_argv() {
     })
     .await;
     let dir = tempfile::tempdir().unwrap();
-    let mut c = common::grevi(&server);
+    let mut c = common::jevify(&server);
     c.env(
-        "GREVI_INVENTORY_FILE",
+        "JEVIFY_INVENTORY_FILE",
         inv(
             &dir,
             r#"[{"name":"true","summary":"do nothing, successfully"}]"#,
@@ -125,9 +125,9 @@ async fn executed_child_output_never_corrupts_the_envelope() {
     })
     .await;
     let dir = tempfile::tempdir().unwrap();
-    let mut c = common::grevi(&server);
+    let mut c = common::jevify(&server);
     c.env(
-        "GREVI_INVENTORY_FILE",
+        "JEVIFY_INVENTORY_FILE",
         inv(
             &dir,
             r#"[{"name":"ls","summary":"list directory contents"}]"#,
@@ -160,9 +160,9 @@ async fn never_exec_tools_are_shown_not_run() {
     })
     .await;
     let dir = tempfile::tempdir().unwrap();
-    let mut c = common::grevi(&server);
+    let mut c = common::jevify(&server);
     c.env(
-        "GREVI_INVENTORY_FILE",
+        "JEVIFY_INVENTORY_FILE",
         inv(
             &dir,
             r#"[{"name":"rm","summary":"remove directory entries"}]"#,

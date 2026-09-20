@@ -53,7 +53,7 @@ impl Respond for FakeClassifier {
         let text = body["items"][0].as_str().unwrap_or_default();
         assert!(!text.is_empty() && text.encode_utf16().count() <= 32_000);
         assert!(body["dimensions"].to_string().encode_utf16().count() <= 16_000);
-        // grevi serializes a non-string state as compact JSON and sends a string state as
+        // jevify serializes a non-string state as compact JSON and sends a string state as
         // itself; this reverses that so the shared `choose`/`noul` closures see the state.
         let state = match serde_json::from_str::<Value>(text) {
             Ok(v) if v.is_object() || v.is_array() => v,
@@ -81,7 +81,7 @@ impl Respond for FakeClassifier {
                 labels.len()
             );
             // A Noul arrives as a two-label dimension whose first label is the `true` side;
-            // every grevi Choice carries NONE, so that tells the two apart.
+            // every jevify Choice carries NONE, so that tells the two apart.
             let is_noul = labels.len() == 2 && !labels.iter().any(|l| l == "NONE");
             let (pick, top) = if is_noul {
                 let p = (self.0.noul)(instr, &state);
@@ -154,25 +154,25 @@ pub async fn mock_classifier(fake: FakeJev) -> MockServer {
     server
 }
 
-/// The binary with every grevi variable removed. A developer's shell may export them
-/// (`GREVI_THRESHOLD=2` turns even `capabilities` into exit 2, since `Config::load` runs for
+/// The binary with every jevify variable removed. A developer's shell may export them
+/// (`JEVIFY_THRESHOLD=2` turns even `capabilities` into exit 2, since `Config::load` runs for
 /// every verb); the contract tests must not depend on it. Every raw binary invocation from
 /// Task 3 onward starts here; `cli_basics.rs` (Task 1, env-immune by construction) and
 /// `live.rs` (needs the inherited key) are the two raw `cargo_bin` exceptions.
 pub fn bin() -> assert_cmd::Command {
-    let mut c = assert_cmd::Command::cargo_bin("grevi").unwrap();
+    let mut c = assert_cmd::Command::cargo_bin("jevify").unwrap();
     for var in [
         "TYPESAFE_API_KEY",
         "TYPESAFE_API_KEY_FILE",
-        "GREVI_BACKEND",
-        "GREVI_BASE_URL",
-        "GREVI_THRESHOLD",
-        "GREVI_MODEL",
-        "GREVI_CONCURRENCY",
-        "GREVI_CACHE_DIR",
-        "GREVI_NO_CACHE",
-        "GREVI_PRICE_PER_MTOK",
-        "GREVI_INVENTORY_FILE",
+        "JEVIFY_BACKEND",
+        "JEVIFY_BASE_URL",
+        "JEVIFY_THRESHOLD",
+        "JEVIFY_MODEL",
+        "JEVIFY_CONCURRENCY",
+        "JEVIFY_CACHE_DIR",
+        "JEVIFY_NO_CACHE",
+        "JEVIFY_PRICE_PER_MTOK",
+        "JEVIFY_INVENTORY_FILE",
     ] {
         c.env_remove(var);
     }
@@ -180,27 +180,27 @@ pub fn bin() -> assert_cmd::Command {
 }
 
 /// The binary, pointed at the mock server, no cache, no key file.
-pub fn grevi(server: &MockServer) -> assert_cmd::Command {
+pub fn jevify(server: &MockServer) -> assert_cmd::Command {
     let mut c = bin();
-    c.env("GREVI_BASE_URL", server.uri())
+    c.env("JEVIFY_BASE_URL", server.uri())
         .env("TYPESAFE_API_KEY", "test-key")
-        .env("GREVI_NO_CACHE", "1");
+        .env("JEVIFY_NO_CACHE", "1");
     c
 }
 
 /// The binary, pointed at a mock classifier.dev, with no key at all.
-pub fn grevi_classifier(server: &MockServer) -> assert_cmd::Command {
+pub fn jevify_classifier(server: &MockServer) -> assert_cmd::Command {
     let mut c = bin();
-    c.env("GREVI_BACKEND", "classifier")
-        .env("GREVI_BASE_URL", server.uri())
-        .env("GREVI_NO_CACHE", "1");
+    c.env("JEVIFY_BACKEND", "classifier")
+        .env("JEVIFY_BASE_URL", server.uri())
+        .env("JEVIFY_NO_CACHE", "1");
     c
 }
 
 /// A library `Config` for in-process tests, built literally so no test touches the process env.
-pub fn config(server: &MockServer) -> grevi::config::Config {
-    grevi::config::Config {
-        backend: grevi::config::Backend::Typesafe,
+pub fn config(server: &MockServer) -> jevify::config::Config {
+    jevify::config::Config {
+        backend: jevify::config::Backend::Typesafe,
         key: Some("test-key".into()),
         key_file: None,
         base_url: server.uri(),
@@ -209,7 +209,7 @@ pub fn config(server: &MockServer) -> grevi::config::Config {
         concurrency: 8,
         cache_dir: None,
         price_per_mtok: 0.042,
-        stats: std::sync::Arc::new(grevi::jev::client::Stats::default()),
+        stats: std::sync::Arc::new(jevify::jev::client::Stats::default()),
     }
 }
 

@@ -19,10 +19,10 @@ pub fn live_key_present() -> bool {
 fn inventory_finds_many_tools_here() {
     let cache = tempfile::tempdir().unwrap();
     let t0 = std::time::Instant::now();
-    let tools = grevi::inventory::load(Some(cache.path())).unwrap();
+    let tools = jevify::inventory::load(Some(cache.path())).unwrap();
     let cold = t0.elapsed();
     let t1 = std::time::Instant::now();
-    let again = grevi::inventory::load(Some(cache.path())).unwrap();
+    let again = jevify::inventory::load(Some(cache.path())).unwrap();
     let warm = t1.elapsed();
     eprintln!(
         "{} tools; cold {cold:?}, cached {warm:?} (informational, not asserted)",
@@ -57,11 +57,11 @@ fn inventory_finds_many_tools_here() {
 #[test]
 #[ignore]
 fn live_classifier_picks_without_a_key() {
-    let mut cmd = assert_cmd::Command::cargo_bin("grevi").unwrap();
+    let mut cmd = assert_cmd::Command::cargo_bin("jevify").unwrap();
     cmd.env_remove("TYPESAFE_API_KEY")
         .env_remove("TYPESAFE_API_KEY_FILE")
-        .env("GREVI_BACKEND", "classifier")
-        .env("GREVI_NO_CACHE", "1");
+        .env("JEVIFY_BACKEND", "classifier")
+        .env("JEVIFY_NO_CACHE", "1");
     let out = cmd
         .args(["--json", "pick", "the invoice from March"])
         .write_stdin("notes.txt\ninvoice-2026-03.pdf\ncat.jpg\n")
@@ -86,10 +86,10 @@ fn live_classifier_picks_without_a_key() {
 #[test]
 #[ignore]
 fn live_classifier_health_is_reachable() {
-    let mut cmd = assert_cmd::Command::cargo_bin("grevi").unwrap();
+    let mut cmd = assert_cmd::Command::cargo_bin("jevify").unwrap();
     cmd.env_remove("TYPESAFE_API_KEY")
         .env_remove("TYPESAFE_API_KEY_FILE")
-        .env("GREVI_BACKEND", "classifier");
+        .env("JEVIFY_BACKEND", "classifier");
     let out = cmd.args(["--json", "health"]).output().unwrap();
     let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
     assert_eq!(out.status.code(), Some(0), "{v}");
@@ -103,7 +103,7 @@ fn live_run_routes_tar() {
     if !live_key_present() {
         return;
     }
-    let out = assert_cmd::Command::cargo_bin("grevi")
+    let out = assert_cmd::Command::cargo_bin("jevify")
         .unwrap()
         .args([
             "--json",

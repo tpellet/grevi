@@ -1,6 +1,6 @@
 mod common;
 use common::{FakeJev, option_containing};
-use grevi::tournament::{Prompts, rank};
+use jevify::tournament::{Prompts, rank};
 
 fn prompts() -> Prompts {
     Prompts {
@@ -24,7 +24,7 @@ async fn finds_needle_across_windows() {
     })
     .await;
     let cfg = common::config(&server);
-    let client = grevi::jev::client::Client::new(&cfg).unwrap();
+    let client = jevify::jev::client::Client::new(&cfg).unwrap();
     let mut items: Vec<String> = (0..1000).map(|i| format!("line {i}")).collect();
     items[777] = "the NEEDLE is here".into();
     let r = rank(&client, "find the needle", &items, &prompts(), None)
@@ -55,7 +55,7 @@ async fn long_lines_are_clipped_so_a_window_stays_under_budget() {
     })
     .await;
     let cfg = common::config(&server);
-    let client = grevi::jev::client::Client::new(&cfg).unwrap();
+    let client = jevify::jev::client::Client::new(&cfg).unwrap();
     let mut items: Vec<String> = (0..200)
         .map(|i| format!("{i} {}", "x".repeat(5_000)))
         .collect();

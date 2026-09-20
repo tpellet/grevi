@@ -1,6 +1,6 @@
 use crate::cmd::Outcome;
 use crate::config::Config;
-use crate::exit::{Exit, GreviError};
+use crate::exit::{Exit, JevifyError};
 use crate::jev::client::Client;
 use crate::tournament::{Prompts, rank};
 use std::path::{Path, PathBuf};
@@ -14,12 +14,12 @@ pub async fn run(
     top: usize,
     index: bool,
     files: Option<&Path>,
-) -> Result<Outcome, GreviError> {
+) -> Result<Outcome, JevifyError> {
     if top == 0 {
-        return Err(GreviError::Usage("-n must be at least 1".into()));
+        return Err(JevifyError::Usage("-n must be at least 1".into()));
     }
     if files.is_some() && index {
-        return Err(GreviError::Usage(
+        return Err(JevifyError::Usage(
             "--index numbers stdin lines; with --files the match is a path".into(),
         ));
     }
@@ -31,12 +31,12 @@ pub async fn run(
             let root = root.clone();
             tokio::task::spawn_blocking(move || list_files(&root))
                 .await
-                .map_err(|e| GreviError::Input(e.to_string()))?
+                .map_err(|e| JevifyError::Input(e.to_string()))?
         }
         None => crate::input::read_stdin_async().await?,
     };
     if root.is_some() && lines.is_empty() {
-        return Err(GreviError::EmptyInput(
+        return Err(JevifyError::EmptyInput(
             "no regular files under the directory (hidden and ignored files are skipped)",
         ));
     }
@@ -48,7 +48,7 @@ pub async fn run(
         .filter(|&i| !lines[i].trim().is_empty() && seen.insert(lines[i].trim()))
         .collect();
     if kept.len() > MAX_LINES {
-        return Err(GreviError::InputTooLarge(if root.is_some() {
+        return Err(JevifyError::InputTooLarge(if root.is_some() {
             format!("more than {MAX_LINES} files; choose a narrower directory")
         } else {
             format!("more than {MAX_LINES} lines; filter first (rg, head) or split the list")
@@ -125,15 +125,15 @@ pub async fn run(
     })
 }
 
-fn canonical_dir(dir: &Path) -> Result<PathBuf, GreviError> {
+fn canonical_dir(dir: &Path) -> Result<PathBuf, JevifyError> {
     // The printed path is built from DIR as typed, so DIR must survive as text.
     if dir.to_str().is_none() {
-        return Err(GreviError::Usage("--files DIR must be valid UTF-8".into()));
+        return Err(JevifyError::Usage("--files DIR must be valid UTF-8".into()));
     }
     let root = std::fs::canonicalize(dir)
-        .map_err(|e| GreviError::Input(format!("--files {}: {e}", dir.display())))?;
+        .map_err(|e| JevifyError::Input(format!("--files {}: {e}", dir.display())))?;
     if !root.is_dir() {
-        return Err(GreviError::Input(format!(
+        return Err(JevifyError::Input(format!(
             "--files {}: not a directory",
             dir.display()
         )));
@@ -291,11 +291,11 @@ mod tests {
         std::fs::write(t.path().join("f"), "x").unwrap();
         assert!(matches!(
             canonical_dir(&t.path().join("missing")),
-            Err(GreviError::Input(_))
+            Err(JevifyError::Input(_))
         ));
         assert!(matches!(
             canonical_dir(&t.path().join("f")),
-            Err(GreviError::Input(_))
+            Err(JevifyError::Input(_))
         ));
         assert!(canonical_dir(t.path()).is_ok());
     }

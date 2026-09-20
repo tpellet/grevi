@@ -28,7 +28,7 @@ COMMON_PROMPT = (
     "Keep any scratch files under .agent-scratch/."
 )
 LIMITATIONS = [
-    "Filesystem reads and A-arm grevi availability are not host-isolated.",
+    "Filesystem reads and A-arm jevify availability are not host-isolated.",
     "Tool/output budgets are detected from CLI events; an in-flight tool may finish.",
     "Requested model is recorded; exact returned model snapshot may be unavailable.",
     "Provider cost and Jev usage remain unavailable unless separately instrumented.",
@@ -52,7 +52,7 @@ def relative_path(value):
     path = Path(value)
     if not value or path.is_absolute() or ".." in path.parts or path == Path("."):
         raise ValueError(f"Unsafe fixture path: {value!r}")
-    if path.parts[0] in {".git", "TASK.md", "GREVI_SKILL.md", ".grevi-bin"}:
+    if path.parts[0] in {".git", "TASK.md", "JEVIFY_SKILL.md", ".jevify-bin"}:
         raise ValueError(f"Reserved fixture path: {value!r}")
     return path
 
@@ -343,7 +343,7 @@ def run_process(command, cwd, prompt, env, directory, seconds, max_tools, max_ou
 def codex_command(codex, root, arm, model, reasoning):
     filesystem = {":root": "deny", ":minimal": "read", str(root): "write",
                   str(Path(codex).resolve()): "read"}
-    installed = shutil.which("grevi")
+    installed = shutil.which("jevify")
     if installed:
         for path in {str(Path(installed)), str(Path(installed).resolve())}:
             filesystem[path] = "deny"
@@ -364,7 +364,7 @@ def codex_command(codex, root, arm, model, reasoning):
                "--skip-git-repo-check", "-m", model]
     command.extend(["-c", "permissions={experiment={filesystem={" + filesystem_toml +
                     "},network={" + network_toml + "}}}"])
-    shell_env = {"PATH": str(root / ".grevi-bin") + ":/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    shell_env = {"PATH": str(root / ".jevify-bin") + ":/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin",
                  "HOME": str(root), "XDG_CACHE_HOME": str(root / ".agent-cache"),
                  "XDG_CONFIG_HOME": str(root / ".agent-config"), "TMPDIR": str(root / ".agent-tmp"),
                  "LANG": "en_US.UTF-8"}
@@ -384,7 +384,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--tasks", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True, help="New private run directory")
-    parser.add_argument("--grevi", type=Path, required=True)
+    parser.add_argument("--jevify", type=Path, required=True)
     parser.add_argument("--skill", type=Path, required=True)
     parser.add_argument("--model", required=True)
     parser.add_argument("--reasoning", default="low")
@@ -405,7 +405,7 @@ def main():
         parser.error("Expected schema_version 1, panel synthetic_diagnostic")
     tasks = taskset["tasks"]
     validate_tasks(tasks)
-    binary = args.grevi.read_bytes()
+    binary = args.jevify.read_bytes()
     skill = args.skill.read_text()
     codex = shutil.which("codex")
     if not codex:
@@ -429,7 +429,7 @@ def main():
     }
     write_json(output / "manifest.json", manifest)
     (output / "tasks.private.json").write_bytes(tasks_bytes)
-    frozen = output / "grevi.frozen"
+    frozen = output / "jevify.frozen"
     frozen.write_bytes(binary)
     frozen.chmod(0o500)
     if not args.execute:
@@ -449,15 +449,15 @@ def main():
                 env = {key: value for key, value in os.environ.items()
                        if key in {"HOME", "USER", "PATH", "LANG", "TMPDIR", "CODEX_HOME"}}
                 if arm == "B":
-                    bindir = root / ".grevi-bin"
+                    bindir = root / ".jevify-bin"
                     bindir.mkdir()
-                    shutil.copyfile(frozen, bindir / "grevi")
-                    (bindir / "grevi").chmod(0o500)
+                    shutil.copyfile(frozen, bindir / "jevify")
+                    (bindir / "jevify").chmod(0o500)
                     env["PATH"] = str(bindir) + os.pathsep + env.get("PATH", "")
-                    (root / "GREVI_SKILL.md").write_text(skill)
-                    prompt += "grevi is available. Read GREVI_SKILL.md. Use it when helpful; ordinary tools and fallback remain available."
+                    (root / "JEVIFY_SKILL.md").write_text(skill)
+                    prompt += "jevify is available. Read JEVIFY_SKILL.md. Use it when helpful; ordinary tools and fallback remain available."
                 else:
-                    prompt += "grevi is unavailable. Use the ordinary installed tools; do not use hosted semantic substitutes."
+                    prompt += "jevify is unavailable. Use the ordinary installed tools; do not use hosted semantic substitutes."
                 before = hashes(root)
                 before_head = repository_head(root)
                 command = codex_command(codex, root, arm, args.model, args.reasoning)
@@ -468,7 +468,7 @@ def main():
                        "before_hashes": before, "start_unix": time.time(),
                        "jev_usage": {"tokens": None, "available": False},
                        "total_usd": None, "cost_available": False,
-                       "grevi_calls": None, "http_attempts": None, "retries": None,
+                       "jevify_calls": None, "http_attempts": None, "retries": None,
                        "semantic_errors": None, "fallback_count": None}
                 write_json(episode / "assignment.json", row)
                 try:

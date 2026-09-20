@@ -1,6 +1,6 @@
 use crate::cmd::Outcome;
 use crate::config::Config;
-use crate::exit::{Exit, GreviError};
+use crate::exit::{Exit, JevifyError};
 use crate::jev::client::Client;
 use crate::tournament::{Prompts, rank};
 use regex::Regex;
@@ -56,10 +56,10 @@ pub fn prefilter(lines: &[String]) -> Vec<usize> {
 
 /// Runs `cmd` via argv (never a shell) with stdout and stderr on one pipe, so the lines
 /// interleave as they would on a terminal. Returns the lines and the child's exit code.
-fn capture(cmd: &[String]) -> Result<(Vec<String>, Option<i32>), GreviError> {
+fn capture(cmd: &[String]) -> Result<(Vec<String>, Option<i32>), JevifyError> {
     use std::io::Read;
     use std::sync::{Arc, Mutex};
-    let io = |e: std::io::Error| GreviError::Input(e.to_string());
+    let io = |e: std::io::Error| JevifyError::Input(e.to_string());
     let (mut reader, writer) = std::io::pipe().map_err(io)?;
     let err = writer.try_clone().map_err(io)?;
     // The temporary `Command` owns our two write ends and is dropped at the end of this
@@ -71,7 +71,7 @@ fn capture(cmd: &[String]) -> Result<(Vec<String>, Option<i32>), GreviError> {
         .stdout(writer)
         .stderr(err)
         .spawn()
-        .map_err(|e| GreviError::Input(format!("failed to start {}: {e}", cmd[0])))?;
+        .map_err(|e| JevifyError::Input(format!("failed to start {}: {e}", cmd[0])))?;
     // Reading happens on its own thread, so a child that has exited is not waited on forever
     // when a daemon it spawned still holds the write end (EOF would never come).
     let buf = Arc::new(Mutex::new(Vec::new()));
@@ -106,7 +106,7 @@ fn capture(cmd: &[String]) -> Result<(Vec<String>, Option<i32>), GreviError> {
         if let Some(status) = child.try_wait().map_err(io)? {
             if exited.get_or_insert_with(Instant::now).elapsed() >= DAEMON_GRACE {
                 eprintln!(
-                    "grevi why: {} exited but a process it left behind still holds its output open; using what was captured",
+                    "jevify why: {} exited but a process it left behind still holds its output open; using what was captured",
                     cmd[0]
                 );
                 break status.code();
@@ -126,9 +126,9 @@ pub async fn run(
     context: usize,
     top: usize,
     cmd: &[String],
-) -> Result<Outcome, GreviError> {
+) -> Result<Outcome, JevifyError> {
     if top == 0 {
-        return Err(GreviError::Usage("-n must be at least 1".into()));
+        return Err(JevifyError::Usage("-n must be at least 1".into()));
     }
     let client = Client::new(ctx)?;
     let (lines, child_exit) = if cmd.is_empty() {
@@ -137,10 +137,10 @@ pub async fn run(
         let cmd = cmd.to_vec();
         tokio::task::spawn_blocking(move || capture(&cmd))
             .await
-            .map_err(|e| GreviError::Input(e.to_string()))??
+            .map_err(|e| JevifyError::Input(e.to_string()))??
     };
     if lines.iter().all(|l| l.trim().is_empty()) {
-        return Err(GreviError::EmptyInput("the command printed nothing"));
+        return Err(JevifyError::EmptyInput("the command printed nothing"));
     }
     let kept = prefilter(&lines);
     let no_signal = !kept.iter().any(|&i| SIGNAL.is_match(&lines[i]));
@@ -209,10 +209,10 @@ pub async fn run(
     }
     // The first thing most people get wrong: compilers write errors to stderr.
     let hint = (causes.is_empty() && no_signal && cmd.is_empty()).then(|| {
-        "no error-like lines on stdin; most tools write errors to stderr: `cmd 2>&1 | grevi why` or `grevi why -- cmd`".to_string()
+        "no error-like lines on stdin; most tools write errors to stderr: `cmd 2>&1 | jevify why` or `jevify why -- cmd`".to_string()
     });
     if let Some(h) = &hint {
-        eprintln!("grevi why: {h}");
+        eprintln!("jevify why: {h}");
     }
     Ok(Outcome {
         exit: if causes.is_empty() {

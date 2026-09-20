@@ -1,4 +1,4 @@
-use crate::exit::GreviError;
+use crate::exit::JevifyError;
 use crate::inventory::Tool;
 use crate::jev::client::Client;
 use crate::jev::{Question, Questions};
@@ -53,7 +53,7 @@ pub async fn propose(
     flags: &[Flag],
     cwd: &[String],
     threshold: f64,
-) -> Result<Proposal, GreviError> {
+) -> Result<Proposal, JevifyError> {
     let values = value_candidates(request);
     let files: Vec<String> = cwd.iter().take(200).cloned().collect();
     let state = serde_json::json!({

@@ -1,15 +1,15 @@
 {
-  "name": "grevi",
-  "description": "The grevi agent skill for Claude Code.",
+  "name": "jevify",
+  "description": "The jevify agent skill for Claude Code.",
   "owner": {
     "name": "tpellet",
     "url": "https://github.com/tpellet"
   },
   "plugins": [
     {
-      "name": "grevi",
-      "description": "Teaches agents to use the grevi CLI: pick, why, is, run, add, sort.",
-      "source": "./plugins/grevi"
+      "name": "jevify",
+      "description": "Teaches agents to use the jevify CLI: pick, why, is, run, add, sort.",
+      "source": "./plugins/jevify"
     }
   ]
 }

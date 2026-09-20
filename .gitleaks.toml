@@ -1,4 +1,4 @@
-title = "grevi gitleaks config"
+title = "jevify gitleaks config"
 
 [extend]
 useDefault = true

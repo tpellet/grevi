@@ -1,9 +1,9 @@
-use crate::exit::GreviError;
+use crate::exit::JevifyError;
 use crate::jev::client::Client;
 use crate::jev::{Question, Questions};
 use std::collections::BTreeMap;
 
-/// The TypeSafe window, and the largest one grevi ever sends. classifier.dev takes 99 options
+/// The TypeSafe window, and the largest one jevify ever sends. classifier.dev takes 99 options
 /// plus NONE; the size in force comes from the backend, not from here.
 pub const WINDOW: usize = 200;
 const PER_WINDOW_FINALISTS: usize = 3;
@@ -57,7 +57,7 @@ async fn window(
     request: &str,
     items: &[(usize, String)],
     prompts: &Prompts,
-) -> Result<Ranking, GreviError> {
+) -> Result<Ranking, JevifyError> {
     // The backend's own input limit caps the window budget: classifier.dev rejects an input
     // over 32,000 characters, so its windows carry shorter excerpts, never a rejected request.
     let budget = WINDOW_CHARS.min(client.backend().max_state_chars());
@@ -104,7 +104,7 @@ pub async fn rank(
     items: &[String],
     prompts: &Prompts,
     finalist_text: Option<&(dyn Fn(usize) -> String + Sync)>,
-) -> Result<Ranking, GreviError> {
+) -> Result<Ranking, JevifyError> {
     let all: Vec<(usize, String)> = items.iter().cloned().enumerate().collect();
     let size = client.backend().window();
     if all.len() <= size && finalist_text.is_none() {
@@ -152,7 +152,7 @@ pub async fn shortlist(
     items: &[String],
     prompts: &Prompts,
     per_window: usize,
-) -> Result<Vec<Candidate>, GreviError> {
+) -> Result<Vec<Candidate>, JevifyError> {
     let all: Vec<(usize, String)> = items.iter().cloned().enumerate().collect();
     let rounds = futures::future::try_join_all(
         all.chunks(client.backend().window())

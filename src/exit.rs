@@ -32,8 +32,8 @@ impl Exit {
 }
 
 #[derive(Debug, thiserror::Error)]
-pub enum GreviError {
-    /// Only reachable with `GREVI_BACKEND=typesafe`: without a key grevi uses classifier.dev.
+pub enum JevifyError {
+    /// Only reachable with `JEVIFY_BACKEND=typesafe`: without a key jevify uses classifier.dev.
     #[error("the typesafe backend needs a key: set TYPESAFE_API_KEY or TYPESAFE_API_KEY_FILE")]
     MissingKey,
     #[error("the API rejected the key (HTTP {0})")]
@@ -47,7 +47,7 @@ pub enum GreviError {
     #[error("input too large: {0}")]
     InputTooLarge(String),
     /// HTTP 413/422: the API rejected the request body. Usually the state is over the token
-    /// budget, sometimes the request is malformed (a grevi bug); an input error, not an outage.
+    /// budget, sometimes the request is malformed (a jevify bug); an input error, not an outage.
     #[error("the API rejected the request (HTTP {0}): {1}")]
     RejectedRequest(u16, String),
     #[error("{0}")]
@@ -58,7 +58,7 @@ pub enum GreviError {
     Declined,
 }
 
-impl GreviError {
+impl JevifyError {
     pub fn exit(&self) -> Exit {
         match self {
             Self::MissingKey | Self::BadKey(_) => Exit::Auth,
@@ -88,37 +88,37 @@ impl GreviError {
     pub fn hint(&self) -> &'static str {
         match self {
             Self::MissingKey => {
-                "unset GREVI_BACKEND to run keyless through classifier.dev, or create a key at https://console.typesafe.ai/settings/keys and export it in your shell profile; grevi never prints it"
+                "unset JEVIFY_BACKEND to run keyless through classifier.dev, or create a key at https://console.typesafe.ai/settings/keys and export it in your shell profile; jevify never prints it"
             }
-            Self::BadKey(_) => "check the key in the TypeSafe console; `grevi health` verifies it",
-            Self::Unavailable(_) => "retry later, or lower GREVI_CONCURRENCY if rate limited",
+            Self::BadKey(_) => "check the key in the TypeSafe console; `jevify health` verifies it",
+            Self::Unavailable(_) => "retry later, or lower JEVIFY_CONCURRENCY if rate limited",
             Self::Protocol(_) => {
-                "the API may have changed, or GREVI_BASE_URL points at the wrong server; run `grevi health` and report the issue with `grevi --version`"
+                "the API may have changed, or JEVIFY_BASE_URL points at the wrong server; run `jevify health` and report the issue with `jevify --version`"
             }
             Self::EmptyInput(msg) if msg.starts_with("no unstaged changes") => {
                 "nothing to stage: `git diff` is empty (untracked files are never staged by add)"
             }
-            Self::EmptyInput(_) => "pipe text into grevi",
+            Self::EmptyInput(_) => "pipe text into jevify",
             Self::InputTooLarge(_) => "filter the input first, e.g. with rg or tail",
             Self::RejectedRequest(..) => {
-                "the input is probably over the API's token budget: filter it first, e.g. with rg or tail; if it is small, this is a grevi bug — report it with `grevi --version`"
+                "the input is probably over the API's token budget: filter it first, e.g. with rg or tail; if it is small, this is a jevify bug — report it with `jevify --version`"
             }
             Self::Input(_) => "check the input path and encoding",
-            Self::Usage(_) => "see `grevi --help` or `grevi capabilities --json`",
+            Self::Usage(_) => "see `jevify --help` or `jevify capabilities --json`",
             Self::Declined => "re-run with --yes to skip confirmation",
         }
     }
     pub fn example(&self) -> &'static str {
         match self {
-            Self::MissingKey => "export TYPESAFE_API_KEY=...; grevi health",
+            Self::MissingKey => "export TYPESAFE_API_KEY=...; jevify health",
             Self::EmptyInput(msg) if msg.starts_with("no unstaged changes") => {
-                "grevi add \"finish the login flow\""
+                "jevify add \"finish the login flow\""
             }
-            Self::EmptyInput(_) => "ls | grevi pick \"the invoice from March\"",
+            Self::EmptyInput(_) => "ls | jevify pick \"the invoice from March\"",
             Self::InputTooLarge(_) | Self::RejectedRequest(..) => {
-                "tail -n 20000 build.log | grevi why"
+                "tail -n 20000 build.log | jevify why"
             }
-            _ => "grevi capabilities --json",
+            _ => "jevify capabilities --json",
         }
     }
 }
@@ -134,16 +134,16 @@ mod tests {
     #[test]
     fn every_error_maps_to_a_stable_kind_and_exit() {
         let errors = [
-            GreviError::MissingKey,
-            GreviError::BadKey(401),
-            GreviError::Unavailable(String::new()),
-            GreviError::Protocol(String::new()),
-            GreviError::EmptyInput(""),
-            GreviError::InputTooLarge(String::new()),
-            GreviError::RejectedRequest(422, String::new()),
-            GreviError::Input(String::new()),
-            GreviError::Usage(String::new()),
-            GreviError::Declined,
+            JevifyError::MissingKey,
+            JevifyError::BadKey(401),
+            JevifyError::Unavailable(String::new()),
+            JevifyError::Protocol(String::new()),
+            JevifyError::EmptyInput(""),
+            JevifyError::InputTooLarge(String::new()),
+            JevifyError::RejectedRequest(422, String::new()),
+            JevifyError::Input(String::new()),
+            JevifyError::Usage(String::new()),
+            JevifyError::Declined,
         ];
         let expected = [
             ("missing_api_key", 5),
@@ -159,7 +159,7 @@ mod tests {
         ];
         for (e, (kind, code)) in errors.iter().zip(expected) {
             assert_eq!((e.kind(), e.exit().code()), (kind, code), "{e}");
-            assert!(!e.hint().is_empty() && e.example().contains("grevi"));
+            assert!(!e.hint().is_empty() && e.example().contains("jevify"));
         }
     }
 }

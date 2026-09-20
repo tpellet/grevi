@@ -13,7 +13,7 @@ import eval_agents as harness
 
 class HarnessTests(unittest.TestCase):
     def setUp(self):
-        self.root = Path(tempfile.mkdtemp(prefix="grevi-harness-test-"))
+        self.root = Path(tempfile.mkdtemp(prefix="jevify-harness-test-"))
         self.task = {"id": "one", "family_id": "family-one", "endpoint": "pick",
                      "stratum": "small", "prompt": "Write answer.json",
                      "files": {"input.txt": "alpha\nbeta\n"},

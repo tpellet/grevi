@@ -1,6 +1,6 @@
 mod common;
-use grevi::jev::client::Client;
-use grevi::jev::{Question, Questions};
+use jevify::jev::client::Client;
+use jevify::jev::{Question, Questions};
 use wiremock::matchers::method;
 use wiremock::{Mock, MockServer, ResponseTemplate};
 
@@ -133,8 +133,8 @@ async fn invalid_cached_answers_are_rejected() {
     cfg.cache_dir = Some(dir.path().to_path_buf());
     let state = serde_json::json!("x");
     let canonical = serde_json::json!({"decision_contract":2,"endpoint":cfg.base_url,"backend":"typesafe","model":cfg.model,"state":state,"questions":one_noul()});
-    let key = grevi::jev::cache::key(&serde_json::to_vec(&canonical).unwrap());
-    grevi::jev::cache::DiskCache::new(dir.path().to_path_buf())
+    let key = jevify::jev::cache::key(&serde_json::to_vec(&canonical).unwrap());
+    jevify::jev::cache::DiskCache::new(dir.path().to_path_buf())
         .unwrap()
         .put(
             &key,
@@ -211,7 +211,7 @@ async fn equivalent_endpoint_trailing_slashes_share_cache() {
 async fn classifier_preflights_all_chunks_before_any_post() {
     let server = MockServer::start().await;
     let mut cfg = common::config(&server);
-    cfg.backend = grevi::config::Backend::Classifier;
+    cfg.backend = jevify::config::Backend::Classifier;
     let mut qs: Questions = (0..21)
         .map(|i| (format!("q{i:02}"), Question::noul("is it?")))
         .collect();
@@ -384,7 +384,7 @@ async fn health_and_prewarm_have_separate_attempt_counters() {
     })
     .await;
     let cfg = common::config(&server);
-    grevi::cmd::agent::health(&cfg).await.unwrap();
+    jevify::cmd::agent::health(&cfg).await.unwrap();
     Client::new(&cfg).unwrap().prewarm();
     for _ in 0..100 {
         let meta = serde_json::to_value(cfg.meta()).unwrap();
@@ -423,7 +423,7 @@ async fn classifier_partial_failure_retains_each_physical_attempt() {
         .mount(&server)
         .await;
     let mut cfg = common::config(&server);
-    cfg.backend = grevi::config::Backend::Classifier;
+    cfg.backend = jevify::config::Backend::Classifier;
     cfg.price_per_mtok = 0.0;
     let qs = (0..21)
         .map(|i| (format!("q{i:02}"), Question::noul("is it?")))
@@ -584,7 +584,7 @@ async fn failed_health_and_prewarm_do_not_become_inference_attempts() {
         .mount(&server)
         .await;
     let cfg = common::config(&server);
-    assert!(grevi::cmd::agent::health(&cfg).await.is_err());
+    assert!(jevify::cmd::agent::health(&cfg).await.is_err());
     Client::new(&cfg).unwrap().prewarm();
     for _ in 0..100 {
         if serde_json::to_value(cfg.meta()).unwrap()["telemetry"]["prewarm_gets"]["failed"] == 1 {

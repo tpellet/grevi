@@ -1,7 +1,7 @@
 # /// script
 # requires-python = ">=3.11"
 # ///
-"""Route each eval intent with `grevi run --json --dry-run --no-args`; compare to BM25 over the same
+"""Route each eval intent with `jevify run --json --dry-run --no-args`; compare to BM25 over the same
 frozen inventory; print a reliability table for `fit`."""
 import json
 import math
@@ -11,10 +11,10 @@ import subprocess
 import sys
 from pathlib import Path
 
-H = "./target/release/grevi"  # fixed: ubs's taint check rejects an argv-selected executable
+H = "./target/release/jevify"  # fixed: ubs's taint check rejects an argv-selected executable
 INV = "evals/inventory.json"
-os.environ["GREVI_INVENTORY_FILE"] = INV
-# grevi and BM25 rank the same frozen tool list, so the comparison is like for like and reproducible.
+os.environ["JEVIFY_INVENTORY_FILE"] = INV
+# jevify and BM25 rank the same frozen tool list, so the comparison is like for like and reproducible.
 docs = {t["name"]: (t["name"] + " " + t["summary"]).lower() for t in json.loads(Path(INV).read_text())}
 def tok(s): return re.findall(r"[a-z0-9]+", s.lower())
 N = len(docs); avg = sum(len(tok(d)) for d in docs.values()) / max(N, 1)
@@ -64,7 +64,7 @@ for c in cases:
     tool, fit, cst, code, _ = route(c["request"], "--no-args"); cost += cst
     if c["ok"]:
         rout_n += 1; hit += tool in c["ok"]; bm += bm25(c["request"]) in c["ok"]
-        # Same rule as set 2: the table covers routes grevi acted on. An abstention (exit 3) carries
+        # Same rule as set 2: the table covers routes jevify acted on. An abstention (exit 3) carries
         # no tool and an error row carries fit 0.0; both would land in the low bins as failures.
         if tool is not None and code == 0: reliability(fit, tool in c["ok"])
     else:
@@ -80,7 +80,7 @@ for c in held:
     if tool is not None and code == 0: reliability(fit, ok)
     hrows.append({"request": c["request"], "tool": tool, "fit": fit, "gold": c["head"], "leaks_name": c.get("leaks_name"), "exit": code}); save("nl2bash.json", hrows)
 print(f"nl2bash held-out: top-1 {h1}/{len(held)}  BM25 {hb}/{len(held)}  abstained {abst}/{len(held)}  errors {errors - errors_before}  total cost ${cost:.4f}")
-print("reliability of routes grevi acted on, both sets, fit >= threshold (fit bin: n, accuracy):", {f"{b/5:.1f}-{(b+1)/5:.1f}": (n, round(k / n, 2)) for b, (n, k) in sorted(bins.items())})
+print("reliability of routes jevify acted on, both sets, fit >= threshold (fit bin: n, accuracy):", {f"{b/5:.1f}-{(b+1)/5:.1f}": (n, round(k / n, 2)) for b, (n, k) in sorted(bins.items())})
 print(f"near-threshold routes, both sets (|fit - threshold| < 0.06, the measured run-to-run jitter; a --no-cache re-run can flip them): {near}")
 # 3. argument-pointing spot check (20, by the author), without --no-args: tool right; every flag a correct
 # command must carry present (counted only when the tool is right; each entry of `required` lists the

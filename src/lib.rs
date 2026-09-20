@@ -15,7 +15,7 @@ pub mod tournament;
 
 use clap::Parser;
 use cli::{Cli, Cmd};
-use exit::{Exit, GreviError};
+use exit::{Exit, JevifyError};
 use output::{Envelope, ErrorBody, Format, Meta};
 use std::io::Write;
 use std::time::Instant;
@@ -33,25 +33,25 @@ const VERBS: [&str; 10] = [
     "init",
 ];
 
-/// What bare `grevi` prints: enough to make a first call, in about 130 tokens. `--help` has the rest.
+/// What bare `jevify` prints: enough to make a first call, in about 130 tokens. `--help` has the rest.
 pub const QUICK_START: &str = concat!(
-    "grevi ",
+    "jevify ",
     env!("CARGO_PKG_VERSION"),
     r#": answer questions about text you already have. Selects, never generates.
-  <list> | grevi pick "<description>"    find one line by meaning
-  <cmd> 2>&1 | grevi why                 find the line that caused a failure
-  grevi is "<statement>" < file          yes / no / unsure as exit code 0 / 1 / 3
-  grevi run --dry-run "<task>"           find the installed command for a task
-  grevi add --dry-run "<topic>"          stage only the git changes about a topic
-  grevi sort <dir>                       propose a folder for each file (dry run)
+  <list> | jevify pick "<description>"    find one line by meaning
+  <cmd> 2>&1 | jevify why                 find the line that caused a failure
+  jevify is "<statement>" < file          yes / no / unsure as exit code 0 / 1 / 3
+  jevify run --dry-run "<task>"           find the installed command for a task
+  jevify add --dry-run "<topic>"          stage only the git changes about a topic
+  jevify sort <dir>                       propose a folder for each file (dry run)
 Add --json for one JSON object on stdout. No key needed.
 Exit: 0 ok, 1 no, 2 usage, 3 nothing fits or unsure, 4 API unavailable, 5 auth, 6 input.
-More: grevi <verb> --help | grevi --help | agents: grevi capabilities --json, grevi robot-docs
+More: jevify <verb> --help | jevify --help | agents: jevify capabilities --json, jevify robot-docs
 "#
 );
 
 pub fn main_exit() -> i32 {
-    // Bare `grevi` stays a usage error (exit 2, stderr), as it was with clap's full help.
+    // Bare `jevify` stays a usage error (exit 2, stderr), as it was with clap's full help.
     if std::env::args_os().len() == 1 {
         eprint!("{QUICK_START}");
         return Exit::Usage.code();
@@ -66,7 +66,7 @@ pub fn main_exit() -> i32 {
                     let name = args
                         .iter()
                         .find(|a| VERBS.contains(&a.as_str()))
-                        .map_or("grevi", String::as_str);
+                        .map_or("jevify", String::as_str);
                     let message = e
                         .to_string()
                         .lines()
@@ -77,7 +77,7 @@ pub fn main_exit() -> i32 {
                     return report_error(
                         format,
                         name,
-                        &GreviError::Usage(message),
+                        &JevifyError::Usage(message),
                         Meta::default(),
                     );
                 }
@@ -158,9 +158,9 @@ async fn run_cli(cli: Cli) -> i32 {
                     return stdout_error(e);
                 }
                 if cli.g.verbose {
-                    eprintln!("grevi: {}", out.data);
+                    eprintln!("jevify: {}", out.data);
                     eprintln!(
-                        "grevi: {} ms, {} requests, {} cached, {}",
+                        "jevify: {} ms, {} requests, {} cached, {}",
                         meta.elapsed_ms,
                         meta.requests,
                         meta.cache_hits,
@@ -193,10 +193,10 @@ async fn run_cli(cli: Cli) -> i32 {
     }
 }
 
-fn report_error(format: Format, name: &str, e: &GreviError, meta: Meta) -> i32 {
+fn report_error(format: Format, name: &str, e: &JevifyError, meta: Meta) -> i32 {
     if format == Format::Human {
         eprintln!(
-            "grevi {name}: error: {e}\n  hint: {}\n  try:  {}",
+            "jevify {name}: error: {e}\n  hint: {}\n  try:  {}",
             e.hint(),
             e.example()
         );
@@ -233,14 +233,14 @@ fn stdout_error(error: std::io::Error) -> i32 {
     if error.kind() == std::io::ErrorKind::BrokenPipe {
         Exit::Ok.code()
     } else {
-        let _ = writeln!(std::io::stderr().lock(), "grevi: output error: {error}");
+        let _ = writeln!(std::io::stderr().lock(), "jevify: output error: {error}");
         Exit::Input.code()
     }
 }
 
 /// Every verb is wired here once (Task 1). Later tasks replace stub bodies in `cmd/*.rs`
 /// and never edit this function.
-async fn dispatch(cli: &Cli, ctx: &config::Config) -> Result<cmd::Outcome, GreviError> {
+async fn dispatch(cli: &Cli, ctx: &config::Config) -> Result<cmd::Outcome, JevifyError> {
     let machine = cli.g.format() != Format::Human;
     match &cli.cmd {
         Cmd::Pick {

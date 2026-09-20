@@ -1,13 +1,13 @@
 use crate::cmd::Outcome;
 use crate::config::Config;
-use crate::exit::{Exit, GreviError};
+use crate::exit::{Exit, JevifyError};
 use crate::inventory::{self, Tool};
 use crate::jev::client::Client;
 use crate::jev::{Question, Questions};
 use crate::manpage;
 use crate::tournament::{Prompts, shortlist};
 
-/// Never executed by grevi, whatever the confidence or the flags: shown as a proposal instead.
+/// Never executed by jevify, whatever the confidence or the flags: shown as a proposal instead.
 /// Matched by tool name; `NEVER_EXEC_PREFIX` covers families such as `mkfs.ext4` and the
 /// interpreters (`python3.12`, `php8.2`, `lua5.4`), which Linux distributions ship versioned.
 const NEVER_EXEC: &[&str] = &[
@@ -77,12 +77,12 @@ pub struct Route {
     pub alternatives: Vec<(String, f64)>,
 }
 
-fn load_tools(cache_dir: Option<std::path::PathBuf>) -> Result<Vec<Tool>, GreviError> {
-    if let Ok(p) = std::env::var("GREVI_INVENTORY_FILE") {
+fn load_tools(cache_dir: Option<std::path::PathBuf>) -> Result<Vec<Tool>, JevifyError> {
+    if let Ok(p) = std::env::var("JEVIFY_INVENTORY_FILE") {
         let b = std::fs::read(&p)
-            .map_err(|e| GreviError::Input(format!("GREVI_INVENTORY_FILE: {e}")))?;
+            .map_err(|e| JevifyError::Input(format!("JEVIFY_INVENTORY_FILE: {e}")))?;
         return serde_json::from_slice(&b)
-            .map_err(|e| GreviError::Input(format!("GREVI_INVENTORY_FILE: {e}")));
+            .map_err(|e| JevifyError::Input(format!("JEVIFY_INVENTORY_FILE: {e}")));
     }
     inventory::load(cache_dir.as_deref())
 }
@@ -92,7 +92,7 @@ pub async fn route(
     ctx: &Config,
     request: &str,
     tools: &[Tool],
-) -> Result<Route, GreviError> {
+) -> Result<Route, JevifyError> {
     let items: Vec<String> = tools
         .iter()
         .map(|t| format!("{}: {}", t.name, t.summary))
@@ -170,7 +170,7 @@ pub async fn route(
     })
 }
 
-pub async fn run(ctx: &Config, intent: &str, flags: RunFlags) -> Result<Outcome, GreviError> {
+pub async fn run(ctx: &Config, intent: &str, flags: RunFlags) -> Result<Outcome, JevifyError> {
     let client = Client::new(ctx)?;
     // Open the connection now; the inventory read below is the local work it overlaps with
     // (measured in benchmarks/README.md; the other verbs have no such work and do not prewarm).
@@ -178,7 +178,7 @@ pub async fn run(ctx: &Config, intent: &str, flags: RunFlags) -> Result<Outcome,
     let cache_dir = ctx.cache_dir.clone();
     let tools = tokio::task::spawn_blocking(move || load_tools(cache_dir))
         .await
-        .map_err(|e| GreviError::Input(e.to_string()))??;
+        .map_err(|e| JevifyError::Input(e.to_string()))??;
     let r = route(&client, ctx, intent, &tools).await?;
     let alts: Vec<_> = r
         .alternatives
@@ -187,7 +187,10 @@ pub async fn run(ctx: &Config, intent: &str, flags: RunFlags) -> Result<Outcome,
         .collect();
     let Some(tool) = r.tool else {
         if !flags.machine {
-            eprintln!("grevi: nothing installed does this (best fit {:.2})", r.fit);
+            eprintln!(
+                "jevify: nothing installed does this (best fit {:.2})",
+                r.fit
+            );
             for (n, p) in r.alternatives.iter().take(3) {
                 eprintln!("  closest: {n} ({p:.2})");
             }
@@ -204,13 +207,13 @@ pub async fn run(ctx: &Config, intent: &str, flags: RunFlags) -> Result<Outcome,
     let mut parsed: Vec<manpage::Flag> = Vec::new();
     let mut chosen: Vec<String> = Vec::new();
     if !flags.no_args {
-        // Flags come from the man page only; grevi never runs a binary with --help to learn them.
+        // Flags come from the man page only; jevify never runs a binary with --help to learn them.
         let name = tool.name.clone();
         parsed = tokio::task::spawn_blocking(move || {
             manpage::parse_flags(&manpage::options_text(&name).unwrap_or_default())
         })
         .await
-        .map_err(|e| GreviError::Input(e.to_string()))?;
+        .map_err(|e| JevifyError::Input(e.to_string()))?;
         let cwd: Vec<String> = std::fs::read_dir(".")
             .map(|rd| {
                 rd.flatten()
@@ -240,14 +243,14 @@ pub async fn run(ctx: &Config, intent: &str, flags: RunFlags) -> Result<Outcome,
         .or_else(|| (!complete).then(|| "unvalidated command grammar; proposal only".to_string()));
     if !flags.machine {
         if flags.dry_run {
-            eprintln!("grevi: {} ({:.2}) — {}", tool.name, r.fit, tool.summary);
+            eprintln!("jevify: {} ({:.2}) — {}", tool.name, r.fit, tool.summary);
         }
         // Each chosen flag with its man-page line, so the user can check the proposal.
         for f in parsed.iter().filter(|f| chosen.contains(&f.flag)) {
             eprintln!("  {}  {}", f.flag, f.desc);
         }
         if let Some(why) = &blocked {
-            eprintln!("grevi: not offering to run this ({why}); check it and run it yourself:");
+            eprintln!("jevify: not offering to run this ({why}); check it and run it yourself:");
         }
     }
     let may_execute = complete
@@ -259,12 +262,12 @@ pub async fn run(ctx: &Config, intent: &str, flags: RunFlags) -> Result<Outcome,
             true
         } else {
             let prompt = format!(
-                "grevi: {} ({:.2})\n  {shown}\nRun it? [y/N] ",
+                "jevify: {} ({:.2})\n  {shown}\nRun it? [y/N] ",
                 tool.name, r.fit
             );
             match crate::cmd::confirm_tty(&prompt)? {
                 Some(true) => true,
-                Some(false) => return Err(GreviError::Declined),
+                Some(false) => return Err(JevifyError::Declined),
                 // No TTY: print the proposal, never run it.
                 None => false,
             }
@@ -280,7 +283,7 @@ pub async fn run(ctx: &Config, intent: &str, flags: RunFlags) -> Result<Outcome,
         }
         let status = child
             .status()
-            .map_err(|e| GreviError::Input(format!("failed to start {}: {e}", argv[0])))?;
+            .map_err(|e| JevifyError::Input(format!("failed to start {}: {e}", argv[0])))?;
         executed = true;
         child_code = status.code();
     }
@@ -317,7 +320,7 @@ fn shell_display(argv: &[String]) -> String {
 pub fn blocked_reason(tool: &str) -> Option<String> {
     let base = tool.rsplit('/').next().unwrap_or(tool);
     (NEVER_EXEC.contains(&base) || NEVER_EXEC_PREFIX.iter().any(|p| base.starts_with(p)))
-        .then(|| format!("{base} is on grevi's never-execute list"))
+        .then(|| format!("{base} is on jevify's never-execute list"))
 }
 
 /// Only cwd entries the request plausibly names leave the machine (and can be appended).

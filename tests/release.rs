@@ -6,7 +6,7 @@ const SHA: &str = "1234567890abcdef1234567890abcdef12345678";
 fn run(case: &str, args: &[&str]) -> (std::process::Output, String) {
     // Keep scratch evidence; repository policy forbids deleting even temporary files.
     let root = tempfile::Builder::new()
-        .prefix("grevi-release-test-")
+        .prefix("jevify-release-test-")
         .tempdir()
         .unwrap()
         .keep();
@@ -36,7 +36,7 @@ case "$name" in
     esac ;;
   gh)
     if [[ $1 == repo ]]; then
-      if [[ $RELEASE_TEST_CASE == bad_repo ]]; then printf 'someone/else\n'; else printf 'tpellet/grevi\n'; fi
+      if [[ $RELEASE_TEST_CASE == bad_repo ]]; then printf 'someone/else\n'; else printf 'tpellet/jevify\n'; fi
     else
       case "$RELEASE_TEST_CASE" in
         missing|cancelled|failure|pending) printf '%s\n' "$RELEASE_TEST_CASE" ;;

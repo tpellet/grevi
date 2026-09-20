@@ -14,7 +14,7 @@ pub struct Flag {
     pub desc: String,
 }
 
-/// Renders the man page with `man` only; grevi never runs the tool itself (not even `--help`)
+/// Renders the man page with `man` only; jevify never runs the tool itself (not even `--help`)
 /// to learn its options.
 fn man_page(cmd: &str) -> Option<String> {
     let out = Command::new("man")

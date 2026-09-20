@@ -1,6 +1,6 @@
 use crate::cmd::Outcome;
 use crate::config::Config;
-use crate::exit::{Exit, GreviError};
+use crate::exit::{Exit, JevifyError};
 use crate::jev::client::Client;
 use crate::jev::{Question, Questions};
 
@@ -8,10 +8,10 @@ use crate::jev::{Question, Questions};
 /// Denser text (non-Latin scripts) can exceed it and surfaces as `api_rejected_request` (exit 6).
 const MAX_CHARS: usize = 96_000;
 
-pub async fn run(ctx: &Config, condition: &str, band: f64) -> Result<Outcome, GreviError> {
+pub async fn run(ctx: &Config, condition: &str, band: f64) -> Result<Outcome, JevifyError> {
     // Above 0.5 the "no" verdict becomes unreachable at the default threshold.
     if !(0.0..=0.5).contains(&band) {
-        return Err(GreviError::Usage(format!(
+        return Err(JevifyError::Usage(format!(
             "--band {band} must be within 0..=0.5"
         )));
     }
@@ -22,7 +22,7 @@ pub async fn run(ctx: &Config, condition: &str, band: f64) -> Result<Outcome, Gr
     // Backend evidence budgets count Unicode characters, not UTF-8 bytes.
     let truncated = text.chars().count() > max_chars;
     if truncated {
-        eprintln!("grevi is: input exceeds the evidence budget; whole input not judged");
+        eprintln!("jevify is: input exceeds the evidence budget; whole input not judged");
         return Ok(Outcome {
             exit: Exit::Abstain,
             data: serde_json::json!({ "p": null, "verdict": "unsure", "truncated": true, "reason": "input exceeds the evidence budget; whole input not judged" }),

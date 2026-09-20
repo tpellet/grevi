@@ -9,7 +9,7 @@ async fn oversized_input_abstains_without_judging_either_predicate() {
     })
     .await;
     for condition in ["contains a refund", "contains no refund"] {
-        let mut c = common::grevi(&server);
+        let mut c = common::jevify(&server);
         let input = format!(
             "{}\nrefund\n{}",
             "ordinary text ".repeat(4000),
@@ -53,7 +53,7 @@ async fn exit_codes_follow_band() {
         ("hello there", 1),
         ("maybe something", 3),
     ] {
-        let mut c = common::grevi(&server);
+        let mut c = common::jevify(&server);
         let input = input.to_string();
         let out = tokio::task::spawn_blocking(move || {
             c.args(["is", "asks for a refund"])
@@ -74,7 +74,7 @@ async fn json_reports_probability() {
         noul: |_, _| 0.81,
     })
     .await;
-    let mut c = common::grevi(&server);
+    let mut c = common::jevify(&server);
     let out = tokio::task::spawn_blocking(move || {
         c.args(["--json", "is", "x"])
             .write_stdin("text")

@@ -43,7 +43,7 @@ fn capabilities_lists_verbs_exit_codes_env() {
             .as_array()
             .unwrap()
             .iter()
-            .find(|e| e["name"] == "GREVI_MODEL")
+            .find(|e| e["name"] == "JEVIFY_MODEL")
             .unwrap()["default"],
         "jev-1.13.0"
     );
@@ -57,12 +57,12 @@ fn robot_docs_topics() {
     common::bin().args(["robot-docs", "nope"]).assert().code(2);
 }
 
-/// Only the backend that needs a key can fail for want of one; with no key grevi uses
+/// Only the backend that needs a key can fail for want of one; with no key jevify uses
 /// classifier.dev instead, which `tests/classifier.rs` covers against a mock server.
 #[test]
 fn health_without_key_is_auth_error_on_the_typesafe_backend() {
     common::bin()
-        .env("GREVI_BACKEND", "typesafe")
+        .env("JEVIFY_BACKEND", "typesafe")
         .args(["health", "--json"])
         .assert()
         .code(5);
@@ -72,7 +72,7 @@ fn health_without_key_is_auth_error_on_the_typesafe_backend() {
 #[test]
 fn capabilities_work_with_an_unreadable_key_file() {
     common::bin()
-        .env("TYPESAFE_API_KEY_FILE", "/nonexistent/grevi-key")
+        .env("TYPESAFE_API_KEY_FILE", "/nonexistent/jevify-key")
         .args(["capabilities", "--json"])
         .assert()
         .success();

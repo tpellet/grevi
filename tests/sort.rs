@@ -21,9 +21,9 @@ async fn sort_with_folder_count(classifier: bool, folders: usize) -> serde_json:
     )
     .unwrap();
     let mut command = if classifier {
-        common::grevi_classifier(&server)
+        common::jevify_classifier(&server)
     } else {
-        common::grevi(&server)
+        common::jevify(&server)
     };
     let out = command
         .args(["--json", "sort", d.path().to_str().unwrap()])
@@ -81,9 +81,9 @@ async fn dangling_targets_and_outside_symlinks_are_not_followed() {
     .unwrap();
     symlink(outside.path(), d.path().join("Outside")).unwrap();
     symlink("missing", d.path().join("Finance/invoice.txt")).unwrap();
-    let out = common::grevi(&server)
-        .env("GREVI_CACHE_DIR", cache.path())
-        .env_remove("GREVI_NO_CACHE")
+    let out = common::jevify(&server)
+        .env("JEVIFY_CACHE_DIR", cache.path())
+        .env_remove("JEVIFY_NO_CACHE")
         .args(["--json", "sort", d.path().to_str().unwrap(), "--apply"])
         .output()
         .unwrap();
@@ -126,10 +126,10 @@ async fn relative_apply_journal_undo_is_independent_of_working_directory() {
     std::fs::create_dir(d.path().join("Finance")).unwrap();
     let filename = "invoice\twith\nlines.txt";
     std::fs::write(d.path().join(filename), "invoice").unwrap();
-    let out = common::grevi(&server)
+    let out = common::jevify(&server)
         .current_dir(d.path())
-        .env("GREVI_CACHE_DIR", cache.path())
-        .env_remove("GREVI_NO_CACHE")
+        .env("JEVIFY_CACHE_DIR", cache.path())
+        .env_remove("JEVIFY_NO_CACHE")
         .args(["--json", "sort", ".", "--apply"])
         .output()
         .unwrap();
@@ -197,9 +197,9 @@ async fn dry_run_then_apply_then_undo() {
     std::fs::write(d.path().join("draft.txt"), "invoice? unsure, maybe a quote").unwrap();
     let cache = tempfile::tempdir().unwrap();
     let run = |args: Vec<String>| {
-        let mut c = common::grevi(&server);
-        c.env("GREVI_CACHE_DIR", cache.path())
-            .env_remove("GREVI_NO_CACHE");
+        let mut c = common::jevify(&server);
+        c.env("JEVIFY_CACHE_DIR", cache.path())
+            .env_remove("JEVIFY_NO_CACHE");
         let a = args.clone();
         async move {
             tokio::task::spawn_blocking(move || c.args(a).output().unwrap())

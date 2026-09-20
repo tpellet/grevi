@@ -1,7 +1,7 @@
 use crate::cli::Shell;
 use crate::cmd::Outcome;
 use crate::config::{Backend, Config};
-use crate::exit::{Exit, GreviError};
+use crate::exit::{Exit, JevifyError};
 
 const GUIDE: &str = include_str!("../../docs/ROBOT_MODE.md");
 
@@ -11,39 +11,39 @@ pub fn capabilities() -> Outcome {
         .map(|(e, d)| serde_json::json!({ "code": e.code(), "name": e, "meaning": d }))
         .collect();
     let data = serde_json::json!({
-        "name": "grevi",
+        "name": "jevify",
         "version": env!("CARGO_PKG_VERSION"),
         "summary": "Answers questions about text that already exists (your input, the installed tools, man pages, folders) by meaning. It selects and never generates. Backend-specific decision scores are not evidence of calibration for every task. Model: Jev through TypeSafe with a key or classifier.dev without one.",
         "use_when": "a question is about meaning and grep or keywords cannot ask it, or the input is too long to read; skip it when a literal search answers the question or you already know the exact command",
         "global_flags": ["--json (alias --robot)", "--format human|json|jsonl|toon", "-t/--threshold <0..1>", "--model <id>", "--no-cache", "-v/--verbose"],
         "output": "human stdout is plain text made for pipes (pick prints the line, is prints nothing), so there is no automatic switch to JSON when piped: pass --json to get the envelope",
         "commands": [
-            { "name": "pick", "usage": "<stdin> | grevi pick \"<intent>\" [-n N] [--index]  |  grevi pick --files <DIR> \"<intent>\" [-n N]", "stdin": true, "exit": [0, 3], "data": "matches[{line,text,p}], any, source", "when": "choose one item out of many by description (a branch, a commit, a file, a process, a history line); the description and the line need no word in common. --files chooses among the files under DIR by what they are about (path names first, then the beginning of at most 24 finalist files) and prints a path", "example": "git log --oneline | grevi pick --json \"the commit that renamed the project\"" },
-            { "name": "why", "usage": "<cmd> 2>&1 | grevi why [-C N] [-n N]  |  grevi why [-C N] -- <cmd...>", "stdin": true, "exit": [0, 3], "data": "causes[{line,text,p,context[]}], any, considered, total, hint, child_exit", "when": "root-cause a build, test or CI log, above all a long one or one where grep for error|fail found the symptom and not the reason", "example": "gh run view --log-failed | grevi why --json", "note": "past 1,500 distinct lines it keeps the neighbourhoods of error-like lines within a 4,000-line budget: compare considered with total" },
-            { "name": "run", "usage": "grevi run [--dry-run|--yes|--exec --yes] [--no-args] <intent...>", "stdin": false, "exit": [0, 3, 7, 130], "data": "tool, fit, argv[], flags[], complete, blocked, executed, child_exit, alternatives[]", "when": "you do not know which installed command does a task, or which of several candidates is installed; it searches every command on the PATH by its man-page summary", "example": "grevi run --json --dry-run --no-args \"keep my mac awake for an hour\"", "note": "read tool and alternatives[], then check the flags in the man page yourself: argv is a proposal" },
-            { "name": "is", "usage": "<stdin> | grevi is \"<condition>\" [--band 0.15]", "stdin": true, "exit": [0, 1, 3], "data": "p, verdict, truncated, reason (when oversized)", "when": "triage or gate on meaning; loop over bounded texts and read the exit codes", "example": "grevi is \"the customer is about to stop being a customer\" < ticket.txt; echo $?", "note": "oversized evidence abstains before API requests, with p null and a stderr warning" },
-            { "name": "add", "usage": "grevi add [--dry-run|--yes] \"<topic>\"", "stdin": false, "exit": [0, 3, 6, 130], "data": "hunks[{file,header,p,staged}]", "when": "stage part of a working tree without a terminal: git add -p is interactive, add is not", "example": "grevi add --json --dry-run \"the token expiry fix\"", "note": "stages single hunks of tracked files; rejects oversized hunks or batches before requests or staging; index only, never commits; works from any subdirectory" },
-            { "name": "sort", "usage": "grevi sort <dir> [--into <root>] [--apply | --undo <log>]", "stdin": false, "exit": [0, 3, 6], "data": "moves[{from,to,p}], skipped[{file,reason}], undo_log, applied", "when": "files whose names say nothing need a home among the folders that already exist; it reads an excerpt", "example": "grevi sort --json ~/Downloads", "note": "dry-run by default; atomic no-replace apply/undo; unique durable JSONL recovery journal; symlink entries skipped; same volume only; concurrent source replacement unsupported; failures identify recovery log and progress" },
-            { "name": "capabilities", "usage": "grevi capabilities --json" },
-            { "name": "robot-docs", "usage": "grevi robot-docs [guide|commands|exit-codes|examples|privacy]" },
-            { "name": "health", "usage": "grevi health --json", "exit": [0, 4, 5] },
-            { "name": "init", "usage": "eval \"$(grevi init zsh|bash)\"" }
+            { "name": "pick", "usage": "<stdin> | jevify pick \"<intent>\" [-n N] [--index]  |  jevify pick --files <DIR> \"<intent>\" [-n N]", "stdin": true, "exit": [0, 3], "data": "matches[{line,text,p}], any, source", "when": "choose one item out of many by description (a branch, a commit, a file, a process, a history line); the description and the line need no word in common. --files chooses among the files under DIR by what they are about (path names first, then the beginning of at most 24 finalist files) and prints a path", "example": "git log --oneline | jevify pick --json \"the commit that renamed the project\"" },
+            { "name": "why", "usage": "<cmd> 2>&1 | jevify why [-C N] [-n N]  |  jevify why [-C N] -- <cmd...>", "stdin": true, "exit": [0, 3], "data": "causes[{line,text,p,context[]}], any, considered, total, hint, child_exit", "when": "root-cause a build, test or CI log, above all a long one or one where grep for error|fail found the symptom and not the reason", "example": "gh run view --log-failed | jevify why --json", "note": "past 1,500 distinct lines it keeps the neighbourhoods of error-like lines within a 4,000-line budget: compare considered with total" },
+            { "name": "run", "usage": "jevify run [--dry-run|--yes|--exec --yes] [--no-args] <intent...>", "stdin": false, "exit": [0, 3, 7, 130], "data": "tool, fit, argv[], flags[], complete, blocked, executed, child_exit, alternatives[]", "when": "you do not know which installed command does a task, or which of several candidates is installed; it searches every command on the PATH by its man-page summary", "example": "jevify run --json --dry-run --no-args \"keep my mac awake for an hour\"", "note": "read tool and alternatives[], then check the flags in the man page yourself: argv is a proposal" },
+            { "name": "is", "usage": "<stdin> | jevify is \"<condition>\" [--band 0.15]", "stdin": true, "exit": [0, 1, 3], "data": "p, verdict, truncated, reason (when oversized)", "when": "triage or gate on meaning; loop over bounded texts and read the exit codes", "example": "jevify is \"the customer is about to stop being a customer\" < ticket.txt; echo $?", "note": "oversized evidence abstains before API requests, with p null and a stderr warning" },
+            { "name": "add", "usage": "jevify add [--dry-run|--yes] \"<topic>\"", "stdin": false, "exit": [0, 3, 6, 130], "data": "hunks[{file,header,p,staged}]", "when": "stage part of a working tree without a terminal: git add -p is interactive, add is not", "example": "jevify add --json --dry-run \"the token expiry fix\"", "note": "stages single hunks of tracked files; rejects oversized hunks or batches before requests or staging; index only, never commits; works from any subdirectory" },
+            { "name": "sort", "usage": "jevify sort <dir> [--into <root>] [--apply | --undo <log>]", "stdin": false, "exit": [0, 3, 6], "data": "moves[{from,to,p}], skipped[{file,reason}], undo_log, applied", "when": "files whose names say nothing need a home among the folders that already exist; it reads an excerpt", "example": "jevify sort --json ~/Downloads", "note": "dry-run by default; atomic no-replace apply/undo; unique durable JSONL recovery journal; symlink entries skipped; same volume only; concurrent source replacement unsupported; failures identify recovery log and progress" },
+            { "name": "capabilities", "usage": "jevify capabilities --json" },
+            { "name": "robot-docs", "usage": "jevify robot-docs [guide|commands|exit-codes|examples|privacy]" },
+            { "name": "health", "usage": "jevify health --json", "exit": [0, 4, 5] },
+            { "name": "init", "usage": "eval \"$(jevify init zsh|bash)\"" }
         ],
         "common_exit": { "codes": [2, 4, 5, 6], "meaning": "any command: usage, API unavailable, auth, input" },
         "exit_codes": exit_codes,
         "env": [
             { "name": "TYPESAFE_API_KEY", "meaning": "API key (never printed); its presence selects the typesafe backend" },
             { "name": "TYPESAFE_API_KEY_FILE", "meaning": "path to a file holding the key (read only when a key is needed)" },
-            { "name": "GREVI_BACKEND", "default": "typesafe with a key, classifier without one", "meaning": "typesafe|classifier: which API answers. Both run Jev; classifier.dev is free and needs no key" },
-            { "name": "GREVI_BASE_URL", "default": "the active backend's own URL", "meaning": "overrides the base URL of whichever backend is active" },
-            { "name": "GREVI_MODEL", "default": "jev-1.13.0", "meaning": "Default applies to TypeSafe model selection; jev-latest moves with each release. Explicit overrides are rejected on classifier.dev, which controls its model" },
-            { "name": "GREVI_THRESHOLD", "default": 0.5 },
-            { "name": "GREVI_CONCURRENCY", "default": 8 },
-            { "name": "GREVI_CACHE_DIR", "default": "platform cache dir/grevi" },
-            { "name": "GREVI_NO_CACHE", "meaning": "disable the answer cache (entries expire after 7 days anyway)" },
-            { "name": "GREVI_PRICE_PER_MTOK", "default": 0.042 },
-            { "name": "GREVI_INVENTORY_FILE", "meaning": "JSON array of {name, summary} replacing the PATH inventory (tests, evals)" },
-            { "name": "GREVI_CNF", "meaning": "enable the command-not-found hook from `grevi init`" }
+            { "name": "JEVIFY_BACKEND", "default": "typesafe with a key, classifier without one", "meaning": "typesafe|classifier: which API answers. Both run Jev; classifier.dev is free and needs no key" },
+            { "name": "JEVIFY_BASE_URL", "default": "the active backend's own URL", "meaning": "overrides the base URL of whichever backend is active" },
+            { "name": "JEVIFY_MODEL", "default": "jev-1.13.0", "meaning": "Default applies to TypeSafe model selection; jev-latest moves with each release. Explicit overrides are rejected on classifier.dev, which controls its model" },
+            { "name": "JEVIFY_THRESHOLD", "default": 0.5 },
+            { "name": "JEVIFY_CONCURRENCY", "default": 8 },
+            { "name": "JEVIFY_CACHE_DIR", "default": "platform cache dir/jevify" },
+            { "name": "JEVIFY_NO_CACHE", "meaning": "disable the answer cache (entries expire after 7 days anyway)" },
+            { "name": "JEVIFY_PRICE_PER_MTOK", "default": 0.042 },
+            { "name": "JEVIFY_INVENTORY_FILE", "meaning": "JSON array of {name, summary} replacing the PATH inventory (tests, evals)" },
+            { "name": "JEVIFY_CNF", "meaning": "enable the command-not-found hook from `jevify init`" }
         ],
         "limits": { "choice_options": 255, "window": crate::tournament::WINDOW, "state_tokens": 32000, "request_tokens": 64000, "requests_per_minute": 1200, "tokens_per_second": 250000, "stdin_bytes": crate::input::MAX_BYTES, "pick_lines": crate::cmd::pick::MAX_LINES },
         "backends": [
@@ -65,16 +65,16 @@ pub fn capabilities() -> Outcome {
             "write what must be true of the text, literally: the statement is judged word for word (\"the customer is about to stop being a customer\" beats \"this customer is about to leave\", which also matches an employee who is leaving their company)",
             "describe the thing, not what you will do with it: \"the line with the failing assertion\", not \"what should I fix\"",
             "one question per call; for A or B, make two calls",
-            "English works best; grevi does not count, do arithmetic, compare dates or judge quality"
+            "English works best; jevify does not count, do arithmetic, compare dates or judge quality"
         ],
         "workflows": [
-            { "goal": "find the tool for a task", "command": "grevi run --json --dry-run \"<task>\"" },
-            { "goal": "explain a failure", "command": "<cmd> 2>&1 | grevi why --json" },
-            { "goal": "explain a failed CI run, however long the log", "command": "gh run view --log-failed | grevi why --json" },
-            { "goal": "select an item", "command": "<list> | grevi pick --json \"<intent>\"" },
-            { "goal": "branch in a script", "command": "grevi is \"<condition>\" < file; case $? in 0) ...;; 1) ...;; 3) ...;; esac" },
-            { "goal": "triage many texts without reading them", "command": "for f in dir/*; do grevi is \"<statement>\" < \"$f\" >/dev/null 2>&1; echo \"$f $?\"; done   # 0 yes, 1 no, 3 unsure: read only those" },
-            { "goal": "stage one topic out of a mixed working tree", "command": "grevi add --json --dry-run \"<topic>\"   # then --yes, when the user asked you to stage" }
+            { "goal": "find the tool for a task", "command": "jevify run --json --dry-run \"<task>\"" },
+            { "goal": "explain a failure", "command": "<cmd> 2>&1 | jevify why --json" },
+            { "goal": "explain a failed CI run, however long the log", "command": "gh run view --log-failed | jevify why --json" },
+            { "goal": "select an item", "command": "<list> | jevify pick --json \"<intent>\"" },
+            { "goal": "branch in a script", "command": "jevify is \"<condition>\" < file; case $? in 0) ...;; 1) ...;; 3) ...;; esac" },
+            { "goal": "triage many texts without reading them", "command": "for f in dir/*; do jevify is \"<statement>\" < \"$f\" >/dev/null 2>&1; echo \"$f $?\"; done   # 0 yes, 1 no, 3 unsure: read only those" },
+            { "goal": "stage one topic out of a mixed working tree", "command": "jevify add --json --dry-run \"<topic>\"   # then --yes, when the user asked you to stage" }
         ],
         "safety": [
             "meta.requests counts attempted inference POSTs, including retries and failures, excluding prewarm and health GETs",
@@ -96,7 +96,7 @@ pub fn capabilities() -> Outcome {
     }
 }
 
-pub fn robot_docs(topic: Option<&str>) -> Result<Outcome, GreviError> {
+pub fn robot_docs(topic: Option<&str>) -> Result<Outcome, JevifyError> {
     let caps = capabilities().data;
     let text = match topic.unwrap_or("guide") {
         "guide" => GUIDE.to_string(),
@@ -105,7 +105,7 @@ pub fn robot_docs(topic: Option<&str>) -> Result<Outcome, GreviError> {
         "examples" => serde_json::to_string_pretty(&caps["workflows"]).unwrap(),
         "privacy" => include_str!("../../PRIVACY.md").to_string(),
         other => {
-            return Err(GreviError::Usage(format!(
+            return Err(JevifyError::Usage(format!(
                 "unknown topic `{other}`; topics: guide, commands, exit-codes, examples, privacy"
             )));
         }
@@ -117,7 +117,7 @@ pub fn robot_docs(topic: Option<&str>) -> Result<Outcome, GreviError> {
     })
 }
 
-pub async fn health(ctx: &Config) -> Result<Outcome, GreviError> {
+pub async fn health(ctx: &Config) -> Result<Outcome, JevifyError> {
     // Both backends are probed the same way, at the cheapest endpoint each offers; only
     // TypeSafe needs a key, and only there can the answer be "the key is wrong".
     let (path, key) = match ctx.backend {
@@ -136,7 +136,7 @@ pub async fn health(ctx: &Config) -> Result<Outcome, GreviError> {
         Ok(r) => r,
         Err(e) => {
             attempt.finish(false);
-            return Err(GreviError::Unavailable(e.to_string()));
+            return Err(JevifyError::Unavailable(e.to_string()));
         }
     };
     let ms = start.elapsed().as_millis();
@@ -147,7 +147,7 @@ pub async fn health(ctx: &Config) -> Result<Outcome, GreviError> {
                 Ok(bytes) => bytes,
                 Err(e) => {
                     attempt.finish(false);
-                    return Err(GreviError::Unavailable(e.to_string()));
+                    return Err(JevifyError::Unavailable(e.to_string()));
                 }
             };
             attempt.finish(true);
@@ -172,11 +172,11 @@ pub async fn health(ctx: &Config) -> Result<Outcome, GreviError> {
         }
         401 | 403 => {
             attempt.finish(false);
-            Err(GreviError::BadKey(r.status().as_u16()))
+            Err(JevifyError::BadKey(r.status().as_u16()))
         }
         s => {
             attempt.finish(false);
-            Err(GreviError::Unavailable(format!("HTTP {s}")))
+            Err(JevifyError::Unavailable(format!("HTTP {s}")))
         }
     }
 }
@@ -184,23 +184,23 @@ pub async fn health(ctx: &Config) -> Result<Outcome, GreviError> {
 pub fn init(shell: Shell) -> Outcome {
     let body = match shell {
         Shell::Zsh => {
-            r#"# grevi shell integration — add to ~/.zshrc: eval "$(grevi init zsh)"
-alias ,='noglob grevi run'
-# Opt-in: route unknown commands of 3+ words to grevi (export GREVI_CNF=1).
-if [[ -n $GREVI_CNF ]] && ! (( $+functions[command_not_found_handler] )); then
+            r#"# jevify shell integration — add to ~/.zshrc: eval "$(jevify init zsh)"
+alias ,='noglob jevify run'
+# Opt-in: route unknown commands of 3+ words to jevify (export JEVIFY_CNF=1).
+if [[ -n $JEVIFY_CNF ]] && ! (( $+functions[command_not_found_handler] )); then
   command_not_found_handler() {
-    if (( $# >= 3 )); then grevi run "$*"; return $?; fi
+    if (( $# >= 3 )); then jevify run "$*"; return $?; fi
     print -u2 "zsh: command not found: $1"; return 127
   }
 fi
 "#
         }
         Shell::Bash => {
-            r#"# grevi shell integration — add to ~/.bashrc: eval "$(grevi init bash)"
-alias ,='grevi run'
-if [[ -n $GREVI_CNF ]] && ! declare -F command_not_found_handle >/dev/null; then
+            r#"# jevify shell integration — add to ~/.bashrc: eval "$(jevify init bash)"
+alias ,='jevify run'
+if [[ -n $JEVIFY_CNF ]] && ! declare -F command_not_found_handle >/dev/null; then
   command_not_found_handle() {
-    if (( $# >= 3 )); then grevi run "$*"; return $?; fi
+    if (( $# >= 3 )); then jevify run "$*"; return $?; fi
     echo "bash: $1: command not found" >&2; return 127
   }
 fi
@@ -245,7 +245,7 @@ mod tests {
                 .as_array()
                 .unwrap()
                 .iter()
-                .any(|e| e["name"] == "GREVI_BACKEND")
+                .any(|e| e["name"] == "JEVIFY_BACKEND")
         );
         assert!(
             d["envelope"]["fields"]
@@ -273,7 +273,7 @@ mod tests {
             assert!(
                 c["example"]
                     .as_str()
-                    .is_some_and(|s| s.contains(&format!("grevi {verb}"))),
+                    .is_some_and(|s| s.contains(&format!("jevify {verb}"))),
                 "{c}"
             );
         }

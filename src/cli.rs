@@ -3,10 +3,10 @@ use clap::{Args, Parser, Subcommand, ValueEnum};
 
 #[derive(Parser, Debug)]
 #[command(
-    name = "grevi",
+    name = "jevify",
     version,
-    about = "Answer questions about text you already have: find a line, an error, a command or a folder by meaning. grevi selects and never generates, with backend-specific decision scores.",
-    after_help = "Examples:\n  gh run view --log-failed | grevi why\n  git branch | grevi pick \"the payment timeout fix\"\n  grevi is \"the customer asks for a refund\" < mail.txt && ./refund\n  grevi run --dry-run \"keep my mac awake for an hour\"\n  grevi add --dry-run \"the token expiry fix\"\n  grevi sort ~/Downloads\n\nExit codes: 0 ok, 1 no (is), 2 usage, 3 nothing fits or unsure, 4 API unavailable, 5 auth, 6 input, 7 child failed, 130 declined.\nAgents: grevi capabilities --json | grevi robot-docs"
+    about = "Answer questions about text you already have: find a line, an error, a command or a folder by meaning. jevify selects and never generates, with backend-specific decision scores.",
+    after_help = "Examples:\n  gh run view --log-failed | jevify why\n  git branch | jevify pick \"the payment timeout fix\"\n  jevify is \"the customer asks for a refund\" < mail.txt && ./refund\n  jevify run --dry-run \"keep my mac awake for an hour\"\n  jevify add --dry-run \"the token expiry fix\"\n  jevify sort ~/Downloads\n\nExit codes: 0 ok, 1 no (is), 2 usage, 3 nothing fits or unsure, 4 API unavailable, 5 auth, 6 input, 7 child failed, 130 declined.\nAgents: jevify capabilities --json | jevify robot-docs"
 )]
 pub struct Cli {
     #[command(flatten)]
@@ -24,10 +24,10 @@ pub struct GlobalOpts {
     #[arg(long, global = true, value_enum)]
     pub format: Option<Format>,
     /// Decision threshold on the backend's score (calibration depends on task and backend)
-    #[arg(short = 't', long, global = true, env = "GREVI_THRESHOLD")]
+    #[arg(short = 't', long, global = true, env = "JEVIFY_THRESHOLD")]
     pub threshold: Option<f64>,
     /// TypeSafe model or alias (default jev-1.13.0); unsupported by classifier.dev
-    #[arg(long, global = true, env = "GREVI_MODEL")]
+    #[arg(long, global = true, env = "JEVIFY_MODEL")]
     pub model: Option<String>,
     /// Skip the local answer cache
     #[arg(long, global = true)]
@@ -51,7 +51,7 @@ impl GlobalOpts {
 pub enum Cmd {
     /// Find one line in a list by describing it: stdin lines in, the matching line out
     #[command(
-        after_help = "Examples:\n  git branch | grevi pick \"the payment timeout fix\"\n  git log --oneline | grevi pick -n 3 \"when we changed the pricing\"\n  code \"$(grevi pick --files . \"where man pages are parsed\")\"\n\nThe description and the line need no word in common. --files ranks the path names under DIR first, then reads the beginning of at most 24 finalist files; hidden files, git-ignored files and symlinks are skipped.\nExit: 0 found, 3 no line fits. --json data: matches[{line, text, p}], any, source."
+        after_help = "Examples:\n  git branch | jevify pick \"the payment timeout fix\"\n  git log --oneline | jevify pick -n 3 \"when we changed the pricing\"\n  code \"$(jevify pick --files . \"where man pages are parsed\")\"\n\nThe description and the line need no word in common. --files ranks the path names under DIR first, then reads the beginning of at most 24 finalist files; hidden files, git-ignored files and symlinks are skipped.\nExit: 0 found, 3 no line fits. --json data: matches[{line, text, p}], any, source."
     )]
     Pick {
         /// Describe the line you want, e.g. "the branch with the payment timeout fix"
@@ -68,7 +68,7 @@ pub enum Cmd {
     },
     /// Find the line that caused a failure in build, test or CI output (stdin, or `-- <cmd>` to run it)
     #[command(
-        after_help = "Examples:\n  cargo build 2>&1 | grevi why\n  gh run view --log-failed | grevi why --json\n  grevi why -- cargo test\n\nPipe 2>&1: compilers write errors to stderr. Works on logs of thousands of lines, and finds a cause that holds no word like \"error\".\nExit: 0 found, 3 no line looks like a failure. --json data: causes[{line, text, p, context[]}], any, considered, total, hint, child_exit."
+        after_help = "Examples:\n  cargo build 2>&1 | jevify why\n  gh run view --log-failed | jevify why --json\n  jevify why -- cargo test\n\nPipe 2>&1: compilers write errors to stderr. Works on logs of thousands of lines, and finds a cause that holds no word like \"error\".\nExit: 0 found, 3 no line looks like a failure. --json data: causes[{line, text, p, context[]}], any, considered, total, hint, child_exit."
     )]
     Why {
         /// Lines of context around the root cause
@@ -77,16 +77,16 @@ pub enum Cmd {
         /// Report up to N causes, each ranked above "no failure"
         #[arg(short = 'n', long, default_value_t = 1)]
         top: usize,
-        /// Run this command and read its stdout+stderr instead of stdin: `grevi why -- cargo build`
+        /// Run this command and read its stdout+stderr instead of stdin: `jevify why -- cargo build`
         #[arg(last = true)]
         cmd: Vec<String>,
     },
     /// Describe a task in plain English and get a command proposal; only validated recipes can run
     #[command(
-        after_help = "Examples:\n  grevi run --dry-run \"keep my mac awake for an hour\"\n  grevi run --json --dry-run --no-args \"test how fast my connection is\"\n\nSearches commands on PATH by their man pages. Flags form proposals to check yourself. Only exact zero-argument true, false, pwd, and ls recipes are complete and eligible to execute; all other argv have complete=false and a blocked reason. Human proposals use POSIX shell quoting.\nExit: 0 found (or ran), 3 no tool fits, 7 the command failed, 130 declined. --json data: tool, fit, argv[], flags[], complete, blocked, executed, child_exit, alternatives[]."
+        after_help = "Examples:\n  jevify run --dry-run \"keep my mac awake for an hour\"\n  jevify run --json --dry-run --no-args \"test how fast my connection is\"\n\nSearches commands on PATH by their man pages. Flags form proposals to check yourself. Only exact zero-argument true, false, pwd, and ls recipes are complete and eligible to execute; all other argv have complete=false and a blocked reason. Human proposals use POSIX shell quoting.\nExit: 0 found (or ran), 3 no tool fits, 7 the command failed, 130 declined. --json data: tool, fit, argv[], flags[], complete, blocked, executed, child_exit, alternatives[]."
     )]
     Run {
-        /// The task, e.g. "count the lines in notes.txt"; flags may follow it (`grevi run burn a dvd --dry-run`)
+        /// The task, e.g. "count the lines in notes.txt"; flags may follow it (`jevify run burn a dvd --dry-run`)
         #[arg(required = true, num_args = 1..)]
         intent: Vec<String>,
         /// Run a validated recipe without asking (only zero-argument true, false, pwd, ls)
@@ -104,7 +104,7 @@ pub enum Cmd {
     },
     /// Ask a yes-or-no question about the text on stdin; the answer is the exit code (0 yes, 1 no, 3 unsure)
     #[command(
-        after_help = "Examples:\n  grevi is \"the customer asks for a refund\" < mail.txt && ./refund\n  for f in mail/*; do grevi is \"asks for a refund\" < \"$f\"; echo \"$f $?\"; done\n\nWrite the statement literally: it is judged word for word. No counting, arithmetic, dates or quality judgments. Oversized input is not judged: no API call, exit 3, p=null, verdict=unsure, truncated=true, and a reason.\nPrints nothing on human stdout; oversized input warns on stderr. Exit: 0 yes, 1 no, 3 unsure. --json data: p, verdict, truncated, reason (when oversized)."
+        after_help = "Examples:\n  jevify is \"the customer asks for a refund\" < mail.txt && ./refund\n  for f in mail/*; do jevify is \"asks for a refund\" < \"$f\"; echo \"$f $?\"; done\n\nWrite the statement literally: it is judged word for word. No counting, arithmetic, dates or quality judgments. Oversized input is not judged: no API call, exit 3, p=null, verdict=unsure, truncated=true, and a reason.\nPrints nothing on human stdout; oversized input warns on stderr. Exit: 0 yes, 1 no, 3 unsure. --json data: p, verdict, truncated, reason (when oversized)."
     )]
     Is {
         /// A statement that must be true of the text, e.g. "the customer asks for a refund"
@@ -115,7 +115,7 @@ pub enum Cmd {
     },
     /// Stage only the git changes that belong to one topic, like `git add -p` without the questions
     #[command(
-        after_help = "Examples:\n  grevi add --dry-run \"the token expiry fix\"\n  grevi add --yes \"the token expiry fix\" && git commit\n\nStages single hunks of tracked files, so it can split the changes of one file. Index only, never commits. Rejects hunks above 3000 characters and batches above the backend evidence budget before API requests or staging; no hunk evidence is clipped.\nExit: 0 staged (or scored with --dry-run), 3 no change is about the topic, 6 empty or oversized input, 130 declined. --json data: hunks[{file, header, p, staged}]."
+        after_help = "Examples:\n  jevify add --dry-run \"the token expiry fix\"\n  jevify add --yes \"the token expiry fix\" && git commit\n\nStages single hunks of tracked files, so it can split the changes of one file. Index only, never commits. Rejects hunks above 3000 characters and batches above the backend evidence budget before API requests or staging; no hunk evidence is clipped.\nExit: 0 staged (or scored with --dry-run), 3 no change is about the topic, 6 empty or oversized input, 130 declined. --json data: hunks[{file, header, p, staged}]."
     )]
     Add {
         /// The topic of the changes to stage, e.g. "the token expiry fix"
@@ -129,7 +129,7 @@ pub enum Cmd {
     },
     /// Propose a folder for each file in a directory by reading the files; moves nothing without --apply
     #[command(
-        after_help = "Examples:\n  grevi sort ~/Downloads\n  grevi sort ~/Downloads --apply\n  grevi sort ~/Downloads --undo <log>\n\nDestinations are the folders that already exist. Never overwrites, never deletes, same volume only.\nExit: 0 moves proposed (or applied), 3 nothing can be placed, 6 no folders to sort into. --json data: moves[{from, to, p}], skipped[{file, reason}], undo_log, applied."
+        after_help = "Examples:\n  jevify sort ~/Downloads\n  jevify sort ~/Downloads --apply\n  jevify sort ~/Downloads --undo <log>\n\nDestinations are the folders that already exist. Never overwrites, never deletes, same volume only.\nExit: 0 moves proposed (or applied), 3 nothing can be placed, 6 no folders to sort into. --json data: moves[{from, to, p}], skipped[{file, reason}], undo_log, applied."
     )]
     Sort {
         /// Directory whose files (not recursive, not hidden) are sorted
@@ -151,7 +151,7 @@ pub enum Cmd {
     RobotDocs { topic: Option<String> },
     /// Check which backend answers, whether a key is needed, and how fast it replies
     Health,
-    /// Print shell integration (`,` alias for `grevi run`)
+    /// Print shell integration (`,` alias for `jevify run`)
     Init { shell: Shell },
 }
 
@@ -167,7 +167,7 @@ mod tests {
     use clap::{CommandFactory, FromArgMatches};
 
     /// `try_parse_from` still reads the `env = ".."` fallbacks from the real process, so a
-    /// developer's exported `GREVI_THRESHOLD=abc` would fail an argv-only test: clear them first.
+    /// developer's exported `JEVIFY_THRESHOLD=abc` would fail an argv-only test: clear them first.
     fn parse_without_env(args: &[&str]) -> Cli {
         let m = Cli::command()
             .mut_args(|a| a.env(None))
@@ -179,15 +179,15 @@ mod tests {
     #[test]
     fn format_flag_overrides_json_and_robot_is_an_alias() {
         let parse = |a: &[&str]| parse_without_env(a).g.format();
-        assert_eq!(parse(&["grevi", "is", "x"]), Format::Human);
-        assert_eq!(parse(&["grevi", "--robot", "is", "x"]), Format::Json);
+        assert_eq!(parse(&["jevify", "is", "x"]), Format::Human);
+        assert_eq!(parse(&["jevify", "--robot", "is", "x"]), Format::Json);
         assert_eq!(
-            parse(&["grevi", "--json", "--format", "toon", "is", "x"]),
+            parse(&["jevify", "--json", "--format", "toon", "is", "x"]),
             Format::Toon
         );
         // Global flags are accepted after the subcommand too.
         assert_eq!(
-            parse(&["grevi", "is", "x", "--format", "jsonl"]),
+            parse(&["jevify", "is", "x", "--format", "jsonl"]),
             Format::Jsonl
         );
     }

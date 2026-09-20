@@ -124,7 +124,7 @@ impl Drop for RetrySleep<'_> {
 use super::cache::{DiskCache, key as cache_key};
 use super::{Questions, Response, classifier};
 use crate::config::{Backend, Config};
-use crate::exit::GreviError;
+use crate::exit::JevifyError;
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
 use std::time::Duration;
@@ -143,7 +143,7 @@ pub struct Client {
 }
 
 impl Client {
-    pub fn new(cfg: &Config) -> Result<Self, GreviError> {
+    pub fn new(cfg: &Config) -> Result<Self, JevifyError> {
         let key = match cfg.backend {
             Backend::Typesafe => Some(cfg.api_key()?),
             Backend::Classifier => None,
@@ -152,14 +152,14 @@ impl Client {
             .connect_timeout(Duration::from_secs(5))
             .timeout(Duration::from_secs(60))
             .pool_idle_timeout(Duration::from_secs(90))
-            .user_agent(concat!("grevi/", env!("CARGO_PKG_VERSION")))
+            .user_agent(concat!("jevify/", env!("CARGO_PKG_VERSION")))
             .build()
-            .map_err(|e| GreviError::Unavailable(e.to_string()))?;
+            .map_err(|e| JevifyError::Unavailable(e.to_string()))?;
         Ok(Self {
             http,
             backend: cfg.backend,
             base: reqwest::Url::parse(&cfg.base_url)
-                .map_err(|_| GreviError::Usage("invalid API endpoint URL".into()))?
+                .map_err(|_| JevifyError::Usage("invalid API endpoint URL".into()))?
                 .as_str()
                 .trim_end_matches('/')
                 .to_string(),
@@ -217,7 +217,7 @@ impl Client {
         &self,
         state: &serde_json::Value,
         questions: &Questions,
-    ) -> Result<Response, GreviError> {
+    ) -> Result<Response, JevifyError> {
         let mut attempt = self.stats.start(AttemptKind::Semantic);
         self.stats.telemetry.lock().unwrap().semantic_questions += questions.len() as u64;
         let result = self.ask_inner(state, questions).await;
@@ -229,7 +229,7 @@ impl Client {
         &self,
         state: &serde_json::Value,
         questions: &Questions,
-    ) -> Result<Response, GreviError> {
+    ) -> Result<Response, JevifyError> {
         let state = crate::input::redact_value(state);
         let mut questions = questions.clone();
         for question in questions.values_mut() {
@@ -262,7 +262,7 @@ impl Client {
             "backend": self.backend.as_str(), "model": self.model, "state": state, "questions": questions
         });
         let k = cache_key(
-            &serde_json::to_vec(&canonical).map_err(|e| GreviError::Protocol(e.to_string()))?,
+            &serde_json::to_vec(&canonical).map_err(|e| JevifyError::Protocol(e.to_string()))?,
         );
         if let Some(hit) = self.cache.as_ref().and_then(|c| c.get(&k)) {
             hit.validate(&questions)?;
@@ -286,14 +286,14 @@ impl Client {
         &self,
         state: &serde_json::Value,
         questions: &Questions,
-    ) -> Result<Response, GreviError> {
+    ) -> Result<Response, JevifyError> {
         let body =
             serde_json::json!({ "model": self.model, "state": state, "questions": questions });
-        let bytes = serde_json::to_vec(&body).map_err(|e| GreviError::Protocol(e.to_string()))?;
+        let bytes = serde_json::to_vec(&body).map_err(|e| JevifyError::Protocol(e.to_string()))?;
         let raw = self
             .post(&format!("{}/v1/systemone", self.base), bytes)
             .await?;
-        serde_json::from_slice(&raw).map_err(|e| GreviError::Protocol(e.to_string()))
+        serde_json::from_slice(&raw).map_err(|e| JevifyError::Protocol(e.to_string()))
     }
 
     /// classifier.dev takes at most 20 dimensions per request, so a larger `Questions` map goes
@@ -303,7 +303,7 @@ impl Client {
         &self,
         state: &serde_json::Value,
         questions: &Questions,
-    ) -> Result<Response, GreviError> {
+    ) -> Result<Response, JevifyError> {
         let url = format!("{}/v1/classify", self.base);
         let ids: Vec<&String> = questions.keys().collect();
         let mut merged = Response {
@@ -318,7 +318,7 @@ impl Client {
                 .map(|id| ((*id).clone(), questions[*id].clone()))
                 .collect();
             let bytes = serde_json::to_vec(&classifier::request_body(state, &part)?)
-                .map_err(|e| GreviError::Protocol(e.to_string()))?;
+                .map_err(|e| JevifyError::Protocol(e.to_string()))?;
             prepared.push((part, bytes));
         }
         for (part, bytes) in prepared {
@@ -331,9 +331,9 @@ impl Client {
     }
 
     /// One POST with the shared retry policy, returning the 200 body. Both backends answer
-    /// errors the same way as far as grevi is concerned: auth, a rejected body, or something
+    /// errors the same way as far as jevify is concerned: auth, a rejected body, or something
     /// worth retrying.
-    async fn post(&self, url: &str, bytes: Vec<u8>) -> Result<Vec<u8>, GreviError> {
+    async fn post(&self, url: &str, bytes: Vec<u8>) -> Result<Vec<u8>, JevifyError> {
         let _permit = self.sem.acquire().await.expect("semaphore open");
         let mut last = String::new();
         let mut wait = None;
@@ -364,7 +364,7 @@ impl Client {
                     if e.is_timeout() || e.is_connect() {
                         continue;
                     }
-                    return Err(GreviError::Unavailable(last));
+                    return Err(JevifyError::Unavailable(last));
                 }
             };
             // Stored now, and again by the two arms that await an error body before returning:
@@ -384,7 +384,7 @@ impl Client {
                 Ok(body) => body.to_vec(),
                 Err(e) if status == 200 => {
                     accounting.finish(false);
-                    return Err(GreviError::Protocol(e.to_string()));
+                    return Err(JevifyError::Protocol(e.to_string()));
                 }
                 // An unreadable error body cannot replace the status's auth/input/retry
                 // classification. Its usage remains unknown.
@@ -393,7 +393,7 @@ impl Client {
             self.stats.record_usage(&body);
             accounting.finish(status == 200);
             // 413/422 = the request body was rejected: in practice state over the token budget,
-            // occasionally a malformed request (a grevi bug). An input problem (exit 6), not an
+            // occasionally a malformed request (a jevify bug). An input problem (exit 6), not an
             // outage (exit 4); the error kind and hint keep the two readings apart.
             // classifier.dev says the same thing with 400 (`input_too_long`, `too_many_labels`,
             // `too_many_decisions`, ...), and its `code` names which. Only there: a TypeSafe 400
@@ -404,13 +404,13 @@ impl Client {
                 200 => {
                     return Ok(body);
                 }
-                401 | 403 => return Err(GreviError::BadKey(status)),
+                401 | 403 => return Err(JevifyError::BadKey(status)),
                 _ if body_rejected => {
                     let text = String::from_utf8_lossy(&body);
                     if rid.is_some() {
                         *self.stats.request_id.lock().unwrap() = rid;
                     }
-                    return Err(GreviError::RejectedRequest(
+                    return Err(JevifyError::RejectedRequest(
                         status,
                         rejection_message(&text),
                     ));
@@ -426,14 +426,14 @@ impl Client {
                     if rid.is_some() {
                         *self.stats.request_id.lock().unwrap() = rid;
                     }
-                    return Err(GreviError::Protocol(format!(
+                    return Err(JevifyError::Protocol(format!(
                         "HTTP {status}: {}",
                         text.chars().take(300).collect::<String>()
                     )));
                 }
             }
         }
-        Err(GreviError::Unavailable(last))
+        Err(JevifyError::Unavailable(last))
     }
 }
 

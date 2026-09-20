@@ -10,7 +10,7 @@ async fn health_json_reports_get_attempts_and_no_inference() {
     })
     .await;
     let out = tokio::task::spawn_blocking(move || {
-        common::grevi(&server)
+        common::jevify(&server)
             .args(["health", "--json"])
             .output()
             .unwrap()
@@ -35,7 +35,7 @@ async fn missing_usage_is_null_in_json_and_unknown_in_verbose_output() {
         .mount(&server)
         .await;
     tokio::task::spawn_blocking(move || {
-        let out = common::grevi(&server)
+        let out = common::jevify(&server)
             .args(["is", "condition", "--json"])
             .write_stdin("x")
             .output()
@@ -48,7 +48,7 @@ async fn missing_usage_is_null_in_json_and_unknown_in_verbose_output() {
             value["meta"]["telemetry"]["usage"]["input_tokens"]["unknown_attempts"],
             1
         );
-        let out = common::grevi(&server)
+        let out = common::jevify(&server)
             .args(["is", "condition", "-v"])
             .write_stdin("x")
             .output()
@@ -65,7 +65,7 @@ fn closed_stdout_is_normal_for_output_and_json_errors() {
     for args in [vec!["capabilities"], vec!["--json", "pick", "--nope"]] {
         let (reader, writer) = std::io::pipe().unwrap();
         drop(reader);
-        let out = std::process::Command::cargo_bin("grevi")
+        let out = std::process::Command::cargo_bin("jevify")
             .unwrap()
             .args(args)
             .stdout(writer)
@@ -84,7 +84,7 @@ fn closed_stdout_is_normal_for_output_and_json_errors() {
 
 #[test]
 fn help_lists_every_verb() {
-    let out = Command::cargo_bin("grevi")
+    let out = Command::cargo_bin("jevify")
         .unwrap()
         .arg("--help")
         .output()
@@ -110,31 +110,31 @@ fn help_lists_every_verb() {
     );
 }
 
-// Bare `grevi` is a usage error with a short card: every verb, the exit codes, the agent entry
+// Bare `jevify` is a usage error with a short card: every verb, the exit codes, the agent entry
 // points, and small enough to cost an agent about 130 tokens.
 #[test]
-fn bare_grevi_prints_the_quick_start_card_as_a_usage_error() {
-    let out = Command::cargo_bin("grevi").unwrap().output().unwrap();
+fn bare_jevify_prints_the_quick_start_card_as_a_usage_error() {
+    let out = Command::cargo_bin("jevify").unwrap().output().unwrap();
     assert_eq!(out.status.code(), Some(2));
     assert!(out.stdout.is_empty());
     let text = String::from_utf8(out.stderr).unwrap();
     for needle in [
-        "grevi pick",
-        "grevi why",
-        "grevi is",
-        "grevi run",
-        "grevi add",
-        "grevi sort",
+        "jevify pick",
+        "jevify why",
+        "jevify is",
+        "jevify run",
+        "jevify add",
+        "jevify sort",
         "--json",
         "3 nothing fits or unsure",
-        "grevi capabilities --json",
+        "jevify capabilities --json",
     ] {
         assert!(text.contains(needle), "{needle} missing from:\n{text}");
     }
     assert!(text.len() < 1000, "{} bytes", text.len());
 }
 
-// An agent that runs `grevi <verb> --help` gets an example to copy and the exit codes, and the
+// An agent that runs `jevify <verb> --help` gets an example to copy and the exit codes, and the
 // free-text argument says how to phrase it.
 #[test]
 fn verb_help_has_examples_exit_codes_and_a_described_argument() {
@@ -143,7 +143,7 @@ fn verb_help_has_examples_exit_codes_and_a_described_argument() {
         ("is", "A statement that must be true"),
         ("add", "The topic of the changes"),
     ] {
-        let out = Command::cargo_bin("grevi")
+        let out = Command::cargo_bin("jevify")
             .unwrap()
             .args([verb, "--help"])
             .output()
@@ -160,7 +160,7 @@ fn verb_help_has_examples_exit_codes_and_a_described_argument() {
 
 #[test]
 fn unknown_flag_is_usage_error() {
-    Command::cargo_bin("grevi")
+    Command::cargo_bin("jevify")
         .unwrap()
         .args(["pick", "--nope", "x"])
         .assert()
@@ -171,7 +171,7 @@ fn unknown_flag_is_usage_error() {
 // usage error for the life of the project (unlike a not-yet-implemented verb).
 #[test]
 fn json_error_envelope_has_kind_hint_example() {
-    let out = Command::cargo_bin("grevi")
+    let out = Command::cargo_bin("jevify")
         .unwrap()
         .args(["--json", "-t", "2", "is", "x"])
         .output()
@@ -180,13 +180,13 @@ fn json_error_envelope_has_kind_hint_example() {
     assert_eq!(v["ok"], false);
     assert_eq!(v["exit_code"], 2);
     assert_eq!(v["error"]["kind"], "usage");
-    assert!(v["error"]["example"].as_str().unwrap().contains("grevi"));
+    assert!(v["error"]["example"].as_str().unwrap().contains("jevify"));
 }
 
 // Clap fails before any Config exists; agents still get exactly one envelope on stdout.
 #[test]
 fn clap_usage_error_under_json_is_an_envelope() {
-    let out = Command::cargo_bin("grevi")
+    let out = Command::cargo_bin("jevify")
         .unwrap()
         .args(["--json", "pick", "--nope", "x"])
         .output()
@@ -195,7 +195,7 @@ fn clap_usage_error_under_json_is_an_envelope() {
     let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
     assert_eq!(v["error"]["kind"], "usage");
     assert_eq!(v["command"], "pick");
-    let out = Command::cargo_bin("grevi")
+    let out = Command::cargo_bin("jevify")
         .unwrap()
         .args(["pick", "--format", "toon", "--nope", "x"])
         .output()
@@ -205,7 +205,7 @@ fn clap_usage_error_under_json_is_an_envelope() {
 
 #[test]
 fn toon_format_renders() {
-    let out = Command::cargo_bin("grevi")
+    let out = Command::cargo_bin("jevify")
         .unwrap()
         .args(["--format", "toon", "-t", "2", "is", "x"])
         .output()
@@ -218,15 +218,15 @@ fn toon_format_renders() {
 #[test]
 fn run_flags_after_intent_are_flags() {
     use clap::{CommandFactory, FromArgMatches};
-    // In-process parse: clap would read `env = "GREVI_THRESHOLD"` from this test's own
+    // In-process parse: clap would read `env = "JEVIFY_THRESHOLD"` from this test's own
     // environment, so the env fallbacks are cleared and only argv is parsed.
-    let cmd = grevi::cli::Cli::command().mut_args(|a| a.env(None));
+    let cmd = jevify::cli::Cli::command().mut_args(|a| a.env(None));
     let m = cmd
-        .try_get_matches_from(["grevi", "run", "burn", "a", "dvd", "--dry-run", "--json"])
+        .try_get_matches_from(["jevify", "run", "burn", "a", "dvd", "--dry-run", "--json"])
         .unwrap();
-    let c = grevi::cli::Cli::from_arg_matches(&m).unwrap();
+    let c = jevify::cli::Cli::from_arg_matches(&m).unwrap();
     assert!(c.g.json);
-    let grevi::cli::Cmd::Run {
+    let jevify::cli::Cmd::Run {
         intent, dry_run, ..
     } = c.cmd
     else {

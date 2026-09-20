@@ -1,6 +1,6 @@
 use crate::cmd::Outcome;
 use crate::config::Config;
-use crate::exit::{Exit, GreviError};
+use crate::exit::{Exit, JevifyError};
 use crate::gitdiff;
 use crate::jev::client::Client;
 use crate::jev::{Question, Questions};
@@ -17,15 +17,15 @@ pub async fn run(
     yes: bool,
     dry_run: bool,
     machine: bool,
-) -> Result<Outcome, GreviError> {
+) -> Result<Outcome, JevifyError> {
     // From a subdirectory `git diff` lists the whole repo, but `git apply` silently skips paths
     // outside the cwd (exit 0): run both at the top level, or hunks are reported staged but are not.
     let top = Command::new("git")
         .args(["rev-parse", "--show-toplevel"])
         .output()
-        .map_err(|e| GreviError::Input(format!("git: {e}")))?;
+        .map_err(|e| JevifyError::Input(format!("git: {e}")))?;
     if !top.status.success() {
-        return Err(GreviError::Input(
+        return Err(JevifyError::Input(
             "not a git repository (or git failed)".into(),
         ));
     }
@@ -42,9 +42,9 @@ pub async fn run(
             "-U3",
         ])
         .output()
-        .map_err(|e| GreviError::Input(format!("git: {e}")))?;
+        .map_err(|e| JevifyError::Input(format!("git: {e}")))?;
     if !out.status.success() {
-        return Err(GreviError::Input(
+        return Err(JevifyError::Input(
             "not a git repository (or git failed)".into(),
         ));
     }
@@ -63,12 +63,12 @@ pub async fn run(
         })
         .collect();
     if flat.is_empty() {
-        return Err(GreviError::EmptyInput(
+        return Err(JevifyError::EmptyInput(
             "no unstaged changes to tracked files (untracked files are never staged by add)",
         ));
     }
     if flat.iter().any(|(_, _, h)| h.chars().count() > HUNK_CHARS) {
-        return Err(GreviError::InputTooLarge(format!(
+        return Err(JevifyError::InputTooLarge(format!(
             "hunk exceeds the {HUNK_CHARS}-character evidence budget; no hunks were classified or staged"
         )));
     }
@@ -91,7 +91,7 @@ pub async fn run(
         .iter()
         .any(|state| state.to_string().chars().count() > client.backend().max_state_chars())
     {
-        return Err(GreviError::InputTooLarge("complete hunk batch exceeds the backend evidence budget; no hunks were classified or staged".into()));
+        return Err(JevifyError::InputTooLarge("complete hunk batch exceeds the backend evidence budget; no hunks were classified or staged".into()));
     }
     let batches = flat.chunks(BATCH).zip(states).map(|(chunk, state)| {
         let mut qs = Questions::new();
@@ -110,7 +110,7 @@ pub async fn run(
             let r = client.ask(&state, &qs).await?;
             (0..chunk.len())
                 .map(|i| r.noul(&format!("h{i:02}")))
-                .collect::<Result<Vec<f64>, GreviError>>()
+                .collect::<Result<Vec<f64>, JevifyError>>()
         }
     });
     let ps: Vec<f64> = futures::future::try_join_all(batches)
@@ -155,7 +155,7 @@ pub async fn run(
                 Some(true)
             ))
     {
-        return Err(GreviError::Declined);
+        return Err(JevifyError::Declined);
     }
     let keep = |fi: usize, hi: usize| {
         flat.iter()
@@ -168,19 +168,19 @@ pub async fn run(
         .args(["apply", "--cached", "--recount", "-"])
         .stdin(Stdio::piped())
         .spawn()
-        .map_err(|e| GreviError::Input(e.to_string()))?;
+        .map_err(|e| JevifyError::Input(e.to_string()))?;
     child
         .stdin
         .take()
         .expect("stdin")
         .write_all(p.as_bytes())
-        .map_err(|e| GreviError::Input(e.to_string()))?;
+        .map_err(|e| JevifyError::Input(e.to_string()))?;
     if !child
         .wait()
-        .map_err(|e| GreviError::Input(e.to_string()))?
+        .map_err(|e| JevifyError::Input(e.to_string()))?
         .success()
     {
-        return Err(GreviError::Input(
+        return Err(JevifyError::Input(
             "git apply --cached rejected the patch; nothing was staged".into(),
         ));
     }

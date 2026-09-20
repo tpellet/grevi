@@ -6,10 +6,10 @@ fn explicit_classifier_model_overrides_are_usage_errors() {
     for via_env in [false, true] {
         let mut command = common::bin();
         command
-            .env("GREVI_BACKEND", "classifier")
+            .env("JEVIFY_BACKEND", "classifier")
             .args(["--json", "capabilities"]);
         if via_env {
-            command.env("GREVI_MODEL", "jev-1.13.0");
+            command.env("JEVIFY_MODEL", "jev-1.13.0");
         } else {
             command.args(["--model", "jev-1.13.0"]);
         }
@@ -20,13 +20,13 @@ fn explicit_classifier_model_overrides_are_usage_errors() {
     }
 }
 use common::{FakeJev, option_containing};
-use grevi::config::Backend;
-use grevi::jev::client::Client;
-use grevi::jev::{Question, Questions};
+use jevify::config::Backend;
+use jevify::jev::client::Client;
+use jevify::jev::{Question, Questions};
 use wiremock::matchers::{method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
 
-fn classifier_config(server: &MockServer) -> grevi::config::Config {
+fn classifier_config(server: &MockServer) -> jevify::config::Config {
     let mut c = common::config(server);
     c.backend = Backend::Classifier;
     c.key = None;
@@ -46,7 +46,7 @@ async fn pick_works_with_no_key_at_all() {
         noul: |_, _| 0.9,
     })
     .await;
-    let mut c = common::grevi_classifier(&server);
+    let mut c = common::jevify_classifier(&server);
     let out = tokio::task::spawn_blocking(move || {
         c.args(["--json", "pick", "the bill"])
             .write_stdin("notes.txt\ninvoice-march.pdf\nphoto.jpg\n")
@@ -84,7 +84,7 @@ async fn is_keeps_its_exit_codes_on_the_free_backend() {
     })
     .await;
     for (stdin, code) in [("a fatal error occurred", 0), ("all fine", 1)] {
-        let mut c = common::grevi_classifier(&server);
+        let mut c = common::jevify_classifier(&server);
         let out = tokio::task::spawn_blocking(move || {
             c.args(["is", "this text reports a failure"])
                 .write_stdin(stdin)
@@ -104,7 +104,7 @@ async fn health_reports_the_active_backend_without_a_key() {
         noul: |_, _| 0.5,
     })
     .await;
-    let mut c = common::grevi_classifier(&server);
+    let mut c = common::jevify_classifier(&server);
     let out = tokio::task::spawn_blocking(move || c.args(["--json", "health"]).output().unwrap())
         .await
         .unwrap();
@@ -117,16 +117,16 @@ async fn health_reports_the_active_backend_without_a_key() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn no_key_and_no_backend_variable_still_answers() {
-    // What a new user gets: `cargo install grevi` and nothing else. Only the base URL is
-    // overridden, so the backend choice itself is the one grevi makes from an empty environment.
+    // What a new user gets: `cargo install jevify` and nothing else. Only the base URL is
+    // overridden, so the backend choice itself is the one jevify makes from an empty environment.
     let server = common::mock_classifier(FakeJev {
         choose: |_, s, o| option_containing(s, o, "invoice"),
         noul: |_, _| 0.9,
     })
     .await;
     let mut c = common::bin();
-    c.env("GREVI_BASE_URL", server.uri())
-        .env("GREVI_NO_CACHE", "1");
+    c.env("JEVIFY_BASE_URL", server.uri())
+        .env("JEVIFY_NO_CACHE", "1");
     let out = tokio::task::spawn_blocking(move || {
         c.args(["--json", "pick", "the bill"])
             .write_stdin("notes.txt\ninvoice-march.pdf\n")
@@ -143,7 +143,7 @@ async fn no_key_and_no_backend_variable_still_answers() {
 #[tokio::test(flavor = "multi_thread")]
 async fn the_typesafe_backend_without_a_key_is_an_auth_error() {
     let mut c = common::bin();
-    c.env("GREVI_BACKEND", "typesafe");
+    c.env("JEVIFY_BACKEND", "typesafe");
     let out = tokio::task::spawn_blocking(move || {
         c.args(["--json", "pick", "x"])
             .write_stdin("a\nb\n")
@@ -169,7 +169,7 @@ async fn the_typesafe_backend_without_a_key_is_an_auth_error() {
 #[tokio::test(flavor = "multi_thread")]
 async fn an_unknown_backend_is_a_usage_error() {
     let mut c = common::bin();
-    c.env("GREVI_BACKEND", "ollama");
+    c.env("JEVIFY_BACKEND", "ollama");
     let out = tokio::task::spawn_blocking(move || c.args(["--json", "health"]).output().unwrap())
         .await
         .unwrap();
@@ -257,7 +257,7 @@ async fn the_cache_never_crosses_backends() {
     c.cache_dir = Some(dir.path().to_path_buf());
     let state = serde_json::json!("hello");
     let client = Client::new(&c).unwrap();
-    let p = |r: grevi::jev::Response| r.noul("q").unwrap();
+    let p = |r: jevify::jev::Response| r.noul("q").unwrap();
     let first = p(client.ask(&state, &one_noul()).await.unwrap());
     assert!((first - 0.42).abs() < 1e-9, "{first}");
     // The second call is served from disk: same answer, one cache hit, no second request.
@@ -290,7 +290,7 @@ async fn a_window_never_offers_more_options_than_the_service_accepts() {
     .await;
     let mut lines: Vec<String> = (0..250).map(|i| format!("file-{i:03}.txt")).collect();
     lines.push("invoice-march.pdf".into());
-    let mut c = common::grevi_classifier(&server);
+    let mut c = common::jevify_classifier(&server);
     let out = tokio::task::spawn_blocking(move || {
         c.args(["--json", "pick", "the bill"])
             .write_stdin(lines.join("\n"))
