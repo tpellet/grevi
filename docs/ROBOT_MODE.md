@@ -1,6 +1,54 @@
 # grevi — robot mode
 
-Start here: `grevi capabilities --json`. Every command accepts `--json` (alias `--robot`) or
+grevi answers a question about text that already exists: your input, the installed tools, a man
+page, the folders on disk. It selects and never generates, so you can check every answer.
+
+## When to call it
+
+You have `grep` and you can read files. Call grevi when those two run out:
+
+- A long log, or a grep that found the symptom. `grep -iE "error|fail"` finds the line that says
+  something failed. The line that says why often holds none of those words (an assertion's
+  `left:`/`right:` values, "could not match actual sql"). `why` reads the whole log, thousands of
+  lines included. Call it before you read a log of more than a few hundred lines.
+- Many texts, one question. Loop `is` over them and read only the exit codes: one line per text,
+  whatever its length. Then read the few that said yes or unsure.
+- One item out of many, described and not named: a branch, a commit, a file, a process, a
+  history line. `pick` matches by meaning, so the description and the line need no word in common.
+- Part of a working tree. `git add -p` needs a terminal. `add` stages the hunks that belong to one
+  topic and leaves the others.
+- A task with no command you are sure of. `run --dry-run --no-args` searches every command on the
+  PATH by what its man page says it does, and only proposes what is installed.
+- Files whose names say nothing. `sort` reads the content and proposes an existing folder.
+
+Skip grevi when a literal search answers the question, when the input is short enough to read, or
+when you already know the exact command.
+
+## How to phrase
+
+- Write what must be true of the text, literally. The statement is judged word for word:
+  `"the customer is about to stop being a customer"` works; `"this customer is about to leave"`
+  also says yes to an employee who is leaving their company.
+- Describe the thing, not what you will do with it: `"the line with the failing assertion"`.
+- One question per call. English works best.
+- grevi does not count, do arithmetic, compare dates or judge quality.
+
+## Patterns
+
+    for f in tickets/*.txt; do                                  # triage, read none of them
+      grevi is "the customer is about to stop being a customer" < "$f" >/dev/null 2>&1
+      echo "$f $?"                                              # 0 yes · 1 no · 3 unsure
+    done
+    gh run view --log-failed | grevi why --json                 # root cause of a CI run
+    git show "$(git log --oneline | grevi pick "the commit that renamed the project" | cut -d' ' -f1)"
+    grevi add --json --dry-run "the token expiry fix"           # scores first; --yes stages
+
+Human stdout is plain text made for pipes (`pick` prints the line, `is` prints nothing), so there
+is no automatic switch to JSON when piped. Pass `--json` when you want the envelope.
+
+## The envelope
+
+Start here for the contract: `grevi capabilities --json`. Every command accepts `--json` (alias `--robot`) or
 `--format json|jsonl|toon` and then prints exactly one envelope on stdout, usage errors included:
 
     { ok, command, version, exit_code, data, meta{backend, model, elapsed_ms, requests,
@@ -26,6 +74,10 @@ Branch on `exit_code` (0 ok, 1 no, 2 usage, 3 abstain, 4 unavailable, 5 auth, 6 
 - `sort <dir> [--into <root>]` → `data.moves[{from, to, p}], skipped[{file, reason}], undo_log, applied`; proposes a home among the existing folders under `root` (default `dir`, depth ≤ 2) for each file directly in `dir`. Dry-run by default: `--apply` moves and writes an undo log (`data.undo_log`), `--undo <log>` moves the files back. Never overwrites, never deletes, same volume only; exit 3 = nothing to move (or nothing restored).
 
 ## Rules for agents
+- On a very long log, `why` keeps the lines around every error-like line within a 4,000-line
+  budget. `data.considered` and `data.total` say how much it looked at. If `considered` is far
+  below `total` and the answer looks like a symptom, cut the log to the failing step and ask again.
+- Exit 4 with `HTTP 429` is the backend's rate limit: wait, or lower `GREVI_CONCURRENCY`.
 - Treat `p` as calibrated: 0.8 ≈ right 80% of the time across many calls. Raise `-t` for costly actions.
 - Exit 3 is an answer, not an error: nothing fits, or the evidence is ambiguous. Escalate or ask.
 - Results always point into your input, the installed tools, or a tool's man page. Nothing is generated.

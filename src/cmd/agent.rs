@@ -13,15 +13,17 @@ pub fn capabilities() -> Outcome {
     let data = serde_json::json!({
         "name": "grevi",
         "version": env!("CARGO_PKG_VERSION"),
-        "summary": "Point at the right thing among real things, by meaning, with calibrated confidence (TypeSafe Jev, through TypeSafe with a key or classifier.dev without one).",
+        "summary": "Answers questions about text that already exists (your input, the installed tools, man pages, folders) by meaning. It selects and never generates, and every answer has a calibrated probability. Model: TypeSafe Jev, through TypeSafe with a key or classifier.dev without one.",
+        "use_when": "a question is about meaning and grep or keywords cannot ask it, or the input is too long to read; skip it when a literal search answers the question or you already know the exact command",
         "global_flags": ["--json (alias --robot)", "--format human|json|jsonl|toon", "-t/--threshold <0..1>", "--model <id>", "--no-cache", "-v/--verbose"],
+        "output": "human stdout is plain text made for pipes (pick prints the line, is prints nothing), so there is no automatic switch to JSON when piped: pass --json to get the envelope",
         "commands": [
-            { "name": "pick", "usage": "<stdin> | grevi pick \"<intent>\" [-n N] [--index]", "stdin": true, "exit": [0, 3], "data": "matches[{line,text,p}], any" },
-            { "name": "why", "usage": "<cmd> 2>&1 | grevi why [-C N] [-n N]  |  grevi why [-C N] -- <cmd...>", "stdin": true, "exit": [0, 3], "data": "causes[{line,text,p,context[]}], any, considered, total, hint, child_exit" },
-            { "name": "run", "usage": "grevi run [--dry-run|--yes|--exec --yes] [--no-args] <intent...>", "stdin": false, "exit": [0, 3, 7, 130], "data": "tool, fit, argv[], flags[], complete, blocked, executed, child_exit, alternatives[]" },
-            { "name": "is", "usage": "<stdin> | grevi is \"<condition>\" [--band 0.15]", "stdin": true, "exit": [0, 1, 3], "data": "p, verdict, truncated" },
-            { "name": "add", "usage": "grevi add [--dry-run|--yes] \"<topic>\"", "stdin": false, "exit": [0, 3, 130], "data": "hunks[{file,header,p,staged}]", "note": "tracked files only; index only, never commits; works from any subdirectory" },
-            { "name": "sort", "usage": "grevi sort <dir> [--into <root>] [--apply | --undo <log>]", "stdin": false, "exit": [0, 3], "data": "moves[], skipped[], undo_log, applied", "note": "dry-run by default; never overwrites, never deletes; same volume only" },
+            { "name": "pick", "usage": "<stdin> | grevi pick \"<intent>\" [-n N] [--index]", "stdin": true, "exit": [0, 3], "data": "matches[{line,text,p}], any", "when": "choose one item out of many by description (a branch, a commit, a file, a process, a history line); the description and the line need no word in common", "example": "git log --oneline | grevi pick --json \"the commit that renamed the project\"" },
+            { "name": "why", "usage": "<cmd> 2>&1 | grevi why [-C N] [-n N]  |  grevi why [-C N] -- <cmd...>", "stdin": true, "exit": [0, 3], "data": "causes[{line,text,p,context[]}], any, considered, total, hint, child_exit", "when": "root-cause a build, test or CI log, above all a long one or one where grep for error|fail found the symptom and not the reason", "example": "gh run view --log-failed | grevi why --json", "note": "past 1,500 distinct lines it keeps the neighbourhoods of error-like lines within a 4,000-line budget: compare considered with total" },
+            { "name": "run", "usage": "grevi run [--dry-run|--yes|--exec --yes] [--no-args] <intent...>", "stdin": false, "exit": [0, 3, 7, 130], "data": "tool, fit, argv[], flags[], complete, blocked, executed, child_exit, alternatives[]", "when": "you do not know which installed command does a task, or which of several candidates is installed; it searches every command on the PATH by its man-page summary", "example": "grevi run --json --dry-run --no-args \"keep my mac awake for an hour\"", "note": "read tool and alternatives[], then check the flags in the man page yourself: argv is a proposal" },
+            { "name": "is", "usage": "<stdin> | grevi is \"<condition>\" [--band 0.15]", "stdin": true, "exit": [0, 1, 3], "data": "p, verdict, truncated", "when": "triage or gate on meaning; loop it over many texts and read only the exit codes, so your cost is one line per text whatever its length", "example": "grevi is \"the customer is about to stop being a customer\" < ticket.txt; echo $?" },
+            { "name": "add", "usage": "grevi add [--dry-run|--yes] \"<topic>\"", "stdin": false, "exit": [0, 3, 130], "data": "hunks[{file,header,p,staged}]", "when": "stage part of a working tree without a terminal: git add -p is interactive, add is not", "example": "grevi add --json --dry-run \"the token expiry fix\"", "note": "stages single hunks, so it can split one file's changes; tracked files only; index only, never commits; works from any subdirectory" },
+            { "name": "sort", "usage": "grevi sort <dir> [--into <root>] [--apply | --undo <log>]", "stdin": false, "exit": [0, 3], "data": "moves[{from,to,p}], skipped[{file,reason}], undo_log, applied", "when": "files whose names say nothing need a home among the folders that already exist; it reads the content", "example": "grevi sort --json ~/Downloads", "note": "dry-run by default; never overwrites, never deletes; same volume only" },
             { "name": "capabilities", "usage": "grevi capabilities --json" },
             { "name": "robot-docs", "usage": "grevi robot-docs [guide|commands|exit-codes|examples|privacy]" },
             { "name": "health", "usage": "grevi health --json", "exit": [0, 4, 5] },
@@ -49,11 +51,20 @@ pub fn capabilities() -> Outcome {
             { "name": "classifier", "key": "none", "model": "Jev (classifier.dev runs it and serves it free)", "window": Backend::Classifier.window(), "choice_options": crate::jev::classifier::MAX_LABELS, "state_chars": crate::jev::classifier::MAX_INPUT_CHARS, "questions_per_request": crate::jev::classifier::MAX_DIMENSIONS, "classifications_per_minute": 3000, "meta": "input_tokens and cost_usd are 0: the service is free" }
         ],
         "envelope": { "fields": ["ok", "command", "version", "exit_code", "data", "meta{backend,model,elapsed_ms,requests,cache_hits,input_tokens,cost_usd,threshold,request_id}", "error{kind,message,hint,example}"] },
+        "phrasing": [
+            "write what must be true of the text, literally: the statement is judged word for word (\"the customer is about to stop being a customer\" beats \"this customer is about to leave\", which also matches an employee who is leaving their company)",
+            "describe the thing, not what you will do with it: \"the line with the failing assertion\", not \"what should I fix\"",
+            "one question per call; for A or B, make two calls",
+            "English works best; grevi does not count, do arithmetic, compare dates or judge quality"
+        ],
         "workflows": [
             { "goal": "find the tool for a task", "command": "grevi run --json --dry-run \"<task>\"" },
             { "goal": "explain a failure", "command": "<cmd> 2>&1 | grevi why --json" },
+            { "goal": "explain a failed CI run, however long the log", "command": "gh run view --log-failed | grevi why --json" },
             { "goal": "select an item", "command": "<list> | grevi pick --json \"<intent>\"" },
-            { "goal": "branch in a script", "command": "grevi is \"<condition>\" < file; case $? in 0) ...;; 1) ...;; 3) ...;; esac" }
+            { "goal": "branch in a script", "command": "grevi is \"<condition>\" < file; case $? in 0) ...;; 1) ...;; 3) ...;; esac" },
+            { "goal": "triage many texts without reading them", "command": "for f in dir/*; do grevi is \"<statement>\" < \"$f\" >/dev/null 2>&1; echo \"$f $?\"; done   # 0 yes, 1 no, 3 unsure: read only those" },
+            { "goal": "stage one topic out of a mixed working tree", "command": "grevi add --json --dry-run \"<topic>\"   # then --yes, when the user asked you to stage" }
         ],
         "safety": [
             "run executes only after TTY confirmation or --yes; in machine mode only with --exec --yes, and the child's stdout goes to stderr so stdout stays one envelope",
@@ -217,6 +228,22 @@ mod tests {
                 .iter()
                 .all(|c| c["name"].is_string() && c["usage"].is_string())
         );
+        // An agent must learn from here when each verb is worth a call, with a command to copy.
+        for verb in ["pick", "why", "run", "is", "add", "sort"] {
+            let c = d["commands"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .find(|c| c["name"] == verb)
+                .unwrap();
+            assert!(c["when"].as_str().is_some_and(|s| !s.is_empty()), "{c}");
+            assert!(
+                c["example"]
+                    .as_str()
+                    .is_some_and(|s| s.contains(&format!("grevi {verb}"))),
+                "{c}"
+            );
+        }
     }
     #[test]
     fn robot_docs_default_to_the_guide_and_reject_unknown_topics() {

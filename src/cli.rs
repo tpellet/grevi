@@ -5,8 +5,8 @@ use clap::{Args, Parser, Subcommand, ValueEnum};
 #[command(
     name = "grevi",
     version,
-    about = "Point at the right thing among real things — by meaning, with calibrated confidence.",
-    after_help = "Examples:\n  ls ~/Downloads | grevi pick \"last month's electricity bill\"\n  cargo build 2>&1 | grevi why\n  grevi why -- cargo build\n  grevi run \"burn a dvd from this iso\"\n  grevi is \"asks for a refund\" < mail.txt && ./refund\n\nAgents: grevi capabilities --json | grevi robot-docs"
+    about = "Answer questions about text you already have: find a line, an error, a command or a folder by meaning. grevi selects and never generates, and every answer has a calibrated probability.",
+    after_help = "Examples:\n  gh run view --log-failed | grevi why\n  git branch | grevi pick \"the payment timeout fix\"\n  grevi is \"the customer asks for a refund\" < mail.txt && ./refund\n  grevi run --dry-run \"keep my mac awake for an hour\"\n  grevi add --dry-run \"the token expiry fix\"\n  grevi sort ~/Downloads\n\nExit codes: 0 ok, 1 no (is), 2 usage, 3 nothing fits or unsure, 4 API unavailable, 5 auth, 6 input, 7 child failed, 130 declined.\nAgents: grevi capabilities --json | grevi robot-docs"
 )]
 pub struct Cli {
     #[command(flatten)]
@@ -49,8 +49,12 @@ impl GlobalOpts {
 
 #[derive(Subcommand, Debug)]
 pub enum Cmd {
-    /// Print the stdin line(s) that match an intent (exit 3 if none fits)
+    /// Find one line in a list by describing it: stdin lines in, the matching line out
+    #[command(
+        after_help = "Examples:\n  git branch | grevi pick \"the payment timeout fix\"\n  git log --oneline | grevi pick -n 3 \"when we changed the pricing\"\n\nThe description and the line need no word in common.\nExit: 0 found, 3 no line fits. --json data: matches[{line, text, p}], any."
+    )]
     Pick {
+        /// Describe the line you want, e.g. "the branch with the payment timeout fix"
         intent: String,
         /// Print up to N matches, each ranked above "nothing fits"
         #[arg(short = 'n', long, default_value_t = 1)]
@@ -59,7 +63,10 @@ pub enum Cmd {
         #[arg(long)]
         index: bool,
     },
-    /// Point at the root-cause line in failing output (stdin, or `-- <cmd>` to run and capture it)
+    /// Find the line that caused a failure in build, test or CI output (stdin, or `-- <cmd>` to run it)
+    #[command(
+        after_help = "Examples:\n  cargo build 2>&1 | grevi why\n  gh run view --log-failed | grevi why --json\n  grevi why -- cargo test\n\nPipe 2>&1: compilers write errors to stderr. Works on logs of thousands of lines, and finds a cause that holds no word like \"error\".\nExit: 0 found, 3 no line looks like a failure. --json data: causes[{line, text, p, context[]}], any, considered, total, hint, child_exit."
+    )]
     Why {
         /// Lines of context around the root cause
         #[arg(short = 'C', long, default_value_t = 3)]
@@ -71,9 +78,12 @@ pub enum Cmd {
         #[arg(last = true)]
         cmd: Vec<String>,
     },
-    /// Route an intent to an installed tool, point at flags from its man page, run on confirm
+    /// Describe a task in plain English, get the installed command that does it; asks before it runs
+    #[command(
+        after_help = "Examples:\n  grevi run --dry-run \"keep my mac awake for an hour\"\n  grevi run --json --dry-run --no-args \"test how fast my connection is\"\n\nSearches every command on the PATH by what its man page says it does. Flags come from the man page; check them before you run.\nExit: 0 found (or ran), 3 no tool fits, 7 the command failed, 130 declined. --json data: tool, fit, argv[], flags[], complete, blocked, executed, child_exit, alternatives[]."
+    )]
     Run {
-        /// The request; flags may follow it (`grevi run burn a dvd --dry-run`)
+        /// The task, e.g. "count the lines in notes.txt"; flags may follow it (`grevi run burn a dvd --dry-run`)
         #[arg(required = true, num_args = 1..)]
         intent: Vec<String>,
         /// Run without asking
@@ -89,15 +99,23 @@ pub enum Cmd {
         #[arg(long)]
         no_args: bool,
     },
-    /// Exit 0 if stdin satisfies the condition, 1 if not, 3 if unsure
+    /// Ask a yes-or-no question about the text on stdin; the answer is the exit code (0 yes, 1 no, 3 unsure)
+    #[command(
+        after_help = "Examples:\n  grevi is \"the customer asks for a refund\" < mail.txt && ./refund\n  for f in mail/*; do grevi is \"asks for a refund\" < \"$f\"; echo \"$f $?\"; done\n\nWrite the statement literally: it is judged word for word. No counting, arithmetic, dates or quality judgments.\nPrints nothing in human mode. Exit: 0 yes, 1 no, 3 unsure. --json data: p, verdict, truncated."
+    )]
     Is {
+        /// A statement that must be true of the text, e.g. "the customer asks for a refund"
         condition: String,
         /// Unsure band around the threshold (0..=0.5)
         #[arg(long, default_value_t = 0.15)]
         band: f64,
     },
-    /// Stage only the git hunks about a topic
+    /// Stage only the git changes that belong to one topic, like `git add -p` without the questions
+    #[command(
+        after_help = "Examples:\n  grevi add --dry-run \"the token expiry fix\"\n  grevi add --yes \"the token expiry fix\" && git commit\n\nStages single hunks of tracked files, so it can split the changes of one file. Index only, never commits.\nExit: 0 staged (or scored with --dry-run), 3 no change is about the topic, 6 nothing unstaged, 130 declined. --json data: hunks[{file, header, p, staged}]."
+    )]
     Add {
+        /// The topic of the changes to stage, e.g. "the token expiry fix"
         topic: String,
         /// Stage without asking
         #[arg(short, long)]
@@ -106,7 +124,10 @@ pub enum Cmd {
         #[arg(long)]
         dry_run: bool,
     },
-    /// Propose moving files into existing folders by meaning
+    /// Propose a folder for each file in a directory by reading the files; moves nothing without --apply
+    #[command(
+        after_help = "Examples:\n  grevi sort ~/Downloads\n  grevi sort ~/Downloads --apply\n  grevi sort ~/Downloads --undo <log>\n\nDestinations are the folders that already exist. Never overwrites, never deletes, same volume only.\nExit: 0 moves proposed (or applied), 3 nothing can be placed, 6 no folders to sort into. --json data: moves[{from, to, p}], skipped[{file, reason}], undo_log, applied."
+    )]
     Sort {
         /// Directory whose files (not recursive, not hidden) are sorted
         dir: std::path::PathBuf,

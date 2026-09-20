@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+Changed:
+
+- Help an agent can use without guessing. Bare `grevi` prints a ten-line quick-start card (still exit 2, on stderr) where it printed the full help. Each verb's `--help` has examples, its exit codes and its `--json` fields, and the free-text arguments say how to phrase them. `capabilities` gains `use_when`, `output`, `phrasing`, more `workflows`, and a `when` and an `example` per verb. The handbook (`grevi robot-docs`) opens with when to call grevi, how to phrase, and patterns.
+- The Claude Code plugin lives in `plugins/grevi/`, so an install copies the skill and its manifest, not the repository. The skill file is now `plugins/grevi/skills/grevi/SKILL.md`.
+- README and guide: plain descriptions of the six verbs, examples run on the keyless backend, animations of `run` and `sort`, and an agent section backed by `benchmarks/agents/`.
+
 ## 0.3.0 — 2026-09-19
 
 Added:

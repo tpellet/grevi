@@ -32,7 +32,29 @@ const VERBS: [&str; 10] = [
     "init",
 ];
 
+/// What bare `grevi` prints: enough to make a first call, in about 130 tokens. `--help` has the rest.
+pub const QUICK_START: &str = concat!(
+    "grevi ",
+    env!("CARGO_PKG_VERSION"),
+    r#": answer questions about text you already have. Selects, never generates.
+  <list> | grevi pick "<description>"    find one line by meaning
+  <cmd> 2>&1 | grevi why                 find the line that caused a failure
+  grevi is "<statement>" < file          yes / no / unsure as exit code 0 / 1 / 3
+  grevi run --dry-run "<task>"           find the installed command for a task
+  grevi add --dry-run "<topic>"          stage only the git changes about a topic
+  grevi sort <dir>                       propose a folder for each file (dry run)
+Add --json for one JSON object on stdout. No key needed.
+Exit: 0 ok, 1 no, 2 usage, 3 nothing fits or unsure, 4 API unavailable, 5 auth, 6 input.
+More: grevi <verb> --help | grevi --help | agents: grevi capabilities --json, grevi robot-docs
+"#
+);
+
 pub fn main_exit() -> i32 {
+    // Bare `grevi` stays a usage error (exit 2, stderr), as it was with clap's full help.
+    if std::env::args_os().len() == 1 {
+        eprint!("{QUICK_START}");
+        return Exit::Usage.code();
+    }
     let cli = match Cli::try_parse() {
         Ok(c) => c,
         Err(e) => {

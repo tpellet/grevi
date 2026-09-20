@@ -23,9 +23,57 @@ fn help_lists_every_verb() {
     }
     // Wave 2: `add` (Task 14) and `sort` (Task 15) are both listed.
     assert!(
-        text.contains("Stage only") && text.contains("Propose moving"),
+        text.contains("Stage only") && text.contains("Propose a folder"),
         "{text}"
     );
+}
+
+// Bare `grevi` is a usage error with a short card: every verb, the exit codes, the agent entry
+// points, and small enough to cost an agent about 130 tokens.
+#[test]
+fn bare_grevi_prints_the_quick_start_card_as_a_usage_error() {
+    let out = Command::cargo_bin("grevi").unwrap().output().unwrap();
+    assert_eq!(out.status.code(), Some(2));
+    assert!(out.stdout.is_empty());
+    let text = String::from_utf8(out.stderr).unwrap();
+    for needle in [
+        "grevi pick",
+        "grevi why",
+        "grevi is",
+        "grevi run",
+        "grevi add",
+        "grevi sort",
+        "--json",
+        "3 nothing fits or unsure",
+        "grevi capabilities --json",
+    ] {
+        assert!(text.contains(needle), "{needle} missing from:\n{text}");
+    }
+    assert!(text.len() < 1000, "{} bytes", text.len());
+}
+
+// An agent that runs `grevi <verb> --help` gets an example to copy and the exit codes, and the
+// free-text argument says how to phrase it.
+#[test]
+fn verb_help_has_examples_exit_codes_and_a_described_argument() {
+    for (verb, arg) in [
+        ("pick", "Describe the line"),
+        ("is", "A statement that must be true"),
+        ("add", "The topic of the changes"),
+    ] {
+        let out = Command::cargo_bin("grevi")
+            .unwrap()
+            .args([verb, "--help"])
+            .output()
+            .unwrap();
+        let text = String::from_utf8(out.stdout).unwrap();
+        for needle in ["Examples:", "Exit:", arg] {
+            assert!(
+                text.contains(needle),
+                "{verb} --help lacks {needle}:\n{text}"
+            );
+        }
+    }
 }
 
 #[test]
