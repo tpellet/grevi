@@ -58,7 +58,3 @@ No. The model reads input as data but is not hardened against instructions embed
 ## Why is `run` slow?
 
 `run cold full` is about 1.9 s at p50. It makes three rounds of requests over the inventory of every tool on your PATH, and it renders man pages. Route-only (`--no-args`) saves about 100 ms, so most of the time goes to routing. `is` is one request and sits near the network round trip, about 450 ms. A cache hit takes a few milliseconds. The table with conditions is in [README, Numbers](../../README.md#numbers).
-
-## Where are `add` and `sort`?
-
-In 0.2.0. `cargo install grevi --locked` gets them; [CHANGELOG.md](../../CHANGELOG.md) lists them under 0.2.0.
