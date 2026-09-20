@@ -57,9 +57,15 @@ fn robot_docs_topics() {
     common::bin().args(["robot-docs", "nope"]).assert().code(2);
 }
 
+/// Only the backend that needs a key can fail for want of one; with no key grevi uses
+/// classifier.dev instead, which `tests/classifier.rs` covers against a mock server.
 #[test]
-fn health_without_key_is_auth_error() {
-    common::bin().args(["health", "--json"]).assert().code(5);
+fn health_without_key_is_auth_error_on_the_typesafe_backend() {
+    common::bin()
+        .env("GREVI_BACKEND", "typesafe")
+        .args(["health", "--json"])
+        .assert()
+        .code(5);
 }
 
 // A bad key file must not break verbs that need no key.

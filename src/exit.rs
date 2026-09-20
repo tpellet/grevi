@@ -23,7 +23,7 @@ impl Exit {
         (Exit::No, "`is`: the condition does not hold"),
         (Exit::Usage, "usage error: bad flag or missing argument"),
         (Exit::Abstain, "abstain: nothing fits, or unsure"),
-        (Exit::Unavailable, "TypeSafe API unavailable after retries"),
+        (Exit::Unavailable, "the API is unavailable after retries"),
         (Exit::Auth, "API key missing or rejected"),
         (Exit::Input, "input error: empty, too large, or unreadable"),
         (Exit::ChildFailed, "`run`: the executed command failed"),
@@ -33,13 +33,14 @@ impl Exit {
 
 #[derive(Debug, thiserror::Error)]
 pub enum GreviError {
-    #[error("no TypeSafe API key: set TYPESAFE_API_KEY or TYPESAFE_API_KEY_FILE")]
+    /// Only reachable with `GREVI_BACKEND=typesafe`: without a key grevi uses classifier.dev.
+    #[error("the typesafe backend needs a key: set TYPESAFE_API_KEY or TYPESAFE_API_KEY_FILE")]
     MissingKey,
-    #[error("TypeSafe rejected the API key (HTTP {0})")]
+    #[error("the API rejected the key (HTTP {0})")]
     BadKey(u16),
-    #[error("TypeSafe API unavailable: {0}")]
+    #[error("API unavailable: {0}")]
     Unavailable(String),
-    #[error("unexpected response from TypeSafe: {0}")]
+    #[error("unexpected response from the API: {0}")]
     Protocol(String),
     #[error("no input: {0}")]
     EmptyInput(&'static str),
@@ -47,7 +48,7 @@ pub enum GreviError {
     InputTooLarge(String),
     /// HTTP 413/422: the API rejected the request body. Usually the state is over the token
     /// budget, sometimes the request is malformed (a grevi bug); an input error, not an outage.
-    #[error("TypeSafe rejected the request (HTTP {0}): {1}")]
+    #[error("the API rejected the request (HTTP {0}): {1}")]
     RejectedRequest(u16, String),
     #[error("{0}")]
     Input(String),
@@ -87,12 +88,12 @@ impl GreviError {
     pub fn hint(&self) -> &'static str {
         match self {
             Self::MissingKey => {
-                "create a key at https://console.typesafe.ai/settings/keys and export it in your shell profile; grevi never prints it"
+                "unset GREVI_BACKEND to run keyless through classifier.dev, or create a key at https://console.typesafe.ai/settings/keys and export it in your shell profile; grevi never prints it"
             }
             Self::BadKey(_) => "check the key in the TypeSafe console; `grevi health` verifies it",
             Self::Unavailable(_) => "retry later, or lower GREVI_CONCURRENCY if rate limited",
             Self::Protocol(_) => {
-                "the TypeSafe API may have changed, or GREVI_BASE_URL points at the wrong server; run `grevi health` and report the issue with `grevi --version`"
+                "the API may have changed, or GREVI_BASE_URL points at the wrong server; run `grevi health` and report the issue with `grevi --version`"
             }
             Self::EmptyInput(msg) if msg.starts_with("no unstaged changes") => {
                 "nothing to stage: `git diff` is empty (untracked files are never staged by add)"

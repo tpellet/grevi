@@ -16,11 +16,11 @@ curl --proto '=https' --tlsv1.2 -LsSf https://github.com/tpellet/grevi/releases/
 
 To build the unreleased `main` instead: `cargo install --git https://github.com/tpellet/grevi --locked grevi`.
 
-## Get a key
+## No key needed
 
-grevi is an independent open-source client of TypeSafe's hosted Jev API; you need your own key from https://console.typesafe.ai. Requests are billed to your key.
+There is nothing to sign up for. With no key grevi asks [classifier.dev](https://classifier.dev), which runs the same model — TypeSafe's Jev — and serves it free, with no key and no account.
 
-Give grevi the key one of two ways:
+A TypeSafe key gets you your own quota and higher limits instead. grevi is an independent open-source client of TypeSafe's hosted Jev API; keys come from https://console.typesafe.ai, and requests on one are billed to you. Give grevi the key one of two ways:
 
 ```sh
 export TYPESAFE_API_KEY=...
@@ -28,15 +28,16 @@ export TYPESAFE_API_KEY=...
 export TYPESAFE_API_KEY_FILE=/path/to/key
 ```
 
-`TYPESAFE_API_KEY_FILE` is read only when a request needs a key. grevi never prints the key and never logs it.
+`TYPESAFE_API_KEY_FILE` is read only when a request needs a key. grevi never prints the key and never logs it. `GREVI_BACKEND=typesafe|classifier` forces either backend; [Configuration](configuration.md#backends) has the differences between them.
 
 ## Check the connection
 
 ```sh
 grevi health
+# ok: classifier reachable in 190 ms (key not needed)
 ```
 
-`health` reports whether the key is accepted and how long the API took to answer. It exits 0 when both are fine, 4 when the API is unreachable and 5 when the key is missing or rejected.
+`health` names the backend that answered, whether a key was needed and accepted, and how long the API took. It exits 0 when all is fine, 4 when the API is unreachable and 5 when a key is missing or rejected.
 
 ## First commands
 

@@ -11,7 +11,7 @@ has a calibrated `p`, and "nothing fits" is a real answer.
 ## Check it is there
 
 ```sh
-grevi health --json        # exit 0: key accepted, API reachable; exit 5: no or bad key
+grevi health --json        # exit 0: API reachable (data.backend names it); exit 5: bad or missing key
 ```
 
 ## Always machine mode

@@ -41,6 +41,79 @@ impl Respond for FakeJev {
     }
 }
 
+/// The same answers over classifier.dev's wire format: one item, one dimension per question,
+/// `scores` per label. Built from a `FakeJev` so a test can point either backend at the same
+/// expectations and compare.
+#[derive(Clone)]
+pub struct FakeClassifier(pub FakeJev);
+
+impl Respond for FakeClassifier {
+    fn respond(&self, req: &Request) -> ResponseTemplate {
+        let body: Value = serde_json::from_slice(&req.body).unwrap();
+        let text = body["items"][0].as_str().unwrap_or_default();
+        // grevi serializes a non-string state as compact JSON and sends a string state as
+        // itself; this reverses that so the shared `choose`/`noul` closures see the state.
+        let state = match serde_json::from_str::<Value>(text) {
+            Ok(v) if v.is_object() || v.is_array() => v,
+            _ => Value::String(text.to_string()),
+        };
+        let mut dims = serde_json::Map::new();
+        for (id, d) in body["dimensions"].as_object().unwrap() {
+            let instr = d["instructions"].as_str().unwrap_or_default();
+            let labels: Vec<String> = d["labels"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|l| l.as_str().unwrap().to_string())
+                .collect();
+            assert!(
+                labels.len() >= 2 && labels.len() <= 100,
+                "classifier.dev takes 2..=100 labels, got {}",
+                labels.len()
+            );
+            // A Noul arrives as a two-label dimension whose first label is the `true` side;
+            // every grevi Choice carries NONE, so that tells the two apart.
+            let is_noul = labels.len() == 2 && !labels.iter().any(|l| l == "NONE");
+            let (pick, top) = if is_noul {
+                let p = (self.0.noul)(instr, &state);
+                (labels[usize::from(p < 0.5)].clone(), p.max(1.0 - p))
+            } else {
+                ((self.0.choose)(instr, &state, &labels), 0.9)
+            };
+            let rest = (1.0 - top) / (labels.len().max(2) - 1) as f64;
+            let scores: serde_json::Map<String, Value> = labels
+                .iter()
+                .map(|l| {
+                    (
+                        l.clone(),
+                        json!(if *l == pick {
+                            top
+                        } else if is_noul {
+                            1.0 - top
+                        } else {
+                            rest
+                        }),
+                    )
+                })
+                .collect();
+            dims.insert(
+                id.clone(),
+                json!({ "label": pick, "confidence": top, "scores": scores, "model": "jev-fake", "ms": 1 }),
+            );
+        }
+        let n = dims.len();
+        assert!(
+            n <= 20,
+            "classifier.dev takes at most 20 dimensions, got {n}"
+        );
+        ResponseTemplate::new(200).set_body_json(json!({
+            "model": "jev-fake",
+            "results": [{ "dimensions": dims }],
+            "usage": { "items": 1, "dimensions": n, "classifications": n }
+        }))
+    }
+}
+
 pub async fn mock(fake: FakeJev) -> MockServer {
     let server = MockServer::start().await;
     Mock::given(method("POST"))
@@ -56,6 +129,22 @@ pub async fn mock(fake: FakeJev) -> MockServer {
     server
 }
 
+/// A mock classifier.dev: the classify endpoint and the health probe.
+pub async fn mock_classifier(fake: FakeJev) -> MockServer {
+    let server = MockServer::start().await;
+    Mock::given(method("POST"))
+        .and(path("/v1/classify"))
+        .respond_with(FakeClassifier(fake))
+        .mount(&server)
+        .await;
+    Mock::given(method("GET"))
+        .and(path("/v1/health"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({"ok": true})))
+        .mount(&server)
+        .await;
+    server
+}
+
 /// The binary with every grevi variable removed. A developer's shell may export them
 /// (`GREVI_THRESHOLD=2` turns even `capabilities` into exit 2, since `Config::load` runs for
 /// every verb); the contract tests must not depend on it. Every raw binary invocation from
@@ -66,6 +155,7 @@ pub fn bin() -> assert_cmd::Command {
     for var in [
         "TYPESAFE_API_KEY",
         "TYPESAFE_API_KEY_FILE",
+        "GREVI_BACKEND",
         "GREVI_BASE_URL",
         "GREVI_THRESHOLD",
         "GREVI_MODEL",
@@ -89,9 +179,19 @@ pub fn grevi(server: &MockServer) -> assert_cmd::Command {
     c
 }
 
+/// The binary, pointed at a mock classifier.dev, with no key at all.
+pub fn grevi_classifier(server: &MockServer) -> assert_cmd::Command {
+    let mut c = bin();
+    c.env("GREVI_BACKEND", "classifier")
+        .env("GREVI_BASE_URL", server.uri())
+        .env("GREVI_NO_CACHE", "1");
+    c
+}
+
 /// A library `Config` for in-process tests, built literally so no test touches the process env.
 pub fn config(server: &MockServer) -> grevi::config::Config {
     grevi::config::Config {
+        backend: grevi::config::Backend::Typesafe,
         key: Some("test-key".into()),
         key_file: None,
         base_url: server.uri(),

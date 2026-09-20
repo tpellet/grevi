@@ -1,6 +1,6 @@
 use crate::cli::Shell;
 use crate::cmd::Outcome;
-use crate::config::Config;
+use crate::config::{Backend, Config};
 use crate::exit::{Exit, GreviError};
 
 const GUIDE: &str = include_str!("../../docs/ROBOT_MODE.md");
@@ -13,7 +13,7 @@ pub fn capabilities() -> Outcome {
     let data = serde_json::json!({
         "name": "grevi",
         "version": env!("CARGO_PKG_VERSION"),
-        "summary": "Point at the right thing among real things, by meaning, with calibrated confidence (TypeSafe Jev).",
+        "summary": "Point at the right thing among real things, by meaning, with calibrated confidence (TypeSafe Jev, through TypeSafe with a key or classifier.dev without one).",
         "global_flags": ["--json (alias --robot)", "--format human|json|jsonl|toon", "-t/--threshold <0..1>", "--model <id>", "--no-cache", "-v/--verbose"],
         "commands": [
             { "name": "pick", "usage": "<stdin> | grevi pick \"<intent>\" [-n N] [--index]", "stdin": true, "exit": [0, 3], "data": "matches[{line,text,p}], any" },
@@ -30,9 +30,10 @@ pub fn capabilities() -> Outcome {
         "common_exit": { "codes": [2, 4, 5, 6], "meaning": "any command: usage, API unavailable, auth, input" },
         "exit_codes": exit_codes,
         "env": [
-            { "name": "TYPESAFE_API_KEY", "meaning": "API key (never printed)" },
+            { "name": "TYPESAFE_API_KEY", "meaning": "API key (never printed); its presence selects the typesafe backend" },
             { "name": "TYPESAFE_API_KEY_FILE", "meaning": "path to a file holding the key (read only when a key is needed)" },
-            { "name": "GREVI_BASE_URL", "default": "https://api.typesafe.ai" },
+            { "name": "GREVI_BACKEND", "default": "typesafe with a key, classifier without one", "meaning": "typesafe|classifier: which API answers. Both run Jev; classifier.dev is free and needs no key" },
+            { "name": "GREVI_BASE_URL", "default": "the active backend's own URL", "meaning": "overrides the base URL of whichever backend is active" },
             { "name": "GREVI_MODEL", "default": "jev-1.13.0", "meaning": "pinned; `jev-latest` is an alias that moves with each release" },
             { "name": "GREVI_THRESHOLD", "default": 0.5 },
             { "name": "GREVI_CONCURRENCY", "default": 8 },
@@ -43,7 +44,11 @@ pub fn capabilities() -> Outcome {
             { "name": "GREVI_CNF", "meaning": "enable the command-not-found hook from `grevi init`" }
         ],
         "limits": { "choice_options": 255, "window": crate::tournament::WINDOW, "state_tokens": 32000, "request_tokens": 64000, "requests_per_minute": 1200, "tokens_per_second": 250000, "stdin_bytes": crate::input::MAX_BYTES, "pick_lines": crate::cmd::pick::MAX_LINES },
-        "envelope": { "fields": ["ok", "command", "version", "exit_code", "data", "meta{model,elapsed_ms,requests,cache_hits,input_tokens,cost_usd,threshold,request_id}", "error{kind,message,hint,example}"] },
+        "backends": [
+            { "name": "typesafe", "key": "required", "model": "Jev", "window": Backend::Typesafe.window(), "choice_options": 255, "state_chars": "32k tokens", "requests_per_minute": 1200, "meta": "input_tokens and cost_usd are real" },
+            { "name": "classifier", "key": "none", "model": "Jev (classifier.dev runs it and serves it free)", "window": Backend::Classifier.window(), "choice_options": crate::jev::classifier::MAX_LABELS, "state_chars": crate::jev::classifier::MAX_INPUT_CHARS, "questions_per_request": crate::jev::classifier::MAX_DIMENSIONS, "classifications_per_minute": 3000, "meta": "input_tokens and cost_usd are 0: the service is free" }
+        ],
+        "envelope": { "fields": ["ok", "command", "version", "exit_code", "data", "meta{backend,model,elapsed_ms,requests,cache_hits,input_tokens,cost_usd,threshold,request_id}", "error{kind,message,hint,example}"] },
         "workflows": [
             { "goal": "find the tool for a task", "command": "grevi run --json --dry-run \"<task>\"" },
             { "goal": "explain a failure", "command": "<cmd> 2>&1 | grevi why --json" },
@@ -87,23 +92,44 @@ pub fn robot_docs(topic: Option<&str>) -> Result<Outcome, GreviError> {
 }
 
 pub async fn health(ctx: &Config) -> Result<Outcome, GreviError> {
-    let key = ctx.api_key()?;
+    // Both backends are probed the same way, at the cheapest endpoint each offers; only
+    // TypeSafe needs a key, and only there can the answer be "the key is wrong".
+    let (path, key) = match ctx.backend {
+        Backend::Typesafe => ("/v1/models", Some(ctx.api_key()?)),
+        Backend::Classifier => ("/v1/health", None),
+    };
+    let mut req = reqwest::Client::new()
+        .get(format!("{}{path}", ctx.base_url))
+        .timeout(std::time::Duration::from_secs(5));
+    if let Some(k) = &key {
+        req = req.bearer_auth(k);
+    }
     let start = std::time::Instant::now();
-    let r = reqwest::Client::new()
-        .get(format!("{}/v1/models", ctx.base_url))
-        .bearer_auth(&key)
-        .timeout(std::time::Duration::from_secs(5))
+    let r = req
         .send()
         .await
         .map_err(|e| GreviError::Unavailable(e.to_string()))?;
     let ms = start.elapsed().as_millis();
+    let backend = ctx.backend.as_str();
     match r.status().as_u16() {
         200 => {
-            let models: serde_json::Value = r.json().await.unwrap_or_default();
+            let body: serde_json::Value = r.json().await.unwrap_or_default();
+            let key_state = if key.is_some() {
+                "present"
+            } else {
+                "not needed"
+            };
             Ok(Outcome {
                 exit: Exit::Ok,
-                human: format!("ok: key accepted, API reachable in {ms} ms\n"),
-                data: serde_json::json!({ "key": "present", "api": "reachable", "latency_ms": ms, "models": models["models"] }),
+                human: format!("ok: {backend} reachable in {ms} ms (key {key_state})\n"),
+                data: serde_json::json!({
+                    "backend": backend,
+                    "base_url": ctx.base_url,
+                    "key": key_state,
+                    "api": "reachable",
+                    "latency_ms": ms,
+                    "models": body["models"],
+                }),
             })
         }
         401 | 403 => Err(GreviError::BadKey(r.status().as_u16())),
@@ -162,6 +188,28 @@ mod tests {
             d["exit_codes"]
         );
         assert_eq!(d["limits"]["window"], crate::tournament::WINDOW);
+        // Both backends are documented, with the env var that picks one.
+        let names: Vec<&str> = d["backends"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|b| b["name"].as_str().unwrap())
+            .collect();
+        assert_eq!(names, ["typesafe", "classifier"]);
+        assert!(
+            d["env"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|e| e["name"] == "GREVI_BACKEND")
+        );
+        assert!(
+            d["envelope"]["fields"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|f| f.as_str().unwrap().contains("meta{backend,"))
+        );
         assert!(
             d["commands"]
                 .as_array()

@@ -3,8 +3,9 @@
 Start here: `grevi capabilities --json`. Every command accepts `--json` (alias `--robot`) or
 `--format json|jsonl|toon` and then prints exactly one envelope on stdout, usage errors included:
 
-    { ok, command, version, exit_code, data, meta{model, elapsed_ms, requests, cache_hits,
-      input_tokens, cost_usd, threshold, request_id}, error{kind, message, hint, example} | null }
+    { ok, command, version, exit_code, data, meta{backend, model, elapsed_ms, requests,
+      cache_hits, input_tokens, cost_usd, threshold, request_id},
+      error{kind, message, hint, example} | null }
 
 Branch on `exit_code` (0 ok, 1 no, 2 usage, 3 abstain, 4 unavailable, 5 auth, 6 input,
 7 child failed, 130 declined), then read `data`. Never parse human output.
@@ -32,7 +33,13 @@ Branch on `exit_code` (0 ok, 1 no, 2 usage, 3 abstain, 4 unavailable, 5 auth, 6 
   under your control is fine; do not use `is` or `pick` as a security gate on untrusted text.
 - The default model is pinned (`jev-1.13.0`); `--model jev-latest` follows TypeSafe's moving alias
   and may shift probabilities against the 0.5 threshold.
-- Cost is in `meta.cost_usd`; repeated identical questions hit the local cache (`meta.cache_hits`).
+- No key is required: without one grevi asks classifier.dev, which runs the same Jev model and
+  serves it free. `meta.backend` (`typesafe` or `classifier`) says which API answered, `meta.model`
+  which build of Jev. `GREVI_BACKEND` forces one; `capabilities.backends` lists both with their
+  limits. On `classifier` a question takes at most 100 options and 32,000 characters, and a
+  request 20 questions — grevi windows and splits to fit, and the answers are the same.
+- Cost is in `meta.cost_usd`, and is `0` on `classifier` because the service is free; repeated
+  identical questions hit the local cache (`meta.cache_hits`), which never crosses backends.
 - Without the cache, the same request moves `p` by up to 0.06 between runs (measured on
   jev-1.13.0): a `p` within 0.06 of the threshold can flip. `is` has `--band` for that; the
   other verbs do not, so re-run with `--no-cache` before acting on such a value.

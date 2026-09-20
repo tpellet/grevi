@@ -6,7 +6,57 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
 
+/// Which service answers the questions. Both run the same Jev model: classifier.dev is a free
+/// front end to it, so the two backends differ in wire format and limits, never in semantics.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Backend {
+    Typesafe,
+    Classifier,
+}
+
+impl Backend {
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Typesafe => "typesafe",
+            Self::Classifier => "classifier",
+        }
+    }
+    pub const fn default_base_url(self) -> &'static str {
+        match self {
+            Self::Typesafe => "https://api.typesafe.ai",
+            Self::Classifier => "https://classifier.dev",
+        }
+    }
+    /// How many items one Choice may offer, NONE excluded. TypeSafe accepts 255 options and
+    /// grevi windows at 200; classifier.dev caps a dimension at 100 labels, so NONE takes the
+    /// hundredth slot. Only the number of windows changes, never what a window asks.
+    pub const fn window(self) -> usize {
+        match self {
+            Self::Typesafe => 200,
+            Self::Classifier => 99,
+        }
+    }
+    /// Character budget for the state a caller may build. classifier.dev rejects an input over
+    /// 32,000 characters (`input_too_long`); 30,000 leaves room for the JSON around the items.
+    pub const fn max_state_chars(self) -> usize {
+        match self {
+            Self::Typesafe => usize::MAX,
+            Self::Classifier => 30_000,
+        }
+    }
+    /// 8 in flight is ~20 req/s, under TypeSafe's 1,200/min. classifier.dev is free and shared
+    /// per IP, so grevi stays at 4 there by default.
+    pub const fn default_concurrency(self) -> usize {
+        match self {
+            Self::Typesafe => 8,
+            Self::Classifier => 4,
+        }
+    }
+}
+
 pub struct Config {
+    pub backend: Backend,
     pub key: Option<String>,
     /// Read lazily by `api_key`: `capabilities`, `init` and `robot-docs` need no key, so a bad
     /// path must not break them.
@@ -51,11 +101,32 @@ impl Config {
         } else {
             directories::ProjectDirs::from("", "", "grevi").map(|p| p.cache_dir().to_path_buf())
         };
+        let key = env("TYPESAFE_API_KEY");
+        let key_file = env("TYPESAFE_API_KEY_FILE").map(PathBuf::from);
+        let backend = match env("GREVI_BACKEND").as_deref() {
+            None => {
+                // No key, no prompt and no signup path: grevi answers out of the box through
+                // classifier.dev, and uses your own TypeSafe quota as soon as a key is there.
+                if key.is_some() || key_file.is_some() {
+                    Backend::Typesafe
+                } else {
+                    Backend::Classifier
+                }
+            }
+            Some("typesafe") => Backend::Typesafe,
+            Some("classifier") => Backend::Classifier,
+            Some(other) => {
+                return Err(GreviError::Usage(format!(
+                    "GREVI_BACKEND={other} is not valid; use typesafe or classifier"
+                )));
+            }
+        };
         Ok(Self {
-            key: env("TYPESAFE_API_KEY"),
-            key_file: env("TYPESAFE_API_KEY_FILE").map(PathBuf::from),
+            backend,
+            key,
+            key_file,
             base_url: env("GREVI_BASE_URL")
-                .unwrap_or_else(|| "https://api.typesafe.ai".into())
+                .unwrap_or_else(|| backend.default_base_url().into())
                 .trim_end_matches('/')
                 .to_string(),
             // Pinned: the 0.5 threshold was calibrated on this version, and TypeSafe documents
@@ -63,7 +134,7 @@ impl Config {
             model: g.model.clone().unwrap_or_else(|| "jev-1.13.0".into()),
             threshold,
             // 16 in flight at ~0.4 s each is ~40 req/s, twice the 1,200/min budget; 8 stays under it.
-            concurrency: parse("GREVI_CONCURRENCY", 8usize)?.max(1),
+            concurrency: parse("GREVI_CONCURRENCY", backend.default_concurrency())?.max(1),
             cache_dir,
             price_per_mtok: parse("GREVI_PRICE_PER_MTOK", 0.042f64)?,
             stats: Arc::new(Stats::default()),
@@ -92,6 +163,7 @@ impl Config {
         let s = &self.stats;
         let tokens = s.input_tokens.load(Ordering::Relaxed);
         Meta {
+            backend: self.backend.as_str(),
             model: s.model.lock().unwrap().clone(),
             elapsed_ms: 0,
             requests: s.requests.load(Ordering::Relaxed),
@@ -110,6 +182,7 @@ mod tests {
     // Built literally: unit tests inside src/ never touch the process environment (AGENTS.md).
     fn cfg(key: Option<&str>, key_file: Option<&str>) -> Config {
         Config {
+            backend: Backend::Typesafe,
             key: key.map(String::from),
             key_file: key_file.map(PathBuf::from),
             base_url: String::new(),
@@ -135,9 +208,27 @@ mod tests {
         );
     }
     #[test]
-    fn meta_prices_input_tokens() {
+    fn meta_prices_input_tokens_and_names_the_backend() {
         let c = cfg(None, None);
         c.stats.input_tokens.fetch_add(1_000_000, Ordering::Relaxed);
         assert!((c.meta().cost_usd - 0.042).abs() < 1e-9);
+        assert_eq!(c.meta().backend, "typesafe");
+    }
+    #[test]
+    fn backend_limits_fit_each_api() {
+        // classifier.dev caps a dimension at 100 labels; NONE takes the hundredth slot.
+        assert_eq!(Backend::Classifier.window() + 1, 100);
+        assert_eq!(Backend::Typesafe.window(), 200);
+        // and its input at 32,000 characters.
+        assert!(Backend::Classifier.max_state_chars() < 32_000);
+        assert_eq!(Backend::Typesafe.max_state_chars(), usize::MAX);
+        assert!(
+            Backend::Classifier.default_concurrency() < Backend::Typesafe.default_concurrency()
+        );
+        assert_eq!(
+            Backend::Classifier.default_base_url(),
+            "https://classifier.dev"
+        );
+        assert_eq!(Backend::Typesafe.as_str(), "typesafe");
     }
 }

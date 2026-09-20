@@ -1,14 +1,20 @@
 # FAQ
 
+## Do I need an API key?
+
+No. With no key grevi asks [classifier.dev](https://classifier.dev), which runs the same model, Jev, and serves it free with no key and no account — that is what `cargo install grevi && grevi health` does on a fresh machine. Set `TYPESAFE_API_KEY` (or `TYPESAFE_API_KEY_FILE`) and grevi uses TypeSafe on your own quota instead. `GREVI_BACKEND=typesafe|classifier` forces either; `meta.backend` and `grevi health` say which answered.
+
+Same verbs, same calibrated probabilities, same exit codes: on the routing and root-cause evals the two backends score the same. The free service's own limits mean a question there takes at most 100 options (so grevi ranks in windows of 99 plus "nothing fits"), 32,000 characters of input, and 20 questions per request; and it is rate-limited per IP, 3,000 classifications a minute. Details in [Configuration](configuration.md#backends).
+
 ## What does a call cost?
 
-Cost is computed from the request's input tokens at `GREVI_PRICE_PER_MTOK` (default 0.042 $/Mtok) and reported in `meta.cost_usd`; `-v` prints it on stderr. Three calls from the session behind the README excerpts: `why` on a 12-line build log, 2 requests, 1,436 tokens, $0.00006; `is` on a 6-line mail, 1 request, 346 tokens, $0.000015; `pick` over 5 file names, 1 request, 487 tokens, $0.00002. The two accuracy eval scripts behind the README's tables cost $0.43 in API requests together. Requests are billed to your own TypeSafe key.
+On classifier.dev, nothing: it is free, and `meta.input_tokens` and `meta.cost_usd` are `0` rather than a price nobody was charged. On TypeSafe, cost is computed from the request's input tokens at `GREVI_PRICE_PER_MTOK` (default 0.042 $/Mtok) and reported in `meta.cost_usd`; `-v` prints it on stderr. Three calls from the session behind the README excerpts: `why` on a 12-line build log, 2 requests, 1,436 tokens, $0.00006; `is` on a 6-line mail, 1 request, 346 tokens, $0.000015; `pick` over 5 file names, 1 request, 487 tokens, $0.00002. The two accuracy eval scripts behind the README's tables cost $0.43 in API requests together. Requests are billed to your own TypeSafe key.
 
 A repeated identical question hits the on-disk cache for 7 days and costs nothing.
 
 ## What leaves my machine?
 
-Only what the verb needs, only to the TypeSafe API, listed verb by verb in [PRIVACY.md](../../PRIVACY.md). `pick` sends your intent and the stdin lines; `why` the filtered log; `is` your condition and the text; `run` your request, tool names with one-line summaries, man-page excerpts of the finalists, and those file names in the current directory that contain a word of your request, never contents. Obvious secrets are masked before sending (best effort). The cache holds answers, not your text. grevi never prints or logs your key. TypeSafe's own data handling: https://docs.typesafe.ai/legal.
+Only what the verb needs, only to the active backend's API — classifier.dev without a key, TypeSafe with one — listed verb by verb in [PRIVACY.md](../../PRIVACY.md). `pick` sends your intent and the stdin lines; `why` the filtered log; `is` your condition and the text; `run` your request, tool names with one-line summaries, man-page excerpts of the finalists, and those file names in the current directory that contain a word of your request, never contents. Obvious secrets are masked before sending (best effort). The cache holds answers, not your text, and never crosses backends. grevi never prints or logs your key. Each service's own data handling: https://docs.typesafe.ai/legal and https://classifier.dev/privacy. On classifier.dev the requests are anonymous but go to a third party you did not sign up with; if that matters for your text, use a TypeSafe key or `GREVI_BACKEND=typesafe`.
 
 ## Why not just use an LLM shell?
 
@@ -24,7 +30,7 @@ The 0.5 threshold was calibrated on `jev-1.13.0`, and the reliability table in t
 
 ## Does it work offline?
 
-No. grevi is a client of TypeSafe's hosted Jev API: no key, no network, no grevi. Cached answers replay offline, but a new question needs the API.
+No. grevi is a client of a hosted Jev API — TypeSafe's, or classifier.dev's free one: no network, no grevi. Cached answers replay offline, but a new question needs the API.
 
 ## Does it work in languages other than English?
 

@@ -6,12 +6,13 @@ grevi has no config file. Everything is a flag or an environment variable; `grev
 
 | Variable | Default | Meaning |
 |:---|:---|:---|
-| `TYPESAFE_API_KEY` | | The API key. Never printed, never logged. |
+| `TYPESAFE_API_KEY` | | The API key. Never printed, never logged. Setting it selects the `typesafe` backend. |
 | `TYPESAFE_API_KEY_FILE` | | Path to a file holding the key; read only when a request needs a key. Use it to keep the key out of your environment and shell history: `TYPESAFE_API_KEY_FILE=/path/to/key`. |
-| `GREVI_BASE_URL` | `https://api.typesafe.ai` | The API endpoint. grevi sends requests nowhere else. |
+| `GREVI_BACKEND` | `typesafe` with a key, `classifier` without one | `typesafe` or `classifier`: which API answers. See [Backends](#backends). |
+| `GREVI_BASE_URL` | the active backend's own URL | The API endpoint. grevi sends requests nowhere else. |
 | `GREVI_MODEL` | `jev-1.13.0` | Model or alias. The default is pinned; `jev-latest` moves with each TypeSafe release and may shift probabilities against the threshold. |
 | `GREVI_THRESHOLD` | `0.5` | Decision threshold on absolute yes/no answers. |
-| `GREVI_CONCURRENCY` | `8` | Parallel requests within one round (the windows of a tournament). |
+| `GREVI_CONCURRENCY` | `8` on `typesafe`, `4` on `classifier` | Parallel requests within one round (the windows of a tournament). |
 | `GREVI_CACHE_DIR` | platform cache dir, `grevi` sub-directory | Where answers, the tool inventory and `sort`'s undo logs live. |
 | `GREVI_NO_CACHE` | | Set to `1` to disable the answer cache (entries expire after 7 days anyway). |
 | `GREVI_PRICE_PER_MTOK` | `0.042` | Dollars per million input tokens, used for `meta.cost_usd`. Change it if your TypeSafe pricing differs. |
@@ -19,6 +20,30 @@ grevi has no config file. Everything is a flag or an environment variable; `grev
 | `GREVI_CNF` | | Set to `1` to enable the command-not-found hook printed by `grevi init`. |
 
 A flag beats its variable: `-t 0.7` wins over `GREVI_THRESHOLD=0.5`.
+
+## Backends
+
+grevi asks one of two APIs, and both run the same model, Jev.
+
+| Backend | Selected when | Key | Cost |
+|:---|:---|:---|:---|
+| `classifier` | no key is set | none needed | free ([classifier.dev](https://classifier.dev) runs Jev and serves it free) |
+| `typesafe` | `TYPESAFE_API_KEY` or `TYPESAFE_API_KEY_FILE` is set | yours | billed to your key |
+
+`GREVI_BACKEND=typesafe|classifier` forces either one; `typesafe` without a key is exit 5. `meta.backend` in the JSON envelope and `grevi health` both name the one that answered, and `meta.model` the build of Jev behind it.
+
+The free service's limits differ from TypeSafe's, so two internals change with it — not the semantics, and not the threshold:
+
+| | `typesafe` | `classifier` |
+|:---|---:|---:|
+| options per question | 255 | 100 |
+| tournament window | 200 | 99 + NONE |
+| input per request | 32,000 tokens | 32,000 characters |
+| questions per request | no limit in practice | 20 (grevi splits bigger asks) |
+| rate limit | 1,200 requests/min | 3,000 classifications/min, 20,000/day, per IP |
+| `meta.input_tokens`, `meta.cost_usd` | real | `0`: the service is free |
+
+On the routing and root-cause evals the two score the same; the measurements are in [evals/](../../evals/).
 
 ## Global flags
 
@@ -36,7 +61,7 @@ Per-verb flags are in [Verbs](verbs.md).
 
 ## Limits
 
-From `capabilities.limits`:
+From `capabilities.limits` (the `typesafe` figures; `capabilities.backends` lists both backends):
 
 | Limit | Value |
 |:---|---:|
@@ -46,6 +71,7 @@ From `capabilities.limits`:
 | request tokens (`request_tokens`) | 64,000 |
 | requests per minute (TypeSafe) | 1,200 |
 | tokens per second (TypeSafe) | 250,000 |
+| classifications per minute (classifier.dev, free, per IP) | 3,000 |
 | stdin bytes (`stdin_bytes`) | 67,108,864 (64 MiB) |
 | `pick` lines (`pick_lines`) | 20,000 |
 

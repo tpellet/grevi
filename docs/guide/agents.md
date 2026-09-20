@@ -14,12 +14,13 @@ The handbook, [docs/ROBOT_MODE.md](../ROBOT_MODE.md), is the contract: the rules
 Every command accepts `--json` (alias `--robot`) or `--format json|jsonl|toon` and then prints exactly one envelope on stdout, usage errors included:
 
 ```
-{ ok, command, version, exit_code, data, meta{model, elapsed_ms, requests, cache_hits,
+{ ok, command, version, exit_code, data, meta{backend, model, elapsed_ms, requests, cache_hits,
   input_tokens, cost_usd, threshold, request_id}, error{kind, message, hint, example} | null }
 ```
 
 - `exit_code` in the envelope equals the process exit code. Branch on it, then read `data`.
 - `meta.requests` and `meta.cache_hits` say how much work the call did; `meta.cost_usd` is computed from `meta.input_tokens` at `GREVI_PRICE_PER_MTOK`.
+- `meta.backend` is the API that answered, `typesafe` or `classifier`; both run Jev, and `meta.model` is the build. Without a key grevi uses classifier.dev, which is free — there `meta.input_tokens` and `meta.cost_usd` are `0`.
 - `meta.request_id` is the TypeSafe request id of the last Jev request (`null` when none was made or every answer came from the cache; `health` does not record one). Quote it when reporting an API problem.
 - `error.kind` strings are stable identifiers (`api_rejected_request`, for one). `error.example` is a corrected command to try next.
 
@@ -33,8 +34,8 @@ Every command accepts `--json` (alias `--robot`) or `--format json|jsonl|toon` a
 | 1 | no | `is`: the condition does not hold |
 | 2 | usage | bad flag or missing argument |
 | 3 | abstain | nothing fits, or unsure |
-| 4 | unavailable | TypeSafe API unavailable after retries |
-| 5 | auth | API key missing or rejected |
+| 4 | unavailable | the API is unavailable after retries |
+| 5 | auth | API key missing or rejected (the `typesafe` backend only) |
 | 6 | input | empty, too large, or unreadable input |
 | 7 | child_failed | `run`: the executed command failed |
 | 130 | interrupted | interrupted, or declined at the confirmation |

@@ -63,26 +63,36 @@ Or the shell installer, macOS and Linux:
 curl --proto '=https' --tlsv1.2 -LsSf https://github.com/tpellet/grevi/releases/download/v0.2.0/grevi-installer.sh | sh
 ```
 
-Then point grevi at a key and try it:
+Then try it. No key, no account, no signup:
 
 ```sh
-export TYPESAFE_API_KEY=...
-# or: export TYPESAFE_API_KEY_FILE=/path/to/key
 grevi health
 cargo build 2>&1 | grevi why
 ```
 
-### Get a key
+### No key needed
 
-grevi is an independent open-source client of TypeSafe's hosted Jev API; you need your own key from https://console.typesafe.ai. Requests are billed to your key.
+Out of the box grevi asks [classifier.dev](https://classifier.dev), which runs the same Jev model and serves it free, with no key and no account. Same verbs, same probabilities, same exit codes; `meta.backend` in the JSON envelope says `classifier`, and `grevi health` names it too.
+
+Set a TypeSafe key and grevi uses your own quota instead — higher limits, and a `meta.cost_usd` that is not zero:
+
+```sh
+export TYPESAFE_API_KEY=...
+# or: export TYPESAFE_API_KEY_FILE=/path/to/key
+```
+
+grevi is an independent open-source client of TypeSafe's hosted Jev API; a key is yours from https://console.typesafe.ai, and requests on it are billed to you. `GREVI_BACKEND=typesafe|classifier` forces either backend.
+
+Two differences follow from the free service's own limits, not from the model: it takes 100 options per question (so grevi ranks in windows of 99 plus "nothing fits" instead of 200) and 32,000 characters of input per request. On the routing and root-cause evals the two backends score the same — see [evals/](evals/).
 
 Each verb makes at least one API request; `-v` prints how many, and what they cost.
 
 ## Quick start
 
 ```sh
-export TYPESAFE_API_KEY=...            # or TYPESAFE_API_KEY_FILE=/path/to/key
-grevi health                           # ok: key accepted, API reachable in 286 ms
+grevi health                           # ok: classifier reachable in 190 ms (key not needed)
+export TYPESAFE_API_KEY=...            # optional; or TYPESAFE_API_KEY_FILE=/path/to/key
+grevi health                           # ok: typesafe reachable in 286 ms (key present)
 ```
 
 Every verb below also takes `--json` for one machine-readable envelope, `-t` to move the decision threshold, `-v` to print probabilities and timing, and `--no-cache` to skip the answer cache. The full flag list per verb is in [docs/guide/verbs.md](docs/guide/verbs.md).
@@ -266,7 +276,7 @@ For Codex, copy or symlink `skills/grevi` into `~/.agents/skills/` (or `.agents/
 
 ## Privacy and safety
 
-What leaves your machine, verb by verb: [PRIVACY.md](PRIVACY.md). Requests go only to the TypeSafe API. Before sending, grevi masks obvious secrets (`token=…`, `Bearer …`, `sk-…`, `ghp_…`, `AKIA…`, JWTs) as `[REDACTED]`. That is best effort, not a guarantee: do not pipe secrets into grevi.
+What leaves your machine, verb by verb: [PRIVACY.md](PRIVACY.md). Requests go only to the active backend's API — classifier.dev without a key, TypeSafe with one. Before sending, grevi masks obvious secrets (`token=…`, `Bearer …`, `sk-…`, `ghp_…`, `AKIA…`, JWTs) as `[REDACTED]`. That is best effort, not a guarantee: do not pipe secrets into grevi.
 
 `run` executes only after a confirmation on the terminal or `--yes`; without a TTY and without `--yes` it prints the command and stops. Commands run via argv, never through a shell. Flags come from man pages; no binary is ever probed with `--help`.
 
@@ -274,7 +284,8 @@ Some tools are never executed, whatever the confidence or the flags: `rm`, `rmdi
 
 ## Limits
 
-- Hosted API. No key, no network, no grevi. Rate limits are TypeSafe's: 1,200 requests per minute and 250k tokens per second; grevi retries with the server's `retry-after` and exits 4 when they run out.
+- Hosted API. No network, no grevi (a key is optional). Rate limits are the backend's: TypeSafe's 1,200 requests per minute and 250k tokens per second, or classifier.dev's free 3,000 classifications per minute and 20,000 per day, per IP. grevi retries with the server's `retry-after` and exits 4 when they run out.
+- On classifier.dev a question takes at most 100 options (grevi windows at 99 plus NONE) and 32,000 characters of input; a request carries at most 20 questions, so grevi splits bigger ones. Same model, same answers.
 - English works best. Ask literal questions: "the line with the failing test", not "what should I do".
 - `pick` caps stdin at 20,000 lines; filter first (`rg`, `head`) or split the list.
 - The byte budget assumes ~4 characters per token. Dense logs (hashes, paths, JSON) and CJK text tokenize denser and can be refused by the API: exit 6, `api_rejected_request`. Filter the input first.

@@ -3,6 +3,8 @@ use crate::jev::client::Client;
 use crate::jev::{Question, Questions};
 use std::collections::BTreeMap;
 
+/// The TypeSafe window, and the largest one grevi ever sends. classifier.dev takes 99 options
+/// plus NONE; the size in force comes from the backend, not from here.
 pub const WINDOW: usize = 200;
 const PER_WINDOW_FINALISTS: usize = 3;
 const MAX_FINALISTS: usize = 24;
@@ -53,7 +55,10 @@ async fn window(
     items: &[(usize, String)],
     prompts: &Prompts,
 ) -> Result<Ranking, GreviError> {
-    let per_item = (WINDOW_CHARS / items.len().max(1)).clamp(200, 2_000);
+    // The backend's own input limit caps the window budget: classifier.dev rejects an input
+    // over 32,000 characters, so its windows carry shorter excerpts, never a rejected request.
+    let budget = WINDOW_CHARS.min(client.backend().max_state_chars());
+    let per_item = (budget / items.len().max(1)).clamp(200, 2_000);
     let state = serde_json::json!({
         "request": request,
         "items": items.iter().enumerate().map(|(i, (_, t))| format!("[{}] {}", id(i), clip(&crate::input::redact(t), per_item))).collect::<Vec<_>>(),
@@ -97,14 +102,15 @@ pub async fn rank(
     finalist_text: Option<&(dyn Fn(usize) -> String + Sync)>,
 ) -> Result<Ranking, GreviError> {
     let all: Vec<(usize, String)> = items.iter().cloned().enumerate().collect();
-    if all.len() <= WINDOW && finalist_text.is_none() {
+    let size = client.backend().window();
+    if all.len() <= size && finalist_text.is_none() {
         return window(client, request, &all, prompts).await;
     }
-    let first = if all.len() <= WINDOW {
+    let first = if all.len() <= size {
         vec![window(client, request, &all, prompts).await?]
     } else {
         futures::future::try_join_all(
-            all.chunks(WINDOW)
+            all.chunks(size)
                 .map(|w| window(client, request, w, prompts)),
         )
         .await?
@@ -145,7 +151,7 @@ pub async fn shortlist(
 ) -> Result<Vec<Candidate>, GreviError> {
     let all: Vec<(usize, String)> = items.iter().cloned().enumerate().collect();
     let rounds = futures::future::try_join_all(
-        all.chunks(WINDOW)
+        all.chunks(client.backend().window())
             .map(|w| window(client, request, w, prompts)),
     )
     .await?;

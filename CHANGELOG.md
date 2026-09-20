@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+Added:
+
+- **No key needed.** With no TypeSafe key, grevi asks [classifier.dev](https://classifier.dev), which runs the same Jev model and serves it free, with no key and no account. Same verbs, same calibrated probabilities, same exit codes, same JSON envelope; `meta.backend` and `grevi health` name the backend that answered, and `capabilities.backends` lists both with their limits. `GREVI_BACKEND=typesafe|classifier` forces either. A key still gets you your own TypeSafe quota, and is what `typesafe` requires.
+- Measured, not assumed: on the two accuracy evals the backends score the same. Routing, hand-written set: 34/39 top-1 on both. NL2Bash held-out: 34/120 on classifier.dev, 33/120 on TypeSafe. Root cause: 14/20 hit@1 and 15/20 hit@3 on both.
+- On classifier.dev the free service's own limits apply: a question takes at most 100 options, so the tournament windows at 99 plus NONE; an input takes 32,000 characters; a request takes 20 questions, and grevi splits bigger asks. `meta.input_tokens` and `meta.cost_usd` are `0` there, because nothing is charged. Default concurrency is 4 rather than 8, the user agent is `grevi/<version>`, and `Retry-After` is honoured.
+
 ## 0.2.0 — 2026-09-19
 
 Wave 2: two verbs that act on real things, each safe by default. macOS and Linux.

@@ -1,4 +1,5 @@
 pub mod cache;
+pub mod classifier;
 pub mod client;
 
 use serde::{Deserialize, Serialize};

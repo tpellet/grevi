@@ -9,8 +9,12 @@ pub enum Format {
     Toon,
 }
 
+/// `Default` is the meta of a command that never reached a backend (a usage error before
+/// `Config` loaded): `backend` is then the empty string, since nothing answered.
 #[derive(Serialize, Default, Debug, Clone)]
 pub struct Meta {
+    /// Which API answered: `typesafe` or `classifier`. Both run Jev; `model` says which build.
+    pub backend: &'static str,
     pub model: Option<String>,
     pub elapsed_ms: u128,
     pub requests: u32,
@@ -64,7 +68,10 @@ mod tests {
             version: "0.0.0",
             exit_code: 0,
             data: serde_json::json!({ "matches": [] }),
-            meta: Meta::default(),
+            meta: Meta {
+                backend: "classifier",
+                ..Meta::default()
+            },
             error: None,
         }
     }
@@ -81,6 +88,8 @@ mod tests {
         );
         assert_eq!(pretty["command"], "pick");
         assert_eq!(pretty["error"], serde_json::Value::Null);
+        // Which API answered is part of the envelope, not just of `-v` output.
+        assert_eq!(pretty["meta"]["backend"], "classifier");
     }
     #[test]
     fn toon_renders_the_fields() {

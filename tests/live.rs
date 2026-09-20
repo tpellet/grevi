@@ -52,6 +52,51 @@ fn inventory_finds_many_tools_here() {
     }
 }
 
+/// Needs no key: classifier.dev is free and keyless, which is the whole point of the backend.
+/// Also the parity check in one assertion — the model that answers there is Jev.
+#[test]
+#[ignore]
+fn live_classifier_picks_without_a_key() {
+    let mut cmd = assert_cmd::Command::cargo_bin("grevi").unwrap();
+    cmd.env_remove("TYPESAFE_API_KEY")
+        .env_remove("TYPESAFE_API_KEY_FILE")
+        .env("GREVI_BACKEND", "classifier")
+        .env("GREVI_NO_CACHE", "1");
+    let out = cmd
+        .args(["--json", "pick", "the invoice from March"])
+        .write_stdin("notes.txt\ninvoice-2026-03.pdf\ncat.jpg\n")
+        .output()
+        .unwrap();
+    let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+    assert_eq!(out.status.code(), Some(0), "{v}");
+    assert_eq!(
+        v["data"]["matches"][0]["text"], "invoice-2026-03.pdf",
+        "{v}"
+    );
+    assert_eq!(v["meta"]["backend"], "classifier");
+    let model = v["meta"]["model"].as_str().unwrap_or_default();
+    assert!(
+        model.starts_with("jev"),
+        "classifier.dev answered with `{model}`"
+    );
+    // Free, and `meta` says so rather than pricing tokens nobody was charged for.
+    assert_eq!(v["meta"]["cost_usd"], 0.0, "{v}");
+}
+
+#[test]
+#[ignore]
+fn live_classifier_health_is_reachable() {
+    let mut cmd = assert_cmd::Command::cargo_bin("grevi").unwrap();
+    cmd.env_remove("TYPESAFE_API_KEY")
+        .env_remove("TYPESAFE_API_KEY_FILE")
+        .env("GREVI_BACKEND", "classifier");
+    let out = cmd.args(["--json", "health"]).output().unwrap();
+    let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+    assert_eq!(out.status.code(), Some(0), "{v}");
+    assert_eq!(v["data"]["backend"], "classifier");
+    assert_eq!(v["data"]["key"], "not needed");
+}
+
 #[test]
 #[ignore]
 fn live_run_routes_tar() {

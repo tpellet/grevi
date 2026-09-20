@@ -18,15 +18,18 @@ pub async fn run(ctx: &Config, condition: &str, band: f64) -> Result<Outcome, Gr
     let client = Client::new(ctx)?;
     let lines = crate::input::read_stdin_async().await?;
     let mut text = crate::input::redact(&lines.join("\n"));
+    // The backend's own input limit caps the budget: classifier.dev rejects an input over
+    // 32,000 characters, so there the text is truncated sooner, never rejected.
+    let max_chars = MAX_CHARS.min(client.backend().max_state_chars());
     // Counted in chars, like the slicing below: bytes would under-truncate multi-byte text.
-    let truncated = text.chars().count() > MAX_CHARS;
+    let truncated = text.chars().count() > max_chars;
     if truncated {
         // keep head and tail: conditions are usually decided by the start or the end of a text
-        let head: String = text.chars().take(MAX_CHARS / 2).collect();
+        let head: String = text.chars().take(max_chars / 2).collect();
         let tail: String = text
             .chars()
             .rev()
-            .take(MAX_CHARS / 2)
+            .take(max_chars / 2)
             .collect::<Vec<_>>()
             .into_iter()
             .rev()

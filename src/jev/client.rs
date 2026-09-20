@@ -12,8 +12,8 @@ pub struct Stats {
 }
 
 use super::cache::{DiskCache, key as cache_key};
-use super::{Questions, Response};
-use crate::config::Config;
+use super::{Questions, Response, classifier};
+use crate::config::{Backend, Config};
 use crate::exit::GreviError;
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
@@ -22,8 +22,10 @@ use tokio::sync::Semaphore;
 
 pub struct Client {
     http: reqwest::Client,
+    backend: Backend,
     base: String,
-    key: String,
+    /// `None` on classifier.dev, which needs no key at all.
+    key: Option<String>,
     model: String,
     sem: Arc<Semaphore>,
     cache: Option<DiskCache>,
@@ -32,7 +34,10 @@ pub struct Client {
 
 impl Client {
     pub fn new(cfg: &Config) -> Result<Self, GreviError> {
-        let key = cfg.api_key()?;
+        let key = match cfg.backend {
+            Backend::Typesafe => Some(cfg.api_key()?),
+            Backend::Classifier => None,
+        };
         let http = reqwest::Client::builder()
             .connect_timeout(Duration::from_secs(5))
             .timeout(Duration::from_secs(60))
@@ -42,6 +47,7 @@ impl Client {
             .map_err(|e| GreviError::Unavailable(e.to_string()))?;
         Ok(Self {
             http,
+            backend: cfg.backend,
             base: cfg.base_url.clone(),
             key,
             model: cfg.model.clone(),
@@ -56,11 +62,19 @@ impl Client {
     /// so the handshake overlaps real work. On the current-thread runtime the spawned task only
     /// progresses while the caller is parked in an `.await`, so the local work must go through
     /// `spawn_blocking` (see `run::load_tools`), or prewarm races `ask` and buys nothing.
+    pub fn backend(&self) -> Backend {
+        self.backend
+    }
+
     pub fn prewarm(&self) {
-        let req = self
-            .http
-            .get(format!("{}/v1/models", self.base))
-            .bearer_auth(&self.key);
+        let req = self.auth(self.http.get(format!(
+            "{}{}",
+            self.base,
+            match self.backend {
+                Backend::Typesafe => "/v1/models",
+                Backend::Classifier => "/v1/health",
+            }
+        )));
         tokio::spawn(async move {
             // Read the body too: hyper returns an HTTP/1.1 connection to the pool only once the
             // response is consumed, and the point of prewarm is that `ask` reuses it.
@@ -70,7 +84,47 @@ impl Client {
         });
     }
 
+    /// The bearer token, on the backends that have one.
+    fn auth(&self, req: reqwest::RequestBuilder) -> reqwest::RequestBuilder {
+        match &self.key {
+            Some(k) => req.bearer_auth(k),
+            None => req,
+        }
+    }
+
     pub async fn ask(
+        &self,
+        state: &serde_json::Value,
+        questions: &Questions,
+    ) -> Result<Response, GreviError> {
+        // The cache key names the backend: the same questions get the same model but a
+        // different wire shape, and an entry must never cross from one to the other.
+        let canonical = serde_json::json!({
+            "backend": self.backend.as_str(), "model": self.model, "state": state, "questions": questions
+        });
+        let k = cache_key(
+            &serde_json::to_vec(&canonical).map_err(|e| GreviError::Protocol(e.to_string()))?,
+        );
+        if let Some(hit) = self.cache.as_ref().and_then(|c| c.get(&k)) {
+            self.stats.cache_hits.fetch_add(1, Ordering::Relaxed);
+            *self.stats.model.lock().unwrap() = Some(hit.model.clone());
+            return Ok(hit);
+        }
+        let resp = match self.backend {
+            Backend::Typesafe => self.ask_typesafe(state, questions).await?,
+            Backend::Classifier => self.ask_classifier(state, questions).await?,
+        };
+        self.stats
+            .input_tokens
+            .fetch_add(resp.usage.input_tokens, Ordering::Relaxed);
+        *self.stats.model.lock().unwrap() = Some(resp.model.clone());
+        if let Some(c) = &self.cache {
+            c.put(&k, &resp);
+        }
+        Ok(resp)
+    }
+
+    async fn ask_typesafe(
         &self,
         state: &serde_json::Value,
         questions: &Questions,
@@ -78,14 +132,47 @@ impl Client {
         let body =
             serde_json::json!({ "model": self.model, "state": state, "questions": questions });
         let bytes = serde_json::to_vec(&body).map_err(|e| GreviError::Protocol(e.to_string()))?;
-        let k = cache_key(&bytes);
-        if let Some(hit) = self.cache.as_ref().and_then(|c| c.get(&k)) {
-            self.stats.cache_hits.fetch_add(1, Ordering::Relaxed);
-            *self.stats.model.lock().unwrap() = Some(hit.model.clone());
-            return Ok(hit);
+        let raw = self
+            .post(&format!("{}/v1/systemone", self.base), bytes)
+            .await?;
+        serde_json::from_slice(&raw).map_err(|e| GreviError::Protocol(e.to_string()))
+    }
+
+    /// classifier.dev takes at most 20 dimensions per request, so a larger `Questions` map goes
+    /// out as several requests, in order, and their answers are merged. One chunk is the common
+    /// case; only `run`'s flag questions on a long man page go past it.
+    async fn ask_classifier(
+        &self,
+        state: &serde_json::Value,
+        questions: &Questions,
+    ) -> Result<Response, GreviError> {
+        let url = format!("{}/v1/classify", self.base);
+        let ids: Vec<&String> = questions.keys().collect();
+        let mut merged = Response {
+            model: String::new(),
+            answers: std::collections::BTreeMap::new(),
+            usage: super::Usage::default(),
+        };
+        for chunk in ids.chunks(classifier::MAX_DIMENSIONS) {
+            let part: Questions = chunk
+                .iter()
+                .map(|id| ((*id).clone(), questions[*id].clone()))
+                .collect();
+            let bytes = serde_json::to_vec(&classifier::request_body(state, &part))
+                .map_err(|e| GreviError::Protocol(e.to_string()))?;
+            let raw = self.post(&url, bytes).await?;
+            let r = classifier::parse(&raw, &part)?;
+            merged.model = r.model;
+            merged.answers.extend(r.answers);
         }
+        Ok(merged)
+    }
+
+    /// One POST with the shared retry policy, returning the 200 body. Both backends answer
+    /// errors the same way as far as grevi is concerned: auth, a rejected body, or something
+    /// worth retrying.
+    async fn post(&self, url: &str, bytes: Vec<u8>) -> Result<Vec<u8>, GreviError> {
         let _permit = self.sem.acquire().await.expect("semaphore open");
-        let url = format!("{}/v1/systemone", self.base);
         let mut last = String::new();
         let mut wait = None;
         for attempt in 0..4u32 {
@@ -95,9 +182,7 @@ impl Client {
                 tokio::time::sleep(wait.take().unwrap_or(backoff)).await;
             }
             let res = self
-                .http
-                .post(&url)
-                .bearer_auth(&self.key)
+                .auth(self.http.post(url))
                 .header("content-type", "application/json")
                 .body(bytes.clone())
                 .send()
@@ -124,27 +209,25 @@ impl Client {
                 *self.stats.request_id.lock().unwrap() = rid.clone();
             }
             let status = r.status().as_u16();
+            // 413/422 = the request body was rejected: in practice state over the token budget,
+            // occasionally a malformed request (a grevi bug). An input problem (exit 6), not an
+            // outage (exit 4); the error kind and hint keep the two readings apart.
+            // classifier.dev says the same thing with 400 (`input_too_long`, `too_many_labels`,
+            // `too_many_decisions`, ...), and its `code` names which. Only there: a TypeSafe 400
+            // keeps falling through to `api_protocol`.
+            let body_rejected = matches!(status, 413 | 422)
+                || (status == 400 && matches!(self.backend, Backend::Classifier));
             match status {
                 200 => {
-                    let resp: Response = r
-                        .json()
+                    let body = r
+                        .bytes()
                         .await
                         .map_err(|e| GreviError::Protocol(e.to_string()))?;
                     self.stats.requests.fetch_add(1, Ordering::Relaxed);
-                    self.stats
-                        .input_tokens
-                        .fetch_add(resp.usage.input_tokens, Ordering::Relaxed);
-                    *self.stats.model.lock().unwrap() = Some(resp.model.clone());
-                    if let Some(c) = &self.cache {
-                        c.put(&k, &resp);
-                    }
-                    return Ok(resp);
+                    return Ok(body.to_vec());
                 }
                 401 | 403 => return Err(GreviError::BadKey(status)),
-                // 413/422 = the request body was rejected: in practice state over the token budget,
-                // occasionally a malformed request (a grevi bug). An input problem (exit 6), not an
-                // outage (exit 4); the error kind and hint keep the two readings apart.
-                413 | 422 => {
+                _ if body_rejected => {
                     let text = r.text().await.unwrap_or_default();
                     if rid.is_some() {
                         *self.stats.request_id.lock().unwrap() = rid;
@@ -191,10 +274,14 @@ fn retry_after(headers: &reqwest::header::HeaderMap) -> Option<Duration> {
         .map(|d| d.min(Duration::from_secs(10)))
 }
 
-/// The readable part of a rejected request's body. The API answers 422 in FastAPI's shape,
-/// `{"detail":[{"loc":["body","state"],"msg":"..."}]}`, which becomes `state: ...`; any other
-/// body is passed through. Clipped to 300 chars.
+/// The readable part of a rejected request's body. TypeSafe answers 422 in FastAPI's shape,
+/// `{"detail":[{"loc":["body","state"],"msg":"..."}]}`, which becomes `state: ...`;
+/// classifier.dev answers 400 as `{"error":"...","code":"..."}`, which becomes `code: ...`;
+/// any other body is passed through. Clipped to 300 chars.
 fn rejection_message(text: &str) -> String {
+    if let Some(m) = classifier::error_message(text) {
+        return m.chars().take(300).collect();
+    }
     let flattened = serde_json::from_str::<serde_json::Value>(text)
         .ok()
         .and_then(|v| {
@@ -269,7 +356,13 @@ mod tests {
             "bad request"
         );
         assert_eq!(rejection_message("state too large"), "state too large");
-        assert_eq!(rejection_message(r#"{"error":"x"}"#), r#"{"error":"x"}"#);
+        // classifier.dev's shape is read too, and its stable `code` leads the message.
+        assert_eq!(
+            rejection_message(r#"{"error":"too long","code":"input_too_long"}"#),
+            "input_too_long: too long"
+        );
+        assert_eq!(rejection_message(r#"{"error":"x"}"#), "x");
+        assert_eq!(rejection_message(r#"{"other":"x"}"#), r#"{"other":"x"}"#);
         assert_eq!(rejection_message(""), "");
         assert_eq!(rejection_message(&"x".repeat(500)).len(), 300);
     }
