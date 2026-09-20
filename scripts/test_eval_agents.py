@@ -2,10 +2,11 @@
 
 import json
 import os
-from pathlib import Path
+import subprocess
 import sys
 import tempfile
 import unittest
+from pathlib import Path
 
 import eval_agents as harness
 
@@ -67,6 +68,34 @@ class HarnessTests(unittest.TestCase):
         self.assertFalse(result["verified_success"])
         self.assertFalse(result["checks"]["no_unexpected_changes"])
 
+    def test_grade_uses_exact_bytes_and_json_types(self):
+        file_task = dict(self.task, expected={"files": {"output.txt": "line\n"}})
+        root = self.root / "exact"
+        harness.materialize(file_task, root)
+        before = harness.hashes(root)
+        (root / "output.txt").write_bytes(b"line\r\n")
+        self.assertFalse(harness.grade(file_task, root, before)["verified_success"])
+
+        answer_task = dict(self.task, expected={"answer": {"failed": False, "cause": "none"}})
+        answer_root = self.root / "typed-answer"
+        harness.materialize(answer_task, answer_root)
+        answer_before = harness.hashes(answer_root)
+        (answer_root / "answer.json").write_text('{"failed":0,"cause":"none"}')
+        self.assertFalse(harness.grade(answer_task, answer_root, answer_before)["verified_success"])
+
+    def test_runtime_namespaces_are_ignored_but_other_artifacts_are_not(self):
+        root = self.root / "runtime"
+        harness.materialize(self.task, root)
+        before = harness.hashes(root)
+        (root / "answer.json").write_text('{"line":2}')
+        for name in harness.RUNTIME_DIRS:
+            directory = root / name
+            directory.mkdir()
+            (directory / "retained.txt").write_text("runtime artifact")
+        self.assertTrue(harness.grade(self.task, root, before)["verified_success"])
+        (root / "empty-extra").mkdir()
+        self.assertFalse(harness.grade(self.task, root, before)["verified_success"])
+
     def test_symlink_answer_is_rejected(self):
         root = self.root / "task"
         harness.materialize(self.task, root)
@@ -84,9 +113,44 @@ class HarnessTests(unittest.TestCase):
                               "files": {"file.txt": "working\n"}})
         root = self.root / "git-task"
         harness.materialize(task, root)
-        self.assertTrue(harness.grade(task, root, harness.hashes(root))["verified_success"])
+        before = harness.hashes(root)
+        head = harness.repository_head(root)
+        self.assertTrue(harness.grade(task, root, before, head)["verified_success"])
         task["expected"]["index"]["file.txt"] = "working\n"
-        self.assertFalse(harness.grade(task, root, harness.hashes(root))["verified_success"])
+        self.assertFalse(harness.grade(task, root, before, head)["verified_success"])
+
+    def test_index_grade_rejects_commit_conflict_and_executable_mode(self):
+        task = dict(self.task, init_git=True, initial_files={"file.txt": "old\n"},
+                    staged_files={"file.txt": "staged\n"}, files={},
+                    expected={"index": {"file.txt": "staged\n"}})
+
+        committed = self.root / "committed"
+        harness.materialize(task, committed)
+        before = harness.hashes(committed)
+        head = harness.repository_head(committed)
+        subprocess.run(["git", "-c", "user.name=Fixture", "-c",
+                        "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false",
+                        "-c", "core.hooksPath=/dev/null", "commit", "-qm", "Forbidden"],
+                       cwd=committed, check=True)
+        self.assertFalse(harness.grade(task, committed, before, head)["verified_success"])
+
+        executable = self.root / "executable"
+        harness.materialize(task, executable)
+        before = harness.hashes(executable)
+        head = harness.repository_head(executable)
+        subprocess.run(["git", "update-index", "--chmod=+x", "file.txt"],
+                       cwd=executable, check=True)
+        self.assertFalse(harness.grade(task, executable, before, head)["verified_success"])
+
+        conflicted = self.root / "conflicted"
+        harness.materialize(task, conflicted)
+        before = harness.hashes(conflicted)
+        head = harness.repository_head(conflicted)
+        blob = subprocess.run(["git", "hash-object", "-w", "file.txt"], cwd=conflicted,
+                              capture_output=True, text=True, check=True).stdout.strip()
+        subprocess.run(["git", "update-index", "--index-info"], cwd=conflicted,
+                       input=f"100644 {blob} 1\tfile.txt\n", text=True, check=True)
+        self.assertFalse(harness.grade(task, conflicted, before, head)["verified_success"])
 
     def test_usage_unknown_is_not_zero_and_tools_deduplicate(self):
         events = [{"type": "item.started", "item": {"id": "a", "type": "command_execution"}},

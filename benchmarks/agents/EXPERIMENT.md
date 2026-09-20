@@ -137,6 +137,14 @@ fresh independent fixture repositories with `git init` for staging tasks, never 
 worktrees of this shared checkout. Every arm gets a new writable data directory; never
 reset or delete prior attempts. Keep immutable manifests and hashes of initial artifacts.
 
+The synthetic panel's offline gold audit accepts all 30 intended outcomes and rejects a
+plausible wrong outcome for each task. Its grader compares output bytes exactly, checks JSON
+types recursively, records file modes and empty directories, rejects unresolved or executable
+index entries, and requires the fixture commit to remain HEAD. Episode caches, configuration,
+temporary files and retained patch helpers have named `.agent-*` directories outside the
+task-artifact comparison; files elsewhere remain graded side effects. This validation does
+not satisfy the independent-source or two-annotator requirements for the pilot.
+
 Initial pilot budgets: 20 minutes, 100 host tool invocations, and 100,000 cumulative agent
 output/reasoning tokens per episode, subject also to the provider context limit. Count
 hidden reasoning only when reported. Record which ceiling ended each run. Use the same

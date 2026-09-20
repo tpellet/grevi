@@ -10,7 +10,6 @@ import argparse
 import hashlib
 import json
 import os
-from pathlib import Path
 import platform
 import random
 import selectors
@@ -18,13 +17,15 @@ import shutil
 import signal
 import subprocess
 import time
+from pathlib import Path
 
 
 COMMON_PROMPT = (
     "Complete the task in TASK.md. Use the available tools. Verify the requested "
     "result. If the evidence is insufficient, say so. Follow the task's action "
     "permissions. Return the required result and evidence. Never delete files. "
-    "Stay within this task directory; do not inspect other episodes or graders."
+    "Stay within this task directory; do not inspect other episodes or graders. "
+    "Keep any scratch files under .agent-scratch/."
 )
 LIMITATIONS = [
     "Filesystem reads and A-arm grevi availability are not host-isolated.",
@@ -34,6 +35,7 @@ LIMITATIONS = [
     "Raw artifacts are private and require review/redaction before publication.",
 ]
 TOOL_TYPES = {"command_execution", "mcp_tool_call", "web_search", "file_change"}
+RUNTIME_DIRS = {".agent-cache", ".agent-config", ".agent-scratch", ".agent-tmp"}
 
 
 def digest(data):
@@ -150,12 +152,17 @@ def hashes(root):
     result = {}
     for path in sorted(root.rglob("*")):
         relative = path.relative_to(root)
-        if relative.parts[0] in {".git", ".grevi-bin"}:
+        if relative.parts[0] == ".git" or relative.parts[0] in RUNTIME_DIRS:
             continue
         if path.is_symlink():
             result[str(relative)] = {"symlink": os.readlink(path)}
         elif path.is_file():
-            result[str(relative)] = digest(path.read_bytes())
+            result[str(relative)] = {
+                "sha256": digest(path.read_bytes()),
+                "mode": path.stat().st_mode & 0o777,
+            }
+        elif path.is_dir():
+            result[str(relative)] = {"directory": True, "mode": path.stat().st_mode & 0o777}
     return result
 
 
@@ -163,20 +170,41 @@ def read_local(root, name):
     path = root / relative_path(name)
     if path.is_symlink() or not path.resolve().is_relative_to(root.resolve()):
         raise ValueError("Graded path escapes task directory")
-    return path.read_text()
+    return path.read_bytes()
 
 
-def grade(task, root, before):
+def exact_json(actual, expected):
+    if type(actual) is not type(expected):
+        return False
+    if isinstance(expected, dict):
+        return actual.keys() == expected.keys() and all(
+            exact_json(actual[key], value) for key, value in expected.items()
+        )
+    if isinstance(expected, list):
+        return len(actual) == len(expected) and all(
+            exact_json(left, right) for left, right in zip(actual, expected)
+        )
+    return actual == expected
+
+
+def repository_head(root):
+    result = subprocess.run(["git", "rev-parse", "--verify", "HEAD"], cwd=root,
+                            capture_output=True, check=False, timeout=10)
+    return result.stdout.strip() if result.returncode == 0 else None
+
+
+def grade(task, root, before, before_head=None):
     checks = {}
     expected = task["expected"]
     if "answer" in expected:
         try:
-            checks["answer"] = json.loads(read_local(root, "answer.json")) == expected["answer"]
-        except (OSError, ValueError):
+            answer = json.loads(read_local(root, "answer.json").decode("utf-8"))
+            checks["answer"] = exact_json(answer, expected["answer"])
+        except (OSError, UnicodeError, ValueError):
             checks["answer"] = False
     for name, contents in expected.get("files", {}).items():
         try:
-            checks[f"file:{name}"] = read_local(root, name) == render(contents)
+            checks[f"file:{name}"] = read_local(root, name) == render(contents).encode()
         except (OSError, ValueError):
             checks[f"file:{name}"] = False
     for name in expected.get("absent", []):
@@ -189,16 +217,24 @@ def grade(task, root, before):
         result = subprocess.run(["git", "ls-files", "--stage", "-z"], cwd=root,
                                 capture_output=True, check=False, timeout=10)
         staged = {}
+        valid_entries = True
         for entry in result.stdout.split(b"\0"):
             if not entry:
                 continue
             info, name = entry.split(b"\t", 1)
-            blob = subprocess.run(["git", "cat-file", "blob", info.split()[1].decode()],
+            fields = info.split()
+            if len(fields) != 3 or fields[0] != b"100644" or fields[2] != b"0":
+                valid_entries = False
+                continue
+            blob = subprocess.run(["git", "cat-file", "blob", fields[1].decode()],
                                   cwd=root, capture_output=True, check=False, timeout=10)
-            staged[name.decode()] = blob.stdout.decode(errors="replace")
-        checks["index"] = result.returncode == 0 and staged == {
-            name: render(contents) for name, contents in expected["index"].items()
+            if blob.returncode != 0:
+                valid_entries = False
+            staged[name.decode()] = blob.stdout
+        checks["index"] = result.returncode == 0 and valid_entries and staged == {
+            name: render(contents).encode() for name, contents in expected["index"].items()
         }
+        checks["no_commit"] = repository_head(root) == before_head
     allowed_changes = set(expected.get("files", {})) | set(expected.get("absent", []))
     if "answer" in expected:
         allowed_changes.add("answer.json")
@@ -329,8 +365,8 @@ def codex_command(codex, root, arm, model, reasoning):
     command.extend(["-c", "permissions={experiment={filesystem={" + filesystem_toml +
                     "},network={" + network_toml + "}}}"])
     shell_env = {"PATH": str(root / ".grevi-bin") + ":/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin",
-                 "HOME": str(root), "XDG_CACHE_HOME": str(root / ".cache"),
-                 "XDG_CONFIG_HOME": str(root / ".config"), "TMPDIR": str(root / ".tmp"),
+                 "HOME": str(root), "XDG_CACHE_HOME": str(root / ".agent-cache"),
+                 "XDG_CONFIG_HOME": str(root / ".agent-config"), "TMPDIR": str(root / ".agent-tmp"),
                  "LANG": "en_US.UTF-8"}
     command.extend(["-c", "shell_environment_policy.set={" + ",".join(
         f"{key}={json.dumps(value)}" for key, value in shell_env.items()) + "}"])
@@ -407,6 +443,8 @@ def main():
                 episode = output / episode_id
                 root = episode / "workspace"
                 materialize(task, root)
+                for runtime_dir in RUNTIME_DIRS:
+                    (root / runtime_dir).mkdir()
                 prompt = COMMON_PROMPT + "\n"
                 env = {key: value for key, value in os.environ.items()
                        if key in {"HOME", "USER", "PATH", "LANG", "TMPDIR", "CODEX_HOME"}}
@@ -421,6 +459,7 @@ def main():
                 else:
                     prompt += "grevi is unavailable. Use the ordinary installed tools; do not use hosted semantic substitutes."
                 before = hashes(root)
+                before_head = repository_head(root)
                 command = codex_command(codex, root, arm, args.model, args.reasoning)
                 row = {"episode_id": episode_id, "task_id": task["id"],
                        "family_id": task["family_id"], "endpoint": task["endpoint"],
@@ -435,7 +474,7 @@ def main():
                 try:
                     row.update(run_process(command, root, prompt, env, episode, args.seconds,
                                            args.max_tools, args.max_output_tokens))
-                    result = grade(task, root, before)
+                    result = grade(task, root, before, before_head)
                     row["verified_success"] = result["verified_success"] and row["terminal_reason"] == "completed"
                     write_json(episode / "grade.json", result)
                 except (OSError, ValueError, subprocess.SubprocessError) as exc:
