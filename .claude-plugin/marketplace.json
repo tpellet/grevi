@@ -9,7 +9,7 @@
     {
       "name": "grevi",
       "description": "Teaches agents to use the grevi CLI: pick, why, is, run, add, sort.",
-      "source": "./"
+      "source": "./plugins/grevi"
     }
   ]
 }

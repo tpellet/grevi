@@ -23,7 +23,15 @@ grevi is "the customer is about to stop being a customer" < ticket.txt && ./page
 grevi sort ~/Downloads                                  # tidy a folder; it shows the plan first
 ```
 
-![demo](demo.gif)
+You describe the task, and grevi finds the command on your machine that does it. It reads what each man page says the tool does, so the request and the command need no word in common:
+
+![grevi run: "keep my mac awake for an hour" finds caffeinate among 2,212 commands, and sleep scores 0.10](docs/img/run.svg)
+
+It reads your files the same way. A name like `document(3).txt` says nothing; the content says it is a tax form:
+
+![grevi sort: three files with meaningless names go to Taxes/2025, Boarding passes and Papers; two files that fit no folder stay](docs/img/sort.svg)
+
+Both animations replay real output of grevi 0.3.0, captured 2026-09-19.
 
 Excerpts from a terminal, captured 2026-09-19 on `jev-1.13.0`, with no key. The first is a failed run of a public repository: 10,074 lines of log, 2.6 MB, 4.3 seconds. A search for "error" or "panicked" finds which test failed. grevi points at the line that says why: the test compares Windows paths with Unix ones.
 
@@ -65,7 +73,7 @@ Or the shell installer, macOS and Linux:
 curl --proto '=https' --tlsv1.2 -LsSf https://github.com/tpellet/grevi/releases/latest/download/grevi-installer.sh | sh
 ```
 
-Then try it. No key, no account, no signup:
+Then try it. It needs no key and no account:
 
 ```sh
 grevi health
@@ -96,6 +104,10 @@ grevi health                           # ok: classifier reachable in 190 ms (key
 export TYPESAFE_API_KEY=...            # optional; or TYPESAFE_API_KEY_FILE=/path/to/key
 grevi health                           # ok: typesafe reachable in 286 ms (key present)
 ```
+
+A terminal recording of `why`, `pick`, `is` and `run`:
+
+![demo](demo.gif)
 
 Every verb below also takes `--json` for one machine-readable envelope, `-t` to move the decision threshold, `-v` to print probabilities and timing, and `--no-cache` to skip the answer cache. The full flag list per verb is in [docs/guide/verbs.md](docs/guide/verbs.md).
 
@@ -187,7 +199,7 @@ grevi sends the file names and the first 2,000 characters of each text file, red
 
 ## How it works
 
-grevi points, it does not generate. Every token it prints comes from your stdin, a tool on your PATH, that tool's man page, or your own request. A flag that is not in the man page cannot appear.
+grevi points and never generates. Every token it prints comes from your stdin, a tool on your PATH, that tool's man page, or your own request. A flag that is not in the man page cannot appear.
 
 Jev, TypeSafe's model, answers two kinds of question. "Which one?" is a choice over the options plus NONE, and a candidate only has to beat NONE. "Is it?" is an absolute yes/no with a calibrated probability, gated by one threshold, 0.5 by default (`-t`). TypeSafe documents that the two kinds are not on one scale, so the threshold never touches a "which one" answer. Exit 3 means grevi abstained: nothing beat NONE, or the yes/no answer fell under the threshold.
 
@@ -228,7 +240,7 @@ Accuracy, measured 2026-09-19 on `jev-1.13.0` with the release build, an empty c
 
 ### run: routing
 
-`--no-args`; top-1 is the routed tool. BM25 ranks the same names and man-page summaries with the request as the query: a free baseline, not a rival.
+`--no-args`; top-1 is the routed tool. BM25 ranks the same names and man-page summaries with the request as the query. It is a free baseline to compare against.
 
 | Set | n | grevi top-1 | BM25 top-1 | abstained | errors |
 |:---|---:|---:|---:|---:|---:|
@@ -283,14 +295,14 @@ Branch on `exit_code`: 0 ok, 1 no, 2 usage, 3 abstain, 4 unavailable, 5 auth, 6 
 
 The per-verb `data` fields and the workflows are in [docs/guide/agents.md](docs/guide/agents.md).
 
-A short agent skill, [skills/grevi/SKILL.md](skills/grevi/SKILL.md), teaches Claude Code and Codex when and how to call grevi. In Claude Code:
+A short agent skill, [plugins/grevi/skills/grevi/SKILL.md](plugins/grevi/skills/grevi/SKILL.md), teaches Claude Code and Codex when and how to call grevi. In Claude Code:
 
 ```
 /plugin marketplace add tpellet/grevi
 /plugin install grevi@grevi
 ```
 
-For Codex, copy or symlink `skills/grevi` into `~/.agents/skills/` (or `.agents/skills/` in a repository).
+For Codex, copy or symlink `plugins/grevi/skills/grevi` into `~/.agents/skills/` (or `.agents/skills/` in a repository).
 
 ### What it changes for an agent
 
@@ -304,7 +316,7 @@ The third case is a job that has no non-interactive command. An agent cannot sta
 
 ## Privacy and safety
 
-What leaves your machine, verb by verb: [PRIVACY.md](PRIVACY.md). Requests go only to the active backend's API — classifier.dev without a key, TypeSafe with one. Before sending, grevi masks obvious secrets (`token=…`, `Bearer …`, `sk-…`, `ghp_…`, `AKIA…`, JWTs) as `[REDACTED]`. That is best effort, not a guarantee: do not pipe secrets into grevi.
+What leaves your machine, verb by verb: [PRIVACY.md](PRIVACY.md). Requests go only to the active backend's API: classifier.dev without a key, TypeSafe with one. Before sending, grevi masks obvious secrets (`token=…`, `Bearer …`, `sk-…`, `ghp_…`, `AKIA…`, JWTs) as `[REDACTED]`. The masking is a regex, so it is best effort: do not pipe secrets into grevi.
 
 `run` executes only after a confirmation on the terminal or `--yes`; without a TTY and without `--yes` it prints the command and stops. Commands run via argv, never through a shell. Flags come from man pages; no binary is ever probed with `--help`.
 

@@ -1,6 +1,6 @@
 # Configuration
 
-grevi has no config file. Everything is a flag or an environment variable; `grevi capabilities --json` prints the list below as data and is the source of truth.
+grevi has no config file. Every setting is a flag or an environment variable. `grevi capabilities --json` prints the list below as data and is the source of truth.
 
 ## Environment variables
 
@@ -30,9 +30,9 @@ grevi asks one of two APIs, and both run the same model, Jev.
 | `classifier` | no key is set | none needed | free ([classifier.dev](https://classifier.dev) runs Jev and serves it free) |
 | `typesafe` | `TYPESAFE_API_KEY` or `TYPESAFE_API_KEY_FILE` is set | yours | billed to your key |
 
-`GREVI_BACKEND=typesafe|classifier` forces either one; `typesafe` without a key is exit 5. `meta.backend` in the JSON envelope and `grevi health` both name the one that answered, and `meta.model` the build of Jev behind it.
+`GREVI_BACKEND=typesafe|classifier` forces a backend. `typesafe` without a key is exit 5. `meta.backend` in the JSON output and `grevi health` both name the backend that answered, and `meta.model` names the build of Jev behind it.
 
-The free service's limits differ from TypeSafe's, so two internals change with it — not the semantics, and not the threshold:
+The free service has tighter limits than TypeSafe, so two internals change with it, shown in the table. The meaning of the answers and the threshold stay the same.
 
 | | `typesafe` | `classifier` |
 |:---|---:|---:|
@@ -43,7 +43,7 @@ The free service's limits differ from TypeSafe's, so two internals change with i
 | rate limit | 1,200 requests/min | 3,000 classifications/min, 20,000/day, per IP |
 | `meta.input_tokens`, `meta.cost_usd` | real | `0`: the service is free |
 
-On the routing and root-cause evals the two score the same; the measurements are in [evals/](../../evals/).
+On the routing and root-cause evals the two score the same. The measurements are in [evals/](../../evals/).
 
 ## Global flags
 
@@ -75,7 +75,7 @@ From `capabilities.limits` (the `typesafe` figures; `capabilities.backends` list
 | stdin bytes (`stdin_bytes`) | 67,108,864 (64 MiB) |
 | `pick` lines (`pick_lines`) | 20,000 |
 
-Past `stdin_bytes` or `pick_lines` grevi exits 6 before sending anything. The token limits are the API's; a request that exceeds them after grevi's own budgeting comes back as `api_rejected_request`, exit 6.
+Past `stdin_bytes` or `pick_lines` grevi exits 6 before sending anything. The token limits are the API's. A request that exceeds them after grevi's own budgeting comes back as `api_rejected_request`, exit 6.
 
 ## Where files live
 
@@ -90,4 +90,4 @@ eval "$(grevi init zsh)"      # ~/.zshrc
 eval "$(grevi init bash)"     # ~/.bashrc
 ```
 
-Defines `,` as an alias for `grevi run` (`noglob grevi run` in zsh) and, only when `GREVI_CNF=1` is exported and no handler exists already, a command-not-found handler that routes unknown commands of three or more words to `grevi run`.
+The snippet defines `,` as an alias for `grevi run` (`noglob grevi run` in zsh). It also defines a command-not-found handler that passes unknown commands of three or more words to `grevi run`, but only when `GREVI_CNF=1` is exported and no handler exists already.

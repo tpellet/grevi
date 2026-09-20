@@ -18,9 +18,9 @@ To build the unreleased `main` instead: `cargo install --git https://github.com/
 
 ## No key needed
 
-There is nothing to sign up for. With no key grevi asks [classifier.dev](https://classifier.dev), which runs the same model — TypeSafe's Jev — and serves it free, with no key and no account.
+There is nothing to sign up for. Without a key, grevi asks [classifier.dev](https://classifier.dev). It runs the same model, TypeSafe's Jev, and serves it free, with no account.
 
-A TypeSafe key gets you your own quota and higher limits instead. grevi is an independent open-source client of TypeSafe's hosted Jev API; keys come from https://console.typesafe.ai, and requests on one are billed to you. Give grevi the key one of two ways:
+With a TypeSafe key, grevi uses your own quota, and the limits are higher. You get a key at https://console.typesafe.ai, and TypeSafe bills you for the requests made with it. grevi is an independent open-source client of their API. Give grevi the key one of two ways:
 
 ```sh
 export TYPESAFE_API_KEY=...
@@ -28,7 +28,7 @@ export TYPESAFE_API_KEY=...
 export TYPESAFE_API_KEY_FILE=/path/to/key
 ```
 
-`TYPESAFE_API_KEY_FILE` is read only when a request needs a key. grevi never prints the key and never logs it. `GREVI_BACKEND=typesafe|classifier` forces either backend; [Configuration](configuration.md#backends) has the differences between them.
+`TYPESAFE_API_KEY_FILE` is read only when a request needs a key. grevi never prints the key and never logs it. `GREVI_BACKEND=typesafe|classifier` forces a backend. [Configuration](configuration.md#backends) has the differences between them.
 
 ## Check the connection
 
@@ -42,16 +42,20 @@ grevi health
 ## First commands
 
 ```sh
-cargo build 2>&1 | grevi why                       # the line that broke the build
-ls ~/Downloads | grevi pick "last month's electricity bill"
-grevi is "asks for a refund" < mail.txt && ./refund
+cargo build 2>&1 | grevi why                       # find the error in a failed build
+history | grevi pick "how I made that gif from a screen recording"
+grevi is "asks for a refund" < mail.txt && ./refund  # a yes-or-no question; the answer is the exit code
 grevi run --dry-run "count the lines in notes.txt" # proposes `wc -l notes.txt`, runs nothing
+grevi add --dry-run "the token expiry fix"         # scores each change against the fix, stages nothing
+grevi sort ~/Downloads                             # shows where each file would go, moves nothing
 ```
+
+In zsh, write `history 1` to get the whole history. Whatever you pipe goes to the API ([PRIVACY.md](../../PRIVACY.md)).
 
 Three things to know before going further:
 
 - Compilers write errors to stderr. Pipe `2>&1` into `why`, or let `grevi why -- cargo build` run the command and capture both streams.
-- Exit 3 is an answer, not an error. It means nothing fit (`pick`, `run`), no line looked like a failure (`why`), or the yes/no probability landed in the unsure band (`is`). Branch on it.
+- Exit 3 is an answer. It means nothing fit (`pick`, `run`), no line looked like a failure (`why`), or the yes/no probability landed in the unsure band (`is`). Branch on it.
 - Every verb makes at least one API request. `-v` prints the request count, the probabilities and the cost on stderr.
 
 ## The `,` alias
@@ -69,7 +73,7 @@ The same snippet holds an opt-in command-not-found hook. With `GREVI_CNF=1` in t
 
 ## Scripting on exit codes
 
-`is` prints nothing: the answer is the exit code, so it composes with `&&`, `||` and `case`.
+`is` prints nothing. Its answer is the exit code (0 yes, 1 no, 3 unsure), so you can use it with `&&`, `||` and `case`.
 
 ```sh
 grevi is "asks for a refund" < mail.txt; case $? in 0) ./refund;; 1) ./archive;; 3) ./ask;; esac
@@ -87,5 +91,5 @@ The exit codes, common to every verb: 0 ok, 1 no, 2 usage, 3 abstain, 4 unavaila
 ## Next
 
 - [Verbs](verbs.md) for every flag and the `data` each verb returns.
-- [Agents](agents.md) if a program, not a person, will read the output.
+- [Agents](agents.md) if a program will read the output.
 - [Configuration](configuration.md) for the environment variables.

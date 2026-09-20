@@ -1,0 +1,143 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 400" width="960" height="400" role="img" aria-labelledby="t d">
+  <title id="t">grevi run picks caffeinate for "keep my mac awake for an hour"</title>
+  <desc id="d">A request is typed. The 2,212 commands on the PATH scroll by. Five candidates appear with the summary line of their man page and a score: caffeinate 0.87, sleep 0.10, pmset 0.07, taskpolicy 0.07, tmux 0.05. caffeinate wins, and grevi prints the command caffeinate -s and asks before it runs it. Output of grevi 0.3.0 on 2026-09-19.</desc>
+  <style>
+    text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size: 15px; fill: #e6edf3; }
+    .dim { fill: #7d8590; }
+    .small { font-size: 12.5px; }
+    .label { font-size: 12.5px; fill: #7d8590; letter-spacing: .04em; }
+    #stream text { fill: #7d8590; }
+    .win { fill: #3fb950; font-weight: 700; }
+    .bar { fill: #30363d; transform-box: fill-box; transform-origin: left center; }
+    .barwin { fill: #3fb950; transform-box: fill-box; transform-origin: left center; }
+    .a { animation-duration: 14s; animation-iteration-count: infinite; animation-timing-function: ease-out; }
+    #cover { animation: type 14s steps(30) infinite; }
+    #stream { animation: scroll 14s linear infinite; }
+    #left { animation-name: left; }
+    #r1 { animation-name: r1; } #r2 { animation-name: r2; } #r3 { animation-name: r3; } #r4 { animation-name: r4; } #r5 { animation-name: r5; }
+    #b1 { animation-name: b1; } #b2 { animation-name: b2; } #b3 { animation-name: b3; } #b4 { animation-name: b4; } #b5 { animation-name: b5; }
+    #hl { animation-name: hl; } #losers { animation-name: losers; } #out { animation-name: out; } #all { animation-name: all; }
+    @keyframes type { 0% { transform: translateX(0); } 11%, 100% { transform: translateX(300px); } }
+    @keyframes scroll { from { transform: translateY(0); } to { transform: translateY(-540px); } }
+    @keyframes left { 0%, 11% { opacity: 0; } 15%, 100% { opacity: 1; } }
+    @keyframes r1 { 0%, 28% { opacity: 0; } 31%, 100% { opacity: 1; } }
+    @keyframes r2 { 0%, 32% { opacity: 0; } 35%, 100% { opacity: 1; } }
+    @keyframes r3 { 0%, 36% { opacity: 0; } 39%, 100% { opacity: 1; } }
+    @keyframes r4 { 0%, 40% { opacity: 0; } 43%, 100% { opacity: 1; } }
+    @keyframes r5 { 0%, 44% { opacity: 0; } 47%, 100% { opacity: 1; } }
+    @keyframes b1 { 0%, 30% { transform: scaleX(0); } 38%, 100% { transform: scaleX(1); } }
+    @keyframes b2 { 0%, 34% { transform: scaleX(0); } 42%, 100% { transform: scaleX(1); } }
+    @keyframes b3 { 0%, 38% { transform: scaleX(0); } 46%, 100% { transform: scaleX(1); } }
+    @keyframes b4 { 0%, 42% { transform: scaleX(0); } 50%, 100% { transform: scaleX(1); } }
+    @keyframes b5 { 0%, 46% { transform: scaleX(0); } 54%, 100% { transform: scaleX(1); } }
+    @keyframes hl { 0%, 57% { opacity: 0; } 61%, 100% { opacity: 1; } }
+    @keyframes losers { 0%, 57% { opacity: 1; } 61%, 100% { opacity: .38; } }
+    @keyframes out { 0%, 66% { opacity: 0; } 70%, 100% { opacity: 1; } }
+    @keyframes all { 0% { opacity: 0; } 2%, 95% { opacity: 1; } 100% { opacity: 0; } }
+    @media (prefers-reduced-motion: reduce) { .a, #cover, #stream { animation: none !important; } #cover { display: none; } }
+  </style>
+  <defs>
+    <clipPath id="col"><rect x="24" y="92" width="230" height="230"/></clipPath>
+    <linearGradient id="fade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0d1117"/><stop offset=".18" stop-color="#0d1117" stop-opacity="0"/>
+      <stop offset=".82" stop-color="#0d1117" stop-opacity="0"/><stop offset="1" stop-color="#0d1117"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="960" height="400" rx="10" fill="#0d1117"/>
+  <g id="all" class="a">
+    <text x="24" y="40"><tspan class="dim">$ </tspan>, keep my mac awake for an hour</text>
+    <rect id="cover" x="42" y="22" width="320" height="26" fill="#0d1117"/>
+
+    <g id="left" class="a">
+      <text x="24" y="80" class="label">2,212 COMMANDS ON YOUR PATH</text>
+      <g clip-path="url(#col)">
+        <g id="stream" class="dim">
+          <text x="24" y="110">afconvert</text><text x="130" y="110">awk</text>
+          <text x="24" y="130">base64</text><text x="130" y="130">bc</text>
+          <text x="24" y="150">caffeinate</text><text x="130" y="150">cal</text>
+          <text x="24" y="170">curl</text><text x="130" y="170">cut</text>
+          <text x="24" y="190">defaults</text><text x="130" y="190">df</text>
+          <text x="24" y="210">diskutil</text><text x="130" y="210">ditto</text>
+          <text x="24" y="230">drutil</text><text x="130" y="230">du</text>
+          <text x="24" y="250">file</text><text x="130" y="250">find</text>
+          <text x="24" y="270">hdiutil</text><text x="130" y="270">head</text>
+          <text x="24" y="290">lsof</text><text x="130" y="290">mdfind</text>
+          <text x="24" y="310">netstat</text><text x="130" y="310">nettop</text>
+          <text x="24" y="330">open</text><text x="130" y="330">pbcopy</text>
+          <text x="24" y="350">plutil</text><text x="130" y="350">pmset</text>
+          <text x="24" y="370">say</text><text x="130" y="370">screencapture</text>
+          <text x="24" y="390">sips</text><text x="130" y="390">sleep</text>
+          <text x="24" y="410">sort</text><text x="130" y="410">split</text>
+          <text x="24" y="430">sysctl</text><text x="130" y="430">tail</text>
+          <text x="24" y="450">tar</text><text x="130" y="450">taskpolicy</text>
+          <text x="24" y="470">textutil</text><text x="130" y="470">tmutil</text>
+          <text x="24" y="490">top</text><text x="130" y="490">tr</text>
+          <text x="24" y="510">uname</text><text x="130" y="510">uniq</text>
+          <text x="24" y="530">uptime</text><text x="130" y="530">vm_stat</text>
+          <text x="24" y="550">wc</text><text x="130" y="550">which</text>
+          <text x="24" y="570">who</text><text x="130" y="570">xargs</text>
+          <text x="24" y="590">xattr</text><text x="130" y="590">xxd</text>
+          <text x="24" y="610">yes</text><text x="130" y="610">zip</text>
+          <text x="24" y="630">zipinfo</text><text x="130" y="630">zsh</text>
+          <text x="24" y="650">afconvert</text><text x="130" y="650">awk</text>
+          <text x="24" y="670">base64</text><text x="130" y="670">bc</text>
+          <text x="24" y="690">caffeinate</text><text x="130" y="690">cal</text>
+          <text x="24" y="710">curl</text><text x="130" y="710">cut</text>
+          <text x="24" y="730">defaults</text><text x="130" y="730">df</text>
+          <text x="24" y="750">diskutil</text><text x="130" y="750">ditto</text>
+          <text x="24" y="770">drutil</text><text x="130" y="770">du</text>
+          <text x="24" y="790">file</text><text x="130" y="790">find</text>
+          <text x="24" y="810">hdiutil</text><text x="130" y="810">head</text>
+          <text x="24" y="830">lsof</text><text x="130" y="830">mdfind</text>
+          <text x="24" y="850">netstat</text><text x="130" y="850">nettop</text>
+          <text x="24" y="870">open</text><text x="130" y="870">pbcopy</text>
+        </g>
+      </g>
+      <rect x="24" y="92" width="230" height="230" fill="url(#fade)"/>
+    </g>
+
+    <text x="290" y="80" class="label a" id="r1h" style="animation-name:r1">WHAT EACH MAN PAGE SAYS IT DOES, SCORED AGAINST YOUR REQUEST</text>
+
+    <rect id="hl" class="a" x="280" y="96" width="664" height="34" rx="6" fill="#3fb950" fill-opacity=".13" stroke="#3fb950" stroke-opacity=".55"/>
+
+    <g id="r1" class="a">
+      <text x="292" y="118" class="win">caffeinate</text>
+      <rect x="400" y="107" width="104" height="12" rx="3" class="barwin a" id="b1"/>
+      <text x="520" y="118" class="win">0.87</text>
+      <text x="572" y="118" class="small">prevent the system from sleeping…</text>
+    </g>
+    <g id="losers" class="a">
+      <g id="r2" class="a">
+        <text x="292" y="158">sleep</text>
+        <rect x="400" y="147" width="12" height="12" rx="3" class="bar a" id="b2"/>
+        <text x="520" y="158" class="dim">0.10</text>
+        <text x="572" y="158" class="small dim">suspend execution for an interval of time</text>
+      </g>
+      <g id="r3" class="a">
+        <text x="292" y="198">pmset</text>
+        <rect x="400" y="187" width="8" height="12" rx="3" class="bar a" id="b3"/>
+        <text x="520" y="198" class="dim">0.07</text>
+        <text x="572" y="198" class="small dim">manipulate power management settings</text>
+      </g>
+      <g id="r4" class="a">
+        <text x="292" y="238">taskpolicy</text>
+        <rect x="400" y="227" width="8" height="12" rx="3" class="bar a" id="b4"/>
+        <text x="520" y="238" class="dim">0.07</text>
+        <text x="572" y="238" class="small dim">execute a program with an altered I/O policy…</text>
+      </g>
+      <g id="r5" class="a">
+        <text x="292" y="278">tmux</text>
+        <rect x="400" y="267" width="6" height="12" rx="3" class="bar a" id="b5"/>
+        <text x="520" y="278" class="dim">0.05</text>
+        <text x="572" y="278" class="small dim">terminal multiplexer</text>
+      </g>
+    </g>
+
+    <g id="out" class="a">
+      <line x1="24" y1="338" x2="936" y2="338" stroke="#21262d"/>
+      <text x="24" y="364">caffeinate -s</text>
+      <text x="24" y="386" class="dim">run it? [y/N]   <tspan class="small">the request and the command share no word; "sleep" does, and scores 0.10</tspan></text>
+    </g>
+  </g>
+</svg>

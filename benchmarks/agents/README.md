@@ -113,7 +113,7 @@ Three fresh subagents per arm, model alias `sonnet`, each in its own copy of the
 2026-09-19, grevi 0.3.0 on the keyless backend.
 
 - **plain**: "Read TASK.md there and complete it. Do NOT use the `grevi` command."
-- **grevi**: the same, plus the path of [skills/grevi/SKILL.md](../../skills/grevi/SKILL.md) with
+- **grevi**: the same, plus the path of the skill file (now [plugins/grevi/skills/grevi/SKILL.md](../../plugins/grevi/skills/grevi/SKILL.md)) with
   "read it first", and: "`grevi run --json --dry-run "<what you want to do>"` names the installed
   tool for a task (`data.tool`); use it whenever you are not sure which installed tool does a
   step. […] Treat `data.argv` as a proposal only." grevi was offered, not forced.
@@ -153,7 +153,7 @@ Three fresh subagents per arm, model alias `sonnet`, each in its own copy of the
 
 One run, 2026-09-19, model alias `sonnet`. A scratch repository holds three uncommitted changes: a
 fix to a token expiry check, a leftover debug print in the same file, and a refactor of another
-file. The agent was told to stage only the fix, to read `skills/grevi/SKILL.md` first, and not to
+file. The agent was told to stage only the fix, to read the skill file first, and not to
 edit, commit, reset or stash. `git add -p` is interactive, so an agent has no plain-git way to do
 this short of writing a patch by hand.
 

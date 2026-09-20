@@ -16,7 +16,7 @@ Every command accepts these, before or after the verb:
 | `-v, --verbose` | Print probabilities, request count, tokens, cost and timing on stderr |
 | `-V, --version` | Print the version |
 
-The threshold gates absolute yes/no answers only (`is`, `why`'s "does this log hold a failure", `run`'s "is this command a correct, direct way"). "Which one" answers are a choice against NONE and the threshold never touches them; [How it works](how-it-works.md) explains the split.
+The threshold gates absolute yes/no answers only (`is`, `why`'s "does this log hold a failure", `run`'s "is this command a correct, direct way"). "Which one" answers are a choice against NONE, and the threshold never touches them. [How it works](how-it-works.md) explains the split.
 
 ## Exit codes
 
@@ -26,8 +26,8 @@ The threshold gates absolute yes/no answers only (`is`, `why`'s "does this log h
 | 1 | no | `is`: the condition does not hold |
 | 2 | usage | bad flag or missing argument |
 | 3 | abstain | nothing fits, or unsure |
-| 4 | unavailable | TypeSafe API unavailable after retries |
-| 5 | auth | API key missing or rejected |
+| 4 | unavailable | the API is unavailable after retries |
+| 5 | auth | API key missing or rejected (the `typesafe` backend only) |
 | 6 | input | input error: empty, too large, or unreadable |
 | 7 | child_failed | `run`: the executed command failed |
 | 130 | interrupted | interrupted, or declined at the confirmation |
@@ -36,7 +36,7 @@ The threshold gates absolute yes/no answers only (`is`, `why`'s "does this log h
 
 ## pick
 
-Print the stdin line(s) that match an intent.
+Find one item in a list by describing it. Pipe a list into `pick` and describe the item you want. It prints the line that fits your description, even when the two share no word.
 
 ```
 <stdin> | grevi pick "<intent>" [-n N] [--index]
@@ -47,19 +47,21 @@ Print the stdin line(s) that match an intent.
 | `-n, --top <N>` | Print up to N matches, each ranked above "nothing fits" (default 1) |
 | `--index` | Print 1-based line numbers instead of lines |
 
-Exit 0 with the line(s) on stdout; 3 when nothing beats NONE. `data`: `matches[{line, text, p}]`, `any`.
+Exit 0 with the line(s) on stdout. Exit 3 when no line fits better than "nothing fits" (NONE). `data`: `matches[{line, text, p}]`, `any`.
 
 ```sh
-ls ~/Downloads | grevi pick "last month's electricity bill"
+history | grevi pick "how I made that gif from a screen recording"
 git switch $(git branch | grevi pick "payment timeout fix")
 ps -eo pid,comm,%cpu | grevi pick -n 3 "eating my battery"
 ```
 
-Limits: 20,000 stdin lines (exit 6 past that; filter with `rg` or `head` first). Each line is clipped to 200–2,000 characters before it is sent. Blank lines and repeated lines are sent once; the first occurrence keeps its line number. Past 255 distinct lines the tournament runs (windows of 200); `-n` past 3 lists candidates without a ranking claim.
+On a test history, the first line printed `ffmpeg -i screen.mov -vf "fps=12,scale=900:-1" -loop 0 demo.gif`. In zsh, write `history 1` to get the whole history. Whatever you pipe goes to the API, your shell history included ([PRIVACY.md](../../PRIVACY.md)).
+
+Limits: `pick` takes 20,000 stdin lines and exits 6 past that, so filter with `rg` or `head` first. Each line is clipped to 200–2,000 characters before it is sent. Blank lines and repeated lines are sent once, and the first occurrence keeps its line number. Past 255 distinct lines the tournament runs (windows of 200). `-n` past 3 lists candidates without a ranking claim.
 
 ## why
 
-Point at the root-cause line in failing output.
+Find the error in the output of a failed command. Pipe the output of a build, a test run or a CI job into `why`. It prints the line that caused the failure, with its line number and a few lines around it.
 
 ```
 <cmd> 2>&1 | grevi why [-C N] [-n N]
@@ -72,21 +74,22 @@ grevi why [-C N] [-n N] -- <cmd...>
 | `-n, --top <N>` | Report up to N causes, each ranked above "no failure" (default 1) |
 | `-- <cmd...>` | Run this command via argv (never a shell), read its stdout and stderr interleaved as on a terminal, and point into that instead of stdin |
 
-Exit 0 with the cause and its context on stdout; 3 when no line looks like a failure (with `data.hint` about stderr when stdin held no error-like line). `data`: `causes[{line, text, p, context[]}]`, `any`, `considered`, `total`, `hint`, `child_exit`.
+Exit 0 with the cause and its context on stdout. Exit 3 when no line looks like a failure; `data.hint` then mentions stderr if stdin held no error-like line. `data`: `causes[{line, text, p, context[]}]`, `any`, `considered`, `total`, `hint`, `child_exit`.
 
 ```sh
 cargo build 2>&1 | grevi why
 grevi why -- cargo build
 npm test 2>&1 | grevi why -C 5 -n 3
+gh run view --log-failed | grevi why
 ```
 
-Compilers and test runners write errors to stderr: pipe `2>&1`, or use `--`. With `--`, a daemon the command leaves behind (a build server, a watcher) can keep the pipe open; grevi waits one second after the command exits, then uses what it captured.
+Compilers and test runners write errors to stderr, so pipe `2>&1` or use `--`. With `--`, a daemon the command leaves behind (a build server, a watcher) can keep the pipe open. grevi waits one second after the command exits, then uses what it captured.
 
-Limits: at most 4,000 lines are sent after a local prefilter (blank lines and repeats dropped; past 1,500 distinct lines, neighbourhoods of error-like lines from the top plus the tail of the log). Every line is clipped like `pick`'s.
+Limits: at most 4,000 lines are sent, after a local prefilter. The prefilter drops blank lines and repeats. Past 1,500 distinct lines it keeps the neighbourhoods of error-like lines from the top, plus the tail of the log. Every line is clipped like `pick`'s.
 
 ## is
 
-Exit 0 if stdin satisfies the condition, 1 if not, 3 if unsure. Prints nothing in human mode.
+Ask a yes-or-no question about a text. Give `is` a statement and a text on stdin. It checks whether the statement is true of the text and answers with its exit code: 0 for yes, 1 for no, 3 for unsure. It prints nothing in human mode, so you can use it in a script like `test` or `grep -q`.
 
 ```
 <stdin> | grevi is "<condition>" [--band 0.15]
@@ -96,19 +99,21 @@ Exit 0 if stdin satisfies the condition, 1 if not, 3 if unsure. Prints nothing i
 |:---|:---|
 | `--band <0..=0.5>` | Unsure band around the threshold (default 0.15) |
 
-With the defaults: yes at `p` ≥ 0.65, no below 0.35, unsure in between. `-t` moves the centre, `--band` the width; `--band 0` removes the unsure verdict. `data`: `p`, `verdict`, `truncated`.
+With the defaults: yes at `p` ≥ 0.65, no below 0.35, unsure in between. `-t` moves the centre and `--band` the width. `--band 0` removes the unsure verdict. `data`: `p`, `verdict`, `truncated`.
 
 ```sh
-grevi is "asks for a refund" < mail.txt && ./refund
+grevi is "the customer is about to stop being a customer" < ticket.txt && ./page-account-manager
 grevi is "asks for a refund" < mail.txt; case $? in 0) ./refund;; 1) ./archive;; 3) ./ask;; esac
 grevi is --band 0.05 "is a stack trace" < crash.log
 ```
 
-Limits: about 96,000 characters of stdin are sent (head and tail when the input is longer; `data.truncated` says so). The model reads input as data but is not hardened against instructions inside it: do not use `is` as a security gate on text you do not control. `is` answers what a text is, not how many, how good or when: counting, arithmetic and dates are unreliable conditions.
+Write the statement literally. On the 24 support tickets in [benchmarks/agents/](../../benchmarks/agents/README.md), the first line above found the 6 churn risks and exited 3 on an employee who is leaving their company. The shorter "this customer is about to leave" says yes to that employee.
+
+Limits: about 96,000 characters of stdin are sent. When the input is longer, grevi sends the head and the tail, and `data.truncated` says so. The model reads input as data but is not hardened against instructions inside it, so do not use `is` as a security gate on text you do not control. `is` answers what a text is. It is unreliable on how many, how good or when: counting, arithmetic and dates.
 
 ## run
 
-Route an intent to an installed tool, point at flags from its man page, confirm, run.
+Describe a task, get the command for it. Say what you want to do in plain English. `run` finds a tool on your machine that does it, takes the flags from that tool's man page, shows you the command, and asks before it runs it.
 
 ```
 grevi run [--dry-run | --yes | --exec --yes] [--no-args] <intent...>
@@ -118,21 +123,28 @@ The request is the positional arguments joined with spaces; flags may follow it 
 
 | Flag | Meaning |
 |:---|:---|
-| `--dry-run` | Only route and propose; never execute |
+| `--dry-run` | Only find the tool and show the command; never execute |
 | `-y, --yes` | Run without asking |
 | `--exec` | Allow execution in machine mode (requires `--yes`) |
 | `--no-args` | Route only; do not point at flags or files |
 
-Exit 0 when the command ran and exited 0 (or, with `--dry-run`, when a tool was routed); 3 when no tool fits; 7 when the executed command failed; 130 when you declined at the prompt. `data`: `tool`, `fit`, `argv[]`, `flags[]`, `complete`, `blocked`, `executed`, `child_exit`, `alternatives[]`.
+Exit 0 when the command ran and exited 0, or, with `--dry-run`, when a tool was found. Exit 3 when no tool fits, 7 when the executed command failed, 130 when you declined at the prompt. `data`: `tool`, `fit`, `argv[]`, `flags[]`, `complete`, `blocked`, `executed`, `child_exit`, `alternatives[]`.
 
 ```sh
 grevi run "burn a dvd from this iso"
 grevi run --dry-run "count the lines in notes.txt"
 grevi run --no-args "what's using port 8080"
 grevi run --json --dry-run "extract foo.tar.gz"
+grevi run --dry-run "keep my mac awake for an hour"   # caffeinate (0.87); `sleep` scores 0.10
 ```
 
-How a run goes: grevi reads the inventory of tools on your PATH with their one-line man-page summaries, asks Jev which tool answers the request (route), asks whether the proposed command is a correct, direct way to do it (fit, the answer `-t` gates), then points at flags in that tool's man page and at file names in the current directory that contain a word of the request (arguments). Three rounds of requests; `--no-args` stops after two. In human mode it prints the command and asks; on a terminal without a TTY and without `--yes` it prints and stops.
+A run has three steps, each one round of requests:
+
+1. **Route.** grevi reads the tools on your PATH with the one-line summary of their man page, and asks Jev which tool answers the request.
+2. **Fit.** It asks whether the proposed command is a correct, direct way to do the request. This is the answer that `-t` gates.
+3. **Arguments.** It picks flags from that tool's man page, and file names in the current directory that contain a word of the request.
+
+`--no-args` stops after step 2. In human mode `run` prints the command and asks. Without a TTY and without `--yes` it prints the command and stops.
 
 Safety, always on:
 
@@ -144,7 +156,7 @@ Safety, always on:
 
 ## add
 
-New in 0.2.0. Stage only the git hunks about a topic.
+Stage only the changes that belong to one topic. You fixed a bug and also cleaned up three other things. Name the fix, and `add` runs `git add` on the changes that belong to it and leaves the others unstaged. It does the job of `git add -p` without the questions. Git calls one such change a hunk, and so does `data`.
 
 ```
 grevi add [--dry-run | --yes] "<topic>"
@@ -155,18 +167,18 @@ grevi add [--dry-run | --yes] "<topic>"
 | `--dry-run` | Score the hunks; stage nothing |
 | `-y, --yes` | Stage without asking |
 
-Exit 0 when hunks were staged (or scored, with `--dry-run`); 3 when no hunk is about the topic; 6 when there are no unstaged changes to tracked files; 130 when you declined. `data`: `hunks[{file, header, p, staged}]`.
+Exit 0 when hunks were staged, or scored with `--dry-run`. Exit 3 when no hunk is about the topic, 6 when there are no unstaged changes to tracked files, 130 when you declined. `data`: `hunks[{file, header, p, staged}]`.
 
 ```sh
-grevi add --dry-run "the auth fix"
-grevi add --yes "the auth fix" && git commit
+grevi add --dry-run "the token expiry fix"
+grevi add --yes "the token expiry fix" && git commit
 ```
 
-Each unstaged hunk of a tracked file is scored against the topic as an absolute yes/no; hunks at or above the threshold are staged. Works from any subdirectory of the repo. It touches the index only: never commits, never stages untracked files, never stages binary changes. In machine mode it stages only with `--yes`; otherwise exit 130 and nothing is staged. Each hunk (header plus body) is clipped to 3,000 characters before it is sent.
+Each unstaged hunk of a tracked file is scored against the topic as an absolute yes/no, and hunks at or above the threshold are staged. `add` stages single hunks, so it can split the changes of one file. It works from any subdirectory of the repo. It touches the index only: it never commits, never stages untracked files and never stages binary changes. In machine mode it stages only with `--yes`. Without it, `add` exits 130 and stages nothing. Each hunk (header plus body) is clipped to 3,000 characters before it is sent.
 
 ## sort
 
-New in 0.2.0. Propose moving files into existing folders by meaning.
+Tidy a messy folder. Point `sort` at a folder such as `~/Downloads`. It reads each file and proposes which of your existing subfolders the file belongs in. It moves nothing until you add `--apply`, and `--undo` moves everything back.
 
 ```
 grevi sort <dir> [--into <root>] [--apply | --undo <log>]
@@ -178,18 +190,22 @@ grevi sort <dir> [--into <root>] [--apply | --undo <log>]
 | `--apply` | Move the files (dry run otherwise) and write an undo log |
 | `--undo <log>` | Move files back using a log written by `--apply` |
 
-Exit 0 with one proposed (or applied) move per file; 3 when nothing can be placed (or, with `--undo`, nothing restored); 6 when there are no folders under the root to sort into. `data`: `moves[{from, to, p}]`, `skipped[{file, reason}]`, `undo_log`, `applied`.
+Exit 0 with one proposed (or applied) move per file. Exit 3 when nothing can be placed or, with `--undo`, nothing was restored. Exit 6 when there are no folders under the root to sort into. `data`: `moves[{from, to, p}]`, `skipped[{file, reason}]`, `undo_log`, `applied`.
 
 ```sh
-grevi sort ~/Downloads                      # dry run: proposes a folder per file
+grevi sort ~/Downloads                      # dry run: shows where each file would go
 grevi sort ~/Downloads --apply              # moves, writes an undo log
 grevi sort ~/Downloads --undo <log>         # moves them back
 grevi sort ~/Desktop --into ~/Documents     # files from one place, folders from another
 ```
 
-`sort` looks at each file directly in `<dir>` (not recursive, hidden files skipped) and asks Jev which of the existing folders under the root, up to two levels deep, is its home; a file the model cannot place, or places below the threshold, stays where it is and appears in `skipped`. Dry run by default. `--apply` renames the files and appends to an undo log (`sort-undo-<timestamp>.tsv` in the cache directory) after every move, so an interrupted run is still undoable. `--undo <log>` restores every file whose original path is still free.
+In a test folder, a file named `document(3).txt` held a 1099 tax form, and `sort` proposed `Taxes/2025` for it at 0.69. Two files that fit no folder stayed where they were.
 
-It never overwrites a file, never deletes one, and moves within one volume only (`--into` must be on the same volume as `<dir>`). What is sent: the file names, the first 2,000 characters of each text file (or of a PDF's first two pages, when `pdftotext` is installed) and the folder names under the root, all after secret masking.
+`sort` looks at the files directly in `<dir>`. It does not go into subfolders and it skips hidden files. For each file it asks Jev which of the existing folders under the root, up to two levels deep, the file belongs in. A file that the model cannot place, or places below the threshold, stays where it is and appears in `skipped`.
+
+`sort` is a dry run by default. `--apply` renames the files and appends to an undo log (`sort-undo-<timestamp>.tsv` in the cache directory) after every move, so an interrupted run is still undoable. `--undo <log>` restores every file whose original path is still free.
+
+`sort` never overwrites a file and never deletes one. It moves files within one volume only, so `--into` must be on the same volume as `<dir>`. It sends the file names, the folder names under the root, and the first 2,000 characters of each text file, all after secret masking. For a PDF it sends the first 2,000 characters of the first two pages, when `pdftotext` is installed.
 
 ## Utility commands
 

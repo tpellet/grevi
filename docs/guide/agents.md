@@ -7,11 +7,11 @@ grevi capabilities --json      # commands, flags, exit codes, env, limits, safet
 grevi robot-docs               # the agent handbook (docs/ROBOT_MODE.md)
 ```
 
-The handbook, [docs/ROBOT_MODE.md](../ROBOT_MODE.md), is the contract: the rules for agents, the per-verb `data` shapes and what `p` means. This page adds context around it and does not repeat it; when the two differ, the handbook and `capabilities` win.
+The handbook, [docs/ROBOT_MODE.md](../ROBOT_MODE.md), is the contract: the rules for agents, the per-verb `data` shapes and what `p` means. This page adds context around it and does not repeat it. When the two differ, the handbook and `capabilities` win.
 
 ## One envelope
 
-Every command accepts `--json` (alias `--robot`) or `--format json|jsonl|toon` and then prints exactly one envelope on stdout, usage errors included:
+Every command accepts `--json` (alias `--robot`) or `--format json|jsonl|toon`. It then prints exactly one JSON object on stdout, usage errors included. This page calls that object the envelope:
 
 ```
 { ok, command, version, exit_code, data, meta{backend, model, elapsed_ms, requests, cache_hits,
@@ -19,12 +19,12 @@ Every command accepts `--json` (alias `--robot`) or `--format json|jsonl|toon` a
 ```
 
 - `exit_code` in the envelope equals the process exit code. Branch on it, then read `data`.
-- `meta.requests` and `meta.cache_hits` say how much work the call did; `meta.cost_usd` is computed from `meta.input_tokens` at `GREVI_PRICE_PER_MTOK`.
-- `meta.backend` is the API that answered, `typesafe` or `classifier`; both run Jev, and `meta.model` is the build. Without a key grevi uses classifier.dev, which is free — there `meta.input_tokens` and `meta.cost_usd` are `0`.
-- `meta.request_id` is the TypeSafe request id of the last Jev request (`null` when none was made or every answer came from the cache; `health` does not record one). Quote it when reporting an API problem.
+- `meta.requests` and `meta.cache_hits` say how much work the call did. `meta.cost_usd` is computed from `meta.input_tokens` at `GREVI_PRICE_PER_MTOK`.
+- `meta.backend` is the API that answered, `typesafe` or `classifier`. Both run Jev, and `meta.model` is the build. Without a key grevi uses classifier.dev, which is free, so `meta.input_tokens` and `meta.cost_usd` are `0` there.
+- `meta.request_id` is the TypeSafe request id of the last Jev request. It is `null` when no request was made or every answer came from the cache, and `health` does not record one. Quote it when reporting an API problem.
 - `error.kind` strings are stable identifiers (`api_rejected_request`, for one). `error.example` is a corrected command to try next.
 
-`--format toon` prints the same envelope in TOON, a compact text encoding for model context; `jsonl` prints it as one line.
+`--format toon` prints the same envelope in TOON, a compact text encoding for model context. `jsonl` prints it as one line.
 
 ## Exit codes
 
@@ -40,7 +40,7 @@ Every command accepts `--json` (alias `--robot`) or `--format json|jsonl|toon` a
 | 7 | child_failed | `run`: the executed command failed |
 | 130 | interrupted | interrupted, or declined at the confirmation |
 
-Exit 3 is an answer, not an error: nothing beat NONE, or the yes/no probability fell under the threshold. Escalate or ask; do not retry the same request hoping for a different answer (the cache would replay it anyway).
+Exit 3 is an answer: nothing beat NONE, or the yes/no probability fell under the threshold. Treat it like one. Escalate or ask. Do not retry the same request in the hope of a different answer, because the cache would replay it anyway.
 
 ## Workflows
 
@@ -52,6 +52,8 @@ The four that `capabilities` lists:
 | explain a failure | `<cmd> 2>&1 \| grevi why --json` |
 | select an item | `<list> \| grevi pick --json "<intent>"` |
 | branch in a script | `grevi is "<condition>" < file; case $? in 0) ...;; 1) ...;; 3) ...;; esac` |
+
+Two more that an agent cannot easily do another way. `grevi add --json --dry-run "<topic>"`, then `--yes`, stages only the hunks that belong to one topic; `git add -p` needs a terminal. A loop of `grevi is` over many texts costs the agent one exit code per text, where reading them costs their full length. The spot checks behind both are in [benchmarks/agents/](../../benchmarks/agents/README.md). They also show where `why` earns its call: on a large log, or when the line that explains the failure holds none of the words one greps for.
 
 ## What `data` holds
 
@@ -68,14 +70,14 @@ The four that `capabilities` lists:
 
 ## Machine mode is safe by default
 
-- `run` never executes in machine mode unless `--exec --yes` is given. With `--exec --yes`, the child's stdout is redirected to stderr so stdout stays one envelope. `data.blocked` names a tool grevi refuses to run (the never-execute list in [Verbs](verbs.md#run)); `data.argv` is still there for you to run under your own rules. `complete=false` means a `<VALUE>` placeholder remains in `argv`.
-- `add` stages only with `--yes` in machine mode; otherwise it exits 130 and stages nothing.
-- `sort` is a dry run unless `--apply`; `data.undo_log` is the file `--undo` takes.
+- `run` never executes in machine mode unless `--exec --yes` is given. With `--exec --yes`, the child's stdout is redirected to stderr so stdout stays one envelope. `data.blocked` names a tool grevi refuses to run (the never-execute list in [Verbs](verbs.md#run)). `data.argv` is still there for you to run under your own rules. `complete=false` means a `<VALUE>` placeholder remains in `argv`.
+- `add` stages only with `--yes` in machine mode. Without it, `add` exits 130 and stages nothing.
+- `sort` is a dry run unless `--apply`. `data.undo_log` is the file `--undo` takes.
 
 ## Reading `p`
 
-`p` is a calibrated probability: across many calls, answers reported at 0.8 were right about 80% of the time (the measured table is in [README, Numbers](../../README.md#numbers)). Raise `-t` for costly actions. Without the cache, the same request moves `p` by up to 0.06 between runs, so a value within 0.06 of the threshold can flip on a `--no-cache` re-run; `is` has `--band` for that, the other verbs do not. `-n N` on `pick` and `why` is ranked by a "which one" answer that is reliable at the top only: entries past the third are candidates, not a ranking.
+`p` is a calibrated probability: across many calls, answers reported at 0.8 were right about 80% of the time (the measured table is in [README, Numbers](../../README.md#numbers)). Raise `-t` for costly actions. Without the cache, the same request moves `p` by up to 0.06 between runs, so a value within 0.06 of the threshold can flip on a `--no-cache` re-run. `is` has `--band` for that, and the other verbs do not. `-n N` on `pick` and `why` is ranked by a "which one" answer that is reliable at the top only. Treat entries past the third as unranked candidates.
 
-## Input is data, not instructions
+## Input is data
 
-grevi sends your text as data, and results always point into your input, the installed tools or a man page: nothing is generated. The model is still not hardened against instructions embedded in the text it reads, so `is` and `pick` are not security gates for text you do not control. Obvious secrets are masked before sending (best effort); [PRIVACY.md](../../PRIVACY.md) lists what each verb sends.
+grevi sends your text as data. Every result is a part of your input, an installed tool or a man page, and grevi generates nothing. The model is still not hardened against instructions embedded in the text it reads, so `is` and `pick` are not security gates for text you do not control. Obvious secrets are masked before sending (best effort); [PRIVACY.md](../../PRIVACY.md) lists what each verb sends.
