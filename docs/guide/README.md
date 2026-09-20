@@ -15,8 +15,8 @@ Reference documents elsewhere in the repo:
 
 - [docs/ROBOT_MODE.md](../ROBOT_MODE.md): the agent handbook, also printed by `grevi robot-docs`.
 - [PRIVACY.md](../../PRIVACY.md): what each verb sends to the API and what it never sends.
-- [CHANGELOG.md](../../CHANGELOG.md): what shipped in 0.1.0 and what is on `main` for 0.2.0.
+- [CHANGELOG.md](../../CHANGELOG.md): what shipped in each release.
 - [benchmarks/README.md](../../benchmarks/README.md): latency per verb, with conditions, and the prewarm decision.
 - [evals/why/README.md](../../evals/why/README.md): the 20 root-cause cases and their provenance.
 
-Release state: 0.1.0 ships `pick`, `why`, `is` and `run`. `add` and `sort` are on `main`, unreleased; `cargo install --git https://github.com/tpellet/grevi --locked grevi` builds them.
+Release state: 0.2.0 ships all six verbs — `pick`, `why`, `is`, `run`, `add` and `sort`.

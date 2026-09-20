@@ -48,4 +48,4 @@ No. The model reads input as data but is not hardened against instructions embed
 
 ## Where are `add` and `sort`?
 
-On `main`, not in the 0.1.0 binaries. `cargo install --git https://github.com/tpellet/grevi --locked grevi` builds them; [CHANGELOG.md](../../CHANGELOG.md) lists them under 0.2.0 (unreleased).
+In 0.2.0. `cargo install grevi --locked` gets them; [CHANGELOG.md](../../CHANGELOG.md) lists them under 0.2.0.

@@ -1,6 +1,6 @@
 # Verbs
 
-Every fact on this page comes from `grevi --help`, `grevi <verb> --help` and `grevi capabilities --json` on a release build of `main`, plus the source for the limits. `add` and `sort` are on `main` and not in the 0.1.0 binaries.
+Every fact on this page comes from `grevi --help`, `grevi <verb> --help` and `grevi capabilities --json` on a release build of `main`, plus the source for the limits.
 
 ## Global flags
 
@@ -144,7 +144,7 @@ Safety, always on:
 
 ## add
 
-New in 0.2.0, unreleased. Stage only the git hunks about a topic.
+New in 0.2.0. Stage only the git hunks about a topic.
 
 ```
 grevi add [--dry-run | --yes] "<topic>"
@@ -166,7 +166,7 @@ Each unstaged hunk of a tracked file is scored against the topic as an absolute 
 
 ## sort
 
-New in 0.2.0, unreleased. Propose moving files into existing folders by meaning.
+New in 0.2.0. Propose moving files into existing folders by meaning.
 
 ```
 grevi sort <dir> [--into <root>] [--apply | --undo <log>]

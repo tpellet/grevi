@@ -4,13 +4,14 @@
 
 grevi is the semantic toolkit for your shell: small, composable commands that bring judgment to ordinary Unix pipelines. Pick a filename from a description, find the error that broke a build, check whether an email asks for a refund, or match a request to an installed tool. Powered by TypeSafe's Jev, grevi selects from your actual input, tools and man pages rather than generating free-form answers. Pipes and exit codes make it fit into the scripts you already write; structured JSON makes the same commands usable by agents. Uncertainty has its own exit code, so your workflow can handle "unsure" explicitly.
 
-One binary for macOS and Linux. The 0.1.0 release ships four verbs, `pick`, `why`, `is` and `run`, plus a `,` shell alias for `run`; two more, `add` and `sort`, are on `main` and unreleased. Every command takes `--json` and prints one envelope with the answer, a calibrated probability, the request count and its cost.
+One binary for macOS and Linux. The 0.2.0 release ships six verbs — `pick`, `why`, `is`, `run`, `add` and `sort` — plus a `,` shell alias for `run`. Every command takes `--json` and prints one envelope with the answer, a calibrated probability, the request count and its cost.
 
 The evidence is in the repo. [benchmarks/](benchmarks/README.md) holds the latency runs behind the Numbers section, [evals/](evals/) the routing and root-cause sets behind the accuracy tables, and [PRIVACY.md](PRIVACY.md) says, verb by verb, what leaves your machine.
 
 The user guide, from install to the agent envelope, is in [docs/guide/](docs/guide/README.md).
 
 [![CI](https://github.com/tpellet/grevi/actions/workflows/ci.yml/badge.svg)](https://github.com/tpellet/grevi/actions/workflows/ci.yml)
+[![crates.io](https://img.shields.io/crates/v/grevi)](https://crates.io/crates/grevi)
 [![Release](https://img.shields.io/github/v/release/tpellet/grevi)](https://github.com/tpellet/grevi/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
@@ -135,7 +136,7 @@ Quote requests that contain an apostrophe: an unquoted `, what's using port 8080
 
 ### add: the hunks about a topic
 
-New in 0.2.0, unreleased: install from source to try it.
+New in 0.2.0.
 
 ```sh
 grevi add --dry-run "the auth fix"
@@ -146,7 +147,7 @@ grevi add --yes "the auth fix" && git commit
 
 ### sort: a folder for each file
 
-New in 0.2.0, unreleased: install from source to try it.
+New in 0.2.0.
 
 ```sh
 grevi sort ~/Downloads                      # dry run: proposes a folder per file
