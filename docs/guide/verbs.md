@@ -199,7 +199,7 @@ It never overwrites a file, never deletes one, and moves within one volume only 
 grevi health
 ```
 
-Checks the key and TypeSafe reachability. Exit 0 ok, 4 unavailable, 5 auth. Makes no Jev request, so `meta.request_id` stays `null`.
+Names the backend that answers, says whether a key was needed and accepted, and times the reply. Exit 0 ok, 4 unavailable, 5 auth. Makes no Jev request, so `meta.request_id` stays `null`.
 
 ### init
 

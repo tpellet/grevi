@@ -26,7 +26,7 @@ pub struct GlobalOpts {
     /// Decision threshold on calibrated probability
     #[arg(short = 't', long, global = true, env = "GREVI_THRESHOLD")]
     pub threshold: Option<f64>,
-    /// TypeSafe model or alias (default jev-1.13.0; `jev-latest` moves with each release)
+    /// Jev model or alias (default jev-1.13.0; `jev-latest` moves with each release)
     #[arg(long, global = true, env = "GREVI_MODEL")]
     pub model: Option<String>,
     /// Skip the local answer cache
@@ -125,7 +125,7 @@ pub enum Cmd {
     Capabilities,
     /// Agent handbook: guide | commands | exit-codes | examples | privacy
     RobotDocs { topic: Option<String> },
-    /// Check the API key and TypeSafe reachability
+    /// Check which backend answers, whether a key is needed, and how fast it replies
     Health,
     /// Print shell integration (`,` alias for `grevi run`)
     Init { shell: Shell },
