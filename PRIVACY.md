@@ -13,6 +13,7 @@ below is the same for both.
 | Verb | Sent | Never sent |
 |---|---|---|
 | pick | your intent and the stdin lines (each clipped to 200–2,000 characters; ≤ 20,000 lines) | anything else |
+| pick --files | your intent, the relative path of every candidate file under DIR, and the first 2,000 characters (masked) of at most 24 finalist files; for a PDF, text of its first two pages when `pdftotext` is installed | hidden files and directories, git-ignored files, symlinks, the content of every other file |
 | why | your stdin (or the `--` command's output) after local filtering (≤ 4,000 lines, each clipped) | lines filtered out locally |
 | is | your condition and complete supported stdin (≤ ~96k chars on `typesafe`, ≤ 30k on `classifier`) | oversized stdin: the command abstains before sending |
 | run | your intent, names and one-line descriptions of installed tools, man-page excerpts of ≤ 12 finalists, the chosen tool's option list, and only those file names in the current directory that contain a word of your request (never contents) | other file names, file contents, environment, history |

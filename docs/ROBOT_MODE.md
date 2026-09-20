@@ -99,6 +99,9 @@ inventing an output-token price. These counters contain no request payloads or c
 
 ## Verbs
 - `pick "<intent>"` (stdin lines) → `data.matches[{line, text, p}]`; exit 3 = nothing fits.
+  `pick --files <DIR> "<intent>"` chooses among the files under DIR instead: `text` is a path
+  usable from the current directory and `data.source` is `files`. Path names go out first, then
+  the beginning of at most 24 finalist files; hidden, git-ignored and symlinked files never do.
 - `why` (stdin: failing output, or `why -- <cmd...>` to run it and capture stdout+stderr) →
   `data.causes[{line, text, p, context[]}]`, `data.child_exit`; `data.hint` explains an exit 3
   on output with no error-like line (usually stderr was not piped).

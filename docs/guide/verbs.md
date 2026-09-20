@@ -40,14 +40,25 @@ Find one item in a list by describing it. Pipe a list into `pick` and describe t
 
 ```
 <stdin> | grevi pick "<intent>" [-n N] [--index]
+grevi pick --files <DIR> "<intent>" [-n N]
 ```
 
 | Flag | Meaning |
 |:---|:---|
 | `-n, --top <N>` | Print up to N matches, each ranked above "nothing fits" (default 1) |
 | `--index` | Print 1-based line numbers instead of lines |
+| `--files <DIR>` | Choose among the files under DIR instead of stdin lines; prints the path |
 
-Exit 0 with the line(s) on stdout. Exit 3 when no line fits better than "nothing fits" (NONE). `data`: `matches[{line, text, p}]`, `any`.
+Exit 0 with the line(s) on stdout. Exit 3 when no line fits better than "nothing fits" (NONE). `data`: `matches[{line, text, p}]`, `any`, `source` (`stdin` or `files`).
+
+`--files` finds a file by what it is about. The candidates are the regular files under DIR. Inside a git work tree the list comes from git, so `.gitignore` applies. Hidden files and directories, symlinks and names that are not UTF-8 are skipped. The first round ranks the path names only. The second round reads the first 2,000 characters of at most 24 finalist files, so a file whose name says nothing can still win on its content, provided its name reached the finals. The match prints as a path that works from the current directory; a name that starts with `-` prints as `./-name`. `--index` does not apply. More than 20,000 files is exit 6: choose a narrower DIR. An empty DIR is exit 6 with no request.
+
+```sh
+code "$(grevi pick --files . "where man pages are parsed")"
+grevi pick --files ~/Downloads -n 3 "the tax form"
+```
+
+Quote the substitution and check the exit code in scripts: when nothing fits, `pick` prints nothing, and the outer command still runs with an empty argument.
 
 ```sh
 history | grevi pick "how I made that gif from a screen recording"

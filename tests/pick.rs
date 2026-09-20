@@ -133,3 +133,103 @@ async fn abstains_when_none_wins_the_choice() {
     .unwrap();
     assert_eq!(out.status.code(), Some(3));
 }
+
+// `--files`: round one carries path names only; the beginning of a file's content reaches the
+// model in the finals round alone. The name `document(3).txt` says nothing, its content does.
+#[tokio::test(flavor = "multi_thread")]
+async fn files_are_ranked_by_name_first_and_found_by_content_in_the_finals() {
+    let server = common::mock(FakeJev {
+        choose: |_, s, o| {
+            let items = s["items"].as_array().unwrap();
+            if items.len() == 5 {
+                assert!(
+                    !s.to_string().contains("1099"),
+                    "file content left the machine in round one"
+                );
+            } else {
+                assert_eq!(items.len(), 3, "finals carry the finalists only");
+            }
+            option_containing(s, o, "1099")
+        },
+        noul: |_, _| 0.9,
+    })
+    .await;
+    let dir = tempfile::tempdir().unwrap();
+    for (name, body) in [
+        ("document(3).txt", "Form 1099-INT interest income"),
+        ("notes.txt", "buy milk"),
+        ("photo.txt", "a beach"),
+        ("report.txt", "quarterly numbers"),
+        ("zeta.txt", "last"),
+        (".env", "TOKEN=1099"),
+    ] {
+        std::fs::write(dir.path().join(name), body).unwrap();
+    }
+    let root = dir.path().to_str().unwrap().to_string();
+    let mut c = common::grevi(&server);
+    let arg = root.clone();
+    let out = tokio::task::spawn_blocking(move || {
+        c.args(["--json", "pick", "--files", &arg, "the tax form"])
+            .output()
+            .unwrap()
+    })
+    .await
+    .unwrap();
+    assert_eq!(out.status.code(), Some(0));
+    let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+    assert_eq!(v["data"]["source"], "files", "{v}");
+    assert_eq!(
+        v["data"]["matches"][0]["text"],
+        format!("{root}/document(3).txt")
+    );
+    assert_eq!(v["meta"]["requests"], 2, "two rounds, no more: {v}");
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn files_mode_rejects_index_and_an_empty_directory_and_abstains_honestly() {
+    let server = common::mock(FakeJev {
+        choose: |_, _, _| "NONE".into(),
+        noul: |_, _| 0.05,
+    })
+    .await;
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path().to_str().unwrap().to_string();
+    let run = |args: Vec<String>| {
+        let mut c = common::grevi(&server);
+        c.args(args).output().unwrap()
+    };
+    let v = |o: &std::process::Output| -> serde_json::Value {
+        serde_json::from_slice(&o.stdout).unwrap()
+    };
+    let args = |extra: &[&str]| -> Vec<String> {
+        let mut a = vec![
+            "--json".to_string(),
+            "pick".into(),
+            "--files".into(),
+            root.clone(),
+        ];
+        a.extend(extra.iter().map(|s| s.to_string()));
+        a
+    };
+    let out = run(args(&["--index", "x"]));
+    assert_eq!(out.status.code(), Some(2));
+    assert_eq!(v(&out)["error"]["kind"], "usage");
+    // Only a hidden file: nothing to choose from, and no request is made.
+    std::fs::write(dir.path().join(".env"), "x").unwrap();
+    let out = run(args(&["x"]));
+    assert_eq!(out.status.code(), Some(6));
+    assert_eq!(v(&out)["error"]["kind"], "empty_input");
+    assert_eq!(v(&out)["meta"]["requests"], 0);
+    std::fs::write(dir.path().join("a.txt"), "x").unwrap();
+    let out = run(args(&["a spaceship"]));
+    assert_eq!(out.status.code(), Some(3));
+    assert_eq!(v(&out)["data"]["matches"], serde_json::json!([]));
+    let out = run(vec![
+        "--json".into(),
+        "pick".into(),
+        "--files".into(),
+        format!("{root}/missing"),
+        "x".into(),
+    ]);
+    assert_eq!(out.status.code(), Some(6));
+}

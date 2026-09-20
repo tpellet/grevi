@@ -135,6 +135,14 @@ The first command prints a line such as `ffmpeg -i screen.mov -vf "fps=12,scale=
 
 `-n 3` prints up to three lines, each ranked above "nothing fits"; `--index` prints line numbers instead of lines.
 
+`--files <DIR>` chooses among the files under a directory instead of stdin lines, and prints the path:
+
+```sh
+code "$(grevi pick --files . "where man pages are parsed")"
+```
+
+It ranks the path names first, then reads the beginning of at most 24 finalist files. Hidden files, git-ignored files and symlinks are never candidates.
+
 ### why: find the error in the output of a failed command
 
 Pipe the output of a build, a test run or a CI job into `why`. It prints the line that caused the failure, with its line number and a few lines around it.

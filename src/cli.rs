@@ -51,7 +51,7 @@ impl GlobalOpts {
 pub enum Cmd {
     /// Find one line in a list by describing it: stdin lines in, the matching line out
     #[command(
-        after_help = "Examples:\n  git branch | grevi pick \"the payment timeout fix\"\n  git log --oneline | grevi pick -n 3 \"when we changed the pricing\"\n\nThe description and the line need no word in common.\nExit: 0 found, 3 no line fits. --json data: matches[{line, text, p}], any."
+        after_help = "Examples:\n  git branch | grevi pick \"the payment timeout fix\"\n  git log --oneline | grevi pick -n 3 \"when we changed the pricing\"\n  code \"$(grevi pick --files . \"where man pages are parsed\")\"\n\nThe description and the line need no word in common. --files ranks the path names under DIR first, then reads the beginning of at most 24 finalist files; hidden files, git-ignored files and symlinks are skipped.\nExit: 0 found, 3 no line fits. --json data: matches[{line, text, p}], any, source."
     )]
     Pick {
         /// Describe the line you want, e.g. "the branch with the payment timeout fix"
@@ -62,6 +62,9 @@ pub enum Cmd {
         /// Print 1-based line numbers instead of lines
         #[arg(long)]
         index: bool,
+        /// Choose among the files under DIR instead of stdin lines; prints the path
+        #[arg(long, value_name = "DIR")]
+        files: Option<std::path::PathBuf>,
     },
     /// Find the line that caused a failure in build, test or CI output (stdin, or `-- <cmd>` to run it)
     #[command(

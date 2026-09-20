@@ -69,6 +69,7 @@ Pass `--json` and branch on `exit_code` (same as the process exit code), then re
 
 ```sh
 git branch | grevi pick --json "payment timeout fix"   # data.matches[{line, text, p}]
+grevi pick --files . --json "where retries back off"    # a file by what it is about; text = path
 cargo build 2>&1 | grevi why --json                     # data.causes[{line, text, p, context[]}]
 grevi why --json -- cargo test                          # runs it, captures stdout+stderr
 grevi is --json "asks for a refund" < mail.txt          # data.p, data.verdict

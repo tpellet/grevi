@@ -43,7 +43,8 @@ fn folders(root: &Path, skipped: &mut Vec<serde_json::Value>) -> Vec<PathBuf> {
     out
 }
 
-fn excerpt(p: &Path) -> String {
+/// `p` must be absolute and normalized (`open_regular`). Shared with `pick --files`.
+pub(crate) fn excerpt(p: &Path) -> String {
     use std::io::Read;
     let name = p
         .file_name()

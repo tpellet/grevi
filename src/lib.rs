@@ -243,7 +243,12 @@ fn stdout_error(error: std::io::Error) -> i32 {
 async fn dispatch(cli: &Cli, ctx: &config::Config) -> Result<cmd::Outcome, GreviError> {
     let machine = cli.g.format() != Format::Human;
     match &cli.cmd {
-        Cmd::Pick { intent, top, index } => cmd::pick::run(ctx, intent, *top, *index).await,
+        Cmd::Pick {
+            intent,
+            top,
+            index,
+            files,
+        } => cmd::pick::run(ctx, intent, *top, *index, files.as_deref()).await,
         Cmd::Why {
             context,
             top,
