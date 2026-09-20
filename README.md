@@ -361,6 +361,12 @@ Every item below is a failure row of the eval run above (`evals/out/*.json` afte
 - [FAQ](docs/guide/faq.md): cost, privacy, why not an LLM, why exit 3.
 - Reference: [robot mode](docs/ROBOT_MODE.md), [what leaves your machine](PRIVACY.md), [changelog](CHANGELOG.md), [benchmarks](benchmarks/README.md), [`why` eval cases](evals/why/README.md).
 
+## Credits
+
+grevi runs on [Jev](https://docs.typesafe.ai) from [TypeSafe AI](https://typesafe.ai), and needs no key thanks to [classifier.dev](https://classifier.dev).
+
+The way this project is built owes a lot to Jeffrey Emanuel ([@Dicklesworthstone](https://github.com/Dicklesworthstone), [@doodlestein](https://x.com/doodlestein)): his tooling and his approach to devops and agentic coding, from [Agent Mail](https://github.com/Dicklesworthstone/mcp_agent_mail) and [beads](https://github.com/Dicklesworthstone/beads_rust) to robot-mode CLIs.
+
 ## License
 
 MIT.
