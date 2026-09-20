@@ -1,10 +1,10 @@
 # Agents
 
-grevi was built to be called by programs as much as by people. Start with two commands:
+jevify was built to be called by programs as much as by people. Start with two commands:
 
 ```sh
-grevi capabilities --json      # commands, flags, exit codes, env, limits, safety rules, as data
-grevi robot-docs               # the agent handbook (docs/ROBOT_MODE.md)
+jevify capabilities --json      # commands, flags, exit codes, env, limits, safety rules, as data
+jevify robot-docs               # the agent handbook (docs/ROBOT_MODE.md)
 ```
 
 The handbook, [docs/ROBOT_MODE.md](../ROBOT_MODE.md), is the contract: the rules for agents, the per-verb `data` shapes and what `p` means. This page adds context around it and does not repeat it. When the two differ, the handbook and `capabilities` win.
@@ -19,8 +19,8 @@ Every command accepts `--json` (alias `--robot`) or `--format json|jsonl|toon`. 
 ```
 
 - `exit_code` in the envelope equals the process exit code. Branch on it, then read `data`.
-- `meta.requests` counts attempted inference POSTs, including retries and failures; prewarm/health GETs are excluded. `meta.cache_hits` counts cached answers. `meta.cost_usd` is computed from reported input tokens at `GREVI_PRICE_PER_MTOK`; classifier token usage is unavailable, not measured zero.
-- `meta.backend` is the API that answered, `typesafe` or `classifier`. Both run Jev, and `meta.model` is the build. Without a key grevi uses classifier.dev, which is free, so `meta.input_tokens` and `meta.cost_usd` are `0` there.
+- `meta.requests` counts attempted inference POSTs, including retries and failures; prewarm/health GETs are excluded. `meta.cache_hits` counts cached answers. `meta.cost_usd` is computed from reported input tokens at `JEVIFY_PRICE_PER_MTOK`; classifier token usage is unavailable, not measured zero.
+- `meta.backend` is the API that answered, `typesafe` or `classifier`. Both run Jev, and `meta.model` is the build. Without a key jevify uses classifier.dev, which is free, so `meta.input_tokens` and `meta.cost_usd` are `0` there.
 - `meta.request_id` is the TypeSafe request id of the last Jev request. It is `null` when no request was made or every answer came from the cache, and `health` does not record one. Quote it when reporting an API problem.
 - `error.kind` strings are stable identifiers (`api_rejected_request`, for one). `error.example` is a corrected command to try next.
 
@@ -48,12 +48,12 @@ The four that `capabilities` lists:
 
 | Goal | Command |
 |:---|:---|
-| find the tool for a task | `grevi run --json --dry-run "<task>"` |
-| explain a failure | `<cmd> 2>&1 \| grevi why --json` |
-| select an item | `<list> \| grevi pick --json "<intent>"` |
-| branch in a script | `grevi is "<condition>" < file; case $? in 0) ...;; 1) ...;; 3) ...;; esac` |
+| find the tool for a task | `jevify run --json --dry-run "<task>"` |
+| explain a failure | `<cmd> 2>&1 \| jevify why --json` |
+| select an item | `<list> \| jevify pick --json "<intent>"` |
+| branch in a script | `jevify is "<condition>" < file; case $? in 0) ...;; 1) ...;; 3) ...;; esac` |
 
-Two more that an agent cannot easily do another way. `grevi add --json --dry-run "<topic>"`, then `--yes`, stages only the hunks that belong to one topic; `git add -p` needs a terminal. A loop of `grevi is` over many texts costs the agent one exit code per text, where reading them costs their full length. The spot checks behind both are in [benchmarks/agents/](../../benchmarks/agents/README.md). They also show where `why` earns its call: on a large log, or when the line that explains the failure holds none of the words one greps for.
+Two more that an agent cannot easily do another way. `jevify add --json --dry-run "<topic>"`, then `--yes`, stages only the hunks that belong to one topic; `git add -p` needs a terminal. A loop of `jevify is` over many texts costs the agent one exit code per text, where reading them costs their full length. The spot checks behind both are in [benchmarks/agents/](../../benchmarks/agents/README.md). They also show where `why` earns its call: on a large log, or when the line that explains the failure holds none of the words one greps for.
 
 ## What `data` holds
 
@@ -66,7 +66,7 @@ Two more that an agent cannot easily do another way. `grevi add --json --dry-run
 | `add` | `hunks[{file, header, p, staged}]` |
 | `sort` | `moves[{from, to, p}]`, `skipped[{file, reason}]`, `undo_log`, `applied` |
 
-`line` values are 1-based line numbers into the input as grevi read it.
+`line` values are 1-based line numbers into the input as jevify read it.
 
 ## Machine mode is safe by default
 
@@ -80,4 +80,4 @@ Two more that an agent cannot easily do another way. `grevi add --json --dry-run
 
 ## Input is data
 
-grevi sends your text as data. Every result is a part of your input, an installed tool or a man page, and grevi generates nothing. The model is still not hardened against instructions embedded in the text it reads, so `is` and `pick` are not security gates for text you do not control. Obvious secrets are masked before sending (best effort); [PRIVACY.md](../../PRIVACY.md) lists what each verb sends.
+jevify sends your text as data. Every result is a part of your input, an installed tool or a man page, and jevify generates nothing. The model is still not hardened against instructions embedded in the text it reads, so `is` and `pick` are not security gates for text you do not control. Obvious secrets are masked before sending (best effort); [PRIVACY.md](../../PRIVACY.md) lists what each verb sends.

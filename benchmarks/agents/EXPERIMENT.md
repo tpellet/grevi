@@ -1,4 +1,4 @@
-# Does grevi improve agent decisions?
+# Does jevify improve agent decisions?
 
 Experiment protocol · 2026-09-20 · Bead `hunch-oki`
 
@@ -29,7 +29,7 @@ cannot enter an A/B result.
 1. Validate every grader with a correct result and a deliberately incorrect result; have
    a separate reviewer inspect prompts and gold. Freeze rendered input, taskset, skill,
    harness and binary hashes. Verify that agents cannot read gold, other attempts, or
-   service credentials, and that the control cannot invoke grevi.
+   service credentials, and that the control cannot invoke jevify.
 2. Run a six-task, two-arm infrastructure smoke on Astra low. Keep these attempts even if
    the harness needs repair; distinguish infrastructure failures from model decisions.
 3. When isolation and accounting pass, run all 30 cases in fresh paired sessions on
@@ -49,16 +49,16 @@ Utility endpoints receive a separate live contract matrix. Their integration cor
 and elapsed times do not substitute for a randomized onboarding comparison. Classifier
 availability failures remain deployment failures in that matrix; they are not labels of
 semantic correctness. The main diagnostic A/B uses the reachable TypeSafe backend with
-the service credential confined to a host-side grevi process.
+the service credential confined to a host-side jevify process.
 
 ## 1. Questions and claims
 
-The primary question is: **for a fresh agent given a real task, does offering grevi improve
+The primary question is: **for a fresh agent given a real task, does offering jevify improve
 verified completion, or reduce resources while preserving completion quality?**
 
 Three distinct quantities matter:
 
-1. **Product effect:** agent with grevi available versus the same agent without it, including
+1. **Product effect:** agent with jevify available versus the same agent without it, including
    learning the skill, deciding whether to use it, verification, fallback, and mistakes.
 2. **Semantic contribution:** Jev versus a strong local selector on identical candidates,
    excerpts, output schema, and execution policy. This isolates selection from packaging.
@@ -78,8 +78,8 @@ Freeze an exact source snapshot and executable hash before running the experimen
 
 | Observation | Interpretation and required correction |
 |---|---|
-| Five one-task comparisons in the agent README; the grevi arm was forbidden to read the inputs directly | Promising mechanism examples, but the constrained treatment and single trials do not estimate ordinary adoption benefit. Allow both agents full normal tools and multiple attempts. |
-| Three agents per arm in the `run` pilot; no treated agent invoked grevi | This measures offering the integration on familiar tools, including overhead. It does not estimate the effect of invoking `run`. Keep familiar-tool tasks and add genuinely unfamiliar inventories. |
+| Five one-task comparisons in the agent README; the jevify arm was forbidden to read the inputs directly | Promising mechanism examples, but the constrained treatment and single trials do not estimate ordinary adoption benefit. Allow both agents full normal tools and multiple attempts. |
+| Three agents per arm in the `run` pilot; no treated agent invoked jevify | This measures offering the integration on familiar tools, including overhead. It does not estimate the effect of invoking `run`. Keep familiar-tool tasks and add genuinely unfamiliar inventories. |
 | One successful `add` skill demonstration | Shows a possible workflow, not a comparative success rate. Noninteractive patch construction is a valid plain-agent baseline. |
 | Twenty `why` logs were normalized and cut to at most 300 lines near a known failure | Existing labels are useful development cases; they cannot validate full-log retrieval or no-failure abstention. Retain raw independent logs for heldout tests. |
 | Existing `run` argument scorer checks tool/flag membership | It does not prove correct values, operand order, absence of harmful extras, or successful final artifacts. Execute safe tasks and inspect their outcomes. |
@@ -102,14 +102,14 @@ quantities. [TypeSafe jaggedness](https://docs.typesafe.ai/model-jaggedness/jev-
 
 | Arm | Available tools and instructions |
 |---|---|
-| A: competent incumbent | Normal shell, file reading, `rg`, `find`, `man`, `apropos`, Git and task-specific installed tools. No grevi or substitute hosted semantic service. |
-| B: grevi available | Everything in A plus the frozen grevi skill and CLI. Agent chooses whether and when to use grevi, may inspect originals, reject its answer, and fall back. |
+| A: competent incumbent | Normal shell, file reading, `rg`, `find`, `man`, `apropos`, Git and task-specific installed tools. No jevify or substitute hosted semantic service. |
+| B: jevify available | Everything in A plus the frozen jevify skill and CLI. Agent chooses whether and when to use jevify, may inspect originals, reject its answer, and fall back. |
 
 Common task prompt: “Complete the task in TASK.md. Use the available tools. Verify the
 requested result. If the evidence is insufficient, say so. Follow the task's action
 permissions. Return the required result and evidence.” The common prompt gives no routing
-hint and no endpoint-specific solution. The arm-specific suffix says either “grevi is
-unavailable” or identifies the frozen skill and permits grevi. Skill-reading tokens and
+hint and no endpoint-specific solution. The arm-specific suffix says either “jevify is
+unavailable” or identifies the frozen skill and permits jevify. Skill-reading tokens and
 latency belong to B. Do not pad A to hide deployment overhead.
 
 Choose two agent model configurations before the pilot: the intended production model and
@@ -153,8 +153,8 @@ freeze them. A timeout or exhausted budget is an unsuccessful episode, with all 
 retained. A secondary fixed-dollar/fixed-time frontier may answer deployment-budget
 questions; do not replace the primary comparison with its best-looking point.
 
-**Intention to treat:** include every assigned B episode, even if grevi is never called.
-Report invocation, acceptance, override and fallback rates. Comparing only B's grevi users
+**Intention to treat:** include every assigned B episode, even if jevify is never called.
+Report invocation, acceptance, override and fallback rates. Comparing only B's jevify users
 against A selects harder or easier tasks after treatment and is not a causal estimate.
 
 ### Controlled mechanism comparisons
@@ -162,11 +162,11 @@ against A selects harder or easier tasks after treatment and is not a causal est
 Run these on a separate development/pilot panel before locking any confirmatory claims:
 
 - **Local selector:** same code-produced inventory, excerpts, candidates, schema and
-  action checks as grevi, replacing Jev with endpoint-appropriate deterministic rules or
+  action checks as jevify, replacing Jev with endpoint-appropriate deterministic rules or
   tuned BM25. Tune on development/calibration only. Include abstention, not forced top-1.
 - **Generative selector:** the agent model selects bounded IDs over the same evidence and
   schema, including `none`. Count its calls, invalid IDs, repairs, tokens and latency.
-- **Jev selector:** grevi's actual selection/gating on those same inputs.
+- **Jev selector:** jevify's actual selection/gating on those same inputs.
 - **Oracle pointer:** supply a gold pointer where one exists to estimate downstream
   headroom. Label this an unattainable diagnostic ceiling, never a competitor.
 
@@ -177,9 +177,9 @@ error/abstention loss and calibration procedure, not the same numeric cutoff on 
 BM25 and Noul scales. Fix each selector's cutoff using calibration data only. If that
 adapter is not implemented, component results
 support selector quality only, not a causal downstream advantage. Also run a distinct full
-pipeline panel: equal candidates isolate the selector but conceal grevi retrieval failures.
+pipeline panel: equal candidates isolate the selector but conceal jevify retrieval failures.
 
-Forced grevi invocation, route-only versus full `run`, JSON versus JSONL/TOON, alternative
+Forced jevify invocation, route-only versus full `run`, JSON versus JSONL/TOON, alternative
 thresholds, and default versus shortened skill text are diagnostic ablations. They are not
 the main A/B and must not be pooled into it.
 
@@ -200,11 +200,11 @@ semantic correctness.
 | `capabilities` | Agent discovers flags, limits and the machine envelope before solving an unfamiliar invocation. Gold is actual parser/contract behavior. | `--help`/subcommand help and available docs. First valid invocation, documentation tokens/time, invalid-call rate and subsequent task success. Schema and exit checks are deterministic; no Jev accuracy claim. |
 | `robot-docs` | Agent learns a command, handles a nonzero exit or discovers privacy behavior; all supported topics plus unknown topic. | Same information in static CLI/docs. Discovery success, error recovery, token/time overhead, factual agreement with current behavior. Compare endpoints individually and as the shipped onboarding bundle. |
 | `health` | Agent diagnoses reachable service, configuration/auth failure and unavailable service, then chooses a correct recovery or stops. | Documented manual checks. Correct diagnosis/recovery, false-ready rate, elapsed time, service calls, secret-free errors. Natural service observations and injected local faults are reported separately. |
-| `init` | Produce and load Bash/Zsh integration in an isolated shell, then verify argument forwarding of the alias against direct invocation. | Direct grevi invocation or documented manual alias. Output correctness, shell validity, setup tokens/time and equivalent argv/result. Never source integration into the evaluator's own shell profile. |
+| `init` | Produce and load Bash/Zsh integration in an isolated shell, then verify argument forwarding of the alias against direct invocation. | Direct jevify invocation or documented manual alias. Output correctness, shell validity, setup tokens/time and equivalent argv/result. Never source integration into the evaluator's own shell profile. |
 
 Help/version, `--robot`, formats and invalid flags are cross-cutting interface tests.
-Auxiliary-command adoption is a separate randomized onboarding panel with grevi's semantic
-tool availability held constant; otherwise it confounds discovering grevi with Jev quality.
+Auxiliary-command adoption is a separate randomized onboarding panel with jevify's semantic
+tool availability held constant; otherwise it confounds discovering jevify with Jev quality.
 Use fresh sessions per documentation condition. Utility timings and error rates are reported
 for every endpoint, but are exploratory unless separately powered and preregistered.
 
@@ -212,7 +212,7 @@ for every endpoint, but are exploratory unless separately powered and preregiste
 
 Use independent source families for development, calibration, pilot and sealed test. No
 log from the same CI incident, near-duplicate ticket, patch template, or renamed tool suite
-may cross splits. Published grevi evals, examples and audit probes are development-only.
+may cross splits. Published jevify evals, examples and audit probes are development-only.
 Record source version, license/consent, sampling frame, inclusion/exclusion decisions,
 checksums, task origin and transformations. Preserve full logs, not only failure windows.
 
@@ -259,7 +259,7 @@ intentionally exhaust a public service or execute dangerous commands to obtain c
 ### Episode accounting
 
 The primary unit is a completed or terminated task episode, not one model response or
-one grevi call. Include planning, skill discovery, tool definitions, all model turns,
+one jevify call. Include planning, skill discovery, tool definitions, all model turns,
 verification, fallback, retries and repair. Exclude offline gold creation and grading from
 deployment cost but report evaluation expense separately.
 
@@ -271,7 +271,7 @@ deployment cost but report evaluation expense separately.
 | Jev tokens and total cost | Separate Jev input usage from agent usage. Compute dollars from dated provider pricing and cache/reasoning billing rules. Record free-backend consumer charge separately from unobserved compute usage. Cross-model raw token sums are labelled, not treated as interchangeable compute. |
 | Context payload | Tool response bytes plus exact agent-tokenizer counts where available; also peak context and cumulative delivered tool tokens. This is a diagnostic, not a substitute for billed tokens. |
 | Wall time | Monotonic start before onboarding to final result/budget termination. Report mean, median, p95 and time-to-verified-success by the fixed deadline. Preserve failures at the deadline; don't report only successful fast runs. |
-| Agent tool calls | Host tool invocations and failed invocations. Separately count shell subprocesses, grevi invocations, semantic questions, HTTP POST attempts, retries, prewarm GETs, and parallel/dependent request rounds. One shell loop may contain 24 grevi calls. |
+| Agent tool calls | Host tool invocations and failed invocations. Separately count shell subprocesses, jevify invocations, semantic questions, HTTP POST attempts, retries, prewarm GETs, and parallel/dependent request rounds. One shell loop may contain 24 jevify calls. |
 | Tool errors | Rates per attempted relevant invocation AND episodes with any error; stable categories below. Report absolute counts and denominators; raw nonzero-exit rate is not semantic error rate. |
 | Recovery | Extra agent turns/tokens/time after an incorrect result, service failure, or abstention; number of fallbacks and eventual success. Label cause from evidence, not a guessed chain of thought. |
 | Side effects | Expected versus observed file/index changes, hash preservation, unintended actions, no-op correctness and restoration. Actual readback overrides `executed`, `staged` or `applied` flags. |
@@ -305,7 +305,7 @@ usage availability; cache events; action readback. Capture scores for candidates
 rejected too. Do not infer those events from final-envelope counts. Validate counter
 conservation against controlled retry/cache traces and a small live run.
 
-Proposed harness records (new schema to implement, not fields already present in grevi):
+Proposed harness records (new schema to implement, not fields already present in jevify):
 
 ```text
 manifest: protocol_hash, source_hash, binary_sha256, fixture_manifest_hash,
@@ -315,7 +315,7 @@ episode:  task_id, family_id, endpoint, stratum, pair_id, replicate, arm,
           start, duration_ms, terminal_reason, verified_success, violations,
           agent_usage{reported_fields, normalized_counts, missing_fields},
           jev_usage{tokens, available}, total_usd, cost_available,
-          host_tool_calls, grevi_calls, http_attempts, retries, cache_hits,
+          host_tool_calls, jevify_calls, http_attempts, retries, cache_hits,
           semantic_errors, invocation_errors, infra_errors, fallback_count,
           before_hashes, after_hashes, trace_ref, grade_ref
 event:    episode_id, event_id, parent_id, stage, monotonic_time,
@@ -335,7 +335,7 @@ Primary cold-decision panel: no semantic answer-cache hits; fixed, already-built
 snapshot in both arms. Count skill onboarding in every fresh episode. Second panel measures
 fresh installation/inventory discovery; third uses realistic repeated workloads and warm
 caches. Never combine these into one speed claim. Record agent prefix-cache billing too.
-Warm grevi results prove replay speed, not fresh Jev inference quality.
+Warm jevify results prove replay speed, not fresh Jev inference quality.
 
 Freeze backend explicitly; TypeSafe and classifier.dev are separate treatments because
 limits, batching, billing visibility and availability differ. Record requested AND returned
@@ -374,7 +374,7 @@ Never interpret a high existence probability as confidence that the returned act
 Plot selective error versus coverage across frozen threshold sweeps on test for description,
 without choosing a new winner on test. Report correct abstention on unanswerable inputs,
 false abstention on answerable inputs, and inappropriate high-confidence acceptance.
-When grevi abstains, count the fallback cost and eventual episode outcome in A/B results.
+When jevify abstains, count the fallback cost and eventual episode outcome in A/B results.
 Test equivalent paraphrases, option permutations and independent uncached repeats; report
 decision flips near threshold and by backend. Perturbation variants stay clustered with
 their source task and do not multiply the independent sample size.
@@ -473,7 +473,7 @@ tool discovery. Small exact lookups and familiar tools are essential negative co
 | Correct candidate lost between windows | Tournament/pruning error | Candidate diversity or alternative shortlist rule within the frozen latency budget. |
 | Correct tool, wrong final artifact | Argument/execution gap | Value/operand handling and verification; do not improve only route hit rate. |
 | Cheap wrong answer accepted confidently | Calibration/framing failure | Per-signal reliability and fallback policy on new calibration data. |
-| Accurate grevi, worse episode cost/time | Integration overhead or excessive invocation | Shorter onboarding, targeted use, batch opportunities; retain full A/B accounting. |
+| Accurate jevify, worse episode cost/time | Integration overhead or excessive invocation | Shorter onboarding, targeted use, batch opportunities; retain full A/B accounting. |
 | No invocation on unfamiliar tasks | Discovery/usability failure | Inspect traces, then randomize integration changes; don't discard non-users. |
 | Zero tokens/requests despite network trouble | Observability failure | Attempt-level counters and nullable usage before any economic claim. |
 | Backend-only limit failures | Contract/adapter mismatch | Match batching and size limits to each service; preserve exact regression case. |
@@ -523,5 +523,5 @@ and a reproducible analysis command. Do not publish only the best endpoint or se
 Agent evaluations should grade observed environment outcomes and retain multiple trials
 and traces, as described in [Anthropic's agent evaluation guide](https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents).
 TypeSafe's [skill-suggestion experiment](https://docs.typesafe.ai/cookbooks/skill_suggestion)
-is a useful vendor example of a bounded routing intervention, not evidence that grevi
-achieves its gains. All grevi performance claims must come from grevi's own frozen runs.
+is a useful vendor example of a bounded routing intervention, not evidence that jevify
+achieves its gains. All jevify performance claims must come from jevify's own frozen runs.

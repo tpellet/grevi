@@ -1,11 +1,11 @@
-# grevi — robot mode
+# jevify — robot mode
 
-grevi answers a question about text that already exists: your input, the installed tools, a man
+jevify answers a question about text that already exists: your input, the installed tools, a man
 page, the folders on disk. It selects and never generates, so you can check every answer.
 
 ## When to call it
 
-You have `grep` and you can read files. Call grevi when those two run out:
+You have `grep` and you can read files. Call jevify when those two run out:
 
 - A long log, or a grep that found the symptom. `grep -iE "error|fail"` finds the line that says
   something failed. The line that says why often holds none of those words (an assertion's
@@ -21,7 +21,7 @@ You have `grep` and you can read files. Call grevi when those two run out:
   PATH by what its man page says it does, and only proposes what is installed.
 - Files whose names say nothing. `sort` reads the content and proposes an existing folder.
 
-Skip grevi when a literal search answers the question, when the input is short enough to read, or
+Skip jevify when a literal search answers the question, when the input is short enough to read, or
 when you already know the exact command.
 
 ## How to phrase
@@ -31,24 +31,24 @@ when you already know the exact command.
   also says yes to an employee who is leaving their company.
 - Describe the thing, not what you will do with it: `"the line with the failing assertion"`.
 - One question per call. English works best.
-- grevi does not count, do arithmetic, compare dates or judge quality.
+- jevify does not count, do arithmetic, compare dates or judge quality.
 
 ## Patterns
 
     for f in tickets/*.txt; do                                  # triage, read none of them
-      grevi is "the customer is about to stop being a customer" < "$f" >/dev/null 2>&1
+      jevify is "the customer is about to stop being a customer" < "$f" >/dev/null 2>&1
       echo "$f $?"                                              # 0 yes · 1 no · 3 unsure
     done
-    gh run view --log-failed | grevi why --json                 # root cause of a CI run
-    git show "$(git log --oneline | grevi pick "the commit that renamed the project" | cut -d' ' -f1)"
-    grevi add --json --dry-run "the token expiry fix"           # scores first; --yes stages
+    gh run view --log-failed | jevify why --json                # root cause of a CI run
+    git show "$(git log --oneline | jevify pick "the commit that renamed the project" | cut -d' ' -f1)"
+    jevify add --json --dry-run "the token expiry fix"          # scores first; --yes stages
 
 Human stdout is plain text made for pipes (`pick` prints the line, `is` prints nothing), so there
 is no automatic switch to JSON when piped. Pass `--json` when you want the envelope.
 
 ## The envelope
 
-Start here for the contract: `grevi capabilities --json`. Every command accepts `--json` (alias `--robot`) or
+Start here for the contract: `jevify capabilities --json`. Every command accepts `--json` (alias `--robot`) or
 `--format json|jsonl|toon` and then prints exactly one envelope on stdout, usage errors included:
 
     { ok, command, version, exit_code, data, meta{backend, model, elapsed_ms, requests,
@@ -90,7 +90,7 @@ subtotal with unknown attempts does not mean zero consumption. Cache hits add no
 usage or inference attempts. `meta.input_tokens` is `null` unless input usage is complete.
 
 `cost_estimate` records `basis`, `input_price_per_mtok`, `reported_input_subtotal_usd`, and
-`complete`. The estimate covers input tokens only at the configured `GREVI_PRICE_PER_MTOK`
+`complete`. The estimate covers input tokens only at the configured `JEVIFY_PRICE_PER_MTOK`
 price; it is not a billing receipt. `meta.cost_usd` is `null` when this input-token basis is
 incomplete, except that a configured zero price gives zero cost regardless of usage.
 Classifier defaults to zero with basis `free_service`; other configured pricing uses
@@ -107,7 +107,7 @@ inventing an output-token price. These counters contain no request payloads or c
   on output with no error-like line (usually stderr was not piped).
 - `run "<intent>"` → `data.tool, argv[], complete, blocked, executed`. Machine mode never executes
   unless `--exec --yes`; the child's stdout is redirected to stderr so stdout stays one envelope.
-  `blocked` names a tool grevi refuses to run (rm, dd, mkfs*, sudo, wrappers such as
+  `blocked` names a tool jevify refuses to run (rm, dd, mkfs*, sudo, wrappers such as
   sh/bash/env/xargs/find that would run another program, interpreters such as
   python*/perl*/ruby*/node*/php*/lua* that take program text, ...): run `argv` yourself under
   your own rules. Use `--dry-run` to route only. Only exact no-argument `true`, `false`, `pwd`,
@@ -122,7 +122,7 @@ inventing an output-token price. These counters contain no request payloads or c
 - On a very long log, `why` keeps the lines around every error-like line within a 4,000-line
   budget. `data.considered` and `data.total` say how much it looked at. If `considered` is far
   below `total` and the answer looks like a symptom, cut the log to the failing step and ask again.
-- Exit 4 with `HTTP 429` is the backend's rate limit: wait, or lower `GREVI_CONCURRENCY`.
+- Exit 4 with `HTTP 429` is the backend's rate limit: wait, or lower `JEVIFY_CONCURRENCY`.
 - `p` is a backend score; application calibration requires evidence for the task and question type.
   TypeSafe Noul and classifier binary Choice are not assumed interchangeable. Raising `-t`
   changes the policy but does not validate incomplete evidence or unsafe actions.
@@ -131,13 +131,13 @@ inventing an output-token price. These counters contain no request payloads or c
 - Input is read as data, but the model is not hardened against instructions embedded in it: text
   under your control is fine; do not use `is` or `pick` as a security gate on untrusted text.
 - TypeSafe defaults to `jev-1.13.0`; `--model jev-latest` follows its moving alias. Classifier
-  selects its model server-side and rejects explicit `--model`/`GREVI_MODEL` overrides.
-- No key is required: without one grevi asks classifier.dev, which runs the same Jev model and
+  selects its model server-side and rejects explicit `--model`/`JEVIFY_MODEL` overrides.
+- No key is required: without one jevify asks classifier.dev, which runs the same Jev model and
   serves it free. `meta.backend` (`typesafe` or `classifier`) says which API answered, `meta.model`
-  which build of Jev. `GREVI_BACKEND` forces one; `capabilities.backends` lists both with their
+  which build of Jev. `JEVIFY_BACKEND` forces one; `capabilities.backends` lists both with their
   limits. On `classifier` a question takes at most 100 options; the input takes 32,000 UTF-16
   code units and a request 20 questions. Serialized dimension definitions take at most 16,000
-  UTF-16 code units. grevi splits dimensions and rejects oversized fields or option sets
+  UTF-16 code units. jevify splits dimensions and rejects oversized fields or option sets
   locally; backend translations can change answers and confidence.
 - Cost is in `meta.cost_usd`, and is `0` at classifier's default zero price; repeated
   identical questions hit the local cache (`meta.cache_hits`), which never crosses backend,

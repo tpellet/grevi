@@ -7,7 +7,7 @@ Status: **local gates passed; bounded TypeSafe live probes exercised all six sem
 An Astra agent at low reasoning effort applied the E2E Pipeline Validator skill. It inspected the ten CLI commands, ran the complete default suite, exercised the actual binary without network access, and ran the real local inventory test. No production code or tests were changed. Semantic selections in the default tests use Wiremock/FakeJev and therefore are contract evidence, not evidence that Jev makes correct decisions.
 
 - Starting HEAD: `ee9eaed7194f6e6098435c71f7d4673c0918a7cf`; working tree was clean at the initial inspection. The lead subsequently changed tracker/documentation files concurrently. No isolated checkout was made.
-- Binary: debug `grevi 0.3.0`; SHA-256 `346f0c202b91a8c6dbe18378884a01ba88551e87e7494e6ca195df9efc4b8544`.
+- Binary: debug build of version 0.3.0; SHA-256 `346f0c202b91a8c6dbe18378884a01ba88551e87e7494e6ca195df9efc4b8544`.
 - Toolchain: rustc 1.93.1, cargo 1.93.1; macOS. These are debug-build observations, not release performance measurements.
 
 ## Executed checks
@@ -95,7 +95,7 @@ The add fixture staged a baseline `settings.txt` containing `token_expiry_second
 
 Sort inputs were exactly `Invoice for office supplies. Total 42 dollars.` in `march.txt` and `A poem: roses are red, violets are blue.` in `poem.txt`, with Finance and Poetry destinations. The restored SHA-256 values matched hashes independently computed from those expected literal bytes: invoice `577cb97f188040ee0060a21f84f736e4999c970ece6f7b023ae3fcd53a5cc1d4`; poem `57442c3ec31b8725d444890dd5e1e28cc678ffc0e26bc7ce7da7cc286d65dc3d`. Boundary fixtures contained the same invoice text with Finance and numbered generic folders (99/100 total).
 
-The explicit run inventory was `[{"name":"pwd","summary":"print working directory"},{"name":"wc","summary":"count lines, words, and bytes"}]`. Route-only intent was `print the current working directory`; full proposal intent was `print the physical current working directory`. Every CLI probe used `--json`, an explicit backend/base URL, and `GREVI_NO_CACHE=1`; only the TypeSafe CLI read the configured key file. Dry-run/apply/undo flags are shown in the result table.
+The explicit run inventory was `[{"name":"pwd","summary":"print working directory"},{"name":"wc","summary":"count lines, words, and bytes"}]`. Route-only intent was `print the current working directory`; full proposal intent was `print the physical current working directory`. Every CLI probe used `--json`, an explicit backend/base URL, and `JEVIFY_NO_CACHE=1`; only the TypeSafe CLI read the configured key file. Dry-run/apply/undo flags are shown in the result table.
 
 The scoped scratch directory retains these normalized records and SHA-256 hashes:
 
@@ -120,7 +120,7 @@ These records preserve selected output fields rather than complete stdout envelo
 
 5. **Current live tests are too narrow for a full E2E claim.** The live suite has local inventory, classifier pick, classifier health and TypeSafe routing only. It lacks live `why`, `is`, `add`, `sort`, argument correctness, mutation verification with real selections, and semantic error/limit cases. Extend the live matrix before describing every endpoint as fully tested; keep deterministic contract tests separate.
 
-6. **Secret redaction destroys a legitimate configuration diff.** The failed token-expiry case was traced to preprocessing, not simply attributed to Jev. A standalone Rust probe linked against `grevi::input::redact` transformed `-token_expiry_seconds=3600` and `+token_expiry_seconds=7200` into `-token[REDACTED]` and `+token[REDACTED]`. The optional delimiter in the secret regex lets an identifier suffix be treated as a secret. The model consequently cannot see the change it is asked to select. Preserve this as an end-to-end failure and add regression coverage for ordinary configuration identifiers/numeric values while retaining genuine credential masking. Preprocessing ablations should distinguish lost evidence from model reasoning errors.
+6. **Secret redaction destroys a legitimate configuration diff.** The failed token-expiry case was traced to preprocessing, not simply attributed to Jev. A standalone Rust probe linked against `jevify::input::redact` transformed `-token_expiry_seconds=3600` and `+token_expiry_seconds=7200` into `-token[REDACTED]` and `+token[REDACTED]`. The optional delimiter in the secret regex lets an identifier suffix be treated as a secret. The model consequently cannot see the change it is asked to select. Preserve this as an end-to-end failure and add regression coverage for ordinary configuration identifiers/numeric values while retaining genuine credential masking. Preprocessing ablations should distinguish lost evidence from model reasoning errors.
 
 Follow-up beads: request accounting `hunch-hjp`; sort limits `hunch-v3r`; run round contract `hunch-u07`; live matrix `hunch-3te`; redaction evidence loss `hunch-2v2` (P1). The lead owns tracker updates and integration.
 
@@ -128,7 +128,7 @@ Follow-up beads: request accounting `hunch-hjp`; sort limits `hunch-v3r`; run ro
 
 For each semantic verb, run approved real-corpus happy, ambiguity, no-match, negation, long-input, candidate-boundary, and misleading-input cases through both configured backends. Record immutable input/gold hashes, model identity, argv, exit/envelope, wall-clock duration, logical and physical request counts, bytes/token usage availability, cache state and actual effect verification. For `add`, verify exact staged patches and unchanged worktree content in a disposable non-clone repository. For `sort`, verify source/destination bytes, collisions, dry-run immutability and undo. For `run`, compare selected command and argv to executable gold and verify benign actual effects. Do not turn model mistakes into passing tests by relaxing gold after observing outputs.
 
-This audit left an empty scratch directory named `grevi-e2e-audit-9w1wol9h`, a scoped probe directory named `grevi-e2e-scoped-20260920-0414` containing the preserved binary, fictional fixtures, sanitized result records and a redaction probe, and the generated sort undo log `sort-undo-1789877697.tsv`. They were not deleted. Existing test-managed temporary directories follow the project's established test behavior. No benchmark payloads or raw service responses were added to this repository.
+This audit left an empty scratch directory (suffix `e2e-audit-9w1wol9h`), a scoped probe directory (suffix `e2e-scoped-20260920-0414`) containing the preserved binary, fictional fixtures, sanitized result records and a redaction probe, and the generated sort undo log `sort-undo-1789877697.tsv`. They were not deleted. Existing test-managed temporary directories follow the project's established test behavior. No benchmark payloads or raw service responses were added to this repository.
 
 UBS also reported scanner scratch directories `tmp.AhB1ClsOHE` and `tmp.TCzYsE8oMb`;
 no manual cleanup was performed.

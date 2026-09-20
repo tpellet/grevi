@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 430" width="960" height="430" role="img" aria-labelledby="t d">
-  <title id="t">grevi sort reads the files in a Downloads folder and proposes a folder for each</title>
-  <desc id="d">Five files with unhelpful names. grevi reads each one. document(3).txt holds a 1099 tax form and goes to Taxes/2025 at 0.69. BP_UA1523.txt is a boarding pass and goes to Boarding passes at 0.99. 1706.03762v7.txt is a research paper and goes to Papers at 0.89. A utility statement and a note fit no folder and stay where they are. It is a dry run: nothing moves until --apply, and --undo moves everything back. Output of grevi 0.3.0 on 2026-09-19.</desc>
+  <title id="t">jevify sort reads the files in a Downloads folder and proposes a folder for each</title>
+  <desc id="d">Five files with unhelpful names. jevify reads each one. document(3).txt holds a 1099 tax form and goes to Taxes/2025 at 0.69. BP_UA1523.txt is a boarding pass and goes to Boarding passes at 0.99. 1706.03762v7.txt is a research paper and goes to Papers at 0.89. A utility statement and a note fit no folder and stay where they are. It is a dry run: nothing moves until --apply, and --undo moves everything back. Output of jevify 0.3.0 on 2026-09-19.</desc>
   <style>
     text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size: 15px; fill: #e6edf3; }
     .dim { fill: #7d8590; }
@@ -19,7 +19,7 @@
     #foot { animation-name: foot; }
     @keyframes all { 0% { opacity: 0; } 2%, 96% { opacity: 1; } 100% { opacity: 0; } }
     @keyframes panes { 0%, 7% { opacity: 0; } 10%, 100% { opacity: 1; } }
-    /* s = what grevi read in the file; shown, then gone once the file has an answer */
+    /* s = what jevify read in the file; shown, then gone once the file has an answer */
     @keyframes s1 { 0%, 11% { opacity: 0; } 13%, 22% { opacity: 1; } 25%, 100% { opacity: 0; } }
     @keyframes s2 { 0%, 27% { opacity: 0; } 29%, 38% { opacity: 1; } 41%, 100% { opacity: 0; } }
     @keyframes s3 { 0%, 43% { opacity: 0; } 45%, 54% { opacity: 1; } 57%, 100% { opacity: 0; } }
@@ -42,7 +42,7 @@
   <rect width="960" height="430" rx="10" fill="#0d1117"/>
   <!-- the command stays visible for the whole loop: it is the point of the picture -->
   <rect x="16" y="16" width="928" height="36" rx="6" fill="#161b22" stroke="#30363d"/>
-  <text x="28" y="40" class="cmd"><tspan class="dim">$ </tspan><tspan class="verb">grevi sort</tspan> ~/Downloads</text>
+  <text x="28" y="40" class="cmd"><tspan class="dim">$ </tspan><tspan class="verb">jevify sort</tspan> ~/Downloads</text>
   <g id="all" class="a">
 
     <g id="panes" class="a">
@@ -62,7 +62,7 @@
       <text x="40" y="320">untitled.txt</text>
     </g>
 
-    <!-- what grevi read in each file -->
+    <!-- what jevify read in each file -->
     <g class="small dim">
       <text id="s1" class="a snip small dim" x="40" y="158">reads: "Form 1099-INT 2025 · Payer: Ally Bank · Interest income"</text>
       <text id="s2" class="a snip small dim" x="40" y="202">reads: "UNITED AIRLINES boarding pass · EWR to SFO · Seat 24C"</text>
@@ -87,7 +87,7 @@
     <g id="foot" class="a">
       <line x1="24" y1="372" x2="936" y2="372" stroke="#21262d"/>
       <text x="24" y="398">This was a dry run: nothing moved.</text>
-      <text x="24" y="418" class="dim small">--apply moves the three files and writes an undo log · --undo moves them back · grevi never overwrites or deletes a file</text>
+      <text x="24" y="418" class="dim small">--apply moves the three files and writes an undo log · --undo moves them back · jevify never overwrites or deletes a file</text>
     </g>
   </g>
 </svg>
