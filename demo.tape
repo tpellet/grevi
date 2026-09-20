@@ -1,4 +1,4 @@
-# demo.tape — grevi v0 demo (grevi-task-13c-demo-jk1)
+# demo.tape — grevi v0 demo (hunch-task-13c-demo-jk1)
 # Fixture data only: no real home directory, no key material shown.
 # Run: TYPESAFE_API_KEY_FILE=/path/to/key vhs demo.tape
 Output demo.gif

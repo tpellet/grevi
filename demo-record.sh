@@ -1,5 +1,5 @@
 #!/bin/bash
-# demo-record.sh — scripted terminal session for demo.gif (grevi-task-13c-demo-jk1)
+# demo-record.sh — scripted terminal session for demo.gif (hunch-task-13c-demo-jk1)
 #
 # Deviation from the bead: vhs's headless Chromium triggered a macOS keychain
 # prompt on the operator's screen (unattended run, nobody to answer it), so

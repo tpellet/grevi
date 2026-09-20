@@ -88,7 +88,7 @@ every `git push`: `gitleaks git . --log-opts="origin/main..HEAD" --redact -v` (n
 `.gitleaks.toml` applies), then read `git diff origin/main..HEAD` for keys, tokens, pasted API
 responses, absolute local paths, session URLs, personal details, other people's data. On a hit:
 fix forward in a new commit, never rewrite history, never force-push. Never commit communications
-drafts (tweet, Show HN, announcements): they live in `~/Projects/grevi-launch/`, outside the repo,
+drafts (tweet, Show HN, announcements): they live in `~/Projects/hunch-launch/`, outside the repo,
 and never go into bead fields or commit messages. User-facing docs say
 `TYPESAFE_API_KEY_FILE=/path/to/key` and "a typical macOS dev machine", never the real key path
 or personal tooling. Commit bodies stay technical: no `Co-Authored-By`, no `Claude-Session:`

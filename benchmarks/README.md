@@ -72,7 +72,7 @@ Reading the table:
 Connection prewarm: `Client::prewarm` spawns a `GET /v1/models` before the verb's local work so
 the first real request finds a pooled TLS connection. Decided twice, on the same day, on
 evidence: removed everywhere (Task 12, measured on `pick`), then re-added for `run` alone
-(bead grevi-n2h, measured on `run cold full`). Only `run` calls it today; there is no
+(bead hunch-n2h, measured on `run cold full`). Only `run` calls it today; there is no
 `GREVI_NO_PREWARM` switch.
 
 ### Round 1 (Task 12): removed, measured on `pick`
@@ -122,7 +122,7 @@ by 10 ms in the same session, so 170 ms is well above the noise between arms.
 The decision rule is defined on `pick`, so prewarm was removed as the plan required, and the
 `run` finding was left for a follow-up decision on a `run cold full` A/B like the one above.
 
-### Round 2 (grevi-n2h): re-added for `run` only, measured on `run cold full`
+### Round 2 (hunch-n2h): re-added for `run` only, measured on `run cold full`
 
 Same day, same conditions (a typical macOS dev machine, consumer Wi-Fi, `jev-1.13.0`, hyperfine
 1.20.0, `--warmup 1 --runs 15 --ignore-failure`, `GREVI_NO_CACHE=1`, the `bench.sh` "run cold
