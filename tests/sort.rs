@@ -1,6 +1,63 @@
 mod common;
 use common::FakeJev;
 
+async fn sort_with_folder_count(classifier: bool, folders: usize) -> serde_json::Value {
+    let fake = FakeJev {
+        choose: |_, _, _| "NONE".into(),
+        noul: |_, _| 0.1,
+    };
+    let server = if classifier {
+        common::mock_classifier(fake).await
+    } else {
+        common::mock(fake).await
+    };
+    let d = tempfile::tempdir().unwrap();
+    for i in 0..folders {
+        std::fs::create_dir(d.path().join(format!("folder-{i:03}"))).unwrap();
+    }
+    std::fs::write(
+        d.path().join("unknown.txt"),
+        "nothing identifies a destination",
+    )
+    .unwrap();
+    let mut command = if classifier {
+        common::grevi_classifier(&server)
+    } else {
+        common::grevi(&server)
+    };
+    let out = command
+        .args(["--json", "sort", d.path().to_str().unwrap()])
+        .output()
+        .unwrap();
+    serde_json::from_slice(&out.stdout).unwrap()
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn destination_capacity_is_backend_aware_without_dropping_folders() {
+    for folders in [99, 100, 200] {
+        let v = sort_with_folder_count(false, folders).await;
+        assert_eq!(v["exit_code"], 3, "TypeSafe with {folders} folders: {v}");
+        assert_eq!(v["data"]["moves"].as_array().unwrap().len(), 0, "{v}");
+    }
+
+    let v = sort_with_folder_count(true, 99).await;
+    assert_eq!(v["exit_code"], 3, "classifier with 99 folders: {v}");
+    assert_eq!(v["data"]["moves"].as_array().unwrap().len(), 0, "{v}");
+
+    for folders in [100, 200] {
+        let v = sort_with_folder_count(true, folders).await;
+        assert_eq!(v["exit_code"], 6, "classifier with {folders} folders: {v}");
+        assert_eq!(v["error"]["kind"], "input_too_large", "{v}");
+        assert!(
+            v["error"]["message"]
+                .as_str()
+                .unwrap()
+                .contains("at most 99 destination folders"),
+            "{v}"
+        );
+    }
+}
+
 #[tokio::test(flavor = "multi_thread")]
 async fn dangling_targets_and_outside_symlinks_are_not_followed() {
     use std::os::unix::fs::symlink;

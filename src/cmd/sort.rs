@@ -349,6 +349,14 @@ pub async fn run(
             root.display()
         )));
     }
+    if dests.len() > ctx.backend.window() {
+        return Err(GreviError::InputTooLarge(format!(
+            "{} supports at most {} destination folders per sort; found {}",
+            ctx.backend.as_str(),
+            ctx.backend.window(),
+            dests.len()
+        )));
+    }
     let mut files: Vec<PathBuf> = std::fs::read_dir(&dir)
         .map_err(|e| GreviError::Input(e.to_string()))?
         .flatten()
