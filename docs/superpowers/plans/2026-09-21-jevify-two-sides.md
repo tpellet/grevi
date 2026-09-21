@@ -60,7 +60,7 @@ Marker grammar:
 
 ```
 marker  := "@{" KIND ":" BODY "}"
-KIND    := "-" | [a-z][a-z-]*            registered kinds only
+KIND    := "-" | [a-z][a-z-]*            the lexer keeps no registry; `fill` validates the name
 BODY    := bytes up to the first unescaped "}"; "\}" is a literal "}"
 one     := "@{one:" OPT ("|" OPT)* ":" QUESTION "}"      escapes \: \| \}
 flag    := "@{flag:" FLAGTEXT ":" QUESTION "}"           whole argv element; FLAGTEXT starts with "-"
@@ -70,8 +70,13 @@ escape  := "@@{"  →  literal "@{"
 - One wrapping pair of `'…'` or `"…"` around BODY is dropped. A newline in BODY becomes a space.
 - Escapes are decoded once. Substituted text is never lexed again, so a handle that holds `@{`
   stays literal.
-- Exit 2, nothing runs: unknown kind (the error names the nearest kind and lists the kinds),
-  `@{word:` with no closing `}`, empty BODY, BODY that is not UTF-8, `flag` embedded in a larger
+- **The lexer keeps no registry.** `marker::parse` knows the syntax of `-`, `one` and `flag`
+  and returns every other syntactically valid kind as a named kind with its span. `fill`
+  validates the names before any other I/O, against the coded kinds, the shipped recipes and,
+  from Phase 3 and only when a name is in neither, the user's `kinds.jsonl`. An unknown name
+  is exit 2, nothing runs: the error names the nearest kind, lists the kinds, and shows the
+  `@@{` spelling for a literal.
+- Exit 2 from the lexer, nothing runs: `@{word:` with no closing `}`, empty BODY, BODY that is not UTF-8, `flag` embedded in a larger
   argument, zero markers, a `one` with fewer than two options or a repeated option, a marker in
   `argv[0]`, and stdin with two roles (a `-` marker without `--candidates FILE` next to a `one`
   or `flag` marker without `--context FILE`).
@@ -80,8 +85,8 @@ escape  := "@@{"  →  literal "@{"
   command as separate arguments".
 - `@{` followed by anything that is not `KIND:` is literal (`@{u}`, `HEAD@{2}`, `@{1 day ago}`).
   `KIND:` is a syntactic test: the Python format string `{user}@{host:>8}` holds `@{host:`,
-  which is a marker with an unknown kind. It is exit 2, not a literal, and the message shows
-  the `@@{` spelling: `'{user}@@{host:>8}'`.
+  which the lexer returns as a marker of the named kind `host`. `fill` finds no such kind: it
+  is exit 2, not a literal, and the message shows the `@@{` spelling: `'{user}@@{host:>8}'`.
 - Every other byte of every argument passes through unchanged. Argv is `OsString` end to end.
 - After `--` every token belongs to the command, a second `--` included.
 
@@ -91,9 +96,9 @@ New files:
 
 | File | Contents | Tests |
 |:---|:---|:---|
-| `src/marker.rs` | Pure lexer: `parse(&[OsString]) -> Result<Vec<Arg>, MarkerError>`; `substitute`. No I/O. | inline table tests |
+| `src/marker.rs` | Pure lexer: `parse(&[OsString]) -> Result<Vec<Arg>, MarkerError>`; `substitute`. No I/O and no registry: it knows the syntax of `-`, `one` and `flag` and returns every other valid kind as a named kind with its span. The unknown-kind error belongs to `fill`. | inline table tests |
 | `src/records.rs` | The record model of `pick`, `filter`, `label` and of `@{-:…}`, over raw bytes. `Record { handle, evidence: String, raw: Range<usize> }` indexes one input buffer. It also holds the one withholding policy for excerpts (2.2), which `--files` applies on every verb. | inline |
-| `src/source.rs` | `enumerate(kind, scope, limit, env) -> Listing { records, total, omitted, ordered }`: the coded kinds and the recipe engine (2.2). Listers run an argv, never a shell, under one deadline. `env` is the injected environment: `PATH`, the configuration directory, the deadline. | inline + `tests/fill.rs`, `tests/pick.rs` |
+| `src/source.rs` | `enumerate(kind, scope, limit, env) -> Listing { records, total, omitted, ordered }`, tier-one evidence only, and `enrich(kind, handles) -> Vec<String>`, tier-two evidence for the given finalists only: the coded kinds and the recipe engine (2.2). Listers run an argv, never a shell, under one deadline. `env` is the injected environment: `PATH`, the configuration directory, the deadline. | inline + `tests/fill.rs`, `tests/pick.rs` |
 | `src/kinds.jsonl` | The shipped recipes, one JSON object per line, compiled in with `include_str!`. | the recipe table test |
 | `src/cmd/fill.rs` | lex → read inputs → enumerate → resolve → substitute → print or `exec`. | `tests/fill.rs` |
 | `src/cmd/filter.rs`, `src/cmd/label.rs` | Per-record verbs; the scorer of 2.3 lives in `filter.rs`. | `tests/filter.rs`, `tests/label.rs` |
@@ -143,12 +148,18 @@ The status line names `n` when it is not 3: `finalists per window: 2`. `tests/to
 proves it on the classifier backend with 4,000 items (41 windows, `n = 2`, 82 finalists in one
 finals request) and with 9,802 items (`too_many`, no request).
 
-1. **Lex and validate** the whole argv and the options before any I/O. A machine format without
+1. **Lex and validate** the whole argv and the options before any I/O. The lexer returns named
+   kinds; `fill` checks each name against the coded kinds and the shipped recipes (from Phase
+   3 also the user's `kinds.jsonl`, read only when a name is in neither): an unknown name is
+   exit 2 with the nearest kind and the `@@{` spelling. A machine format without
    `--dry-run` is exit 2. A literal `argv[0]` that is not on the PATH is exit 6 `cannot_run`.
 2. **Read inputs.** `-` reads `--candidates FILE` or stdin. `one` and `flag` read
    `--context FILE` or stdin. stdin is read once, on the blocking pool, up to 64 MiB. A required
    stdin that is a terminal is exit 6 `stdin_is_tty`. A context above the evidence budget is
-   exit 3 `insufficient_evidence` with no request, as `is` does (`src/cmd/is.rs:21-31`).
+   exit 3 `insufficient_evidence` with no request. The behaviour is that of `is`
+   (`src/cmd/is.rs:21-31`); the word is not: `insufficient_evidence` is a reason of `fill`
+   only, and `is` keeps its `data.reason` sentence ("input exceeds the evidence budget; whole
+   input not judged", `src/cmd/is.rs:28`).
 3. **Enumerate** each distinct `(kind, prefix)` once, in parallel. A lister that fails or passes
    its deadline is killed, and the call is exit 6 `lister_failed` with a bounded tail of the
    tool's stderr. Then, per marker:
@@ -181,7 +192,16 @@ finals request) and with 9,802 items (`too_many`, no request).
    - Finalist evidence needs no callback. A caller with tier-two evidence makes two calls:
      `tournament::shortlist` for round 1 (`src/tournament.rs:149`), then it fetches the
      evidence of the finalists itself (async, inside `spawn_blocking`, after the withholding
-     check), then `tournament::window` for the finals. `fill`, `pick --from` and `pick --files`
+     check), then `tournament::window` for the finals. `shortlist` returns, per window, the
+     full `Ranking` (candidates, `any`, `none`); today `:149-167` keeps the candidates only.
+     With one window the caller decides from that `Ranking` with no second request
+     (`tests/tournament.rs`: decisive, low `any`, dominant `NONE`, each with exactly one
+     request).
+   - Enumeration is tier-one only. `source::enrich(kind, handles) -> Vec<String>` (async; git
+     or file reads on the blocking pool; the withholding function first for path kinds)
+     returns tier-two evidence for the given finalists only. `fill` and `pick --from` call it
+     after `shortlist`. Test: a fake `git` records its invocations, and no tier-two command
+     runs for a non-finalist. `fill`, `pick --from` and `pick --files`
      all use this shape. `rank` stays for callers with no tier two (stdin `pick`, `why`).
    - `decide` (the ratio, `ambiguous`) serves `fill` and `pick --from` only. stdin `pick` keeps
      its found rule (`any ≥ threshold` and best > `NONE`, `src/cmd/pick.rs:83-88`) and its
@@ -215,8 +235,11 @@ finals request) and with 9,802 items (`too_many`, no request).
    UTF-8 reaches the command unchanged. A path handle is relative to the prefix it was listed under, so
    `'src/@{file:…}'` becomes `src/cmd/add.rs`. A path handle that opens its argument and
    starts with `-` gets `./`. A `flag` that is left out removes its whole argv element.
-8. **`--dry-run`:** print the quoted command on stdout, one line, through `output::shell_quote`;
-   exit 0. Quoting works on bytes, so an argument that is not UTF-8 prints and reads back
+8. **`--dry-run`:** print one command on stdout through `output::shell_quote`; exit 0. It is
+   one physical line unless an argument holds a newline; such an argument is single-quoted
+   with its newline kept, which bash, zsh and dash read back exactly. Status lines on stderr
+   escape a newline in a handle or an argument as `\n`, so each status line stays one line
+   with its prefix. Quoting works on bytes, so an argument that is not UTF-8 prints and reads back
    exactly. With a machine format the envelope carries `data.argv`; an argv that is not UTF-8
    is exit 6 `cannot_run` there, because JSON cannot hold it.
 9. **Run.** Print the evidence lines and `jevify fill: exec <quoted command>` on stderr, flush,
@@ -246,6 +269,12 @@ finals request) and with 9,802 items (`too_many`, no request).
      shows one bin target, `jevify`.
    - After an `exec` line, the exit code belongs to the command. Without one, the last line is
      `jevify fill: not run: <reason>` and the code is 2 to 6.
+   - That holds for every error of `fill`. When the verb is `fill`, `run_cli` writes each
+     error (clap, configuration, dispatch, a failed `exec`) as
+     `jevify fill: not run: <kind>: <message>`; the hint follows as a second `jevify fill:`
+     line unless `-q`. `report_error` writes `error`, `hint` and `try` lines today
+     (`src/lib.rs:196-205`) and keeps them for the other verbs. Machine envelopes keep their
+     shape. Bead 2.0 owns this rendering.
    - `fill -q` prints only `not run:` lines. `jevify fill -q -- CMD 2>&1 | jevify why` then
      reads the command's output alone, and a `not run:` line is the true cause, which `why`
      may point at. Output verbs have no special case for `fill`.
@@ -371,9 +400,12 @@ outside the record model (§1 rule 1): it takes no split option and keeps its ou
 - **Splitting**, exactly one of: lines (default), `-0`, `--para`. Two together is exit 2.
 - **`--files`** is a boolean on `pick`, `filter` and `label`: the record is a path and the
   evidence is its first lines, so `fd -0 | jevify filter -0 --files '…'` works. The order is
-  fixed: the withholding function of 2.2 runs first; a relative path is then resolved against
-  the working directory, because `sort::excerpt` needs an absolute normalized path
-  (`src/cmd/sort.rs:46-47`); every excerpt read runs inside `spawn_blocking`, because
+  fixed: the withholding function of 2.2 runs first; the path is then resolved, because
+  `sort::excerpt` needs an absolute normalized path (`src/cmd/sort.rs:46-47`): join it with
+  the working directory, drop `.` components lexically, canonicalize the parent directory
+  only, and append the final component unfollowed; a final symlink is withheld and counted
+  (inline tests: `./a.txt`, `a/../b.txt`, a directory reached through a symlinked ancestor,
+  which a macOS temporary directory is); every excerpt read runs inside `spawn_blocking`, because
   `excerpt` reads files and may start `pdftotext`. `pick --files` keeps its two stages: path
   names first, excerpts for the finalists.
 - **A machine format and a record that is not UTF-8.** The envelope carries the record's
@@ -458,11 +490,15 @@ The scorer (`filter`, `label`):
   (classifier.dev OpenAPI). It is never retried: exit 4, message "daily quota of the free
   backend reached"; the printed records are a correct prefix and the last line says
   `answered 3000 of 3120`. `rate_limit_minute` and every other 429 are retried after
-  `Retry-After` (`src/jev/client.rs:418-422`). For `ask_each` the cap on one wait is 60 s (it
-  is 10 s today, `retry_after`, `src/jev/client.rs:442-451`), because a minute limit needs a
-  minute. A 429 whose `Retry-After` exceeds the 60 s cap is not retried, and the message
-  names the limit from the body's `code` (`rate_limit_hour` included). The FakeJev quota
-  responder returns exactly that status and body.
+  `Retry-After` (`src/jev/client.rs:418-422`). In `ask_each` a `Retry-After` up
+  to 60 s is honoured as given, because a minute limit needs a minute; above 60 s the request
+  is not retried: exit 4 after one request, and the message names the limit from the body's
+  `code` (`rate_limit_hour` included). Tests go through the wait-decision function, not by
+  sleeping: 30 s, 60 s, 61 s, 3600 s. `ask` keeps its 10 s cap (`retry_after`,
+  `src/jev/client.rs:442-451`). The quota error is `JevifyError::Unavailable(message)`: no
+  new variant, and `src/exit.rs` does not change for it. The body is already read at
+  `src/jev/client.rs:383`; its `code` is parsed before the 429 arm (`:418-422`). The FakeJev
+  quota responder returns exactly that status and body.
 - **The ceiling** is 20,000 distinct records, a day of the free backend: exit 6 `too_many`, and
   the message says to narrow with `grep` or `head`. There is no flag to raise it.
 - **`filter` flags:** `-v` keeps the records where the statement is false, `-c` prints the
@@ -473,8 +509,10 @@ The scorer (`filter`, `label`):
 ### 2.4 The saved input
 
 `why` and `filter` write the full input, as the bytes they read, to
-`<save dir>/outputs/<blake3-16>.log` before the first request, and print `full output: PATH` as
-their last stderr line. Only these two save. stdin `pick` saves nothing: it returns one record
+`<save dir>/outputs/<blake3-16>.log` before the first request, and name the path in one final
+status line, as the vision shows: `jevify filter: kept 31 of 10074, 2 unsure, full output: PATH`
+(or `…, full output: not saved (<reason>)`); `why` ends with `jevify why: full output: PATH`.
+Only these two save. stdin `pick` saves nothing: it returns one record
 of a list the caller can list again. `label` saves nothing: every record comes out.
 
 - The name is the content hash: no slot, no index file, no lock. The write goes through a
@@ -497,8 +535,18 @@ manifests, then the version bump and the release through `bash scripts/release.s
 
 - **A contract bead waits for the behaviour it documents**, so it never closes before the
   status lines it quotes exist. The "After" columns below say which beads.
-- **The tracker.** Workers change bead state with `br` only and never stage `.beads/`. The
-  lead exports (`br sync --flush-only`) and commits `.beads/` between waves.
+- **The tracker.** Workers change bead state with `br update` only and never stage `.beads/`.
+  The lead exports (`br sync --flush-only`) and commits `.beads/` between waves.
+- **The gate is divided.** Workers run in a sandbox that cannot bind 127.0.0.1 or reach
+  `~/.ssh`. The worker runs `cargo fmt --check`, `cargo check --locked --all-targets`,
+  `cargo clippy --locked --all-targets -- -D warnings`,
+  `RUSTDOCFLAGS='-D warnings' cargo doc --locked --no-deps` and `ubs <changed files>`, and
+  tries `cargo test --locked -- --test-threads=1`; when the sandbox blocks the tests it
+  reports them as NOT RUN with the error. The lead then runs the full test gate outside the
+  sandbox, sends failures back to the worker, and only the lead stages, commits (signed),
+  pushes and closes the bead. Workers never run `git add`, `git commit`, `git push` or
+  `br close`. No language feature newer than Rust 1.87 (no let chains): CI runs on Linux with
+  toolchain 1.87.0, and a red CI on a commit is its worker's to fix forward.
 - **`ubs` on a bead whose changed files are only Markdown or JSON**: run `ubs <changed files>`;
   when it reports that nothing was scanned, record "ubs: not applicable, nothing scanned" in
   the bead and validate every JSON file with `jq .`. That is a pass. The rule is in the Rules
@@ -564,8 +612,25 @@ stays green. Bead 1.7 puts `pick` on the byte records, adds `-0 --files`, the wi
 function and the relative-path rule of 2.3, and completes those tests in place. `why` gets no
 `-0`, `--para` or `--files` in the parser.
 
-Until bead 1.6 the `is` of bead 1.0 refuses more than one statement with an input error; it
-never judges only the first.
+**Interim behaviour of bead 1.0, all with zero requests.** `pick -0` and `pick --para` return
+a "not implemented" input error until 1.7. `why --no-save` parses and is a no-op until 1.7.
+`pick --files` keeps `visible()` (`src/cmd/pick.rs:145`) and applies it to the excerpt read:
+a hidden path is a candidate by name and gets no excerpt, until 1.7 replaces it with the
+withholding function; the moved test pipes the five visible names plus `.env` and asserts
+that no request holds `TOKEN=1099`. The public async excerpt function of the `records.rs`
+stub calls the withholding function, so 1.0 holds no dead code. Bead 1.0 installs and wires
+the final `is` signature, `run(ctx, statements: &[String], context: Option<&Path>)`; the
+refusal of several statements until 1.6 lives in `src/cmd/is.rs` (an input error; it never
+judges only the first), so bead 1.6 never touches dispatch.
+
+**Removed forms get one corrected line.** A pre-scan of `args_os` in `main_exit`, before
+`Cli::try_parse`, maps a first token `run` and a `why … --` to `JevifyError::Usage` with the
+corrected form; the envelope `command` is `jevify` for `run` and `why` for `why`.
+
+**`Exit::ALL`.** Bead 1.0 rewrites its descriptions (`src/exit.rs:22`, `:29`): exit 0 without
+"executed"; exit 7 names only the verbs that still produce it in 0.5.0, or "reserved" when
+none does; the inline test at `:131` follows. Bead 1.8 adds the output of
+`jevify capabilities --json` to its anchored grep targets.
 
 `is 'a' 'b' 'c'`: one Noul per statement in one request (21 statements are two requests on
 classifier, one on TypeSafe); exit 1 when any is no, else 3 when
@@ -624,8 +689,9 @@ three markers; the sh helper receives the exact argv, a non-UTF-8 handle include
 `flag` and an answer from another model run nothing (a sentinel file proves it), and so does
 an answer whose `meta.model` has one part that is not Jev; `F + 1` lines are `too_many` with
 no request; 250 lines resolve in two rounds and the finals hold three finalists of every
-window; on the classifier backend 4,000 items give `n = 2` in one finals request and 9,802
-items are `too_many` with no request, for `pick` and for `pick --from`; `why` with
+window; on the classifier backend 4,000 items give `n = 2` in one finals request; 9,802
+candidates of an unordered list (stdin `pick`, an unordered kind) are `too_many` with no
+request, and an ordered kind (`pick --from branch`) keeps its newest 9,801 and says so; `why` with
 `MAX_KEEP` lines resolves with `n = 2`; a `one` with `W` options resolves and with `W + 1` is
 exit 2; several failed markers report the first in argv order and list all in
 `data.markers[]`; `cargo metadata` shows one bin target, `jevify`.
@@ -719,10 +785,13 @@ Each item was cut on purpose and names what brings it back.
 - `marker.rs` table: every literal (`@{u}`, `@{-1}`, `HEAD@{2}`, `stash@{0}`, `@{1 day ago}`,
   `@types/node`, `user@host:path`, PowerShell `@{k='v'}`), prefix,
   suffix, flag value, two markers in one argument, `\}`, quotes stripped once, unterminated,
-  unknown kind with suggestion, empty body, a marker in `argv[0]`, a non-UTF-8 literal,
-  `one` and `flag`, substituted text that holds `@{`, stdin with two roles. Python
-  `{user}@{host:>8}` is in the error rows: unknown kind `host`, exit 2, and the message shows
-  `'{user}@@{host:>8}'`; `{user}@@{host:>8}` is in the literal rows.
+  empty body, a marker in `argv[0]`, a non-UTF-8 literal, `one` and `flag`, substituted text
+  that holds `@{`, stdin with two roles. The table has no unknown-kind row: `@{widget:x}` and
+  Python `{user}@{host:>8}` lex as named kinds (`widget`, `host`) with their spans, and
+  `{user}@@{host:>8}` is in the literal rows. The unknown-kind check and its tests are in
+  `tests/fill.rs`: `host` is exit 2 before any other I/O (no lister runs, no request), with the
+  nearest kind and `'{user}@@{host:>8}'`. Phase 3 extends the same check to user recipes with
+  no change to `src/marker.rs`.
 - `FakeJev` gives the winner 0.9 and spreads 0.1 (`tests/common/mod.rs:26-31`), so no tie and
   no `ambiguous` path can be written today. Bead 1.2 adds a probability vector per question,
   the batch responder, a named model per dimension, and the quota responder (HTTP 429 with
@@ -896,7 +965,8 @@ Nothing rations requests. What bounds a verb is time: two rounds, the client sem
 12. The removal of `run`'s flags in bead 1.0 rewrites seven tests of `tests/run_args.rs` and
     `tests/run_route.rs` to exit-2 and print-only assertions. It is the approved removal of
     `run`, not a weakened test.
-13. `rate_limit_day` is never retried; one wait of `ask_each` is capped at 60 s.
+13. `rate_limit_day` is never retried; `ask_each` honours a `Retry-After` up to 60 s as given
+    and does not retry above it.
 14. `{user}@{host:>8}` is an unknown kind, exit 2; the literal is spelled `@@{`.
 15. A handle is an `OsString`. A record that is not UTF-8 is `text`, `lossy: true` and
     `ordinal` under a machine format; no base64.

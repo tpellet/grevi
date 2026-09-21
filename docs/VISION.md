@@ -161,9 +161,10 @@ runs. A list with no kind is a pipe into `'@{-:…}'`, shaped by `sed`, `cut` or
 - Code handles order, counts and dates before the model is asked. "The newest branch" is a sort.
 
 **The run.** `fill` becomes the command, as `env` and `nice` do: it replaces itself with the
-resolved argument list, with no shell and no process in between. `--dry-run` prints the command
-on one line, quoted so that bash, zsh and dash read it back exactly, and runs nothing. The
-printed line is the command that a run executes.
+resolved argument list, with no shell and no process in between. `--dry-run` prints the command,
+quoted so that bash, zsh and dash read it back exactly, and runs nothing. It is one line unless
+an argument holds a newline, which stays inside its single quotes. What it prints is the command
+that a run executes.
 
 - The caller's own permission system decides what may run; jevify is not a permission system.
 - The command owns its output, its signals, its terminal and its exit code. jevify writes to
