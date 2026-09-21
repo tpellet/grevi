@@ -24,6 +24,208 @@ async fn malformed_choice_labels_return_a_protocol_envelope() {
 use common::{FakeJev, option_containing};
 
 #[tokio::test(flavor = "multi_thread")]
+async fn selected_records_preserve_bytes_and_split_terminators() {
+    let server = common::mock(FakeJev {
+        choose: |_, s, o| option_containing(s, o, "invoice"),
+        noul: |_, _| 0.9,
+    })
+    .await;
+    for (flag, input, expected) in [
+        (
+            None,
+            b"other\n\x1b[31minvoice\x1b[0m\n".as_slice(),
+            b"\x1b[31minvoice\x1b[0m\n".as_slice(),
+        ),
+        (None, b"other\r\ninvoice\r\n", b"invoice\r\n"),
+        (None, b"other\ninvoice\xff\n", b"invoice\xff\n"),
+        (None, b"other\ninvoice", b"invoice"),
+        (Some("-0"), b"other\0invoice\0", b"invoice\0"),
+        (
+            Some("--para"),
+            b"other\n\ninvoice\ncontinued\n\n",
+            b"invoice\ncontinued\n\n",
+        ),
+    ] {
+        let mut cmd = common::jevify(&server);
+        cmd.args(["pick", "bill"]);
+        if let Some(flag) = flag {
+            cmd.arg(flag);
+        }
+        let out = tokio::task::spawn_blocking(move || cmd.write_stdin(input).output().unwrap())
+            .await
+            .unwrap();
+        assert_eq!(out.status.code(), Some(0));
+        assert_eq!(out.stdout, expected);
+    }
+    let mut cmd = common::jevify(&server);
+    let out = tokio::task::spawn_blocking(move || {
+        cmd.args(["--json", "pick", "bill"])
+            .write_stdin(b"other\ninvoice\xff\n".as_slice())
+            .output()
+            .unwrap()
+    })
+    .await
+    .unwrap();
+    let value: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+    assert_eq!(value["data"]["matches"][0]["text"], "invoice\u{fffd}\n");
+    assert_eq!(value["data"]["matches"][0]["lossy"], true);
+    assert_eq!(value["data"]["matches"][0]["ordinal"], 2);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn three_best_index_blank_limit_and_no_saved_input() {
+    let server = common::mock(
+        FakeJev {
+            choose: |_, _, _| "L000".into(),
+            noul: |_, _| 0.9,
+        }
+        .with_probabilities(|_, _, options| {
+            options
+                .iter()
+                .map(|o| match o.as_str() {
+                    "L000" => 0.4,
+                    "L001" => 0.3,
+                    "L002" => 0.2,
+                    "NONE" => 0.1,
+                    "yes" => 0.9,
+                    _ => 0.1,
+                })
+                .collect()
+        }),
+    )
+    .await;
+    let root = tempfile::tempdir().unwrap().keep();
+    for (args, input, code, expected) in [
+        (
+            vec!["pick", "-n", "3", "x"],
+            "a\nb\nc\n".to_string(),
+            0,
+            "a\nb\nc\n",
+        ),
+        (
+            vec!["pick", "--index", "x"],
+            "\na\nb\nc\n".to_string(),
+            0,
+            "2\n",
+        ),
+        (vec!["pick", "x"], " \n\t\n".to_string(), 6, ""),
+        (
+            vec!["pick", "x"],
+            (0..20_001).map(|i| format!("{i}\n")).collect(),
+            6,
+            "",
+        ),
+    ] {
+        let mut cmd = common::jevify(&server);
+        cmd.env("JEVIFY_CACHE_DIR", &root);
+        let out = tokio::task::spawn_blocking(move || {
+            cmd.args(args).write_stdin(input).output().unwrap()
+        })
+        .await
+        .unwrap();
+        assert_eq!(out.status.code(), Some(code));
+        assert_eq!(out.stdout, expected.as_bytes());
+    }
+    assert_eq!(std::fs::read_dir(root).unwrap().count(), 0);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn nul_file_paths_resolve_relative_names_and_withhold_npmrc() {
+    let server = common::mock(FakeJev {
+        choose: |_, s, o| option_containing(s, o, "invoice"),
+        noul: |_, _| 0.9,
+    })
+    .await;
+    let root = tempfile::tempdir().unwrap().keep();
+    std::fs::write(root.join("invoice.txt"), "VISIBLE_FILE_BODY").unwrap();
+    std::fs::write(root.join(".npmrc"), "TOKEN=1099").unwrap();
+    let mut cmd = common::jevify(&server);
+    cmd.current_dir(root);
+    let out = tokio::task::spawn_blocking(move || {
+        cmd.args(["pick", "-0", "--files", "bill"])
+            .write_stdin(b"./invoice.txt\0.npmrc\0".as_slice())
+            .output()
+            .unwrap()
+    })
+    .await
+    .unwrap();
+    assert_eq!(out.status.code(), Some(0));
+    assert_eq!(out.stdout, b"./invoice.txt\0");
+    assert!(String::from_utf8_lossy(&out.stderr).contains("excerpts withheld: 1"));
+    let requests = server.received_requests().await.unwrap();
+    assert_eq!(requests.len(), 2);
+    let first = String::from_utf8_lossy(&requests[0].body);
+    let second = String::from_utf8_lossy(&requests[1].body);
+    assert!(first.contains(".npmrc"));
+    assert!(!first.contains("VISIBLE_FILE_BODY"));
+    assert!(second.contains("VISIBLE_FILE_BODY"));
+    assert!(second.contains(".npmrc"));
+    assert!(
+        requests
+            .iter()
+            .all(|r| !String::from_utf8_lossy(&r.body).contains("TOKEN=1099"))
+    );
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn empty_file_shortlist_abstains_without_a_second_request() {
+    use wiremock::{Mock, MockServer, ResponseTemplate};
+    let server = MockServer::start().await;
+    Mock::given(wiremock::matchers::method("POST")).respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({"answers":{"any":{"noul":0.9},"pick":{"choice":"NONE","probabilities":{"L000":0.0,"NONE":1.0}}}}))).mount(&server).await;
+    let mut cmd = common::jevify(&server);
+    let out = tokio::task::spawn_blocking(move || {
+        cmd.args(["--json", "pick", "--files", "x"])
+            .write_stdin("a.txt\n")
+            .output()
+            .unwrap()
+    })
+    .await
+    .unwrap();
+    assert_eq!(
+        out.status.code(),
+        Some(3),
+        "{}",
+        String::from_utf8_lossy(&out.stdout)
+    );
+    let value: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+    assert_eq!(value["data"]["any"], 0.0);
+    assert_eq!(server.received_requests().await.unwrap().len(), 1);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn twins_that_split_choice_mass_abstain() {
+    let server = common::mock(
+        FakeJev {
+            choose: |_, _, _| "NONE".into(),
+            noul: |_, _| 0.9,
+        }
+        .with_probabilities(|_, _, options| {
+            options
+                .iter()
+                .map(|option| match option.as_str() {
+                    "NONE" => 0.4,
+                    "yes" => 0.9,
+                    "no" => 0.1,
+                    _ => 0.3,
+                })
+                .collect()
+        }),
+    )
+    .await;
+    let mut cmd = common::jevify(&server);
+    let out = tokio::task::spawn_blocking(move || {
+        cmd.args(["pick", "invoice"])
+            .write_stdin("invoice-a\ninvoice-b\n")
+            .output()
+            .unwrap()
+    })
+    .await
+    .unwrap();
+    assert_eq!(out.status.code(), Some(3));
+    assert!(out.stdout.is_empty());
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn prints_matching_line_raw() {
     let server = common::mock(FakeJev {
         choose: |_, s, o| option_containing(s, o, "invoice"),

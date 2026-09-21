@@ -54,13 +54,43 @@ pub async fn run(
     ctx: &Config,
     context: usize,
     top: usize,
-    _no_save: bool,
+    no_save: bool,
 ) -> Result<Outcome, JevifyError> {
     if top == 0 {
         return Err(JevifyError::Usage("-n must be at least 1".into()));
     }
     let client = Client::new(ctx)?;
-    let lines = crate::input::read_stdin_async().await?;
+    let directory = (!no_save)
+        .then(|| crate::config::save_dir(std::env::var("JEVIFY_CACHE_DIR").ok().as_deref()))
+        .flatten();
+    let (lines, saved) = tokio::task::spawn_blocking(move || {
+        let bytes = crate::input::read_stdin_bytes()?;
+        let saved = crate::save::save(&bytes, directory.as_deref());
+        let lines = crate::input::split_lines(&String::from_utf8_lossy(&bytes));
+        Ok::<_, JevifyError>((lines, saved))
+    })
+    .await
+    .map_err(|e| JevifyError::Input(e.to_string()))??;
+    let complete = saved.is_ok();
+    let saved_input = match saved {
+        Ok(path) => {
+            eprintln!(
+                "jevify why: full output: {}",
+                path.to_string_lossy().replace(['\r', '\n'], " ")
+            );
+            Some(path)
+        }
+        Err(reason) => {
+            eprintln!(
+                "jevify why: full output: not saved ({})",
+                reason.replace(['\r', '\n'], " ")
+            );
+            None
+        }
+    };
+    if lines.iter().all(|line| line.trim().is_empty()) {
+        return Err(JevifyError::EmptyInput("stdin was empty"));
+    }
     let kept = prefilter(&lines);
     let no_signal = !kept.iter().any(|&i| SIGNAL.is_match(&lines[i]));
     let items: Vec<String> = kept
@@ -139,7 +169,7 @@ pub async fn run(
         } else {
             Exit::Ok
         },
-        data: serde_json::json!({ "causes": causes, "any": ranking.any, "considered": kept.len(), "total": lines.len(), "hint": hint }),
+        data: serde_json::json!({ "causes": causes, "any": ranking.any, "considered": kept.len(), "total": lines.len(), "hint": hint, "saved_input": saved_input, "complete": complete }),
         human: human.into_bytes(),
         exec: None,
     })

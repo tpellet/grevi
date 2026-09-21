@@ -52,7 +52,7 @@ fn id(i: usize) -> String {
     format!("L{i:03}")
 }
 
-async fn window(
+pub(crate) async fn window(
     client: &Client,
     request: &str,
     items: &[(usize, String)],

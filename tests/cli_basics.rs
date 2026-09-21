@@ -287,7 +287,7 @@ fn clap_errors_preserve_non_utf8_args_and_stop_format_scanning_at_double_dash() 
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn interim_refusals_make_no_requests() {
+async fn record_forms_are_implemented_and_ask_the_backend() {
     let server = common::mock(common::FakeJev {
         choose: |_, _, _| "NONE".into(),
         noul: |_, _| 0.9,
@@ -309,17 +309,12 @@ async fn interim_refusals_make_no_requests() {
         })
         .await
         .unwrap();
-        assert_eq!(out.status.code(), Some(6));
+        assert_ne!(out.status.code(), Some(6));
         let value: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
-        assert!(
-            value["error"]["message"]
-                .as_str()
-                .unwrap()
-                .contains("not implemented")
-        );
-        assert_eq!(value["meta"]["requests"], 0);
+        assert!(value["error"].is_null());
+        assert_ne!(value["meta"]["requests"], 0);
     }
-    assert!(server.received_requests().await.unwrap().is_empty());
+    assert!(!server.received_requests().await.unwrap().is_empty());
 }
 
 #[test]
