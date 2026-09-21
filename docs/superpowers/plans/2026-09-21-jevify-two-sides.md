@@ -98,7 +98,7 @@ New files:
 |:---|:---|:---|
 | `src/marker.rs` | Pure lexer: `parse(&[OsString]) -> Result<Vec<Arg>, MarkerError>`; `substitute`. No I/O and no registry: it knows the syntax of `-`, `one` and `flag` and returns every other valid kind as a named kind with its span. The unknown-kind error belongs to `fill`. | inline table tests |
 | `src/records.rs` | The record model of `pick`, `filter`, `label` and of `@{-:…}`, over raw bytes. `Record { handle, evidence: String, raw: Range<usize> }` indexes one input buffer. It also holds the one withholding policy for excerpts (2.2), which `--files` applies on every verb. | inline |
-| `src/source.rs` | `enumerate(kind, scope, limit, env) -> Listing { records, total, omitted, ordered }`, tier-one evidence only, and `enrich(kind, handles) -> Vec<String>`, tier-two evidence for the given finalists only: the coded kinds and the recipe engine (2.2). Listers run an argv, never a shell, under one deadline. `env` is the injected environment: `PATH`, the configuration directory, the deadline. | inline + `tests/fill.rs`, `tests/pick.rs` |
+| `src/source.rs` | `enumerate(kind, scope, limit, env) -> Listing { records, total, omitted, ordered }`, tier-one evidence only, and `enrich(kind, handles) -> Vec<String>`, tier-two evidence for the given finalists only: the coded kinds and the recipe engine (2.2). Listers run an argv, never a shell, under one deadline. `scope` is `enum Scope { Input { bytes, split, field, key }, Prefix(Option<PathBuf>) }`: `Input` for `-` (the caller read stdin or `--candidates FILE` and passes the bytes; `enumerate` never reads stdin; it reuses `records::field` and `records::key`, `src/records.rs:88`, `:111`), `Prefix` for path kinds, `Prefix(None)` for `branch`. `env` is the injected environment: `PATH`, the configuration directory, the deadline. | inline + `tests/fill.rs`, `tests/pick.rs` |
 | `src/kinds.jsonl` | The shipped recipes, one JSON object per line, compiled in with `include_str!`. | the recipe table test |
 | `src/cmd/fill.rs` | lex → read inputs → enumerate → resolve → substitute → print or `exec`. | `tests/fill.rs` |
 | `src/cmd/filter.rs`, `src/cmd/label.rs` | Per-record verbs; the scorer of 2.3 lives in `filter.rs`. | `tests/filter.rs`, `tests/label.rs` |
@@ -109,17 +109,18 @@ Changed in place:
 | File | Change |
 |:---|:---|
 | `src/jev/client.rs`, `src/jev/classifier.rs` | `Client::ask_each(records, questions)`, the per-record request of 2.3 |
-| `src/cli.rs` | `Fill`, `Route`, `Why` without `cmd`, `Filter`, `Label`, `Pick --from`, `Is` with several statements and `--context`; `--files` as a boolean; `Init` takes `zsh`, `bash` or `agents` (`:154-161`); the global `-v` leaves (`:36`) |
-| `src/lib.rs` | `VERBS` (`:23`), `QUICK_START` (`:37-51`), `command_name` (`:128`); the clap error path reads `args_os` and stops at `--` (`:63` uses `env::args()`); `human` written as bytes (`:151-158`); the `route` dispatch arm calls `cmd::run::run(ctx, intent, machine)` (`:257-275` builds `RunFlags` today) |
+| `src/jev/mod.rs`, `src/jev/classifier.rs`, `src/jev/client.rs` | bead 2.0b (hunch-7zg.23): a missing or empty model name is kept as the literal `unknown` (`join_models`, `src/jev/mod.rs:164-165`, filters it out today); the cache contract becomes 4 (2.3 "The model") |
+| `src/cli.rs` | `Fill`, `Route`, `Why` without `cmd`, `Filter`, `Label`, `Pick --from` (clap `conflicts_with` against `--files`, `--index`, `-0`, `--para`), `Is` with several statements and `--context`; `--files` as a boolean; `Init` takes `zsh`, `bash` or `agents` (`:154-161`); the global `-v` leaves (`:36`) |
+| `src/lib.rs` | `VERBS` (`:25`), `QUICK_START` (`:40-55`), `command_name` (`:174`); the clap error path reads `args_os` and stops at `--` (`raw_command`, `:159`, which bead 2.0 uses to know that the verb is `fill`); the `fill` dispatch arm calls `cmd::fill::run(ctx, flags: FillFlags { dry_run, quiet, candidates, context, field, key, split }, cmd: &[OsString], machine: bool)`; `human` written as bytes (`:151-158`); the `route` dispatch arm calls `cmd::run::run(ctx, intent, machine)` (`:257-275` builds `RunFlags` today) |
 | `src/cmd/mod.rs` | `Outcome` changes once, in bead 1.0: `human: Vec<u8>` (`:15` is `String`) and `exec: Option<Exec>` with `struct Exec { argv: Vec<OsString>, stdin_null: bool }`, `None` at every construction site. Bead 2.0 adds no field; it only makes `run_cli` act on `exec`, after it has written everything else |
 | `src/exit.rs` | one variant `JevifyError::Kinded { kind, exit, message, hint, example }` for the new kinds |
 | `src/input.rs` | `read_stdin_bytes()` with the same 64 MiB cap and terminal check; the terminal check (`:54`) becomes a function that takes `is_terminal: bool`, with a unit test, so no verb needs a process-level "stdin is a terminal" test |
 | `src/output.rs` | `shell_quote(&[OsString]) -> Vec<u8>`: `shell_display` of `run.rs:312`, moved and written over bytes |
-| `src/tournament.rs` | `window` becomes `pub(crate)` (`:55`) in bead 1.7, its one change there; in bead 2.2 `decide(&Ranking)` for `fill` and `pick --from`, and the pool rule of 2.1 for `rank` and `shortlist` + `window` (`:126-127`) |
+| `src/tournament.rs` | `window` becomes `pub(crate)` (`:55`) in bead 1.7, its one change there; in bead 2.2 `decide(&Ranking, threshold: f64)` for `fill` and `pick --from`, and the pool rule of 2.1 for `rank` and `shortlist` + `window` (`:126-127`); `rank` keeps its `finalist_text` parameter for `why` |
 | `src/cmd/why.rs` | delete `capture` and the `cmd` argument (`:59-`); the saved input; the output format stays |
 | `src/cmd/run.rs` | becomes `route`: bead 1.0 sets the signature `run(ctx, intent, machine)` and removes `RunFlags`; bead 1.4 deletes execution, the confirmation, the argument pass |
 | `src/cmd/pick.rs`, `src/cmd/is.rs` | byte records, `--files` from stdin, `--from KIND`; several statements, `--context FILE` |
-| `src/cmd/agent.rs` | Phase 0: the `health` client follows no redirect (`:127`); capabilities, robot-docs, `init agents` |
+| `src/cmd/agent.rs` | Phase 0: the `health` client follows no redirect (`:127`); capabilities, robot-docs, `init agents`. Bead 2.0 adds a minimal `fill` entry to the capabilities table (clap order; `usage`, `data`, `exit`, `when`), from which the `- fill:` line of `init agents` follows, and loosens the help/capabilities guard regex of `tests/agent.rs` (`:115-121`) to `jevify run`, `jevify label`, `why -- ` and `jevify -v`; bead 2.5 completes the entry and tightens the guard again to `label` and the Phase 3 kinds |
 | `src/config.rs` | Phase 0. `Config` gains no field in this plan: the file gets pure functions that take the variable's value as a parameter, with unit tests: `save_dir(Option<&str>)` in bead 1.0 (`JEVIFY_CACHE_DIR`, `:99`) and `config_dir(Option<&str>)` in Phase 3 (`JEVIFY_CONFIG_DIR`). The production environment builder for listers lives in `src/source.rs` |
 | `tests/common/mod.rs` | `FakeJev` answers with a probability vector per question |
 | Documents | section 6 |
@@ -138,11 +139,19 @@ there is no child to wait for, no signal to forward and no tokio `signal` featur
 request. The capacity is `W × W` candidates: 9,801 keyless; on TypeSafe the ceiling of 20,000
 is reached first.
 
+**The finalist order** is defined once, in `src/tournament.rs`: by rank, then window index
+(rank 1 of every window, then rank 2, then rank 3). `shortlist` returns the finalists in that
+order alongside the per-window `Ranking`s, and "tier-two evidence for the first 24" uses it.
+`route` keeps its own behaviour: its adapter re-flattens the windows by probability and keeps
+its `take(12)` (`src/cmd/run.rs:42`). `rank` keeps its `finalist_text` parameter for `why`,
+its remaining user (`src/cmd/why.rs:116-122`): the finals of `why` carry the context lines, and
+a one-window `why` sends two requests; stdin `pick` passes `None` (`src/cmd/pick.rs:87`).
+
 | Caller | `n` | Limit | Above the limit |
 |:---|:---|:---|:---|
 | `fill` | 3 only | `F = W × (W / 3)` | an ordered kind keeps its newest `F`; any other kind is exit 6 `too_many` |
 | `pick`, `pick --from` | the full rule | `W × W`, and 20,000 (`MAX_LINES`, `src/cmd/pick.rs:9`) | an ordered list keeps its newest `W × W` and the status line says so; any other list is exit 6 `too_many` (narrow with `grep`, `head` or a prefix) |
-| `why` | the full rule | `MAX_KEEP = 4000` (`src/cmd/why.rs:14`): 41 windows keyless, `n = 2` | `why` keeps at most `MAX_KEEP` lines by its own code, as today |
+| `why` | the full rule | `MAX_KEEP = 4000` (`src/cmd/why.rs:13`): 41 windows keyless, `n = 2` | `why` keeps at most `MAX_KEEP` lines by its own code, as today |
 
 The status line names `n` when it is not 3: `finalists per window: 2`. `tests/tournament.rs`
 proves it on the classifier backend with 4,000 items (41 windows, `n = 2`, 82 finalists in one
@@ -155,7 +164,12 @@ finals request) and with 9,802 items (`too_many`, no request).
    `--dry-run` is exit 2. A literal `argv[0]` that is not on the PATH is exit 6 `cannot_run`.
 2. **Read inputs.** `-` reads `--candidates FILE` or stdin. `one` and `flag` read
    `--context FILE` or stdin. stdin is read once, on the blocking pool, up to 64 MiB. A required
-   stdin that is a terminal is exit 6 `stdin_is_tty`. A context above the evidence budget is
+   stdin that is a terminal is exit 6 `stdin_is_tty`: `fill` tests
+   `std::io::stdin().is_terminal()` itself through a pure `fn(bool)` in `src/cmd/fill.rs`
+   (`check_terminal`, `src/input.rs:61`, is private and `src/input.rs` is in no Phase 2 write
+   set). An `EmptyInput` from the read maps to an empty listing, which is exit 3 `no_match`.
+   `source::enumerate` never reads stdin: `fill` passes the bytes in `Scope::Input`.
+   A context above the evidence budget is
    exit 3 `insufficient_evidence` with no request. The behaviour is that of `is`
    (`src/cmd/is.rs:21-31`); the word is not: `insufficient_evidence` is a reason of `fill`
    only, and `is` keeps its `data.reason` sentence ("input exceeds the evidence budget; whole
@@ -184,7 +198,7 @@ finals request) and with 9,802 items (`too_many`, no request).
      (`MAX_DIMENSIONS`, `src/jev/classifier.rs:26`).
    - Round 2, one request per listing marker. With several windows it is the finals: the three
      best of each window **by rank** (`n = 3`, the only value `fill` uses), all of them, with
-     tier-two evidence for the first 24 (`MAX_FINALISTS`). A probability is never compared with
+     tier-two evidence for the first 24 of the finalist order (`MAX_FINALISTS`). A probability is never compared with
      one from another request (`src/tournament.rs:126-127` does that today and keeps 24). With
      one window, round 2 runs only when the ratio failed and the kind has tier-two evidence.
      This one-window shortcut applies to `fill` and `pick --from`; `pick --files` always runs
@@ -204,7 +218,7 @@ finals request) and with 9,802 items (`too_many`, no request).
      runs for a non-finalist. `fill`, `pick --from` and `pick --files`
      all use this shape. `rank` stays for callers with no tier two (stdin `pick`, `why`).
    - `decide` (the ratio, `ambiguous`) serves `fill` and `pick --from` only. stdin `pick` keeps
-     its found rule (`any ≥ threshold` and best > `NONE`, `src/cmd/pick.rs:83-88`) and its
+     its found rule (`any ≥ threshold` and best > `NONE`, `src/cmd/pick.rs:89-94`) and its
      `-n N` semantics.
    - A `one` marker holds at most `W` options, because `NONE` takes one slot of the Choice:
      more is exit 2 with the count. The lexer has no backend, so `fill` checks it
@@ -214,21 +228,27 @@ finals request) and with 9,802 items (`too_many`, no request).
      `p(best) ≥ 2 × max(p(second), p(NONE))`. A ratio holds for 3 options and for 200. Equal
      scores abstain. The factor is a constant in `tournament.rs`.
    - `one`: the same ratio over the options and `NONE`.
-   - `flag`: `is::band_verdict` (`src/cmd/is.rs:54-62`). Yes keeps the argument, no leaves it
+   - `flag`: `is::band_verdict(p, threshold, band)` (`src/cmd/is.rs:121`) with the band 0.15,
+     a constant in `src/cmd/fill.rs`. Yes keeps the argument, no leaves it
      out, **unsure abstains**: `not run: arg 5 flag --draft: unsure 0.48; write --draft or drop
      the marker`.
    - **The model guard.** classifier.dev names the model that answered, and answers with
      another model when Jev is not available. `fill` runs a command only on an answer from
-     Jev; any other model is exit 4 `unavailable`, and the line names the model. Output verbs
-     answer and name the model in their status line.
-   - Reasons for exit 3: `no_match`, `ambiguous`, `unsure_flag`, `insufficient_evidence`.
+     Jev: `jev::all_jev` over `meta.model` (`src/jev/mod.rs:160`). Any other model is
+     `JevifyError::Unavailable(format!("answered by {model}, not Jev"))`: exit 4, kind
+     `api_unavailable`, and the line names the model. A missing or empty model name is the
+     part `unknown` (bead 2.0b, hunch-7zg.23), so a mixed unknown/Jev answer runs nothing.
+     Output verbs answer and name the model in their status line.
+   - Reasons for exit 3: `no_match`, `ambiguous`, `unsure_flag`, `insufficient_evidence`. They
+     are `&'static str` constants for `data.reason`, not `JevifyError`s, and have no
+     `error.kind`.
 6. **All or nothing.** Any abstention means nothing runs: exit 3, empty stdout, one line per
    failed marker:
    `jevify fill: not run: arg 3 branch: ambiguous; closest: tp/auth (0.41), tp/auth-v2 (0.38)`.
    An abstention is an `Outcome` with exit 3 and `error: null`: `data.reason` is the reason of
    the first failed marker in argv order, and `data.markers[]` lists every marker with its own
    reason. There is no `error.kind` for an abstention, so the envelope code of
-   `src/lib.rs:173-214` (outcomes carry `data`, errors carry `error`) does not change
+   `src/lib.rs:221-229` and `:255-268` (outcomes carry `data`, errors carry `error`) does not change
    (`tests/fill.rs`: a `no_match` at arg 2 and an `unsure_flag` at arg 4 give `data.reason`
    `no_match`, `error` null, and both markers in `data.markers[]`).
 7. **Substitute.** A handle is an `OsString` and is substituted as bytes, so a path that is not
@@ -253,7 +273,8 @@ finals request) and with 9,802 items (`too_many`, no request).
      the path in the message.
    - `fill` returns `Outcome.exec = Some(Exec { argv, stdin_null })` to `run_cli` (the field
      exists since bead 1.0, `None` everywhere else), and `run_cli` calls `exec` as its last act,
-     after `meta` is computed and the status lines are written. No destructor of jevify runs
+     after `meta` is computed, the status lines are written and stdout is flushed. Bead 2.0
+     removes the `debug_assert!(out.exec.is_none())` of `src/lib.rs:203`. No destructor of jevify runs
      after `exec`, so everything that must reach the disk is written before it: the answer
      cache entries of this call (`DiskCache::put` writes through a rename and holds no buffer)
      and the stderr lines (stderr is unbuffered).
@@ -273,8 +294,9 @@ finals request) and with 9,802 items (`too_many`, no request).
      error (clap, configuration, dispatch, a failed `exec`) as
      `jevify fill: not run: <kind>: <message>`; the hint follows as a second `jevify fill:`
      line unless `-q`. `report_error` writes `error`, `hint` and `try` lines today
-     (`src/lib.rs:196-205`) and keeps them for the other verbs. Machine envelopes keep their
-     shape. Bead 2.0 owns this rendering.
+     (`src/lib.rs:244-253`) and keeps them for the other verbs. Machine envelopes keep their
+     shape. On the clap path (`main_exit`, `src/lib.rs:57`) the verb comes from `raw_command`
+     (`:159`). Bead 2.0 owns this rendering.
    - `fill -q` prints only `not run:` lines. `jevify fill -q -- CMD 2>&1 | jevify why` then
      reads the command's output alone, and a `not run:` line is the true cause, which `why`
      may point at. Output verbs have no special case for `fill`.
@@ -288,9 +310,11 @@ jevify fill: flag --draft: no 0.07, left out
 jevify fill: exec 'git' 'switch' 'tp/auth-refactor'      | not run: arg 3 branch: ambiguous; …
 ```
 
-New stable error kinds, six: `stdin_is_tty`, `lister_failed`, `too_many`, `cannot_run`,
-`recipe_invalid` (all exit 6), and the abstention reason `unsure_flag` (exit 3). The message
-line carries the detail; a kind names only what an agent does next.
+New stable error kinds, five, all exit 6: `stdin_is_tty`, `lister_failed`, `too_many`,
+`cannot_run`, `recipe_invalid`. They are values of `error.kind`. The abstention reasons of
+exit 3 (`no_match`, `ambiguous`, `unsure_flag`, `insufficient_evidence`) are values of
+`data.reason`, with `error: null`. The message line carries the detail; a kind names only what
+an agent does next.
 
 ### 2.2 Kinds
 
@@ -299,7 +323,7 @@ Coded kinds, the ones that need logic:
 | Kind | Lister (argv) | Handle | Tier 1 evidence | Tier 2 |
 |:---|:---|:---|:---|:---|
 | `-` | stdin / `--candidates FILE` via `records.rs` | `--key` / `--field N` / whole record | the whole record | — |
-| `branch` | `git for-each-ref --sort=-committerdate --format=… refs/heads refs/remotes` | local short name; `origin/x` for a remote-only ref | name, tip subject, age computed by code | + last 5 subjects, changed top-level paths |
+| `branch` | `git for-each-ref --sort=-committerdate --format=… refs/heads refs/remotes` | local short name; `origin/x` for a remote-only ref | name, tip subject, age computed by code | + last 5 subjects, the top-level paths changed in those 5 commits (`git log -5 --name-only`); a branch record has `raw = 0..0` |
 | `commit` | `git log -n <limit> --format=… HEAD`, NUL-delimited; the total from `git rev-list --count HEAD` | full OID | subject | + body, changed paths |
 | `file`, `dir` | `git ls-files -co --exclude-standard -z`; outside a work tree a no-follow walk | path relative to the prefix | path | + first lines (`sort::excerpt`, behind the withholding function of `src/records.rs`) |
 | `tool` | `inventory::load` (exists) | name | name + whatis line | — |
@@ -483,6 +507,14 @@ The scorer (`filter`, `label`):
   `answered by ibm-granite/granite-4.0-h-micro, not Jev`. The model guard of `fill` requires
   every part to start with `jev`. Test: a non-Jev dimension followed by a Jev dimension makes
   `fill` refuse (`tests/client.rs` for the joined string, `tests/fill.rs` for the refusal).
+  Bead 2.0b (hunch-7zg.23) closes the gap that remains: `join_models`
+  (`src/jev/mod.rs:164-165`) discards an empty model name during classifier parsing and
+  request aggregation, so a mixed unknown/Jev answer reads as Jev and passes `all_jev`. A
+  missing or empty model name is kept as the literal `unknown` through
+  `classifier::parse_each`, the chunk merge, `ask_each`, `Stats.model` and the disk cache;
+  `all_jev` is false when any part is `unknown`; the cache contract becomes 4, so an entry
+  written under contract 3 is bypassed (`tests/client.rs`). `tests/fill.rs` holds the
+  sentinel test "mixed unknown and Jev provenance runs nothing".
 - **The pace is the backend's.** Keyless: 3,000 decisions a minute and 20,000 a day per IP.
   The verb prints `jevify filter: 10074 records, 3120 distinct, 4 requests` on stderr before
   the first request.
@@ -671,12 +703,13 @@ branches, and for an option that depends on text it has not read.
 
 | Bead | Writes | After |
 |:---|:---|:---|
-| 2.0 skeleton | the shared files (`Fill`, `Pick --from`, the error kinds, the `fill` line of `QUICK_START`); `run_cli` acts on `Outcome.exec` (no new field); `src/cmd/pick.rs`, only for the final signature `run(…, from: Option<&str>)` with a "not implemented" input error; `tests/bin/argv.sh`; stubs `src/marker.rs`, `src/source.rs`, `src/cmd/fill.rs` | release 0.5.0 |
+| 2.0 skeleton | the shared files (`Fill`, `Pick --from`, the error kinds, the `fill` line of `QUICK_START`); `run_cli` acts on `Outcome.exec` (no new field); `src/cmd/pick.rs`, only for the final signature `run(…, from: Option<&str>)` with a "not implemented" input error; `tests/bin/argv.sh`; stubs `src/marker.rs`, `src/source.rs`, `src/cmd/fill.rs`; `src/cmd/agent.rs` and `tests/agent.rs` for the minimal `fill` entry of capabilities and the loosened guard regex | release 0.5.0 |
+| 2.0b — hunch-7zg.23 (model provenance keeps `unknown`) | `src/jev/mod.rs`, `src/jev/classifier.rs`, `src/jev/client.rs`, `tests/client.rs`, `tests/classifier.rs` | nothing; parallel with 2.0 |
 | 2.1 — new: marker lexer | `src/marker.rs` | 2.0 |
 | 2.2 — hunch-q8p (`-`, `branch`, the lister runner) | `src/source.rs` | 2.0 |
 | 2.2 — hunch-zxz (the pool rule for every caller of `rank`) | `src/tournament.rs`, `tests/tournament.rs`; call sites and capacity tests in `src/cmd/why.rs`, `src/cmd/pick.rs`, `src/cmd/run.rs`, `tests/pick.rs`, `tests/why.rs` | 2.0 |
 | 2.3 — new: `pick --from` | `src/cmd/pick.rs`, `tests/pick.rs` | 2.2 (both) |
-| 2.4 — hunch-bkb (fill core) | `src/cmd/fill.rs`, `tests/fill.rs`, `tests/live.rs` | 2.1, 2.2 (both) |
+| 2.4 — hunch-bkb (fill core) | `src/cmd/fill.rs`, `tests/fill.rs`, `tests/live.rs` | 2.0b, 2.1, 2.2 (both) |
 | 2.5 contract | section 6 | 2.1, 2.2 (both), 2.3, 2.4 |
 | release 0.6.0 (lead) | the version, `Cargo.lock`, the `CHANGELOG.md` heading | all of the above |
 
@@ -693,7 +726,10 @@ jevify pick --from branch 'the release automation work'
 and, as contract tests: the `gh issue create` example of the vision sends one POST for its
 three markers; the sh helper receives the exact argv, a non-UTF-8 handle included; an unsure
 `flag` and an answer from another model run nothing (a sentinel file proves it), and so does
-an answer whose `meta.model` has one part that is not Jev; `F + 1` lines are `too_many` with
+an answer whose `meta.model` has one part that is not Jev, the part `unknown` of a missing
+model name included (mixed unknown and Jev provenance runs nothing); an entry of the answer
+cache written under contract 3 is bypassed; the finals of `why` still carry the context
+lines and a one-window `why` still sends two requests; `F + 1` lines are `too_many` with
 no request; 250 lines resolve in two rounds and the finals hold three finalists of every
 window; on the classifier backend 4,000 items give `n = 2` in one finals request; 9,802
 candidates of an unordered list (stdin `pick`, an unordered kind) are `too_many` with no
@@ -826,8 +862,22 @@ Each item was cut on purpose and names what brings it back.
   in the developer's cache: no test writes outside its temporary directory.
 - "stdin is a terminal" is covered by the unit test of the terminal-check function of
   `src/input.rs` (it takes `is_terminal: bool`); no verb has a process-level test for it.
+  `fill` has its own pure `fn(bool)` in `src/cmd/fill.rs`, which returns `stdin_is_tty`, with
+  an inline unit test.
 - `tests/tournament.rs`: the pool rule with `n` = 3, 2 and 1; 4,000 and 9,802 items on the
-  classifier backend; the planted answer in every position of every window.
+  classifier backend; the planted answer in every position of every window; the finalist
+  order (by rank, then window index). For the classifier backend it builds a literal
+  `Config { backend: Backend::Classifier, key: None, … }` against `common::mock_classifier`,
+  because `common::config()` builds a TypeSafe config only (`tests/common/mod.rs:335-348`).
+- `tests/why.rs`: the finals request still carries the context lines, and a one-window `why`
+  still sends two requests (`rank` keeps `finalist_text` for `why`).
+- `tests/client.rs`, `tests/classifier.rs` (bead 2.0b): a missing or empty model name is
+  `unknown` through parsing, the chunk merge, `ask_each`, `Stats.model` and the disk cache;
+  `all_jev` is false with an `unknown` part; an entry under cache contract 3 is bypassed.
+- `tests/agent.rs` (bead 2.0): the `fill` entry of capabilities and the `- fill:` line of
+  `init agents`; the guard regex keeps `jevify run`, `jevify label`, `why -- ` and `jevify -v`.
+  Each new error kind (`stdin_is_tty`, `lister_failed`, `cannot_run`, `recipe_invalid`) has a
+  test of its exit code and `error.kind`; the abstention reasons have none.
 - `tests/fill.rs`: dry-run output equals the argv a run receives (`sh tests/bin/argv.sh`
   prints its arguments NUL-separated); a non-UTF-8 handle; `W` and `W + 1` options in a `one`;
   several failed markers; abstain prints nothing and runs nothing; 0, 1 and 2 candidates; a tie;
@@ -837,7 +887,8 @@ Each item was cut on purpose and names what brings it back.
   wins; a branch with a remote twin resolves; stdin ownership (the command sees EOF with
   `@{-:…}`, inherits otherwise); the command's exit code comes through; `-q`; a machine format
   without `--dry-run` is exit 2; `one` + `flag` in one request; a `flag` no removes the
-  element; a `flag` unsure and a model that is not Jev run nothing.
+  element; a `flag` unsure and a model that is not Jev run nothing; mixed unknown and Jev
+  provenance runs nothing (a sentinel file); an empty stdin for `@{-:…}` is exit 3 `no_match`.
 - Output verbs: split modes and their exit-2 combinations; CRLF, colour, NUL and non-UTF-8
   records byte-identical; `ask_each` batches of 1,000 on the classifier backend and 20 on
   TypeSafe; judge-once; flow (the first batch is on stdout before the last is answered); a
@@ -1009,7 +1060,7 @@ Nothing rations requests. What bounds a verb is time: two rounds, the client sem
 |:---|:---|:---|
 | 0 | hunch-ed1 | — |
 | 1 | hunch-bx6 (1.5), hunch-sb9 (1.8) | skeleton and cutover (1.0); byte records (1.1); `ask_each` (1.2); saved input (1.3); route is print-only (1.4); `is` statements and `--context` (1.6); save in `why` and records in `pick` (1.7); 0.5.0 documents (1.8); scripts and demo files use the new grammar (1.9) |
-| 2 | hunch-bkb (2.4), hunch-q8p and hunch-zxz (2.2) | skeleton (2.0); marker lexer (2.1); `pick --from` (2.3); contract (2.5) |
+| 2 | hunch-bkb (2.4), hunch-q8p and hunch-zxz (2.2) | skeleton (2.0); model provenance keeps unknown answers (2.0b, hunch-7zg.23: ready with 2.0, hunch-bkb and the release 0.6.0 wait for it); marker lexer (2.1); `pick --from` (2.3); contract (2.5) |
 | 3 | hunch-q8p continued | recipe engine and shipped recipes; `commit`, `file`, `dir`, `tool`; contract with `docs/guide/kinds.md` |
 | 4 | hunch-qxn | contract |
 
