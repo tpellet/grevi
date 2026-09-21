@@ -51,7 +51,7 @@ delete a test to get past a sandbox failure.
 Live tests (`tests/live.rs`, all `#[ignore]`):
 
 ```bash
-TYPESAFE_API_KEY_FILE=/path/to/key cargo test --test live -- --ignored --test-threads=1
+TYPESAFE_API_KEY_FILE=$HOME/.ssh/typesafe-ai-key cargo test --test live -- --ignored --test-threads=1
 ```
 
 Without a key they print `SKIPPED: set TYPESAFE_API_KEY_FILE=...` and return; a hand-off lists
@@ -117,7 +117,7 @@ is") and no retrospective language ("now", "since 0.x", "new in", "ships", "rele
 and conditions belong only next to a measurement; history belongs in `CHANGELOG.md`.
 
 **Live API key.** Point jevify at the key with
-`TYPESAFE_API_KEY_FILE=/path/to/key` in the command's environment — jevify reads
+`TYPESAFE_API_KEY_FILE=$HOME/.ssh/typesafe-ai-key` in the command's environment — jevify reads
 it, you never do. Never echo the variable or the key. Live commands need the sandbox disabled
 because `~/.ssh` is sandbox-denied.
 
