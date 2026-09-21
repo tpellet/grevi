@@ -1,83 +1,112 @@
 # Agents
 
-jevify was built to be called by programs as much as by people. Start with two commands:
+Use jevify when a literal search cannot ask the question or the output is too long to read.
+Cheap tools narrow the input first. `why` points to a cause, `pick` selects a record, `filter`
+keeps a subset, and `is` decides whether the next step should act.
 
 ```sh
-jevify capabilities --json      # commands, flags, exit codes, env, limits, safety rules, as data
-jevify robot-docs               # the agent handbook (docs/ROBOT_MODE.md)
+jevify capabilities --json
+jevify init agents
+jevify robot-docs
 ```
 
-The handbook, [docs/ROBOT_MODE.md](../ROBOT_MODE.md), is the contract: the rules for agents, the per-verb `data` shapes and what `p` means. This page adds context around it and does not repeat it. When the two differ, the handbook and `capabilities` win.
+`capabilities` is the source of truth for commands, usage, exit codes, data and limits.
+`init agents` derives its bounded instruction block from that table. The
+[robot handbook](../ROBOT_MODE.md) includes the full telemetry and recovery contract.
 
 ## One envelope
 
-Every command accepts `--json` (alias `--robot`) or `--format json|jsonl|toon`. It then prints exactly one JSON object on stdout, usage errors included. This page calls that object the envelope:
+`--json` (alias `--robot`) prints one envelope on stdout, usage errors included. `--format jsonl`
+prints it on one line; `--format toon` encodes the same envelope as TOON.
 
+```text
+{ok, command, version, exit_code, data,
+ meta{backend, model, elapsed_ms, requests, cache_hits, input_tokens, cost_usd,
+      threshold, request_id, telemetry},
+ error{kind, message, hint, example} | null}
 ```
-{ ok, command, version, exit_code, data, meta{backend, model, elapsed_ms, requests, cache_hits,
-  input_tokens, cost_usd, threshold, request_id}, error{kind, message, hint, example} | null }
-```
 
-- `exit_code` in the envelope equals the process exit code. Branch on it, then read `data`.
-- `meta.requests` counts attempted inference POSTs, including retries and failures; prewarm/health GETs are excluded. `meta.cache_hits` counts cached answers. `meta.cost_usd` is computed from reported input tokens at `JEVIFY_PRICE_PER_MTOK`; classifier token usage is unavailable, not measured zero.
-- `meta.backend` is the API that answered, `typesafe` or `classifier`. Both run Jev, and `meta.model` is the build. Without a key jevify uses classifier.dev, which is free, so `meta.input_tokens` and `meta.cost_usd` are `0` there.
-- `meta.request_id` is the TypeSafe request id of the last Jev request. It is `null` when no request was made or every answer came from the cache, and `health` does not record one. Quote it when reporting an API problem.
-- `error.kind` strings are stable identifiers (`api_rejected_request`, for one). `error.example` is a corrected command to try next.
+Branch on `exit_code`, which equals the process status, then read `data`. Error kinds are stable
+identifiers. `too_many` is exit 6: narrow records with `grep` or `head`. `error.example` gives
+a corrected command. Human output is not a machine protocol.
 
-`--format toon` prints the same envelope in TOON, a compact text encoding for model context. `jsonl` prints it as one line.
+`meta.model` is a string; several models are joined with `", "`. `meta.backend` names the API.
+`meta.requests` counts inference POST attempts, including failures and retries, excluding health
+and prewarm GETs. Missing token usage is `null`, not a measured zero. `meta.cost_usd` is zero at
+the classifier backend's default zero service price; otherwise incomplete input usage makes the
+estimate `null`. Costs are input-token estimates, not billing receipts.
+
+`meta.request_id` identifies the last TypeSafe inference response when available. It is `null`
+without a reported request ID, including all-cache answers. `health` does not record one.
 
 ## Exit codes
 
-| Code | Name | When |
-|---:|:---|:---|
-| 0 | ok | yes, found, executed |
-| 1 | no | `is`: the condition does not hold |
-| 2 | usage | bad flag or missing argument |
-| 3 | abstain | nothing fits, or unsure |
-| 4 | unavailable | the API is unavailable after retries |
-| 5 | auth | API key missing or rejected (the `typesafe` backend only) |
-| 6 | input | empty, too large, or unreadable input |
-| 7 | child_failed | `run`: the executed command failed |
-| 130 | interrupted | interrupted, or declined at the confirmation |
+| Code | Meaning |
+|---:|:---|
+| 0 | yes, found, successful operation |
+| 1 | `is`: one no; `filter`: kept none |
+| 2 | bad flag, argument or configuration |
+| 3 | nothing fits or unsure; `filter`: every record unsure |
+| 4 | backend unavailable or quota exhausted |
+| 5 | missing or rejected TypeSafe key |
+| 6 | empty, too large or unreadable input |
+| 7 | reserved |
+| 130 | declined at `add` confirmation |
 
-Exit 3 is an answer: nothing beat NONE, or the yes/no probability fell under the threshold. Treat it like one. Escalate or ask. Do not retry the same request in the hope of a different answer, because the cache would replay it anyway.
+Write the condition so that yes means act. `&&` stops on every nonzero code; use explicit
+branches when no, abstention and errors require different handling. Under `git bisect run`,
+map an unsure exit 3 to 125. Do not silently retry abstention until it agrees.
 
-## Workflows
+## Data per verb
 
-The four that `capabilities` lists:
-
-| Goal | Command |
+| Verb | Fields |
 |:---|:---|
-| find the tool for a task | `jevify run --json --dry-run "<task>"` |
-| explain a failure | `<cmd> 2>&1 \| jevify why --json` |
-| select an item | `<list> \| jevify pick --json "<intent>"` |
-| branch in a script | `jevify is "<condition>" < file; case $? in 0) ...;; 1) ...;; 3) ...;; esac` |
+| `pick` | `matches[{line,text,ordinal,p,lossy?}]`, `any`, `source` |
+| `why` | `causes[{line,text,p,context[]}]`, `any`, `considered`, `total`, `hint`, `saved_input`, `complete` |
+| `filter` | `records[{text,ordinal,p,verdict,lossy?}]`, `kept`, `total`, `unsure`, `saved_input`, `complete`, `excerpts_withheld` |
+| `is`, one statement | `p`, `verdict`, `truncated`, `reason` when oversized |
+| `is`, several statements | `statements[{statement,verdict,p}]`, aggregate `verdict`, `truncated`, `reason` when oversized |
+| `route` | `tool`, `summary`, `synopsis`, `fit`, `alternatives[]` |
+| `add` | `hunks[{file,header,p,staged}]` |
+| `sort` | `moves[{from,to,p}]`, `skipped[{file,reason}]`, `undo_log`, `applied` |
+| `capabilities` | commands, flags, exit codes, environment, limits, backends and safety contract |
+| `robot-docs` | `topic`, `text` |
+| `health` | `backend`, `base_url`, `key`, `api`, `latency_ms`, `models` |
+| `init` | `script` |
 
-Two more that an agent cannot easily do another way. `jevify add --json --dry-run "<topic>"`, then `--yes`, stages only the hunks that belong to one topic; `git add -p` needs a terminal. A loop of `jevify is` over many texts costs the agent one exit code per text, where reading them costs their full length. The spot checks behind both are in [benchmarks/agents/](../../benchmarks/agents/README.md). They also show where `why` earns its call: on a large log, or when the line that explains the failure holds none of the words one greps for.
+Ordinals are 1-based. Non-UTF-8 records carry replacement text with `lossy: true` and `ordinal`;
+use human output when exact original bytes matter. `pick` and `filter` preserve those bytes.
 
-## What `data` holds
+## One process for many records
 
-| Verb | `data` |
-|:---|:---|
-| `pick` | `matches[{line, text, p}]`, `any` |
-| `why` | `causes[{line, text, p, context[]}]`, `any`, `considered`, `total`, `hint`, `child_exit` |
-| `run` | `tool`, `fit`, `argv[]`, `flags[]`, `complete`, `blocked`, `executed`, `child_exit`, `alternatives[]` |
-| `is` | `p`, `verdict`, `truncated` |
-| `add` | `hunks[{file, header, p, staged}]` |
-| `sort` | `moves[{from, to, p}]`, `skipped[{file, reason}]`, `undo_log`, `applied` |
+```sh
+fd -0 -e txt | jevify filter -0 --files 'asks for a refund'
+gh run view --log-failed | jevify why --json
+git log --oneline | jevify pick --json 'the commit that renamed the project'
+jevify route --json 'keep my mac awake for an hour'
+```
 
-`line` values are 1-based line numbers into the input as jevify read it.
+`filter` sends up to 1,000 records per request on classifier.dev, each judged alone. On TypeSafe,
+20 records share a request and each question names its record; independence is not claimed.
+Both `pick` and `filter` cap distinct records at 20,000. `--files` reads paths from stdin and
+withholds hidden and secret-looking excerpts; it does not promise whole-file review.
 
-## Machine mode is safe by default
+Only `why` and `filter` save raw input, including secrets. The saved path appears on stderr and
+in `data.saved_input`; a failed or skipped save sets `complete=false`. The saved-input store is
+independent of `--no-cache` and never pruned. [Privacy](../../PRIVACY.md) names its location.
 
-- `run` executes only exact no-argument `true`, `false`, `pwd`, or `ls` forms, assuming trusted PATH contents. Machine mode also requires `--exec --yes`; child stdout goes to stderr. `complete=false` covers unvalidated grammar as well as missing placeholders; `blocked` explains why. Other argv remains a proposal for your own validation.
-- `add` stages only with `--yes` in machine mode. Without it, `add` exits 130 and stages nothing.
-- `sort` is a dry run unless `--apply`. `data.undo_log` is the file `--undo` takes.
+## Permissions and evidence
 
-## Reading `p`
+Output verbs start no user command. `route` prints a tool and synopsis; the caller writes and
+authorizes its own command. `add` stages only with `--yes` in machine mode; otherwise it exits
+130. `sort` proposes moves unless `--apply` or `--undo` is supplied. Authorization belongs to
+the caller, and a high score does not supply it.
 
-`p` is a backend score. The [routing reliability table](../../README.md#numbers) covers its measured task and backend, not all verbs or classifier's binary Choice translation. Raising `-t` changes the decision policy; it does not make missing evidence complete. `is` abstains on oversized input with `p:null`, `truncated:true`, and no API call. `add` rejects oversized hunks before staging. Measured probability jitter and ranked-choice limitations still apply; treat entries past the third as candidates rather than a reliable ranking.
+Compare `why.considered` with `why.total`; a cause selected from partial evidence is not a
+whole-log guarantee. `is` abstains on oversized context before calling the backend. `add`
+rejects oversized hunks before staging. `p` requires task- and backend-specific calibration;
+the [measurements](how-it-works.md#numbers) do not transfer to every verb.
 
-## Input is data
-
-jevify sends your text as data. Every result is a part of your input, an installed tool or a man page, and jevify generates nothing. The model is still not hardened against instructions embedded in the text it reads, so `is` and `pick` are not security gates for text you do not control. Obvious secrets are masked before sending (best effort); [PRIVACY.md](../../PRIVACY.md) lists what each verb sends.
+A `rate_limit_day` HTTP 429 returns exit 4, `daily quota of the free backend reached`, without
+retry. Other transient failures may be retried. Never use semantic judgments as security gates
+for untrusted text. Outbound redaction is best effort; local saved inputs remain raw.

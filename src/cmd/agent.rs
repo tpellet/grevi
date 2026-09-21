@@ -8,45 +8,54 @@ const GUIDE: &str = include_str!("../../docs/ROBOT_MODE.md");
 pub fn capabilities() -> Outcome {
     let exit_codes: Vec<_> = Exit::ALL
         .iter()
-        .map(|(e, d)| serde_json::json!({ "code": e.code(), "name": e, "meaning": d }))
+        .map(|(e, d)| {
+            let meaning = match e {
+                Exit::No => "is: at least one no; filter: kept none",
+                Exit::Unavailable => "backend unavailable or quota exhausted",
+                Exit::Interrupted => "declined at add confirmation",
+                _ => d,
+            };
+            serde_json::json!({ "code": e.code(), "name": e, "meaning": meaning })
+        })
         .collect();
     let data = serde_json::json!({
         "name": "jevify",
         "version": env!("CARGO_PKG_VERSION"),
         "summary": "Answers questions about text that already exists (your input, the installed tools, man pages, folders) by meaning. It selects and never generates. Backend-specific decision scores are not evidence of calibration for every task. Model: Jev through TypeSafe with a key or classifier.dev without one.",
         "use_when": "a question is about meaning and grep or keywords cannot ask it, or the input is too long to read; skip it when a literal search answers the question or you already know the exact command",
-        "global_flags": ["--json (alias --robot)", "--format human|json|jsonl|toon", "-t/--threshold <0..1>", "--model <id>", "--no-cache", "-v/--verbose"],
-        "output": "human stdout is plain text made for pipes (pick prints the line, is prints nothing), so there is no automatic switch to JSON when piped: pass --json to get the envelope",
+        "global_flags": ["--json (alias --robot)", "--format human|json|jsonl|toon", "-t/--threshold <0..1>", "--model <id>", "--no-cache", "--verbose"],
+        "output": "human stdout is plain text made for pipes: pick and filter preserve input records; why prints numbered context; is prints nothing for one statement and VERDICT<TAB>STATEMENT lines for several. Pass --json for the envelope; non-UTF-8 records have text, lossy: true, ordinal",
         "commands": [
-            { "name": "pick", "usage": "<stdin> | jevify pick \"<intent>\" [-n N] [--index]  |  jevify pick --files <DIR> \"<intent>\" [-n N]", "stdin": true, "exit": [0, 3], "data": "matches[{line,text,p}], any, source", "when": "choose one item out of many by description (a branch, a commit, a file, a process, a history line); the description and the line need no word in common. --files chooses among the files under DIR by what they are about (path names first, then the beginning of at most 24 finalist files) and prints a path", "example": "git log --oneline | jevify pick --json \"the commit that renamed the project\"" },
-            { "name": "why", "usage": "<cmd> 2>&1 | jevify why [-C N] [-n N]  |  jevify why [-C N] -- <cmd...>", "stdin": true, "exit": [0, 3], "data": "causes[{line,text,p,context[]}], any, considered, total, hint, child_exit", "when": "root-cause a build, test or CI log, above all a long one or one where grep for error|fail found the symptom and not the reason", "example": "gh run view --log-failed | jevify why --json", "note": "past 1,500 distinct lines it keeps the neighbourhoods of error-like lines within a 4,000-line budget: compare considered with total" },
-            { "name": "route", "usage": "jevify route <intent...>", "stdin": false, "exit": [0, 3], "data": "tool, summary, fit, alternatives[]", "when": "find the installed tool for a task", "example": "jevify route 'keep my mac awake for an hour'", "note": "prints a tool; starts no command" },
-            { "name": "filter", "usage": "<stdin> | jevify filter [-v] [-c] [--strict] [-0|--para] [--files] [--no-save] '<statement>'", "stdin": true, "when": "keep matching records", "example": "cargo test 2>&1 | jevify filter 'reports a failed assertion'", "note": "not implemented" },
-            { "name": "is", "usage": "<stdin> | jevify is \"<condition>\" [--band 0.15]", "stdin": true, "exit": [0, 1, 3], "data": "p, verdict, truncated, reason (when oversized)", "when": "triage or gate on meaning; loop over bounded texts and read the exit codes", "example": "jevify is \"the customer is about to stop being a customer\" < ticket.txt; echo $?", "note": "oversized evidence abstains before API requests, with p null and a stderr warning" },
+            { "name": "pick", "usage": "<stdin> | jevify pick '<intent>' [-n N] [--index | --files] [-0 | --para]", "stdin": true, "exit": [0, 3], "data": "matches[{line,text,ordinal,p,lossy?}], any, source", "when": "choose one record by description; --files reads paths from stdin, ranks names first, then excerpts of at most 24 finalists", "example": "git ls-files | jevify pick --files 'where man pages are parsed'", "note": "hidden or secret-looking paths and symlink files receive no excerpt; stderr reports excerpts withheld: N; selected records retain their bytes and input order; input is not saved" },
+            { "name": "why", "usage": "<cmd> 2>&1 | jevify why [-C N] [-n N] [--no-save]", "stdin": true, "exit": [0, 3], "data": "causes[{line,text,p,context[]}], any, considered, total, hint, saved_input, complete", "when": "find the cause in a long build, test or CI log, especially when grep found only the symptom", "example": "gh run view --log-failed | jevify why --json", "note": "prints numbered lines with context; no split options; past 1,500 distinct lines keeps error neighbourhoods within 4,000 lines: compare considered with total" },
+            { "name": "route", "usage": "jevify route <intent...>", "stdin": false, "exit": [0, 3], "data": "tool, summary, synopsis, fit, alternatives[]", "when": "find the installed tool for a task", "example": "jevify route 'keep my mac awake for an hour'", "note": "prints a tool, summary and synopsis; starts no command" },
+            { "name": "filter", "usage": "<stdin> | jevify filter [-v] [-c] [--strict] [-0|--para] [--files] [--no-save] '<statement>'", "stdin": true, "exit": [0, 1, 3], "data": "records[{text,ordinal,p,verdict,lossy?}], kept, total, unsure, complete, saved_input, excerpts_withheld", "when": "many records or files, one question: keep matching records in one process", "example": "cargo test 2>&1 | jevify filter 'reports a failed assertion'", "note": "-v inverts; -c counts; unsure records stay unless --strict; 0 kept some, 1 kept none, 3 every record unsure; --files reads stdin paths and withholds hidden or secret-looking excerpts" },
+            { "name": "is", "usage": "jevify is '<statement>' ['<statement>' ...] [--context FILE] [--band 0.15]", "stdin": true, "exit": [0, 1, 3], "data": "one statement: p, verdict, truncated, reason (when oversized); several: statements[{statement,verdict,p}], verdict, truncated, reason (when oversized)", "when": "the next step depends on a fact: write the condition so that yes means act", "example": "jevify is 'asks for a refund' 'mentions an order' --context mail.txt", "note": "stdin unless --context supplies a file; 0 all yes, 1 one no, 3 otherwise; oversized evidence abstains before API requests" },
             { "name": "add", "usage": "jevify add [--dry-run|--yes] \"<topic>\"", "stdin": false, "exit": [0, 3, 6, 130], "data": "hunks[{file,header,p,staged}]", "when": "stage part of a working tree without a terminal: git add -p is interactive, add is not", "example": "jevify add --json --dry-run \"the token expiry fix\"", "note": "stages single hunks of tracked files; rejects oversized hunks or batches before requests or staging; index only, never commits; works from any subdirectory" },
             { "name": "sort", "usage": "jevify sort <dir> [--into <root>] [--apply | --undo <log>]", "stdin": false, "exit": [0, 3, 6], "data": "moves[{from,to,p}], skipped[{file,reason}], undo_log, applied", "when": "files whose names say nothing need a home among the folders that already exist; it reads an excerpt", "example": "jevify sort --json ~/Downloads", "note": "dry-run by default; atomic no-replace apply/undo; unique durable JSONL recovery journal; symlink entries skipped; same volume only; concurrent source replacement unsupported; failures identify recovery log and progress" },
-            { "name": "capabilities", "usage": "jevify capabilities --json" },
-            { "name": "robot-docs", "usage": "jevify robot-docs [guide|commands|exit-codes|examples|privacy]" },
-            { "name": "health", "usage": "jevify health --json", "exit": [0, 4, 5] },
-            { "name": "init", "usage": "eval \"$(jevify init zsh|bash)\"" }
+            { "name": "capabilities", "usage": "jevify capabilities --json", "exit": [0], "data": "name, version, commands, global_flags, exit_codes, env, limits, backends, saved_inputs, envelope, telemetry, workflows, safety" },
+            { "name": "robot-docs", "usage": "jevify robot-docs [guide|commands|exit-codes|examples|privacy]", "exit": [0, 2], "data": "topic, text" },
+            { "name": "health", "usage": "jevify health --json", "exit": [0, 4, 5], "data": "backend, base_url, key, api, latency_ms, models" },
+            { "name": "init", "usage": "jevify init zsh|bash|agents", "exit": [0], "data": "script" }
         ],
         "common_exit": { "codes": [2, 4, 5, 6], "meaning": "any command: usage, API unavailable, auth, input" },
         "exit_codes": exit_codes,
         "env": [
             { "name": "TYPESAFE_API_KEY", "meaning": "API key (never printed); its presence selects the typesafe backend" },
             { "name": "TYPESAFE_API_KEY_FILE", "meaning": "path to a file holding the key (read only when a key is needed)" },
-            { "name": "JEVIFY_BACKEND", "default": "typesafe with a key, classifier without one", "meaning": "typesafe|classifier: which API answers. Both run Jev; classifier.dev is free and needs no key" },
+            { "name": "JEVIFY_BACKEND", "default": "typesafe with a key, classifier without one", "meaning": "typesafe|classifier: which API answers. Classifier is free and needs no key; meta.model identifies the service-controlled answering model" },
             { "name": "JEVIFY_BASE_URL", "default": "the active backend's own URL", "meaning": "HTTPS on port 443 at api.typesafe.ai for typesafe or classifier.dev for classifier; localhost/127.0.0.1 allow any scheme and port; no userinfo or redirects" },
             { "name": "JEVIFY_MODEL", "default": "jev-1.13.0", "meaning": "Default applies to TypeSafe model selection; jev-latest moves with each release. Explicit overrides are rejected on classifier.dev, which controls its model" },
             { "name": "JEVIFY_THRESHOLD", "default": 0.5 },
-            { "name": "JEVIFY_CONCURRENCY", "default": 8 },
+            { "name": "JEVIFY_CONCURRENCY", "default": "8 on typesafe, 4 on classifier" },
             { "name": "JEVIFY_CACHE_DIR", "default": "platform cache dir/jevify" },
             { "name": "JEVIFY_NO_CACHE", "meaning": "disable the answer cache (entries expire after 7 days anyway)" },
             { "name": "JEVIFY_PRICE_PER_MTOK", "default": 0.042 },
             { "name": "JEVIFY_INVENTORY_FILE", "meaning": "JSON array of {name, summary} replacing the PATH inventory (tests, evals)" },
             { "name": "JEVIFY_CNF", "meaning": "enable the command-not-found hook from `jevify init`" }
         ],
-        "limits": { "choice_options": 255, "window": crate::tournament::WINDOW, "state_tokens": 32000, "request_tokens": 64000, "requests_per_minute": 1200, "tokens_per_second": 250000, "stdin_bytes": crate::input::MAX_BYTES, "pick_lines": crate::cmd::pick::MAX_LINES },
+        "limits": { "choice_options": 255, "window": crate::tournament::WINDOW, "state_tokens": 32000, "request_tokens": 64000, "requests_per_minute": 1200, "tokens_per_second": 250000, "stdin_bytes": crate::input::MAX_BYTES, "pick_lines": crate::cmd::pick::MAX_LINES, "distinct_records": 20000, "records_per_request": { "classifier": 1000, "typesafe": 20 }, "too_many": "exit 6, error.kind too_many: narrow distinct records with grep or head" },
+        "saved_inputs": { "verbs": ["why", "filter"], "directory": "JEVIFY_CACHE_DIR/outputs, or the platform cache directory/jevify/outputs", "filename": "<blake3-16>.log", "contents": "raw input bytes, secrets included", "retention": "never pruned", "disable": "--no-save (independent of --no-cache)", "permissions": "directory 0700, file 0600", "incomplete": "failed or skipped save: saved_input null, complete false" },
         "backends": [
             { "name": "typesafe", "key": "required", "model": "Jev", "window": Backend::Typesafe.window(), "choice_options": 255, "state_chars": "32k tokens", "requests_per_minute": 1200, "meta": "input_tokens is null unless every inference attempt reports usage; cost_usd estimates input-token cost at the configured price and is null when that basis is incomplete" },
             { "name": "classifier", "key": "none", "model": "service-controlled Jev; explicit model overrides unsupported", "decision_semantics": "two-label Choice substitutes for Noul; scores and thresholds are not assumed interchangeable with TypeSafe Noul", "window": Backend::Classifier.window(), "choice_options": crate::jev::classifier::MAX_LABELS, "state_chars": crate::jev::classifier::MAX_INPUT_CHARS, "questions_per_request": crate::jev::classifier::MAX_DIMENSIONS, "classifications_per_minute": 3000, "meta": "input_tokens is null when token usage is unavailable; cost_usd is 0 at the default zero service price, with an explicit telemetry.cost_estimate basis" }
@@ -65,27 +74,27 @@ pub fn capabilities() -> Outcome {
         "phrasing": [
             "write what must be true of the text, literally: the statement is judged word for word (\"the customer is about to stop being a customer\" beats \"this customer is about to leave\", which also matches an employee who is leaving their company)",
             "describe the thing, not what you will do with it: \"the line with the failing assertion\", not \"what should I fix\"",
-            "one question per call; for A or B, make two calls",
+            "one process for many records: use filter rather than a loop of is; is accepts several statements about one context",
             "English works best; jevify does not count, do arithmetic, compare dates or judge quality"
         ],
         "workflows": [
-            { "goal": "find the tool for a task", "command": "jevify run --json --dry-run \"<task>\"" },
+            { "goal": "find the tool for a task", "command": "jevify route --json '<task>'" },
             { "goal": "explain a failure", "command": "<cmd> 2>&1 | jevify why --json" },
             { "goal": "explain a failed CI run, however long the log", "command": "gh run view --log-failed | jevify why --json" },
             { "goal": "select an item", "command": "<list> | jevify pick --json \"<intent>\"" },
             { "goal": "branch in a script", "command": "jevify is \"<condition>\" < file; case $? in 0) ...;; 1) ...;; 3) ...;; esac" },
-            { "goal": "triage many texts without reading them", "command": "for f in dir/*; do jevify is \"<statement>\" < \"$f\" >/dev/null 2>&1; echo \"$f $?\"; done   # 0 yes, 1 no, 3 unsure: read only those" },
+            { "goal": "triage many files without reading them", "command": "fd -0 -e txt | jevify filter -0 --files '<statement>'" },
             { "goal": "stage one topic out of a mixed working tree", "command": "jevify add --json --dry-run \"<topic>\"   # then --yes, when the user asked you to stage" }
         ],
         "safety": [
             "meta.requests counts attempted inference POSTs, including retries and failures, excluding prewarm and health GETs",
-            "run complete=true requires exactly one argv token: true, false, pwd, or ls; all flags, operands, and other commands remain unvalidated proposals with complete=false and a blocked reason",
-            "run resolves recipe executables through PATH, which must be trusted; a command name is not executable identity verification",
+            "route, why, pick, filter and is start no user command; route prints a tool and the caller writes its arguments",
             "is abstains without an API request when input exceeds its evidence budget: exit 3, p null, verdict unsure, truncated true, and a reason; stderr warns that the whole input was not judged",
             "add rejects any hunk above 3000 characters or any complete batch exceeding the backend state budget before API requests or staging; it never classifies clipped evidence",
-            "run executes only after TTY confirmation or --yes; in machine mode only with --exec --yes, and the child's stdout goes to stderr so stdout stays one envelope",
-            "run never executes tools on its never-execute list (rm, dd, mkfs*, diskutil, shutdown, kill, sudo, wrappers such as sh/bash/env/xargs/find/timeout that would run another program, and interpreters such as python*/perl*/ruby*/node*/php*/lua* that take program text, ...): data.blocked names the reason and argv is only shown",
-            "commands run via argv, never a shell; flags come from man pages, no binary is ever probed with --help",
+            "filter judges records alone only on classifier.dev; on TypeSafe 20 records share one request and each question names its record",
+            "rate_limit_day HTTP 429: exit 4, daily quota of the free backend reached; never retried",
+            "meta.model is a string; several answering models are joined with comma and space",
+            "only add stages hunks and sort --apply or --undo moves files; caller authorization remains required",
             "obvious secrets are masked before text is sent (best effort)",
             "results are pointers into input, the machine, or man pages; nothing is generated"
         ]
@@ -197,11 +206,26 @@ pub fn init(shell: Shell) -> Outcome {
             .as_array()
             .unwrap()
             .iter()
-            .filter_map(|command| command["name"].as_str())
+            .map(|command| {
+                format!(
+                    "- {}: {}",
+                    command["name"].as_str().unwrap(),
+                    command["when"]
+                        .as_str()
+                        .unwrap_or_else(|| command["usage"].as_str().unwrap())
+                )
+            })
             .collect::<Vec<_>>()
-            .join(", ");
+            .join("\n");
+        let exits = capabilities["exit_codes"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|entry| format!("{} {}", entry["code"], entry["meaning"].as_str().unwrap()))
+            .collect::<Vec<_>>()
+            .join("; ");
         let block = format!(
-            "# jevify\nSelect existing items by meaning with: {verbs}.\nUse jevify capabilities --json as the source of truth for commands and flags.\n"
+            "# jevify\nUse meaning when literal search cannot answer; cheap tools go first.\nOn command output, select existing records; never generate text.\n{verbs}\nUse one filter call for many records, not a loop of is calls.\nWrite the condition so that yes means act; check pick's exit before using its output.\nOnly why and filter save raw input, secrets included; --no-save disables saving.\nOutput verbs start no user command; authorize add and sort mutations separately.\nExit codes: {exits}.\nUse jevify capabilities --json as the source of truth for commands and flags.\n"
         );
         return Outcome {
             exit: Exit::Ok,
@@ -289,7 +313,10 @@ mod tests {
                 .as_array()
                 .unwrap()
                 .iter()
-                .all(|c| c["name"].is_string() && c["usage"].is_string())
+                .all(|c| c["name"].is_string()
+                    && c["usage"].is_string()
+                    && c["data"].is_string()
+                    && c["exit"].as_array().is_some_and(|codes| !codes.is_empty()))
         );
         // An agent must learn from here when each verb is worth a call, with a command to copy.
         assert_eq!(
@@ -328,7 +355,7 @@ mod tests {
         for shell in [Shell::Zsh, Shell::Bash] {
             let script = String::from_utf8(init(shell).human).unwrap();
             assert!(script.contains("alias ,=") && script.contains("jevify route"));
-            assert!(!script.contains("jevify run"));
+            assert!(!script.contains(&["jevify", "run"].join(" ")));
         }
     }
     #[test]

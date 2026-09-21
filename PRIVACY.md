@@ -1,46 +1,84 @@
 # What leaves your machine
 
-jevify sends requests to the active backend's API:
+jevify sends evidence to the active backend:
 
-| Backend | When | Where the text goes | Authentication |
-|---|---|---|---|
-| `typesafe` | a key is set, or `JEVIFY_BACKEND=typesafe` | the TypeSafe API, `https://api.typesafe.ai` | your key |
-| `classifier` | no key is set | classifier.dev, `https://classifier.dev`, which runs the same Jev model and serves it free | none; no key, no account, no cookie |
+| Backend | Selected when | Destination | Authentication |
+|:---|:---|:---|:---|
+| `typesafe` | a key is set, or `JEVIFY_BACKEND=typesafe` | `https://api.typesafe.ai` | your key |
+| `classifier` | no key is set, or `JEVIFY_BACKEND=classifier` | `https://classifier.dev` | none |
 
-`JEVIFY_BASE_URL` is restricted to HTTPS at the active backend's host, with no port or
-explicit port 443. Host comparison ignores case; trailing dots, other hosts and ports,
-userinfo and malformed URLs are refused before any request. Blank values use the default.
-For local testing, `localhost` and `127.0.0.1` accept any scheme and port, without userinfo;
-these endpoints receive the same evidence and, on TypeSafe, the bearer key.
-Inference, prewarm and health requests never follow redirects.
+`JEVIFY_BASE_URL` accepts only HTTPS at the active backend's host, on port 443. Host comparison
+ignores case; trailing dots, other hosts and ports, userinfo and malformed URLs are rejected
+before requests. Blank values use the default. For local testing, `localhost` and `127.0.0.1`
+accept any scheme and port, without userinfo; these endpoints receive the same evidence and,
+on TypeSafe, the bearer key. Inference, prewarm and health requests never follow redirects.
 
-Which one answered is in `meta.backend` of the JSON envelope and in `jevify health`. The table
-below is the same for both.
+`meta.backend` names the API. `meta.model` names the answering model, with several models joined
+by `", "`. A free-backend response is service-controlled and can name a different model.
 
-| Verb | Sent | Never sent |
-|---|---|---|
-| pick | your intent and the stdin lines (each clipped to 200–2,000 characters; ≤ 20,000 lines) | anything else |
-| pick --files | your intent, the relative path of every candidate file under DIR, and the first 2,000 characters (masked) of at most 24 finalist files; for a PDF, text of its first two pages when `pdftotext` is installed | hidden files and directories, git-ignored files, symlinks, the content of every other file |
-| why | your stdin (or the `--` command's output) after local filtering (≤ 4,000 lines, each clipped) | lines filtered out locally |
-| is | your condition and complete supported stdin (≤ ~96k chars on `typesafe`, ≤ 30k on `classifier`) | oversized stdin: the command abstains before sending |
-| run | your intent, names and one-line descriptions of installed tools, man-page excerpts of ≤ 12 finalists, the chosen tool's option list, and only those file names in the current directory that contain a word of your request (never contents) | other file names, file contents, environment, history |
-| add | your topic and each full unstaged hunk of tracked files (header + body, at most 3,000 characters; larger hunks are rejected) | untracked files, file contents outside the diff |
-| sort | the names of regular files directly in the directory, the first 2,000 characters of each text file (or of a PDF's first two pages via `pdftotext`, when installed), and eligible folder names under the root | hidden files, symlink entries, files in sub-folders, the rest of each file, binary contents |
+## Evidence per verb
+
+| Verb | Sent | Not sent |
+|:---|:---|:---|
+| `pick` | description and distinct stdin records, clipped to 200–2,000 characters per selection item | unselected evidence beyond the clipping budget |
+| `pick --files` | description, stdin paths, masked excerpts of at most 24 finalists | withheld file contents; other files not listed on stdin |
+| `filter` | statement and distinct record evidence; with `--files`, stdin paths and eligible file excerpts | file content beyond excerpts, or content withheld by the path rules |
+| `why` | filtered stdin log, at most 4,000 selected lines, each clipped | lines filtered out locally |
+| `is` | statements and complete supported context from stdin or `--context FILE` | oversized context: it abstains before inference |
+| `route` | intent, installed tool names and summaries, man-page excerpts of at most 12 finalists | directory file contents, shell history, environment values |
+| `add` | topic and complete unstaged hunks of tracked files, header plus body, at most 3,000 characters each | untracked files and content outside the diff; oversized hunks are rejected |
+| `sort` | eligible file and folder names, first 2,000 characters of file text | hidden files, symlink entries, files below the source directory, content beyond excerpts |
+| `health` | reachability request and TypeSafe bearer key when needed | user text |
+| `capabilities`, `robot-docs`, `init` | nothing | all local data |
+
+PDF excerpts use text from the first two pages when `pdftotext` is installed, clipped to 2,000
+characters. File excerpts do not establish a whole-document verdict.
+
+`--files` is a boolean on `pick` and `filter`, with paths supplied by the caller on stdin.
+Before reading an excerpt, jevify withholds any path whose written components:
+
+- start with `.` (except navigation `.` and `..`), or with `id_`;
+- end with `.pem` or `.key`;
+- contain `credentials` or `secret`.
+
+These checks are case-sensitive. Symlink file entries also receive no excerpt. The path remains
+a candidate and can leave the machine as a name; a withheld excerpt is not a withheld path.
+The stderr status reports `excerpts withheld: N`. The checks are not a filesystem sandbox.
 
 Before sending, jevify masks obvious secrets (`token=…`, `Bearer …`, `sk-…`, `ghp_…`, `AKIA…`,
-JWTs) in semantic state, requests, conditions and question descriptions as `[REDACTED]`.
-Opaque option IDs remain stable. This is best effort, not a guarantee: do not pipe secrets into jevify.
+JWTs) in semantic state and questions as `[REDACTED]`. Opaque option IDs remain stable.
+Masking is best effort, not a guarantee: do not send secrets to a backend you do not trust.
+jevify never prints or logs your API key. Use `TYPESAFE_API_KEY_FILE=/path/to/key`.
 
-Answers are cached on disk in your cache directory (`JEVIFY_CACHE_DIR`), keyed by a hash of the
-request, for 7 days; the cache holds answers (option ids and probabilities), not your text.
-`--no-cache` or `JEVIFY_NO_CACHE=1` disables it; cache identity includes backend, endpoint and
-decision-contract version. Sort recovery logs are separate: they retain local absolute path
-bytes and file identity so undo can verify what it restores. They are not sent to the model.
-Do not concurrently replace source files while sorting; excluding symlink entries is not a
-general sandbox against a hostile local writer. jevify never logs or prints your key.
+## Two stores
 
-Each service's own data handling: TypeSafe, https://docs.typesafe.ai/legal; classifier.dev,
-https://classifier.dev/privacy and https://classifier.dev/terms. On classifier.dev the requests
-are anonymous but not private: they are rate-limited per IP, and jevify identifies itself with a
-`jevify/<version>` user agent. If your text must not reach a third party you did not sign up
-with, set a TypeSafe key or `JEVIFY_BACKEND=typesafe`.
+The base directory is `JEVIFY_CACHE_DIR`, or the platform cache directory's `jevify` directory:
+`~/Library/Caches/jevify` on macOS; `$XDG_CACHE_HOME/jevify` or `~/.cache/jevify` on Linux.
+
+| Store | Contents | Retention | Disable |
+|:---|:---|:---|:---|
+| Answer cache | answers and probabilities, keyed by a hash of the redacted request | answers expire after seven days; expiry does not reclaim files | `--no-cache` or `JEVIFY_NO_CACHE=1` |
+| Saved inputs, `outputs/<blake3-16>.log` | full raw input bytes, secrets included | never pruned by jevify | `--no-save` on `why` and `filter` |
+
+Only `why` and `filter` save inputs. They save before the first inference request, with directory
+mode 0700 and file mode 0600. Identical input has the same content-addressed path. `--no-cache`
+does not disable saving. Stderr and `data.saved_input` name the file; a failed or skipped save
+reports `full output: not saved (REASON)` and sets `data.complete=false`.
+
+The answer cache never crosses backend, endpoint or decision-contract versions. Tool inventory
+and `sort` recovery journals also use the cache directory. Recovery journals retain local
+absolute path bytes and file identity for undo; they are not sent to the model. Preserve journals
+needed for recovery. Concurrent replacement of source files while sorting is unsupported.
+
+## Backend limits and handling
+
+`filter` batches up to 1,000 records per request on classifier.dev, each judged alone. With
+TypeSafe, 20 records share one request state; each question names its record, but independence
+is not claimed. A `rate_limit_day` HTTP 429 returns exit 4, `daily quota of the free backend
+reached`, with no retry. Human output already emitted before a later failure can be a prefix.
+
+Service policies: [TypeSafe](https://docs.typesafe.ai/legal),
+[classifier.dev privacy](https://classifier.dev/privacy) and
+[terms](https://classifier.dev/terms). Free-backend requests need no account, but are not private:
+the service sees your IP and the `jevify/<version>` user agent. Select TypeSafe if your text must
+not go to the free backend; both choices send evidence off the machine.

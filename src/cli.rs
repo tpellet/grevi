@@ -51,7 +51,7 @@ impl GlobalOpts {
 pub enum Cmd {
     /// Find one line in a list by describing it: stdin lines in, the matching line out
     #[command(
-        after_help = "Examples:\n  git branch | jevify pick \"the payment timeout fix\"\n  git log --oneline | jevify pick -n 3 \"when we changed the pricing\"\n  git ls-files | jevify pick --files \"where man pages are parsed\"\n\nThe description and the line need no word in common. --files ranks stdin paths first, then reads excerpts of the finalists; hidden paths receive no excerpt.\nExit: 0 found, 3 no line fits. --json data: matches[{line, text, p}], any, source."
+        after_help = "Examples:\n  git branch | jevify pick \"the payment timeout fix\"\n  git log --oneline | jevify pick -n 3 \"when we changed the pricing\"\n  git ls-files | jevify pick --files \"where man pages are parsed\"\n\nThe description and the record need no word in common. --files ranks stdin paths first, then reads excerpts of the finalists; hidden or secret-looking paths and symlink files receive no excerpt (stderr: excerpts withheld: N). Selected records keep their bytes and input order. Input is not saved.\nExit: 0 found, 3 no record fits. --json data: matches[{line, text, ordinal, p, lossy?}], any, source. Non-UTF-8 records have lossy: true."
     )]
     Pick {
         /// Describe the line you want, e.g. "the branch with the payment timeout fix"
@@ -74,7 +74,7 @@ pub enum Cmd {
     },
     /// Find the line that caused a failure in build, test or CI output on stdin
     #[command(
-        after_help = "Examples:\n  cargo build 2>&1 | jevify why\n  gh run view --log-failed | jevify why --json\n\nPipe 2>&1: compilers write errors to stderr. Finds a cause that holds no word like \"error\" and prints numbered context.\nExit: 0 found, 3 no line looks like a failure. --json data: causes[{line, text, p, context[]}], any, considered, total, hint."
+        after_help = "Examples:\n  cargo build 2>&1 | jevify why\n  gh run view --log-failed | jevify why --json\n\nPipe 2>&1: compilers write errors to stderr. Prints numbered context; takes no split option. Saves raw input, secrets included, unless --no-save; stderr names the full output path.\nExit: 0 found, 3 no line looks like a failure. --json data: causes[{line, text, p, context[]}], any, considered, total, hint, saved_input, complete. A skipped or failed save sets complete: false."
     )]
     Why {
         /// Lines of context around the root cause
@@ -89,7 +89,7 @@ pub enum Cmd {
     },
     /// Describe a task and print the installed tool that fits it
     #[command(
-        after_help = "Examples:\n  jevify route \"keep my mac awake for an hour\"\n  jevify route --json \"test how fast my connection is\"\n\nSearches commands on PATH by their man pages and prints a tool. Starts no command.\nExit: 0 found, 3 no tool fits. --json data: tool, summary, fit, alternatives[]."
+        after_help = "Examples:\n  jevify route \"keep my mac awake for an hour\"\n  jevify route --json \"test how fast my connection is\"\n\nSearches commands on PATH by their man pages and prints a tool, summary and synopsis. Starts no command.\nExit: 0 found, 3 no tool fits. --json data: tool, summary, synopsis, fit, alternatives[]."
     )]
     Route {
         /// The task, e.g. "count the lines in notes.txt"
@@ -98,7 +98,7 @@ pub enum Cmd {
     },
     /// Keep stdin records that satisfy a statement
     #[command(
-        after_help = "Example:\n  cargo test 2>&1 | jevify filter 'reports a failed assertion'\n\n-v inverts the statement; unsure records are kept unless --strict is set.\nExit: 0 kept some, 1 kept none, 3 every record unsure."
+        after_help = "Example:\n  cargo test 2>&1 | jevify filter 'reports a failed assertion'\n\n-v inverts; -c prints the count. Unsure records stay unless --strict. --verbose has no short flag. --files reads stdin paths; hidden or secret-looking paths and symlink files receive no excerpt (excerpts withheld: N). Saves raw input, secrets included, unless --no-save. Status: jevify filter: kept N of M, U unsure, full output: PATH.\nExit: 0 kept some, 1 kept none, 3 every record unsure. --json data: records[{text, ordinal, p, verdict, lossy?}], kept, total, unsure, complete, saved_input, excerpts_withheld. A skipped or failed save sets complete: false. Non-UTF-8 records have lossy: true."
     )]
     Filter {
         statement: String,
@@ -119,7 +119,7 @@ pub enum Cmd {
     },
     /// Ask a yes-or-no question about the text on stdin; the answer is the exit code (0 yes, 1 no, 3 unsure)
     #[command(
-        after_help = "Examples:\n  jevify is \"the customer asks for a refund\" < mail.txt && ./refund\n  jevify is 'asks for a refund' 'mentions an order' --context mail.txt\n\nWrite each statement literally: it is judged word for word. No counting, arithmetic, dates or quality judgments. Oversized input is not judged.\nOne statement prints nothing on human stdout; several print one verdict each. Exit: 0 all yes, 1 one no, 3 otherwise. --json data: p, verdict, truncated, reason; several statements: verdicts[]."
+        after_help = "Examples:\n  jevify is \"the customer asks for a refund\" < mail.txt && ./refund\n  jevify is 'asks for a refund' 'mentions an order' --context mail.txt\n\nWrite the condition so that yes means act. Each statement is judged literally. No counting, arithmetic, dates or quality judgments. Oversized input is not judged.\nOne statement prints nothing on human stdout; several print VERDICT<TAB>STATEMENT lines. Exit: 0 all yes, 1 one no, 3 otherwise. --json data: p, verdict, truncated, reason (when oversized); several: statements[{statement, verdict, p}], verdict, truncated."
     )]
     Is {
         /// A statement that must be true of the text, e.g. "the customer asks for a refund"

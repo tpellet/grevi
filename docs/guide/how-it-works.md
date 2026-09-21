@@ -1,83 +1,163 @@
 # How it works
 
-## Every answer is something that already exists
+## Selection and NONE
 
-jevify never writes text of its own. Every token it prints comes from your stdin, a tool on your PATH, that tool's man page, or your own request.
+jevify selects existing records, installed tools, tracked hunks and destination folders. The
+model writes no answer text. `why` adds line numbers and context; `pick` and `filter` preserve
+selected input records byte for byte, in input order.
 
-- `pick` returns one of the lines you gave it.
-- `why` returns a line of the log.
-- `run` returns the name of a tool that is installed, and flags that are in its man page.
-- `add` stages changes that are in your working tree.
-- `sort` returns a folder that exists.
+A choice question includes NONE so that no candidate needs to win by default. Choice scores
+rank candidates relative to their options. A separate yes/no fit score gates the result at
+`-t` (default 0.5). TypeSafe uses Noul for yes/no; classifier translates it to binary Choice.
+Their calibration is not assumed interchangeable, and a score does not authorize an action.
 
-A proposed flag comes from a man page and a tool from the inventory. Existing text can still contain shell metacharacters or describe an invalid invocation: validate it before acting. `run` executes argv directly and quotes its human display; selecting existing text is not a shell-safety guarantee.
+`is` has an unsure band (`--band`, default 0.15): yes at or above threshold plus band, no below
+threshold minus band, unsure between. `filter` uses the same verdict boundaries with a fixed
+0.15 band, retaining unsure records unless `--strict` drops them. `filter -v` inverts yes/no
+selection and still retains unsure records by default.
 
-## Two kinds of question, and NONE
+One `is` statement prints nothing; several print `VERDICT<TAB>STATEMENT` lines. The aggregate
+exit is 0 for all yes, 1 for any no, and 3 otherwise. Oversized context abstains before inference
+rather than pretending that a clipped middle was judged.
 
-Jev, TypeSafe's model, answers two kinds of question, and jevify keeps them apart.
+## Records and batches
 
-**"Which one?"** is a choice over a list of options plus NONE. jevify adds NONE to every list, so the model can say that no line matches, no tool fits, no folder is right. A candidate only has to beat NONE to be returned. If NONE wins, jevify exits 3. The probabilities of a choice are relative to the list, so a "which one" answer is reliable at the top only. That is why the tournament (below) takes 3 per window, and why `-n` past 3 lists candidates without a ranking claim.
+`pick` and `filter` read lines, paragraphs (`--para`) or NUL-separated records (`-0`). The two
+split flags conflict. Blank records are omitted; original delimiters, CRLF and non-UTF-8 bytes
+remain in selected human output. Machine records carry `text` and a 1-based `ordinal`; invalid
+UTF-8 adds `lossy: true`. `pick` also supplies `line` and `p`.
 
-**"Is it?"** uses an absolute Noul on TypeSafe. Classifier translates it to a binary Choice; jevify does not assume the scores share calibration. These questions appear in five places:
+Identical records are judged once. `filter` maps answers back to every occurrence; `pick`
+returns the first occurrence of a selected distinct record. Both limit distinct records to
+20,000, with `error.kind=too_many`, exit 6 above that ceiling. Input is bounded at 64 MiB.
 
-- `is`: your condition.
-- `why`: "does this log hold a failure at all" (`data.any`).
-- `run`: "is this command a correct, direct way to do the request" (`data.fit`).
-- `add`: "is this hunk about the topic".
-- `sort`: the placement confidence.
+`filter` sends up to 1,000 records per request on classifier.dev and 20 on TypeSafe, in parallel
+subject to `JEVIFY_CONCURRENCY`. Classifier records are judged alone. TypeSafe records share one
+request state, with each question identifying its record; independence is not claimed there.
+Answers flow in input order as soon as earlier records are answered. A closed stdout stops work
+normally. A later backend error can leave a human-output prefix and exits with that error.
 
-Every prompt asks what a thing is: "is this command a correct, direct way to do the request". During development, the other form, "would running it accomplish the request", answered in a narrow band on almost any input. The descriptive form is the one the 0.5 default was measured on.
+## Selection rounds
 
-## One threshold
+Selection uses at most two rounds of parallel Jev calls. TypeSafe windows contain 200 candidates
+plus NONE; classifier windows contain 99 plus NONE. A selection window shares a character budget,
+clipping each candidate to 200–2,000 characters. Up to three candidates per window enter a pool
+capped at 24 finalists, followed by a final comparison. Candidates outside that pool cannot win;
+a long-list selection is not evidence that every plausible rival reached the final comparison.
 
-`-t` (default 0.5, env `JEVIFY_THRESHOLD`) gates yes/no fit scores, not the relative candidate Choice used for ranking. On classifier, that fit score comes from a binary Choice translation whose calibration needs separate evidence. Exit 3 means no fit, ambiguity, or insufficient input evidence; oversized `is` input abstains without a model call.
-
-`is` adds a dead band around the threshold, `--band` (default 0.15): yes at or above 0.65, no below 0.35, unsure in between. It is the only verb with one. The reason is measured: without the cache, identical requests move `p` by up to 0.06 between runs on `jev-1.13.0`, so a decision within 0.06 of the threshold can flip on a re-run. The other verbs report `p` and leave the margin to you.
-
-The [routing reliability table](../../README.md#numbers) records 37 correct routes in 42 fits at or above 0.8, and 12 in 17 in the bin above the threshold. It covers the measured TypeSafe routing task. Fits below 0.5 were not scored, and this is not evidence of calibration for every verb, threshold or backend.
-
-## Order is canonical
-
-Option order is part of the request and inside the cache key. In measurements during development it never flipped a top answer, but it moved an uncertain probability by up to 0.23. So every list reaches the model in a fixed order: stdin order for `pick`, prefilter order for `why`, the inventory sorted by name for `run`, man-page order for flags, and sorted file and folder names for `sort` and for the file names `run` may append. Identical items would split the probability of a choice between them. So `pick` sends each distinct non-blank line once, and `why` drops any line already seen. The first occurrence keeps its line number.
-
-## The tournament
-
-The API takes at most 255 options per question. Past that, `pick` and `why` run a tournament: windows of 200 items plus NONE, 3 finalists per window (at most 24 finalists in all), then one finals round. A window's items share a 60,000-character budget, each item clipped to 200–2,000 characters, which keeps a request under the model's 32k-token state limit for typical text. The windows of a round are requested in parallel (`JEVIFY_CONCURRENCY`, default 8).
-
-Every verb finishes in at most 2 rounds of requests, except `run`, which takes 3: route (which tool), fit (is the command a correct, direct way), arguments (which flags, which files). `--no-args` stops after fit.
+`pick --files` reads paths from stdin, selects finalists by name, then reads eligible excerpts
+for the second round. Hidden and secret-looking path components and symlink files receive no
+excerpt. Paths remain candidates; the status reports `excerpts withheld: N`.
+`-n` requests more candidates, but ranks past the third have no reliability claim.
 
 ## The `why` prefilter
 
-A CI log can run to thousands of lines, most of them noise. Before anything is sent, `why` drops blank and repeated lines. If 1,500 or fewer distinct lines remain, they all go. Otherwise it keeps neighbourhoods of five lines around every line that matches an error-like pattern (`error`, `failed`, `panic`, `not found`, `traceback`, `denied`, `exit code N`, `assert`, and so on). It takes them from the top of the log first, because the root cause is usually the first error. Then it fills the rest of a 4,000-line budget from the tail. Context (`-C`) is read from the full log afterwards, so a kept line still shows its real neighbours.
+`why` takes a log on stdin and no split options. It prints numbered cause lines with context.
+Blank and repeated lines are removed from selection evidence. Up to 1,500 distinct lines all
+go to selection; above that it keeps neighbourhoods around error-like lines within 4,000 lines,
+then fills from the tail. Context comes from the full input. Compare `data.considered` and
+`data.total`; incomplete selection evidence does not establish a whole-log verdict.
 
-With `why -- <cmd>`, jevify runs the command via argv, never a shell, with stdout and stderr on one pipe so the lines interleave as they would on a terminal. A daemon the command leaves behind (a build server, a watcher) can keep the pipe open after the command exits. jevify waits one second for it, then uses what it captured.
+## Tool routing
 
-## `run`: inventory, man pages, files
+`route` inventories PATH commands and their one-line man-page summaries. It chooses candidates
+from that inventory, then judges fit using man-page excerpts of at most 12 finalists. The result
+is a tool name, summary and synopsis, or exit 3. It supplies no arguments and starts no user
+command. Local inventory work can overlap the API connection prewarm.
 
-`run` builds an inventory of the tools on your PATH with the one-line summary from each man page, and caches it. Names without a man page are kept. Each of the three steps reads something different:
+## Cache and saved inputs
 
-- Route chooses among those names and summaries.
-- Fit reads the man-page excerpts of at most 12 finalists.
-- Arguments picks from the chosen tool's option list, and from those file names in the current directory that contain a word of your request.
+Answer cache identity includes endpoint, backend, decision-contract version, model and serialized
+redacted request. Answers expire after seven days, with decision fields validated before reuse.
+The cache holds answers, not input text; expiry does not reclaim files. `--no-cache` or
+`JEVIFY_NO_CACHE=1` bypasses it.
 
-Nothing else about your files, environment or history is sent ([PRIVACY.md](../../PRIVACY.md)).
+Only `why` and `filter` separately save raw input before inference. Their content-addressed files
+are `outputs/<blake3-16>.log` under `JEVIFY_CACHE_DIR` or the platform cache directory's `jevify`
+directory. They include secrets and are never pruned. `--no-save` skips saving; a failed or
+skipped save reports the reason and sets `data.complete=false`. `--no-cache` does not disable
+this store. [Privacy](../../PRIVACY.md) gives the permissions and outbound withholding rules.
 
-`run` is the one verb that opens its connection to the API before its local work. It spends about a second reading the inventory, and the TLS handshake runs during that second. Measured on `run cold full`, that overlap is worth about 200 ms at p50. The other verbs have no local work to overlap and do not prewarm. The A/B runs are in [benchmarks/README.md](../../benchmarks/README.md).
+## Models, retries and evidence
 
-## The cache
+TypeSafe defaults to `jev-1.13.0`; `--model jev-latest` opts into a moving alias. Classifier
+controls its model and rejects explicit overrides. `meta.model` is one string, with multiple
+answering models joined by `", "`. Calibration requires evidence for that model, backend and task.
 
-Answers are cached for 7 days under `JEVIFY_CACHE_DIR`, keyed by endpoint, backend, decision-contract version, model and serialized redacted request. Cached decision fields are validated before use. The cache holds answers, not input text; expiry does not reclaim old files. `meta.cache_hits` counts hits. `--no-cache` or `JEVIFY_NO_CACHE=1` bypasses it.
+Transient 408, 429, 5xx and timeout failures can be retried up to three times. A `rate_limit_day`
+429 is never retried: exit 4, `daily quota of the free backend reached`. Filter batch requests
+honour numeric `Retry-After` through 60 seconds and refuse longer delays; other inference calls
+cap the server delay at ten seconds. Millisecond headers take precedence; HTTP-date values are
+not parsed. There is no overall command deadline. A 413 or 422 returns exit 6,
+`api_rejected_request`: narrow evidence before asking again.
 
-## The pinned model
+`meta.requests` counts inference POST attempts, including failures and retries, excluding health
+and prewarm GETs. Unknown token usage is `null`. Cost estimates cover input tokens at the
+configured price, not a billing receipt. [Robot mode](../ROBOT_MODE.md) defines the counters.
 
-TypeSafe defaults to `jev-1.13.0`; `--model jev-latest` (or `JEVIFY_MODEL`) opts into its moving alias. Classifier selects its model server-side and rejects explicit overrides. The response's model is reported when available. A model or prompt change requires fresh calibration evidence; the old threshold evidence does not automatically transfer.
+## Numbers
 
-## Retries and limits
+Measurements below are bounded by their date, inputs and backend; they do not validate every
+verb or the classifier translation. Inputs and measurement scripts live in
+[benchmarks](../../benchmarks/README.md) and [evals](../../evals/).
 
-jevify retries a request up to 3 times on 408, 429, 5xx and timeouts. It honours the server's `retry-after` (or `retry-after-ms`) header in place of its own backoff, capped at ten seconds. When retries run out it exits 4. A 413 or 422 means the API refused the request itself, usually because dense text (hashes, paths, JSON, CJK) tokenized past the budget. jevify reports that as an input error, `api_rejected_request`, exit 6. The fix is to filter the input first. TypeSafe's rate limits are 1,200 requests per minute and 250k tokens per second.
+Latency measured 2026-09-19 on a typical macOS dev machine (Apple M4 Pro, 24 GB, macOS 26.6.2),
+consumer Wi-Fi, TypeSafe `jev-1.13.0`, `hyperfine --warmup 1 --runs 15`. An empty HTTPS round trip
+took about 240 ms. Cold means `JEVIFY_NO_CACHE=1`; warm means an answer-cache hit.
 
-`meta.requests` counts attempted inference POSTs, including retries and failures, but excludes health/prewarm GETs. There is no overall command deadline; each HTTP attempt has its own timeout. HTTP-date Retry-After and longer server delays are not fully honored by the capped policy. Deadline and quota work is tracked in the implementation plan. Classifier field and label limits are checked locally before sending.
+| Task | p50 | p95 | n | failed |
+|:---|---:|---:|---:|---:|
+| `pick` cold, 924 lines from `/usr/bin` | 739 ms | 804 ms | 15 | 0 |
+| `pick` warm | 6 ms | 10 ms | 15 | 0 |
+| `is` cold, same 924 lines | 454 ms | 488 ms | 15 | 0 |
+| `why` cold, 12-line failing build | 638 ms | 732 ms | 15 | 0 |
+| tool routing, without argument selection | 1,823 ms | 2,007 ms | 15 | 0 |
+| `rg -c compress`, same 924 lines | 3 ms | 4 ms | 15 | 0 |
 
-## Redaction
+The `rg` measurement is below hyperfine's 5 ms floor and illustrates the cost of literal search.
+Input-token estimates at $0.042/Mtok in these measurements: `why`, 2 requests, 1,436 tokens,
+$0.00006; `is` on a six-line mail, 1 request, 346 tokens, $0.000015; `pick` over five names,
+1 request, 487 tokens, $0.00002.
 
-Before any text leaves the machine, jevify masks obvious secrets (`token=…`, `Bearer …`, `sk-…`, `ghp_…`, `AKIA…`, JWTs) as `[REDACTED]`. It is a regex, so it is best effort: do not pipe secrets into jevify.
+Routing accuracy measured 2026-09-19 on TypeSafe `jev-1.13.0`, release build, empty cache,
+threshold 0.5, frozen inventory `evals/inventory.json` of 1,693 tools. BM25 ranks the same names
+and man-page summaries. The routing and root-cause evaluation requests together cost $0.43
+(routing $0.42, root cause $0.01).
+
+| Routing set | n | jevify top-1 | BM25 top-1 | abstained | errors |
+|:---|---:|---:|---:|---:|---:|
+| author-written, routable | 39 | 36 | 9 | 0 | 0 |
+| NL2Bash held-out | 120 | 36 | 4 | 66 | 0 |
+
+Among ten requests labelled unanswerable by installed tools, nine abstain; translation to French
+routes to `spit`, whose man page describes LLM translation, and counts as a miss. NL2Bash mostly
+describes pipelines around `find`: 54 of 66 abstentions and 12 of 18 wrong routes name `find`
+as gold. Forty requests name a utility explicitly; 16 of the 36 hits are among those forty.
+
+Reliability among 93 accepted routes only, on the two routable sets:
+
+| Fit bin | Routes | Correct | Accuracy |
+|:---|---:|---:|---:|
+| 0.4–0.6 (observed fits at least 0.5) | 17 | 12 | 0.71 |
+| 0.6–0.8 | 34 | 23 | 0.68 |
+| 0.8–1.0 | 42 | 37 | 0.88 |
+
+These bins do not establish calibration below the threshold, on another backend, or for another
+verb. A 0.6 threshold excludes 17 accepted routes, including 12 correct ones. Twenty of 169 routing
+decisions lie within 0.06 of the threshold, the measured uncached probability jitter for identical
+requests on this model. A changed model or prompt needs new evidence.
+
+Root-cause accuracy, measured 2026-09-19 on TypeSafe `jev-1.13.0`: twenty real CI logs, 136–300
+lines each, four per ecosystem, hand-labelled cause ranges; `jevify why -n 3`. Three abstentions,
+zero errors. Baselines use the first or last line matching the same error-signal regex.
+
+| Method | hit@1 | hit@3 |
+|:---|---:|---:|
+| jevify | 15/20 | 16/20 |
+| first signal match | 4/20 | 10/20 |
+| last signal match | 1/20 | 3/20 |
+
+Every log contains a failure, so the three abstentions are misses. `data.any` has minimum 0.17
+and median 0.77; the abstentions score 0.17, 0.43 and 0.46. Failures include a data race, an
+assertion described as “still exists”, and a lint finding. A quoted failure or library frame can
+also distract selection from the cause. These counts quantify the limits of the measured task.

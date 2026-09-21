@@ -10,18 +10,18 @@ file — using TypeSafe's Jev model, with confidence scores and an honest "nothi
   transcribe it). `docs/superpowers/plans/2026-09-18-hunch-v0.md` is the plan of the verbs that
   exist.
 
-Principles: point, never generate · at most two rounds of parallel Jev calls per verb (the
-documented `run` argument pass permits a third) · one decision threshold, with calibration
+Principles: point, never generate · at most two rounds of parallel Jev calls per verb ·
+one decision threshold, with calibration
 claims scoped to backend and task · Unix-first human output, one machine envelope · safe by
-default. Incomplete evidence cannot authorize whole-input verdicts or larger actions;
-unvalidated command grammar remains a proposal. See the remediation section of the plan.
+default. Incomplete evidence cannot authorize whole-input verdicts or larger actions.
+Output verbs start no user command; callers authorize staging and file moves.
 
 ---
 
 ## Toolchain: Rust & Cargo
 
-- Cargo only. Edition 2024, stable toolchain. `rust-version = "1.87"` is the floor for
-  `std::io::pipe` (`why -- <cmd>`); the local toolchain is pinned to 1.93.
+- Cargo only. Edition 2024, stable toolchain. `rust-version = "1.87"` is the supported floor;
+  the local toolchain is pinned to 1.93.
 - `#![deny(unsafe_code)]` in `src/lib.rs`. `unsafe { std::env::set_var(..) }` only inside
   `tests/` (edition 2024 marks it unsafe).
 - Async: tokio current-thread runtime only; no second executor. Blocking local work (stdin,
@@ -51,7 +51,7 @@ delete a test to get past a sandbox failure.
 Live tests (`tests/live.rs`, all `#[ignore]`):
 
 ```bash
-TYPESAFE_API_KEY_FILE=$HOME/.ssh/typesafe-ai-key cargo test --test live -- --ignored --test-threads=1
+TYPESAFE_API_KEY_FILE=/path/to/key cargo test --test live -- --ignored --test-threads=1
 ```
 
 Without a key they print `SKIPPED: set TYPESAFE_API_KEY_FILE=...` and return; a hand-off lists
@@ -117,14 +117,15 @@ is") and no retrospective language ("now", "since 0.x", "new in", "ships", "rele
 and conditions belong only next to a measurement; history belongs in `CHANGELOG.md`.
 
 **Live API key.** Point jevify at the key with
-`TYPESAFE_API_KEY_FILE=$HOME/.ssh/typesafe-ai-key` in the command's environment — jevify reads
+`TYPESAFE_API_KEY_FILE=/path/to/key` in the command's environment — jevify reads
 it, you never do. Never echo the variable or the key. Live commands need the sandbox disabled
 because `~/.ssh` is sandbox-denied.
 
 ### Agent-facing contract (do not break without updating capabilities + docs + tests)
 
-Exit codes 0 ok · 1 no · 2 usage · 3 abstain · 4 unavailable · 5 auth · 6 input · 7 child
-failed · 130 declined. Machine envelope: `{ok, command, version, exit_code, data, meta, error}`
+Exit codes 0 ok · 1 no · 2 usage · 3 abstain · 4 unavailable · 5 auth · 6 input · 7 reserved
+(no verb reports a child command's failure) · 130 declined (`add` confirmation; `sort` has no
+confirmation prompt). Machine envelope: `{ok, command, version, exit_code, data, meta, error}`
 with `error{kind, message, hint, example}`. Error `kind` strings are stable identifiers.
 New verbs update `cli.rs`, dispatch, `capabilities()`, `docs/ROBOT_MODE.md`, README, a
 PRIVACY.md row, and tests.

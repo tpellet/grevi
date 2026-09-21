@@ -1,6 +1,38 @@
 # Changelog
 
-## Unreleased
+## 0.5.0
+
+Added:
+
+- `filter` selects matching stdin records, preserving bytes and input order. `-v` inverts,
+  `-c` counts, and unsure records remain unless `--strict`. Batches hold up to 1,000 records
+  on classifier.dev or 20 on TypeSafe; the distinct-record ceiling is 20,000 (`too_many`).
+- `is` accepts several statements and `--context FILE`. One statement prints nothing;
+  several print verdict-tab-statement lines, with `data.statements` in machine output.
+- `pick` and `filter` accept `-0`, `--para` and boolean `--files` reading paths from stdin.
+  Hidden and secret-looking file excerpts are withheld. Non-UTF-8 machine records carry
+  replacement text, `lossy: true` and `ordinal`.
+- `why` and `filter` save full raw inputs under the cache directory's `outputs/`, with
+  content-addressed names and private permissions. These files include secrets and are never
+  pruned. `--no-save` is separate from `--no-cache`; skipped or failed saves mark incomplete data.
+- `init agents` prints at most 25 lines derived from the capabilities command and exit tables.
+
+Changed:
+
+- `route` prints an installed tool, summary and synopsis without starting the user's command.
+  Shell integration calls `route`. Capabilities, help and agent documents share this contract.
+- `why` reads stdin only, keeps numbered context and accepts no record split option.
+- `meta.model` remains a string, joining several answering models with comma and space.
+- A `rate_limit_day` HTTP 429 returns exit 4 with no retry. Classifier record batches honour
+  numeric `Retry-After` through 60 seconds and refuse longer waits.
+
+Removed:
+
+- `why -- CMD`, `run`, its `--yes`, `--exec`, `--dry-run` and `--no-args` flags, and its
+  argument-selection pass. No compatibility aliases are provided.
+- `pick --files DIR`; supply paths on stdin instead.
+- Global `-v`; use `--verbose` for diagnostics. `filter -v` means inversion.
+- The README's obsolete terminal recording reference; the recording files remain available.
 
 Fixed:
 

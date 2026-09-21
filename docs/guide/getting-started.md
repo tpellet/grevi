@@ -2,94 +2,87 @@
 
 ## Install
 
-With Rust 1.87 or newer:
+With Rust 1.87 or newer, on macOS or Linux:
 
 ```sh
 cargo install jevify --locked
 ```
 
-Or the shell installer, macOS and Linux:
+The shell installer is also available:
 
 ```sh
 curl --proto '=https' --tlsv1.2 -LsSf https://github.com/tpellet/jevify/releases/latest/download/jevify-installer.sh | sh
 ```
 
-To build the unreleased `main` instead: `cargo install --git https://github.com/tpellet/jevify --locked jevify`.
+Build from `main` with `cargo install --git https://github.com/tpellet/jevify --locked jevify`.
 
 ## No key needed
 
-There is nothing to sign up for. Without a key, jevify asks [classifier.dev](https://classifier.dev). It runs the same model, TypeSafe's Jev, and serves it free, with no account.
-
-With a TypeSafe key, jevify uses your own quota, and the limits are higher. You get a key at https://console.typesafe.ai, and TypeSafe bills you for the requests made with it. jevify is an independent open-source client of their API. Give jevify the key one of two ways:
+Without a key, jevify asks [classifier.dev](https://classifier.dev), which serves the free backend
+without an account. A TypeSafe key selects TypeSafe and its quota:
 
 ```sh
-export TYPESAFE_API_KEY=...
-# or, to keep it out of your environment and shell history:
 export TYPESAFE_API_KEY_FILE=/path/to/key
 ```
 
-`TYPESAFE_API_KEY_FILE` is read only when a request needs a key. jevify never prints the key and never logs it. `JEVIFY_BACKEND=typesafe|classifier` forces a backend. [Configuration](configuration.md#backends) has the differences between them.
-
-## Check the connection
+`TYPESAFE_API_KEY` is also supported. jevify reads the key file only when it needs the key, and
+never prints or logs the key. `JEVIFY_BACKEND=typesafe|classifier` forces a backend.
+Scores and thresholds are not assumed interchangeable between the two backends.
 
 ```sh
 jevify health
-# ok: classifier reachable in 190 ms (key not needed)
 ```
 
-`health` names the backend that answered, whether a key was needed and accepted, and how long the API took. It exits 0 when all is fine, 4 when the API is unreachable and 5 when a key is missing or rejected.
+`health` names the backend, key status and response latency: exit 0 reachable, 4 unavailable,
+5 missing or rejected TypeSafe key.
 
 ## First commands
 
 ```sh
-cargo build 2>&1 | jevify why                       # find the error in a failed build
-history | jevify pick "how I made that gif from a screen recording"
-jevify is "asks for a refund" < mail.txt && ./refund  # a yes-or-no question; the answer is the exit code
-jevify run --dry-run "count the lines in notes.txt" # proposes `wc -l notes.txt`, runs nothing
-jevify add --dry-run "the token expiry fix"         # scores each change against the fix, stages nothing
-jevify sort ~/Downloads                             # shows where each file would go, moves nothing
+printf 'build started\nerror: connection timed out\nbuild stopped\n' | jevify filter 'reports a network failure'
+printf 'All tests passed.\n' | jevify is 'the tests passed' && printf 'ready\n'
+cargo build 2>&1 | jevify why
+git branch | jevify pick 'the payment timeout fix'
+git ls-files | jevify pick --files 'where man pages are parsed'
+jevify route 'keep my mac awake for an hour'
 ```
 
-In zsh, write `history 1` to get the whole history. Whatever you pipe goes to the API ([PRIVACY.md](../../PRIVACY.md)).
+`why` prints numbered lines with context. Compilers write errors to stderr, so pipe `2>&1`.
+`pick` prints selected input records. `filter` keeps matching and unsure records, with `--strict`
+to drop unsure ones. `filter -v` inverts; `--verbose` prints diagnostics and has no short flag.
 
-Three things to know before going further:
+Only `why` and `filter` save full raw input, secrets included, under the cache directory's
+`outputs/` subdirectory. Stderr names the saved path. `--no-save` skips the save independently
+of the answer cache; a skipped or failed save sets `data.complete=false`.
 
-- Compilers write errors to stderr. Pipe `2>&1` into `why`, or let `jevify why -- cargo build` run the command and capture both streams.
-- Exit 3 is an answer. It means nothing fit (`pick`, `run`), no line looked like a failure (`why`), or the yes/no probability landed in the unsure band (`is`). Branch on it.
-- Every verb makes at least one API request. `-v` prints the request count, the probabilities and the cost on stderr.
+## The comma alias
 
-## The `,` alias
-
-`jevify init` prints a snippet that makes `,` an alias for `jevify run`:
+`init` prints shell integration; it does not edit a shell profile. The comma alias and opt-in
+command-not-found hook call `route`, which prints a tool and starts no user command.
 
 ```sh
-eval "$(jevify init zsh)"      # or bash; add the line to ~/.zshrc or ~/.bashrc
+eval "$(jevify init zsh)"
 , "what's using port 8080"
 ```
 
-Quote requests that contain an apostrophe: an unquoted `, what's using port 8080` opens a quote in both zsh and bash. In zsh the alias is `noglob jevify run`, so `*` in a request is not expanded.
-
-The same snippet holds an opt-in command-not-found hook. With `JEVIFY_CNF=1` in the environment, a command the shell cannot find that has three or more words is passed to `jevify run` instead of failing with "command not found". Shorter unknown commands still fail as before. jevify never installs the hook on its own: it is only defined if you export the variable and no handler exists already.
+Use `jevify init bash` for bash. The zsh alias includes `noglob`. Quote requests with apostrophes.
+When `JEVIFY_CNF=1` is set and no handler exists, the snippet defines a hook for unknown commands
+of three or more words. Shorter unknown commands return 127.
 
 ## Scripting on exit codes
 
-`is` prints nothing. Its answer is the exit code (0 yes, 1 no, 3 unsure), so you can use it with `&&`, `||` and `case`.
+Write the condition so that yes means act. One `is` statement prints nothing; several print
+`VERDICT<TAB>STATEMENT` lines. `--context FILE` uses a file instead of stdin.
 
 ```sh
-jevify is "asks for a refund" < mail.txt; case $? in 0) ./refund;; 1) ./archive;; 3) ./ask;; esac
+printf 'Please refund order 42.\n' | jevify is 'asks for a refund' 'mentions an order'
+jevify is 'asks for a refund' --context mail.txt
 ```
 
-`pick` and `why` print the matching line on stdout, so they sit inside `$( )`:
+Exit 0 means all yes, 1 means at least one no, and 3 means unsure otherwise. `&&` acts only on 0.
+Use `case` to distinguish no, unsure and backend errors. Check a `pick` call's exit before using
+its output as an argument; an unchecked substitution can pass an empty argument on abstention.
 
-```sh
-git switch $(git branch | jevify pick "payment timeout fix")
-kill $(ps -eo pid,comm,%cpu | jevify pick "eating my battery" | awk '{print $1}')
-```
-
-The exit codes, common to every verb: 0 ok, 1 no, 2 usage, 3 abstain, 4 unavailable, 5 auth, 6 input, 7 child failed, 130 declined. [Verbs](verbs.md) lists which ones each verb can return.
-
-## Next
-
-- [Verbs](verbs.md) for every flag and the `data` each verb returns.
-- [Agents](agents.md) if a program will read the output.
-- [Configuration](configuration.md) for the environment variables.
+The common codes are 0 ok, 1 no, 2 usage, 3 abstain, 4 unavailable, 5 auth, 6 input, 7 reserved
+and 130 declined at `add` confirmation. [Verbs](verbs.md) lists the per-command data and flags.
+For machine output, use `--json`; [Agents](agents.md) describes the envelope.

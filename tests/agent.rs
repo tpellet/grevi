@@ -38,27 +38,37 @@ fn capabilities_lists_verbs_exit_codes_env() {
         .unwrap();
     let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
     let d = &v["data"];
-    for verb in ["pick", "why", "route", "filter", "is"] {
-        assert!(
-            d["commands"]
-                .as_array()
-                .unwrap()
-                .iter()
-                .any(|c| c["name"] == verb),
-            "{verb}"
-        );
+    use clap::CommandFactory;
+    let parser = jevify::cli::Cli::command();
+    let verbs: Vec<_> = parser.get_subcommands().map(|c| c.get_name()).collect();
+    let commands = d["commands"].as_array().unwrap();
+    assert_eq!(
+        commands
+            .iter()
+            .map(|c| c["name"].as_str().unwrap())
+            .collect::<Vec<_>>(),
+        verbs
+    );
+    for command in commands {
+        assert!(!command["usage"].as_str().unwrap().is_empty());
+        assert!(!command["data"].as_str().unwrap().is_empty());
+        let codes = command["exit"].as_array().unwrap();
+        assert!(!codes.is_empty());
+        assert!(codes.iter().all(|code| code.is_u64()));
     }
-    // Wave 2: both `add` (Task 14) and `sort` (Task 15) are listed.
-    for verb in ["add", "sort"] {
-        assert!(
-            d["commands"]
-                .as_array()
-                .unwrap()
-                .iter()
-                .any(|c| c["name"] == verb),
-            "{verb}"
-        );
-    }
+    assert_eq!(d["limits"]["distinct_records"], 20_000);
+    assert_eq!(d["limits"]["records_per_request"]["classifier"], 1_000);
+    assert_eq!(d["limits"]["records_per_request"]["typesafe"], 20);
+    assert_eq!(
+        d["saved_inputs"]["verbs"],
+        serde_json::json!(["why", "filter"])
+    );
+    assert!(
+        d["saved_inputs"]["directory"]
+            .as_str()
+            .unwrap()
+            .contains("outputs")
+    );
     assert_eq!(d["exit_codes"].as_array().unwrap().len(), 9);
     assert!(
         d["env"]
@@ -77,6 +87,45 @@ fn capabilities_lists_verbs_exit_codes_env() {
             .unwrap()["default"],
         "jev-1.13.0"
     );
+}
+
+#[test]
+fn agent_block_is_bounded_and_public_help_has_no_removed_forms() {
+    use clap::CommandFactory;
+    let parser = jevify::cli::Cli::command();
+    let verbs: Vec<_> = parser.get_subcommands().map(|c| c.get_name()).collect();
+    let out = common::bin().args(["init", "agents"]).output().unwrap();
+    assert!(out.status.success());
+    let block = String::from_utf8(out.stdout).unwrap();
+    assert!(block.lines().count() <= 25);
+    assert!(block.contains("jevify capabilities --json"));
+    assert!(block.contains("yes means act"));
+    for verb in &verbs {
+        assert!(block.contains(&format!("- {verb}:")), "{verb}");
+    }
+    let mut outputs = vec![block];
+    for args in [vec!["--help"], vec!["capabilities", "--json"]]
+        .into_iter()
+        .chain(verbs.iter().map(|verb| vec![*verb, "--help"]))
+    {
+        let out = common::bin().args(&args).output().unwrap();
+        assert!(out.status.success(), "{args:?}");
+        outputs.push(String::from_utf8(out.stdout).unwrap());
+    }
+    let removed = regex::Regex::new(
+        r"jevify (?:run|fill|label)(?:\s|$)|why -- |@\{[a-z-]+:|pick --from|jevify -v(?:\s|$)",
+    )
+    .unwrap();
+    for output in outputs {
+        assert!(!removed.is_match(&output), "{output}");
+    }
+    for shell in ["bash", "zsh"] {
+        let out = common::bin().args(["init", shell]).output().unwrap();
+        assert!(out.status.success());
+        let script = String::from_utf8(out.stdout).unwrap();
+        assert!(script.contains("alias ,=") && script.contains("jevify route"));
+        assert!(script.contains("then jevify route \"$*\""));
+    }
 }
 
 #[test]

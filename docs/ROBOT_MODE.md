@@ -1,153 +1,171 @@
 # jevify — robot mode
 
-jevify answers a question about text that already exists: your input, the installed tools, a man
-page, the folders on disk. It selects and never generates, so you can check every answer.
+jevify judges the output side of a command: existing records in, pointers or decisions out.
+It selects and never generates. Use `jevify capabilities --json` as the source of truth;
+`jevify init agents` prints an instruction block derived from its command and exit tables.
 
 ## When to call it
 
-You have `grep` and you can read files. Call jevify when those two run out:
+| Trigger | Verb | Classical twin |
+|:---|:---|:---|
+| a long failed build or a grep that found only the symptom | `why` | — |
+| one record described but not named | `pick` | `fzf --filter` |
+| many records or files, one question | `filter` | `grep` |
+| the next step depends on a fact | `is` | `test` |
+| an unfamiliar task on a large PATH | `route` | command discovery |
+| tracked changes mixed across topics | `add` | `git add -p` |
+| files that need a home among existing folders | `sort` | folder placement |
 
-- A long log, or a grep that found the symptom. `grep -iE "error|fail"` finds the line that says
-  something failed. The line that says why often holds none of those words (an assertion's
-  `left:`/`right:` values, "could not match actual sql"). `why` reads the whole log, thousands of
-  lines included. Call it before you read a log of more than a few hundred lines.
-- Many texts, one question. Loop `is` over them and read only the exit codes: one line per text,
-  whatever its length. Then read the few that said yes or unsure.
-- One item out of many, described and not named: a branch, a commit, a file, a process, a
-  history line. `pick` matches by meaning, so the description and the line need no word in common.
-- Part of a working tree. `git add -p` needs a terminal. `add` stages the hunks that belong to one
-  topic and leaves the others.
-- A task with no command you are sure of. `run --dry-run --no-args` searches every command on the
-  PATH by what its man page says it does, and only proposes what is installed.
-- Files whose names say nothing. `sort` reads the content and proposes an existing folder.
+Cheap tools go first. Skip jevify when literal search answers the question, the input is short
+enough to read, or the exact command is known. Use one `filter` process for many records, never
+a loop of `is` calls. Write a literal statement about the evidence, not a vague request for advice.
+No counting, arithmetic, date comparisons or quality judgments; English works best.
 
-Skip jevify when a literal search answers the question, when the input is short enough to read, or
-when you already know the exact command.
+```sh
+gh run view --log-failed | jevify why --json
+git log --oneline | jevify pick --json 'the commit that renamed the project'
+fd -0 -e txt | jevify filter -0 --files 'asks for a refund'
+printf 'All tests passed.\n' | jevify is 'the tests passed' && printf 'ready\n'
+jevify route --json 'keep my mac awake for an hour'
+jevify add --json --dry-run 'the token expiry fix'
+```
 
-## How to phrase
+`jq`, `cut`, `grep`, `head` and another jevify verb can consume selected records. `pick` and
+`filter` preserve their exact bytes and input order. Check a `pick` call's exit before using
+its output as an argument; unchecked substitution can turn abstention into an empty argument.
 
-- Write what must be true of the text, literally. The statement is judged word for word:
-  `"the customer is about to stop being a customer"` works; `"this customer is about to leave"`
-  also says yes to an employee who is leaving their company.
-- Describe the thing, not what you will do with it: `"the line with the failing assertion"`.
-- One question per call. English works best.
-- jevify does not count, do arithmetic, compare dates or judge quality.
+## Verbs and data
 
-## Patterns
+- `pick '<intent>' [-n N] [--index | --files] [-0 | --para]` reads stdin records.
+  Data: `matches[{line,text,ordinal,p,lossy?}]`, `any`, `source`. Exit 0 found, 3 nothing fits.
+  `--files` is boolean: `git ls-files | jevify pick --files 'where man pages are parsed'`.
+  Paths are ranked first, then eligible excerpts of at most 24 finalists. Input is not saved.
+- `why [-C N] [-n N] [--no-save]` reads stdin logs and prints numbered causes with context;
+  it takes no split option. Data: `causes[{line,text,p,context[]}]`, `any`, `considered`, `total`,
+  `hint`, `saved_input`, `complete`. Exit 0 found, 3 abstain. Pipe stderr with `2>&1`.
+- `filter '<statement>' [-v] [-c] [--strict] [-0 | --para] [--files] [--no-save]` keeps records.
+  `-v` inverts, `-c` counts, unsure records stay unless `--strict`. `--verbose` has no short flag.
+  Data: `records[{text,ordinal,p,verdict,lossy?}]`, `kept`, `total`, `unsure`, `complete`,
+  `saved_input`, `excerpts_withheld`. Exit 0 kept some, 1 kept none, 3 every record unsure.
+- `is '<statement>' ['<statement>' ...] [--context FILE] [--band 0.15]` reads one context.
+  One statement prints nothing; several print `VERDICT<TAB>STATEMENT` (`yes`, `no`, `unsure`).
+  Data for one: `p`, `verdict`, `truncated`; for several: `statements[{statement,verdict,p}]`,
+  aggregate `verdict`, `truncated`. Oversized context adds a reason and null probabilities,
+  with no inference. Exit 0 all yes, 1 any no, 3 otherwise.
+- `route <intent...>` prints a tool, summary and synopsis; starts no user command and selects
+  no arguments. Data: `tool`, `summary`, `synopsis`, `fit`, `alternatives[{tool,fit}]`.
+  Exit 0 found, 3 nothing fits. Missing synopsis is null.
+- `add '<topic>' [--dry-run | --yes]` scores tracked unstaged hunks. Data:
+  `hunks[{file,header,p,staged}]`. Exit 0 scored or staged, 3 no match, 6 empty or oversized,
+  130 declined. Machine mode stages only with `--yes`; never commits.
+- `sort <DIR> [--into ROOT] [--apply | --undo LOG]` proposes existing folders.
+  Data: `moves[{from,to,p}]`, `skipped[{file,reason}]`, `undo_log`, `applied`. Exit 0 success,
+  3 nothing placed or restored, 6 input error. Moves require `--apply` or `--undo`; no prompt.
+  Atomic no-replace moves and a unique JSONL recovery journal protect occupied destinations.
+  Symlink entries are skipped; same volume only; concurrent source replacement unsupported.
+- `capabilities` prints commands, flags, data fields, exit codes, environment and limits.
+- `robot-docs [guide|commands|exit-codes|examples|privacy]` prints `topic` and `text` in machine mode.
+- `health` reports `backend`, `base_url`, `key`, `api`, `latency_ms`, `models`; exit 0, 4 or 5.
+- `init zsh|bash|agents` prints `script`. Shell integration routes through `jevify route`.
 
-    for f in tickets/*.txt; do                                  # triage, read none of them
-      jevify is "the customer is about to stop being a customer" < "$f" >/dev/null 2>&1
-      echo "$f $?"                                              # 0 yes · 1 no · 3 unsure
-    done
-    gh run view --log-failed | jevify why --json                # root cause of a CI run
-    git show "$(git log --oneline | jevify pick "the commit that renamed the project" | cut -d' ' -f1)"
-    jevify add --json --dry-run "the token expiry fix"          # scores first; --yes stages
+`pick` and `filter` split lines by default, NUL records with `-0`, paragraphs with `--para`.
+They limit distinct records to 20,000 within 64 MiB. `filter` judges identical records once and
+restores all occurrences. Non-UTF-8 machine records carry `text`, `lossy: true` and `ordinal`;
+human output preserves exact bytes. `pick` also uses `line` for its 1-based input position.
 
-Human stdout is plain text made for pipes (`pick` prints the line, `is` prints nothing), so there
-is no automatic switch to JSON when piped. Pass `--json` when you want the envelope.
+`--files` paths remain candidates when excerpts are withheld. Hidden or secret-looking components
+and symlink file entries receive no excerpt; status reports `excerpts withheld: N`. See
+[Privacy](../PRIVACY.md) for the exact checks. Excerpts are not complete file evidence.
 
-## The envelope
+Only `why` and `filter` save raw inputs, secrets included, never pruned. The directory is
+`JEVIFY_CACHE_DIR/outputs` or the platform cache directory's `jevify/outputs`.
+`--no-save` is independent of `--no-cache`. Stderr names the saved file:
+`jevify why: full output: PATH` or `jevify filter: kept N of M, U unsure, full output: PATH`.
+A failed or skipped save reports `full output: not saved (REASON)`, with `saved_input=null`
+and `complete=false`. Compare `why.considered` with `why.total` separately for selection coverage.
 
-Start here for the contract: `jevify capabilities --json`. Every command accepts `--json` (alias `--robot`) or
-`--format json|jsonl|toon` and then prints exactly one envelope on stdout, usage errors included:
+## Exit codes and recovery
 
-    { ok, command, version, exit_code, data, meta{backend, model, elapsed_ms, requests,
-      cache_hits, input_tokens, cost_usd, threshold, request_id, telemetry},
-      error{kind, message, hint, example} | null }
+Write the condition so that yes means act. `&&` acts only on exit 0; use `case` to distinguish
+no, unsure and errors. Under `git bisect run`, map unsure exit 3 to 125.
 
-Branch on `exit_code` (0 ok, 1 no, 2 usage, 3 abstain, 4 unavailable, 5 auth, 6 input,
-7 child failed, 130 declined), then read `data`. Never parse human output.
+| Code | Meaning / response |
+|---:|:---|
+| 0 | yes, found or successful operation |
+| 1 | `is`: any no; `filter`: kept none |
+| 2 | usage error: read the corrected command in `error.example` |
+| 3 | nothing fits or unsure: inspect evidence; do not retry until it agrees |
+| 4 | unavailable or quota exhausted: read the error |
+| 5 | missing or rejected TypeSafe key |
+| 6 | empty, oversized or unreadable input; `too_many`: narrow with `grep` or `head` |
+| 7 | reserved |
+| 130 | declined at `add` confirmation |
 
-`meta.telemetry` separates inference POSTs, health GETs, prewarm GETs, and semantic calls.
-Each of `inference_posts`, `health_gets`, `prewarm_gets`, and `semantic_calls` has
-`attempted`, `succeeded`, `failed`, `cancelled`, and `in_flight` counters, with:
+`rate_limit_day` HTTP 429 is exit 4, `daily quota of the free backend reached`, without retry.
+Filter batch requests honour numeric `Retry-After` through 60 seconds, refusing longer waits.
+A failed later batch can leave a human-output prefix; do not treat it as complete input coverage.
 
-    attempted = succeeded + failed + cancelled + in_flight
+## Envelope and telemetry
 
-A transport attempt starts immediately before an HTTP send. Waiting for an inference
-concurrency permit does not start a transport attempt. Transport success means HTTP 200
-and a fully received body; malformed JSON or invalid decisions can therefore count as a
-successful transport attempt and a failed semantic call. Dropped futures count as cancelled;
-prewarm work that is still running at the snapshot remains in flight. A semantic call is one
-`ask`, including cache hits and local validation failures. `semantic_questions` counts the
-questions in those calls. `logical_rounds` is `null`: HTTP traffic cannot establish logical
-rounds or stage counts.
+`--json` (alias `--robot`) prints one envelope, including usage errors. There is no automatic
+JSON switch for pipes. `--format jsonl` prints one line; `--format toon` encodes the same fields.
 
-`retry_sends` counts sends after the initial attempt, not planned retries. `retry_sleep_ms`
-sums elapsed retry waits when each wait completes or is interrupted; an unfinished wait is
-not included until it ends. It does not count semaphore waits, HTTP time, or proposed backoff.
+```text
+{ok, command, version, exit_code, data,
+ meta{backend, model, elapsed_ms, requests, cache_hits, input_tokens, cost_usd,
+      threshold, request_id, telemetry}, error{kind, message, hint, example} | null}
+```
+
+Branch on `exit_code`, which equals the process exit code, then read `data`. Error kinds are
+stable identifiers. `meta.model` is a string, several answering models joined with `", "`.
+TypeSafe defaults to `jev-1.13.0`; classifier chooses its model and rejects explicit overrides.
+`meta.request_id` names the last TypeSafe inference request when reported; `health` records none.
+
+`meta.requests` counts attempted inference POSTs, including retries and failures, excluding
+health and prewarm GETs. `meta.telemetry` separates `inference_posts`, `health_gets`,
+`prewarm_gets` and `semantic_calls`. Each group obeys:
+
+```text
+attempted = succeeded + failed + cancelled + in_flight
+```
+
+An attempt starts immediately before a send, not while waiting for a concurrency permit.
+Transport success means HTTP 200 with the complete body, so invalid decisions can succeed at
+transport and fail semantically. Dropped futures count as cancelled; pending prewarm stays in
+flight. Semantic accounting includes cache hits and locally rejected calls. `semantic_questions`
+counts submitted questions. `logical_rounds` is null: HTTP accounting cannot infer stage counts.
+
+`retry_sends` counts actual sends after the first attempt. `retry_sleep_ms` sums elapsed completed
+or interrupted waits, excluding pending waits, HTTP time and semaphore waits.
 
 `usage.input_tokens` and `usage.output_tokens` each contain `reported_subtotal`,
-`reported_attempts`, `unknown_attempts`, and `complete`. Only service-reported unsigned
-token counts enter subtotals, including usage received before semantic validation fails.
-Missing fields, unrepresentable subtotals, malformed bodies, transport failures, cancellation, and pending attempts
+`reported_attempts`, `unknown_attempts` and `complete`. Only valid service-reported counts enter
+subtotals; missing fields, malformed bodies, failed transport, cancellation and pending attempts
 remain unknown. For each token field:
 
-    reported_attempts + unknown_attempts = inference_posts.attempted
+```text
+reported_attempts + unknown_attempts = inference_posts.attempted
+```
 
-`complete` means no inference attempt has unknown usage for that token field. A zero
-subtotal with unknown attempts does not mean zero consumption. Cache hits add no service
-usage or inference attempts. `meta.input_tokens` is `null` unless input usage is complete.
+`meta.input_tokens` is null unless input usage is complete; unknown does not mean zero.
+Cache hits add no inference attempt or service usage. `cost_estimate` supplies `basis`,
+`input_price_per_mtok`, `reported_input_subtotal_usd` and `complete`. It estimates input tokens
+only, not a billing receipt. `meta.cost_usd` is null when that basis is incomplete, except that
+a configured zero price yields zero regardless of usage. Classifier defaults to `free_service`;
+other pricing uses `configured_input_token_price`. No output-token price is invented.
 
-`cost_estimate` records `basis`, `input_price_per_mtok`, `reported_input_subtotal_usd`, and
-`complete`. The estimate covers input tokens only at the configured `JEVIFY_PRICE_PER_MTOK`
-price; it is not a billing receipt. `meta.cost_usd` is `null` when this input-token basis is
-incomplete, except that a configured zero price gives zero cost regardless of usage.
-Classifier defaults to zero with basis `free_service`; other configured pricing uses
-`configured_input_token_price`. Output token usage is reported independently, without
-inventing an output-token price. These counters contain no request payloads or credentials.
+## Permissions and judgment limits
 
-## Verbs
-- `pick "<intent>"` (stdin lines) → `data.matches[{line, text, p}]`; exit 3 = nothing fits.
-  `pick --files <DIR> "<intent>"` chooses among the files under DIR instead: `text` is a path
-  usable from the current directory and `data.source` is `files`. Path names go out first, then
-  the beginning of at most 24 finalist files; hidden, git-ignored and symlinked files never do.
-- `why` (stdin: failing output, or `why -- <cmd...>` to run it and capture stdout+stderr) →
-  `data.causes[{line, text, p, context[]}]`, `data.child_exit`; `data.hint` explains an exit 3
-  on output with no error-like line (usually stderr was not piped).
-- `run "<intent>"` → `data.tool, argv[], complete, blocked, executed`. Machine mode never executes
-  unless `--exec --yes`; the child's stdout is redirected to stderr so stdout stays one envelope.
-  `blocked` names a tool jevify refuses to run (rm, dd, mkfs*, sudo, wrappers such as
-  sh/bash/env/xargs/find that would run another program, interpreters such as
-  python*/perl*/ruby*/node*/php*/lua* that take program text, ...): run `argv` yourself under
-  your own rules. Use `--dry-run` to route only. Only exact no-argument `true`, `false`, `pwd`,
-  and `ls` forms are validated for execution; everything else has `complete=false` and a
-  `blocked` reason, even without placeholders. Execution assumes trusted PATH contents.
-- `is "<condition>"` (stdin) → `data.p, verdict`; exit 0 yes, 1 no, 3 unsure. Oversized input
-  abstains before an API call, with `p:null`, `verdict:"unsure"`, `truncated:true` and a reason.
-- `add "<topic>"` → `data.hunks[{file, header, p, staged}]`; stages only unstaged hunks of tracked files, index only, never commits; machine mode stages only with `--yes` (else exit 130); exit 3 = no hunk is about the topic. A hunk over 3,000 characters is an input error before API calls or staging.
-- `sort <dir> [--into <root>]` → `data.moves[{from, to, p}], skipped[{file, reason}], undo_log, applied`; proposes a home among existing folders (depth ≤ 2). Dry-run by default. Apply/undo use atomic no-replace moves and a unique JSONL recovery log with absolute path bytes and file identity. Old TSV logs are rejected. Failures identify the log and completed progress. Symlink entries are skipped; concurrent replacement of source files is unsupported. Same volume only; exit 3 = nothing to move (or nothing restored).
+Output verbs start no user command. The caller authorizes `add` staging and `sort` moves.
+`is` abstains on oversized context; `add` rejects oversized hunks and complete batches before
+staging. A higher threshold cannot validate missing evidence or grant permission.
 
-## Rules for agents
-- On a very long log, `why` keeps the lines around every error-like line within a 4,000-line
-  budget. `data.considered` and `data.total` say how much it looked at. If `considered` is far
-  below `total` and the answer looks like a symptom, cut the log to the failing step and ask again.
-- Exit 4 with `HTTP 429` is the backend's rate limit: wait, or lower `JEVIFY_CONCURRENCY`.
-- `p` is a backend score; application calibration requires evidence for the task and question type.
-  TypeSafe Noul and classifier binary Choice are not assumed interchangeable. Raising `-t`
-  changes the policy but does not validate incomplete evidence or unsafe actions.
-- Exit 3 is an answer, not an error: nothing fits, or the evidence is ambiguous. Escalate or ask.
-- Results always point into your input, the installed tools, or a tool's man page. Nothing is generated.
-- Input is read as data, but the model is not hardened against instructions embedded in it: text
-  under your control is fine; do not use `is` or `pick` as a security gate on untrusted text.
-- TypeSafe defaults to `jev-1.13.0`; `--model jev-latest` follows its moving alias. Classifier
-  selects its model server-side and rejects explicit `--model`/`JEVIFY_MODEL` overrides.
-- No key is required: without one jevify asks classifier.dev, which runs the same Jev model and
-  serves it free. `meta.backend` (`typesafe` or `classifier`) says which API answered, `meta.model`
-  which build of Jev. `JEVIFY_BACKEND` forces one; `capabilities.backends` lists both with their
-  limits. On `classifier` a question takes at most 100 options; the input takes 32,000 UTF-16
-  code units and a request 20 questions. Serialized dimension definitions take at most 16,000
-  UTF-16 code units. jevify splits dimensions and rejects oversized fields or option sets
-  locally; backend translations can change answers and confidence.
-- Cost is in `meta.cost_usd`, and is `0` at classifier's default zero price; repeated
-  identical questions hit the local cache (`meta.cache_hits`), which never crosses backend,
-  endpoint or decision-contract versions. `meta.requests` counts attempted inference POSTs,
-  including retries and failures; it excludes prewarm and health GETs.
-- Without the cache, the same request moves `p` by up to 0.06 between runs (measured on
-  jev-1.13.0): a `p` within 0.06 of the threshold can flip. `is` has `--band` for that; the
-  other verbs do not, so re-run with `--no-cache` before acting on such a value.
-- `-n N` (`pick`, `why`) is ranked by a "which one" answer that is reliable at the top only:
-  entries past the third are candidates, not a ranking.
-- Errors carry `error.example`: a corrected command you can run next. `meta.request_id` is the
-  TypeSafe request id of the last Jev request (`null` if none was made or every answer came from
-  the cache; `health` does not record one): quote it when reporting an API problem.
+`filter` batches up to 1,000 records on classifier.dev, each judged alone. On TypeSafe 20 records
+share a request state and each question names its record; independence is not claimed.
+`p` is a backend score. Calibration needs task- and backend-specific evidence; ranks past the
+third are candidates without a reliability claim. Text can influence the model with embedded
+instructions, so semantic judgments are not security gates.
+
+Outbound secret masking is best effort. Answer cache keys use redacted requests, expire after
+seven days and never cross backend, endpoint or decision-contract versions. Raw saved inputs
+are a separate store. Neither telemetry nor diagnostics prints credentials.
