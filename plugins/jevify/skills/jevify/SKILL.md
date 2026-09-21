@@ -1,133 +1,124 @@
 ---
 name: jevify
-description: Use the jevify CLI when a question is about meaning and grep or keywords cannot ask it. Find the root cause in a long build, test or CI log, including when the line that explains it holds no word like "error". Triage many texts (tickets, mails, files, commits, search results) by a yes/no question without reading them. Pick one item from a list by description (a branch, a commit, a file, a process, a history line). Stage only the git changes that belong to one topic, which git add -p cannot do without a terminal. Find which installed tool does a task. Propose folders for files with meaningless names. Do not use to generate code or text, to count or judge quality, or as a security gate on untrusted input.
+description: Use the jevify CLI when a question is about meaning and a literal search cannot answer it. Find the cause in a long failure log, filter many records or files with one question, pick one record by description, branch on a fact, or discover an unfamiliar installed tool. Stage hunks by topic or propose folders for files when requested. Do not use for short input, known commands, counting, arithmetic, quality judgments, generating text, or security decisions on untrusted input.
 ---
 
 # jevify
 
-jevify answers a question about text that already exists: your input, the installed tools, a man
-page, the folders on disk. It selects and never generates, so an answer is always something you
-can check. Scores depend on the backend and task; "nothing fits" and insufficient evidence
-are real answers, not permission to invent a match.
+## The two sides of a command
 
-## When it beats what you already have
+A command takes arguments and produces output. On the output side, jevify turns a long stream
+into a pointer, a subset, or a decision. It selects existing text and never generates an
+argument or a command. Write the command yourself; let jevify judge the evidence it produces.
 
-You have `grep` and you can read files. Reach for jevify when those two run out:
+Use cheap tools first: `grep`, `jq`, `head`. Skip jevify when a literal search answers the
+question, the input is short enough to read, or you already know the exact tool.
 
-- **A long log, or a grep that found the symptom.** `grep -iE "error|fail"` finds the line that
-  says something failed. The line that says why often holds none of those words (an assertion's
-  `left:`/`right:` values, "could not match actual sql"). `why` filters long logs into bounded
-  evidence and returns a selected line with its number and context. Call it before you read a
-  log of more than a few hundred lines, and whenever your grep named a failing test but not the
-  reason.
-- **Many texts, one question.** Do not read 200 tickets to find the 10 that matter. Loop `is`
-  over them and read the exit codes. Oversized texts abstain without a model call; read or
-  scope those separately. Then read the few that said yes or unsure.
-- **One item out of many, described and not named.** "The commit where we changed the pricing",
-  "the branch with the timeout fix", "the process that is draining the battery". `pick` matches
-  by meaning, so the description and the line need no word in common. Use `-n 3` to see the
-  runners-up.
-- **Part of a working tree.** `git add -p` is interactive, so you cannot use it. `add` stages the
-  hunks that belong to one topic and leaves the others unstaged.
-- **A task with no tool you are sure of.** `run --dry-run --no-args` searches every command on
-  the PATH by what its man page says it does. It finds tools you would not think of
-  (`caffeinate` for "keep my mac awake", `networkQuality` for "test my connection speed") and
-  tells you which of several candidates is installed. Read `data.tool` and
-  `data.alternatives`, then check the flags in the man page yourself.
-- **Files whose names say nothing.** `sort` reads the content and proposes one of the existing
-  folders for each file.
+## The verbs
 
-Skip jevify when a literal search answers the question, when the input is short enough to read, or
-when you already know the exact command.
-
-## Ask literal questions
-
-The model judges the statement you wrote, word for word. Write what must be true of the text.
-
-- Good: `"the customer is about to stop being a customer"`. Weak: `"this customer is about to
-  leave"`, which also says yes to an employee who is leaving their company.
-- Describe the thing, not what you will do with it: `"the line with the failing assertion"`, not
-  `"what should I fix"`.
-- One question per call. For "A or B", make two calls.
-- English works best. jevify does not count, do arithmetic, compare dates or judge quality.
-
-## Check it is there
+| Situation | Verb | Result |
+|:---|:---|:---|
+| A failed build has more than about 50 lines, or grep finds only the symptom | `why` | A cause with line number and context |
+| Many records, one question | `filter` | Matching and unsure records, like `grep` by meaning |
+| Many files, one question | `filter --files` | Paths judged by file content |
+| One record or file out of many, described rather than named | `pick` | A selected input record, or abstention |
+| The next step depends on a fact | `is` | An exit code, like `test` |
+| An unfamiliar task in the long tail of a large PATH | `route` | An installed tool and its summary; nothing executes |
+| Requested staging of one topic | `add` | Scores or stages individual hunks |
+| Requested organization of files with opaque names | `sort` | Proposes existing destination folders; moves only with `--apply` |
 
 ```sh
-jevify health --json        # exit 0: API reachable (data.backend names it); exit 5: bad or missing key
+cargo build 2>&1 | jevify why
+gh issue list | jevify filter 'reports a crash'
+fd -0 | jevify filter -0 --files 'a test fixture'
+git ls-files | jevify pick --files 'where retries back off'
+git log --oneline | jevify pick -n 3 'the pricing change'
+gh pr list --json number,title | jq -c '.[]' | jevify filter 'touches the installer' | jq -r .number
+cargo test 2>&1 | jevify is 'every failure is a network timeout' && cargo test
+until kubectl get pods | jevify is 'every pod is ready'; do sleep 5; done
+jevify is 'asks for a refund' 'mentions an order' --context mail.txt
+jevify route 'keep my mac awake for an hour'
+jevify add --json --dry-run 'the token expiry fix'
+jevify sort --json ./Downloads
 ```
 
-## Always machine mode
+`pick` and `filter` print input records byte for byte. A record is a line; `--para` reads
+blocks between blank lines, and `-0` reads NUL-separated records. These two split modes are
+mutually exclusive. `--files` reads paths from stdin and uses file excerpts as evidence.
+`why` takes none of those split or file options: it prints numbered lines with context.
+Pipe stderr with `2>&1` because compilers write errors there.
 
-Pass `--json` and branch on `exit_code` (same as the process exit code), then read `data`:
+`filter` keeps unsure records: a dropped record can hide the answer. `--strict` drops them.
+`filter -v` inverts the statement, as `grep -v`; `-c` prints the kept count. Verbosity is
+`--verbose`. A failed request can leave a partial prefix on stdout; check the exit code before
+treating the subset as complete.
 
-- 0 ok · 1 no (`is`) · 3 abstain: nothing fits or unsure. It is an answer; do not retry, escalate or ask.
-- 2 usage · 4 API unavailable · 5 auth · 6 input · 7 child failed · 130 declined.
-- On error, `error.example` is a corrected command to try next.
+`why` searches bounded evidence. In machine output, compare `data.considered` with
+`data.total`; if much is omitted and the answer is a symptom, narrow to the failing job or
+step. A saved full input is a way back, not proof that every line was judged.
 
-## Verbs
+### Habits
 
-```sh
-git branch | jevify pick --json "payment timeout fix"   # data.matches[{line, text, p}]
-jevify pick --files . --json "where retries back off"    # a file by what it is about; text = path
-cargo build 2>&1 | jevify why --json                     # data.causes[{line, text, p, context[]}]
-jevify why --json -- cargo test                          # runs it, captures stdout+stderr
-jevify is --json "asks for a refund" < mail.txt          # data.p, data.verdict
-jevify run --json --dry-run "count the lines in notes.txt"  # data.tool, data.argv[], data.blocked
-jevify add --json --dry-run "the auth fix"               # data.hunks[{file, header, p, staged}]
-jevify sort --json ~/Downloads                           # dry run: data.moves[{from, to, p}]
-```
+- One jevify process per question, however many records. Never start one process per record
+  in a shell loop; use `filter` or `filter --files`. Polling a changing state with `until` is
+  a different question on each snapshot.
+- Write literal statements: “the customer is about to stop being a customer” avoids the
+  ambiguity of “the customer is leaving.” Describe the evidence, not the fix you want.
+- Write conditions so yes means act. In human output, `is` with one statement prints nothing
+  on stdout: read its exit code. Several statements share one call and print one verdict each.
+- `&&` acts only on yes. `until` also repeats on abstention and unavailable responses; inspect
+  stderr and stop polling on an outage or quota exhaustion.
+- Never put a `pick` command substitution in another command's argument: the shell discards
+  its exit code and an abstention becomes an empty argument. Read the selected record and its
+  exit code, then write the next command explicitly.
+- Under `git bisect run`, map jevify exit 3 to 125 (skip), so uncertainty is not a bad commit.
+  Handle operational errors separately; they are not evidence about the commit.
+- Scores depend on backend and task. A higher threshold does not repair incomplete evidence,
+  and text under judgment can argue with the judge. Do not use jevify as a security gate.
 
-Pipe `2>&1` into `why`: compilers write errors to stderr. On a very long log, `why` keeps the
-lines around every error-like line, from the top first, within a 4,000-line budget;
-`data.considered` and `data.total` tell you how much it looked at. If `considered` is far below
-`total` and the answer looks like a symptom, cut the log to the failing job or step and ask again.
+## Exit codes and recovery
 
-## Patterns
+| Code | Meaning and next step |
+|:---|:---|
+| 0 | Found, kept records, or all statements yes |
+| 1 | `is`: at least one no; `filter`: kept none |
+| 2 | Usage: copy the corrected argument or command from the error |
+| 3 | Abstention: nothing fits or unsure; read closer or narrow the evidence |
+| 4 | Backend unavailable: read the line for the quota or model problem |
+| 5 | Authentication: check backend and key configuration |
+| 6 | Input error: check the input; for `too_many`, narrow with `grep` or `head` |
+| 7 | Reserved |
+| 130 | Declined |
 
-```sh
-# Triage many texts and read none of them: one line per text comes back.
-for f in tickets/*.txt; do
-  jevify is "the customer is about to stop being a customer" < "$f" >/dev/null 2>&1
-  echo "$f $?"                                   # 0 yes · 1 no · 3 unsure
-done
+`filter` exits 3 when every record is unsure, even when it prints those records. `is` exits 0
+when all statements hold, 1 when any is no, and 3 otherwise. Oversized `is` input abstains
+without a model call. Do not retry unchanged evidence to turn uncertainty into certainty.
 
-# Root cause of a CI run, however long the log is.
-gh run view --log-failed | jevify why --json
+For exit 4, “daily quota of the free backend reached” means the daily quota is exhausted;
+immediate retries or lower concurrency do not restore it. Read the model information as well.
 
-# Feed the choice to the next command.
-git show "$(git log --oneline | jevify pick "the commit that renamed the project" | cut -d' ' -f1)"
+Use `--json` when you need scores or structured errors; leave it off for record pipelines and
+silent predicates. The envelope is `{ok, command, version, exit_code, data, meta, error}`;
+`error` contains `kind`, `message`, `hint`, and `example`. Branch on the process exit code or
+`exit_code`, then inspect `data`. The installed contract is available with
+`jevify capabilities --json` and `jevify robot-docs guide`.
 
-# Stage one topic: look at the scores first. Stage only if the user asked you to stage.
-jevify add --json --dry-run "the token expiry fix"
-jevify add --json --yes "the token expiry fix"
-```
+## Permissions and privacy
 
-Treat exit 3 in a loop as "a human or a closer read decides", not as no. Exit 4 with HTTP 429
-means the free backend's rate limit: wait and continue, or lower `JEVIFY_CONCURRENCY`. Identical
-requests are cached for 7 days, so a re-run of the same loop is free and fast.
+Allow the output verbs (`why`, `pick`, `filter`, `is`, `route`) freely. They do not execute the
+tool they select. Check the selected tool's help and write its arguments yourself.
 
-Never pipe secrets. jevify masks obvious tokens before sending, but that is best effort, and
-whatever you pipe (a shell history, a log with credentials) goes to the API.
+`add` changes the index, never commits. Inspect `--dry-run` first; use `--yes` only when
+staging is authorized. It rejects oversized hunks instead of clipping evidence. `sort` proposes
+by default; `--apply` requires authorization to move files. Keep its JSONL recovery log and
+reported progress if a move fails.
 
-## Safety
+Evidence goes to the configured API with best-effort masking. Do not supply secrets.
+`why` and `filter` also save the raw input locally, secrets included, and print the saved path
+on stderr. Saved inputs are not pruned by jevify. `--no-save` disables that raw copy;
+`--no-cache` only disables the separate answer cache. A failed or disabled save is reported,
+so do not assume the full input remains available.
 
-- `run`: use `--dry-run`, then run `data.argv` yourself under your own rules. Never pass
-  `--exec --yes` unless the user asked for jevify to execute. `data.blocked` names a tool jevify
-  refuses to run or whose grammar is unvalidated. Only exact no-argument `true`, `false`,
-  `pwd`, and `ls` forms can be complete and execute, assuming trusted PATH contents.
-  Other flags/operands/commands remain proposals even with `--exec --yes`.
-- `add`: stages single hunks, not whole files, so it can split one file's changes. `--dry-run`
-  first; `--yes` stages (index only, never commits) only with the user's say-so. Hunks above
-  3,000 characters are rejected before classification or staging; evidence is never clipped.
-- `sort`: dry run by default; `--apply` uses atomic no-replace moves and a JSONL recovery log.
-  Symlink entries are skipped; concurrent source replacement is unsupported. On failure,
-  retain the journal path and reported progress for recovery.
-- `is`: oversized input returns exit 3, `p:null`, `truncated:true`, without an API call.
-- A higher threshold does not make incomplete evidence or unvalidated actions safe. TypeSafe
-  Noul and classifier binary Choice scores do not share established application calibration.
-
-## Source of truth
-
-`jevify capabilities --json` (commands, flags, exit codes, limits) and `jevify robot-docs guide`
-(the agent handbook). When this file and those differ, they win.
+`--files` withholds excerpts of hidden paths and files that look like secrets; stderr reports
+`excerpts withheld: N`. Their names still reach the backend. Withholding an excerpt is not a
+guarantee that the remaining input contains no sensitive information.

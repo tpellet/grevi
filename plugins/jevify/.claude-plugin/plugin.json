@@ -1,6 +1,6 @@
 {
   "name": "jevify",
-  "description": "Agent skill for the jevify CLI: select a line, tool, hunk or file with backend-specific confidence and explicit abstention.",
+  "description": "Agent skill for the jevify CLI: find causes, filter records, pick files, branch on facts and discover tools, with explicit abstention.",
   "author": {
     "name": "tpellet",
     "url": "https://github.com/tpellet"
