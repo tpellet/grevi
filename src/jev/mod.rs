@@ -93,6 +93,11 @@ pub struct Response {
 }
 
 impl Response {
+    /// Every contributing model must be Jev; missing provenance is not sufficient.
+    pub fn all_jev(&self) -> bool {
+        all_jev(&self.model)
+    }
+
     /// Validate only decision-bearing fields; unused answers and metadata may evolve.
     pub fn validate(&self, questions: &Questions) -> Result<(), crate::exit::JevifyError> {
         for (id, question) in questions {
@@ -151,9 +156,36 @@ pub(crate) fn valid_probability(p: f64) -> bool {
     p.is_finite() && (0.0..=1.0).contains(&p)
 }
 
+/// The common provenance check for action guards and output status lines.
+pub fn all_jev(model: &str) -> bool {
+    !model.is_empty() && model.split(", ").all(|part| part.starts_with("jev"))
+}
+
+pub(crate) fn join_models(into: &mut String, models: &str) {
+    for model in models.split(", ").filter(|s| !s.is_empty()) {
+        if !into.split(", ").any(|seen| seen == model) {
+            if !into.is_empty() {
+                into.push_str(", ");
+            }
+            into.push_str(model);
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn model_union_is_stable_and_guard_checks_every_part() {
+        let mut model = String::new();
+        join_models(&mut model, "other-model, jev-fake");
+        join_models(&mut model, "jev-fake, jev-next");
+        assert_eq!(model, "other-model, jev-fake, jev-next");
+        assert!(!all_jev(&model));
+        assert!(all_jev("jev-fake, jev-next"));
+        assert!(!all_jev(""));
+        assert!(!all_jev("jev-fake, "));
+    }
     #[test]
     fn decision_validation_requires_complete_finite_member_scores() {
         let qs = [(

@@ -116,18 +116,20 @@ fn dimension(q: &Question) -> Result<serde_json::Value, JevifyError> {
     }))
 }
 
-/// The body of one `POST /v1/classify`: one item, one dimension per question.
+/// The body of one `POST /v1/classify`: items sharing one dimension per question.
 pub fn request_body(
-    state: &serde_json::Value,
+    items: &[String],
     questions: &Questions,
 ) -> Result<serde_json::Value, JevifyError> {
-    let item = item_text(state);
-    if item.trim().is_empty() {
+    if items.is_empty() || items.iter().any(|item| item.trim().is_empty()) {
         return Err(JevifyError::Usage(
             "classifier item must not be empty".into(),
         ));
     }
-    if item.encode_utf16().count() > MAX_INPUT_CHARS {
+    if items
+        .iter()
+        .any(|item| item.encode_utf16().count() > MAX_INPUT_CHARS)
+    {
         return Err(JevifyError::InputTooLarge(
             "classifier item exceeds 32000 characters".into(),
         ));
@@ -135,6 +137,11 @@ pub fn request_body(
     if questions.is_empty() || questions.len() > MAX_DIMENSIONS {
         return Err(JevifyError::InputTooLarge(
             "classifier requires 1..=20 dimensions".into(),
+        ));
+    }
+    if items.len() > 1_000 / questions.len() {
+        return Err(JevifyError::InputTooLarge(
+            "classifier requires at most 1000 decisions".into(),
         ));
     }
     if questions
@@ -158,7 +165,7 @@ pub fn request_body(
             "classifier dimension definitions exceed 16000 UTF-16 code units".into(),
         ));
     }
-    Ok(serde_json::json!({ "items": [item], "dimensions": dimensions }))
+    Ok(serde_json::json!({ "items": items, "dimensions": dimensions }))
 }
 
 #[derive(Deserialize, Debug, Default)]
@@ -194,16 +201,33 @@ struct ClassifyResponse {
 /// nullable) the verdict's own `confidence` stands in, mirrored for a `no`. A Choice keeps its
 /// scores as probabilities; with no scores there is no distribution to rank items by, which is
 /// a protocol error (exit 4), never a silently invented one.
-pub fn parse(body: &[u8], questions: &Questions) -> Result<Response, JevifyError> {
+pub fn parse_each(
+    body: &[u8],
+    questions: &Questions,
+    count: usize,
+) -> Result<Vec<Response>, JevifyError> {
     let parsed: ClassifyResponse =
         serde_json::from_slice(body).map_err(|e| JevifyError::Protocol(e.to_string()))?;
-    let item = parsed
+    if parsed.results.len() != count {
+        return Err(JevifyError::Protocol(format!(
+            "classify returned {} results; expected {count}",
+            parsed.results.len()
+        )));
+    }
+    parsed
         .results
         .into_iter()
-        .next()
-        .ok_or_else(|| JevifyError::Protocol("classify returned no result".into()))?;
+        .map(|item| parse_item(item, &parsed.model, questions))
+        .collect()
+}
+
+fn parse_item(
+    item: Item,
+    fallback_model: &str,
+    questions: &Questions,
+) -> Result<Response, JevifyError> {
     let mut answers = BTreeMap::new();
-    let mut model = parsed.model;
+    let mut model = String::new();
     for (id, q) in questions {
         let r = item
             .dimensions
@@ -214,9 +238,7 @@ pub fn parse(body: &[u8], questions: &Questions) -> Result<Response, JevifyError
                 "invalid confidence for `{id}`"
             )));
         }
-        if let Some(m) = &r.model {
-            model = m.clone();
-        }
+        super::join_models(&mut model, r.model.as_deref().unwrap_or(fallback_model));
         let answer = match q {
             Question::Noul { criteria, .. } => {
                 let (yes, no) = noul_labels(criteria.as_ref());
@@ -293,6 +315,55 @@ mod tests {
     use super::*;
     use crate::jev::Question;
 
+    #[test]
+    fn batch_result_count_must_match_and_models_keep_first_seen_order() {
+        let qs: Questions = [
+            ("a".into(), Question::noul("a")),
+            ("b".into(), Question::noul("b")),
+            ("c".into(), Question::noul("c")),
+        ]
+        .into();
+        let item = serde_json::json!({"dimensions": {
+            "a": {"label":"yes","confidence":0.8,"model":"other-model"},
+            "b": {"label":"yes","confidence":0.8,"model":"jev-fake"},
+            "c": {"label":"yes","confidence":0.8,"model":"other-model"}
+        }});
+        for count in [0, 1, 2, 3] {
+            let bytes = serde_json::to_vec(&serde_json::json!({"model":"unused-fallback", "results":vec![item.clone(); count]})).unwrap();
+            let result = parse_each(&bytes, &qs, 2);
+            if count == 2 {
+                let responses = result.unwrap();
+                assert_eq!(responses.len(), 2);
+                for response in responses {
+                    assert_eq!(response.model, "other-model, jev-fake");
+                    assert!(!response.all_jev());
+                }
+            } else {
+                assert_eq!(result.unwrap_err().kind(), "api_protocol");
+            }
+        }
+    }
+
+    #[test]
+    fn request_decision_limit_and_empty_items_are_checked() {
+        let qs: Questions = [("q".into(), Question::noul("q"))].into();
+        assert!(request_body(&[], &qs).is_err());
+        assert!(request_body(&[" ".into()], &qs).is_err());
+        assert!(request_body(&vec!["x".into(); 1000], &qs).is_ok());
+        assert!(request_body(&vec!["x".into(); 1001], &qs).is_err());
+        let qs: Questions = [
+            ("a".into(), Question::noul("a")),
+            ("b".into(), Question::noul("b")),
+        ]
+        .into();
+        assert!(request_body(&vec!["x".into(); 500], &qs).is_ok());
+        assert!(request_body(&vec!["x".into(); 501], &qs).is_err());
+    }
+
+    fn parse(body: &[u8], questions: &Questions) -> Result<Response, JevifyError> {
+        Ok(parse_each(body, questions, 1)?.remove(0))
+    }
+
     fn questions() -> Questions {
         let mut crit: BTreeMap<String, Option<String>> =
             (0..2).map(|i| (format!("L{i:03}"), None)).collect();
@@ -308,7 +379,11 @@ mod tests {
 
     #[test]
     fn a_choice_becomes_a_dimension_whose_labels_are_its_options() {
-        let body = request_body(&serde_json::json!({ "items": ["a", "b"] }), &questions()).unwrap();
+        let body = request_body(
+            &[item_text(&serde_json::json!({ "items": ["a", "b"] }))],
+            &questions(),
+        )
+        .unwrap();
         let pick = &body["dimensions"]["pick"];
         assert_eq!(
             pick["labels"],
@@ -342,7 +417,7 @@ mod tests {
             Question::noul_with("Is it?", "y".repeat(201), "n"),
         );
         qs.insert("same".into(), Question::noul_with("Is it?", "x", "x"));
-        let body = request_body(&serde_json::Value::String("text".into()), &qs).unwrap();
+        let body = request_body(&["text".into()], &qs).unwrap();
         for id in ["q", "long", "same"] {
             let d = &body["dimensions"][id];
             assert_eq!(d["labels"], serde_json::json!(["yes", "no"]), "{id}");
@@ -361,17 +436,14 @@ mod tests {
         let mut qs = Questions::new();
         qs.insert("q".into(), Question::noul("x".repeat(9_000)));
         assert_eq!(
-            request_body(
-                &serde_json::Value::String("y".repeat(MAX_INPUT_CHARS * 2)),
-                &qs,
-            )
-            .unwrap_err()
-            .exit()
-            .code(),
+            request_body(&["y".repeat(MAX_INPUT_CHARS * 2)], &qs,)
+                .unwrap_err()
+                .exit()
+                .code(),
             6
         );
         assert_eq!(
-            request_body(&serde_json::json!("small"), &qs)
+            request_body(&["small".into()], &qs)
                 .unwrap_err()
                 .exit()
                 .code(),
@@ -388,30 +460,30 @@ mod tests {
             )
         };
         let mut qs: Questions = [("q".into(), choice(100, "é".repeat(4000)))].into();
-        assert!(request_body(&serde_json::json!("é".repeat(32_000)), &qs).is_ok());
-        assert!(request_body(&serde_json::json!("é".repeat(32_001)), &qs).is_err());
+        assert!(request_body(&["é".repeat(32_000)], &qs).is_ok());
+        assert!(request_body(&["é".repeat(32_001)], &qs).is_err());
         qs.insert("q".into(), choice(101, "x".into()));
-        assert!(request_body(&serde_json::json!("x"), &qs).is_err());
+        assert!(request_body(&["x".into()], &qs).is_err());
         qs.insert("q".into(), choice(2, "x".repeat(4001)));
-        assert!(request_body(&serde_json::json!("x"), &qs).is_err());
+        assert!(request_body(&["x".into()], &qs).is_err());
         for n in [200, 201] {
             qs.insert(
                 "q".into(),
                 Question::choice("x", [("é".repeat(n), None), ("NONE".into(), None)].into()),
             );
-            assert_eq!(request_body(&serde_json::json!("x"), &qs).is_ok(), n == 200);
+            assert_eq!(request_body(&["x".into()], &qs).is_ok(), n == 200);
         }
         for n in [20, 21] {
             qs = (0..n)
                 .map(|i| (format!("q{i}"), choice(2, "x".into())))
                 .collect();
-            assert_eq!(request_body(&serde_json::json!("x"), &qs).is_ok(), n == 20);
+            assert_eq!(request_body(&["x".into()], &qs).is_ok(), n == 20);
         }
         for n in [64, 65] {
             qs = [("é".repeat(n), choice(2, "x".into()))].into();
-            assert_eq!(request_body(&serde_json::json!("x"), &qs).is_ok(), n == 64);
+            assert_eq!(request_body(&["x".into()], &qs).is_ok(), n == 64);
         }
-        assert!(request_body(&serde_json::json!(""), &questions()).is_err());
+        assert!(request_body(&["".into()], &questions()).is_err());
     }
 
     #[test]
@@ -424,7 +496,7 @@ mod tests {
                 )
             })
             .collect();
-        let body = request_body(&serde_json::json!("x"), &qs).unwrap();
+        let body = request_body(&["x".into()], &qs).unwrap();
         let remaining = 16_000 - body["dimensions"].to_string().encode_utf16().count();
         // Newlines count as two characters in compact JSON because they are escaped.
         for i in 0..remaining / 2 {
@@ -440,7 +512,7 @@ mod tests {
             };
             instructions.push('x');
         }
-        let body = request_body(&serde_json::json!("x"), &qs).unwrap();
+        let body = request_body(&["x".into()], &qs).unwrap();
         assert_eq!(
             body["dimensions"].to_string().encode_utf16().count(),
             16_000
@@ -450,10 +522,7 @@ mod tests {
         };
         instructions.push('x');
         assert_eq!(
-            request_body(&serde_json::json!("x"), &qs)
-                .unwrap_err()
-                .exit()
-                .code(),
+            request_body(&["x".into()], &qs).unwrap_err().exit().code(),
             6
         );
     }
@@ -462,7 +531,7 @@ mod tests {
     fn classifier_limits_count_astral_characters_as_two_utf16_units() {
         for n in [16_000, 16_001] {
             assert_eq!(
-                request_body(&serde_json::json!("😀".repeat(n)), &questions()).is_ok(),
+                request_body(&["😀".repeat(n)], &questions()).is_ok(),
                 n == 16_000
             );
         }
@@ -472,10 +541,7 @@ mod tests {
                 Question::noul_with("😀".repeat(n), "matches", "different"),
             )]
             .into();
-            assert_eq!(
-                request_body(&serde_json::json!("x"), &qs).is_ok(),
-                n == 2_000
-            );
+            assert_eq!(request_body(&["x".into()], &qs).is_ok(), n == 2_000);
         }
         for n in [100, 101] {
             let qs = [(
@@ -483,11 +549,11 @@ mod tests {
                 Question::choice("x", [("😀".repeat(n), None), ("NONE".into(), None)].into()),
             )]
             .into();
-            assert_eq!(request_body(&serde_json::json!("x"), &qs).is_ok(), n == 100);
+            assert_eq!(request_body(&["x".into()], &qs).is_ok(), n == 100);
         }
         for n in [32, 33] {
             let qs = [("😀".repeat(n), Question::noul("x"))].into();
-            assert_eq!(request_body(&serde_json::json!("x"), &qs).is_ok(), n == 32);
+            assert_eq!(request_body(&["x".into()], &qs).is_ok(), n == 32);
         }
     }
 

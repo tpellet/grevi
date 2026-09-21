@@ -125,10 +125,18 @@ use super::cache::{DiskCache, key as cache_key};
 use super::{Questions, Response, classifier};
 use crate::config::{Backend, Config};
 use crate::exit::JevifyError;
+use futures::future::try_join_all;
+use futures::stream::FuturesUnordered;
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
 use std::time::Duration;
 use tokio::sync::Semaphore;
+
+#[derive(Clone, Copy)]
+enum Caller {
+    Ask,
+    Each,
+}
 
 pub struct Client {
     http: reqwest::Client,
@@ -229,34 +237,11 @@ impl Client {
         questions: &Questions,
     ) -> Result<Response, JevifyError> {
         let state = crate::input::redact_value(state);
-        let mut questions = questions.clone();
-        for question in questions.values_mut() {
-            match question {
-                super::Question::Noul {
-                    instructions,
-                    criteria,
-                } => {
-                    *instructions = crate::input::redact(instructions);
-                    if let Some(c) = criteria {
-                        c.yes = crate::input::redact(&c.yes);
-                        c.no = crate::input::redact(&c.no);
-                    }
-                }
-                super::Question::Choice {
-                    instructions,
-                    criteria,
-                } => {
-                    *instructions = crate::input::redact(instructions);
-                    for text in criteria.values_mut().flatten() {
-                        *text = crate::input::redact(text);
-                    }
-                }
-            }
-        }
+        let questions = redact_questions(questions);
         // The cache key names the backend: the same questions get the same model but a
         // different wire shape, and an entry must never cross from one to the other.
         let canonical = serde_json::json!({
-            "decision_contract": 2, "endpoint": self.base,
+            "decision_contract": 3, "endpoint": self.base,
             "backend": self.backend.as_str(), "model": self.model, "state": state, "questions": questions
         });
         let k = cache_key(
@@ -265,7 +250,7 @@ impl Client {
         if let Some(hit) = self.cache.as_ref().and_then(|c| c.get(&k)) {
             hit.validate(&questions)?;
             self.stats.cache_hits.fetch_add(1, Ordering::Relaxed);
-            *self.stats.model.lock().unwrap() = Some(hit.model.clone());
+            self.record_model(&hit.model);
             return Ok(hit);
         }
         let resp = match self.backend {
@@ -273,11 +258,134 @@ impl Client {
             Backend::Classifier => self.ask_classifier(&state, &questions).await?,
         };
         resp.validate(&questions)?;
-        *self.stats.model.lock().unwrap() = Some(resp.model.clone());
+        self.record_model(&resp.model);
         if let Some(c) = &self.cache {
             c.put(&k, &resp);
         }
         Ok(resp)
+    }
+
+    fn record_model(&self, model: &str) {
+        let mut seen = self.stats.model.lock().unwrap();
+        super::join_models(seen.get_or_insert_with(String::new), model);
+    }
+
+    /// Batches finish as available; responses inside each batch retain record order.
+    /// Dropping the stream cancels its pending requests.
+    pub fn ask_each<'a>(
+        &'a self,
+        records: &'a [String],
+        questions: &'a Questions,
+    ) -> impl futures::Stream<Item = Result<(usize, Vec<Response>), JevifyError>> + 'a {
+        let size = match self.backend {
+            Backend::Classifier => (1_000 / questions.len().max(1)).max(1),
+            Backend::Typesafe => 20,
+        };
+        records
+            .chunks(size)
+            .enumerate()
+            .map(move |(index, records)| async move {
+                let mut attempt = self.stats.start(AttemptKind::Semantic);
+                self.stats.telemetry.lock().unwrap().semantic_questions +=
+                    (records.len() * questions.len()) as u64;
+                let result = self.ask_batch(records, questions).await;
+                attempt.finish(result.is_ok());
+                result.map(|responses| (index, responses))
+            })
+            .collect::<FuturesUnordered<_>>()
+    }
+
+    async fn ask_batch(
+        &self,
+        records: &[String],
+        questions: &Questions,
+    ) -> Result<Vec<Response>, JevifyError> {
+        if questions.is_empty() {
+            return Err(JevifyError::Usage("ask_each requires a question".into()));
+        }
+        let records: Vec<String> = records
+            .iter()
+            .map(|record| {
+                let redacted = crate::input::redact(record);
+                let mut units = 0;
+                redacted
+                    .chars()
+                    .take_while(|c| {
+                        units += c.len_utf16();
+                        units <= classifier::MAX_INPUT_CHARS
+                    })
+                    .collect()
+            })
+            .collect();
+        let questions = redact_questions(questions);
+        let expanded = record_questions(records.len(), &questions);
+        let canonical = serde_json::json!({
+            "decision_contract": 3, "endpoint": self.base,
+            "backend": self.backend.as_str(), "model": self.model,
+            "records": records, "questions": questions
+        });
+        let k = cache_key(
+            &serde_json::to_vec(&canonical).map_err(|e| JevifyError::Protocol(e.to_string()))?,
+        );
+        if let Some(hit) = self.cache.as_ref().and_then(|c| c.get(&k)) {
+            hit.validate(&expanded)?;
+            self.stats.cache_hits.fetch_add(1, Ordering::Relaxed);
+            self.record_model(&hit.model);
+            return unpack_batch(hit, records.len(), &questions);
+        }
+        let response = match self.backend {
+            Backend::Typesafe => {
+                let items: Vec<_> = records
+                    .iter()
+                    .enumerate()
+                    .map(|(i, text)| serde_json::json!({"id": i, "text": text}))
+                    .collect();
+                let body = serde_json::json!({"model": self.model, "state": {"items": items}, "questions": expanded});
+                let bytes =
+                    serde_json::to_vec(&body).map_err(|e| JevifyError::Protocol(e.to_string()))?;
+                let raw = self
+                    .post(&format!("{}/v1/systemone", self.base), bytes, Caller::Each)
+                    .await?;
+                serde_json::from_slice::<Response>(&raw)
+                    .map_err(|e| JevifyError::Protocol(e.to_string()))?
+            }
+            Backend::Classifier => {
+                let body = classifier::request_body(&records, &questions)?;
+                let bytes =
+                    serde_json::to_vec(&body).map_err(|e| JevifyError::Protocol(e.to_string()))?;
+                let raw = self
+                    .post(&format!("{}/v1/classify", self.base), bytes, Caller::Each)
+                    .await?;
+                let responses = classifier::parse_each(&raw, &questions, records.len())?;
+                let mut batch = Response {
+                    model: String::new(),
+                    answers: Default::default(),
+                    usage: Default::default(),
+                };
+                for (i, response) in responses.into_iter().enumerate() {
+                    super::join_models(&mut batch.model, &response.model);
+                    for (id, answer) in response.answers {
+                        batch.answers.insert(format!("{i}:{id}"), answer);
+                    }
+                    // Per-record provenance survives the batch cache without attributing a
+                    // neighbouring record's model to this record.
+                    batch.answers.insert(
+                        format!("model:{i}"),
+                        super::Answer {
+                            choice: Some(response.model),
+                            ..Default::default()
+                        },
+                    );
+                }
+                batch
+            }
+        };
+        response.validate(&expanded)?;
+        self.record_model(&response.model);
+        if let Some(cache) = &self.cache {
+            cache.put(&k, &response);
+        }
+        unpack_batch(response, records.len(), &questions)
     }
 
     async fn ask_typesafe(
@@ -289,14 +397,13 @@ impl Client {
             serde_json::json!({ "model": self.model, "state": state, "questions": questions });
         let bytes = serde_json::to_vec(&body).map_err(|e| JevifyError::Protocol(e.to_string()))?;
         let raw = self
-            .post(&format!("{}/v1/systemone", self.base), bytes)
+            .post(&format!("{}/v1/systemone", self.base), bytes, Caller::Ask)
             .await?;
         serde_json::from_slice(&raw).map_err(|e| JevifyError::Protocol(e.to_string()))
     }
 
     /// classifier.dev takes at most 20 dimensions per request, so a larger `Questions` map goes
-    /// out as several requests, in order, and their answers are merged. One chunk is the common
-    /// case; only `run`'s flag questions on a long man page go past it.
+    /// out as concurrent requests, with answers merged in question order.
     async fn ask_classifier(
         &self,
         state: &serde_json::Value,
@@ -315,14 +422,23 @@ impl Client {
                 .iter()
                 .map(|id| ((*id).clone(), questions[*id].clone()))
                 .collect();
-            let bytes = serde_json::to_vec(&classifier::request_body(state, &part)?)
-                .map_err(|e| JevifyError::Protocol(e.to_string()))?;
+            let bytes = serde_json::to_vec(&classifier::request_body(
+                &[classifier::item_text(state)],
+                &part,
+            )?)
+            .map_err(|e| JevifyError::Protocol(e.to_string()))?;
             prepared.push((part, bytes));
         }
-        for (part, bytes) in prepared {
-            let raw = self.post(&url, bytes).await?;
-            let r = classifier::parse(&raw, &part)?;
-            merged.model = r.model;
+        let chunks = try_join_all(prepared.into_iter().map(|(part, bytes)| {
+            let url = &url;
+            async move {
+                let raw = self.post(url, bytes, Caller::Ask).await?;
+                Ok::<_, JevifyError>(classifier::parse_each(&raw, &part, 1)?.remove(0))
+            }
+        }))
+        .await?;
+        for r in chunks {
+            super::join_models(&mut merged.model, &r.model);
             merged.answers.extend(r.answers);
         }
         Ok(merged)
@@ -331,7 +447,12 @@ impl Client {
     /// One POST with the shared retry policy, returning the 200 body. Both backends answer
     /// errors the same way as far as jevify is concerned: auth, a rejected body, or something
     /// worth retrying.
-    async fn post(&self, url: &str, bytes: Vec<u8>) -> Result<Vec<u8>, JevifyError> {
+    async fn post(
+        &self,
+        url: &str,
+        bytes: Vec<u8>,
+        caller: Caller,
+    ) -> Result<Vec<u8>, JevifyError> {
         let _permit = self.sem.acquire().await.expect("semaphore open");
         let mut last = String::new();
         let mut wait = None;
@@ -416,7 +537,15 @@ impl Client {
                 // 408 request timeout, 429 rate limit, 5xx (incl. 529 overloaded): retry after the
                 // server's wait if it named one, else with backoff.
                 408 | 429 | 500..=599 => {
-                    wait = response_wait;
+                    let parsed: serde_json::Value =
+                        serde_json::from_slice(&body).unwrap_or_default();
+                    let code = if status == 429 {
+                        parsed["code"].as_str()
+                    } else {
+                        None
+                    };
+                    let policy = if status == 429 { caller } else { Caller::Ask };
+                    wait = wait_decision(response_wait, code, policy)?;
                     last = format!("HTTP {status}");
                 }
                 _ => {
@@ -436,7 +565,7 @@ impl Client {
 }
 
 /// The wait the server asked for: `retry-after-ms` (milliseconds) beats `retry-after` (whole
-/// seconds; an HTTP-date is ignored), both capped at 10 s. `None` means use the backoff.
+/// seconds; an HTTP-date is ignored). `None` means use the backoff.
 fn retry_after(headers: &reqwest::header::HeaderMap) -> Option<Duration> {
     let num = |name: &str| {
         headers
@@ -447,7 +576,98 @@ fn retry_after(headers: &reqwest::header::HeaderMap) -> Option<Duration> {
     num("retry-after-ms")
         .map(Duration::from_millis)
         .or_else(|| num("retry-after").map(Duration::from_secs))
-        .map(|d| d.min(Duration::from_secs(10)))
+}
+
+fn wait_decision(
+    wait: Option<Duration>,
+    code: Option<&str>,
+    caller: Caller,
+) -> Result<Option<Duration>, JevifyError> {
+    if code == Some("rate_limit_day") {
+        return Err(JevifyError::Unavailable(
+            "daily quota of the free backend reached".into(),
+        ));
+    }
+    match caller {
+        Caller::Ask => Ok(wait.map(|d| d.min(Duration::from_secs(10)))),
+        Caller::Each if wait.is_some_and(|d| d > Duration::from_secs(60)) => {
+            Err(JevifyError::Unavailable(format!(
+                "{}: Retry-After exceeds 60 seconds",
+                code.unwrap_or("HTTP 429")
+            )))
+        }
+        Caller::Each => Ok(wait),
+    }
+}
+
+fn redact_questions(questions: &Questions) -> Questions {
+    let mut questions = questions.clone();
+    for question in questions.values_mut() {
+        match question {
+            super::Question::Noul {
+                instructions,
+                criteria,
+            } => {
+                *instructions = crate::input::redact(instructions);
+                if let Some(c) = criteria {
+                    c.yes = crate::input::redact(&c.yes);
+                    c.no = crate::input::redact(&c.no);
+                }
+            }
+            super::Question::Choice {
+                instructions,
+                criteria,
+            } => {
+                *instructions = crate::input::redact(instructions);
+                for text in criteria.values_mut().flatten() {
+                    *text = crate::input::redact(text);
+                }
+            }
+        }
+    }
+    questions
+}
+
+fn record_questions(count: usize, questions: &Questions) -> Questions {
+    (0..count)
+        .flat_map(|i| {
+            questions.iter().map(move |(id, question)| {
+                let mut question = question.clone();
+                let (super::Question::Noul { instructions, .. }
+                | super::Question::Choice { instructions, .. }) = &mut question;
+                *instructions = format!("Judge record id {i} alone. {instructions}");
+                (format!("{i}:{id}"), question)
+            })
+        })
+        .collect()
+}
+
+fn unpack_batch(
+    mut batch: Response,
+    count: usize,
+    questions: &Questions,
+) -> Result<Vec<Response>, JevifyError> {
+    (0..count)
+        .map(|i| {
+            let mut answers = std::collections::BTreeMap::new();
+            for id in questions.keys() {
+                let answer = batch.answers.remove(&format!("{i}:{id}")).ok_or_else(|| {
+                    JevifyError::Protocol(format!("missing record {i} answer `{id}`"))
+                })?;
+                answers.insert(id.clone(), answer);
+            }
+            let model = batch
+                .answers
+                .remove(&format!("model:{i}"))
+                .and_then(|a| a.choice)
+                .unwrap_or_else(|| batch.model.clone());
+            Ok(Response {
+                model,
+                answers,
+                usage: super::Usage::default(),
+            })
+        })
+        .collect()
 }
 
 /// The readable part of a rejected request's body. TypeSafe answers 422 in FastAPI's shape,
@@ -502,7 +722,42 @@ mod tests {
     use reqwest::header::{HeaderMap, HeaderValue};
 
     #[test]
+    fn cached_batches_restore_record_answers_and_individual_models() {
+        let questions: Questions = [("q".into(), super::super::Question::noul("holds"))].into();
+        let batch: Response = serde_json::from_value(serde_json::json!({
+            "model": "other-model, jev-fake",
+            "answers": {
+                "0:q": {"noul": 0.2}, "1:q": {"noul": 0.8},
+                "model:0": {"choice": "other-model"}, "model:1": {"choice": "jev-fake"}
+            }
+        }))
+        .unwrap();
+        let expanded = record_questions(2, &questions);
+        batch.validate(&expanded).unwrap();
+        let responses = unpack_batch(batch.clone(), 2, &questions).unwrap();
+        assert_eq!(responses[0].noul("q").unwrap(), 0.2);
+        assert_eq!(responses[1].noul("q").unwrap(), 0.8);
+        assert_eq!(responses[0].model, "other-model");
+        assert_eq!(responses[1].model, "jev-fake");
+        assert!(!responses[0].all_jev());
+        assert!(responses[1].all_jev());
+        assert!(unpack_batch(batch, 3, &questions).is_err());
+        for (id, question) in expanded {
+            let super::super::Question::Noul { instructions, .. } = question else {
+                unreachable!()
+            };
+            assert!(instructions.starts_with(&format!(
+                "Judge record id {} alone.",
+                id.split(':').next().unwrap()
+            )));
+        }
+    }
+
+    #[test]
     fn retry_after_prefers_the_ms_header_and_caps_at_ten_seconds() {
+        let retry_after = |headers: &HeaderMap| {
+            wait_decision(super::retry_after(headers), None, Caller::Ask).unwrap()
+        };
         let mut h = HeaderMap::new();
         assert_eq!(retry_after(&h), None);
         h.insert("retry-after", HeaderValue::from_static("2"));
@@ -518,6 +773,35 @@ mod tests {
             HeaderValue::from_static("Wed, 21 Oct 2026 07:28:00 GMT"),
         );
         assert_eq!(retry_after(&d), None);
+    }
+
+    #[test]
+    fn each_waits_up_to_a_minute_and_never_retries_daily_quota() {
+        for code in [Some("rate_limit_minute"), Some("rate_limit_hour"), None] {
+            for seconds in [30, 60, 61, 3600] {
+                let wait = Some(Duration::from_secs(seconds));
+                let decision = wait_decision(wait, code, Caller::Each);
+                if seconds <= 60 {
+                    assert_eq!(decision.unwrap(), wait);
+                } else {
+                    let error = decision.unwrap_err();
+                    assert_eq!(error.exit().code(), 4);
+                    assert!(error.to_string().contains(code.unwrap_or("HTTP 429")));
+                }
+                assert_eq!(
+                    wait_decision(wait, code, Caller::Ask).unwrap(),
+                    Some(Duration::from_secs(10))
+                );
+            }
+        }
+        for caller in [Caller::Ask, Caller::Each] {
+            assert_eq!(
+                wait_decision(None, Some("rate_limit_day"), caller)
+                    .unwrap_err()
+                    .to_string(),
+                "API unavailable: daily quota of the free backend reached"
+            );
+        }
     }
 
     #[test]

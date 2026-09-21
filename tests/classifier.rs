@@ -39,6 +39,306 @@ fn one_noul() -> Questions {
     q
 }
 
+#[tokio::test]
+async fn each_batches_by_decision_count_and_returns_every_record_in_order() {
+    use futures::TryStreamExt;
+    for (count, dimensions, sizes) in [(2500, 1, vec![1000, 1000, 500]), (1000, 2, vec![500, 500])]
+    {
+        let server = common::mock_classifier(FakeJev {
+            choose: |_, _, _| "NONE".into(),
+            noul: |_, state| state.as_str().unwrap().parse::<f64>().unwrap() / 2500.0,
+        })
+        .await;
+        let cfg = classifier_config(&server);
+        let client = Client::new(&cfg).unwrap();
+        let qs: Questions = (0..dimensions)
+            .map(|i| (format!("q{i}"), Question::noul("Is it?")))
+            .collect();
+        let records: Vec<String> = (0..count).map(|i| i.to_string()).collect();
+        let mut batches: Vec<_> = client.ask_each(&records, &qs).try_collect().await.unwrap();
+        batches.sort_by_key(|b| b.0);
+        assert_eq!(batches.iter().map(|b| b.1.len()).collect::<Vec<_>>(), sizes);
+        for (i, response) in batches.into_iter().flat_map(|b| b.1).enumerate() {
+            for id in qs.keys() {
+                assert!((response.noul(id).unwrap() - i as f64 / 2500.0).abs() < 1e-12);
+            }
+        }
+        let mut actual: Vec<_> = server
+            .received_requests()
+            .await
+            .unwrap()
+            .iter()
+            .map(|r| {
+                let body: serde_json::Value = serde_json::from_slice(&r.body).unwrap();
+                body["items"].as_array().unwrap().len()
+            })
+            .collect();
+        actual.sort_unstable_by(|a, b| b.cmp(a));
+        assert_eq!(actual, sizes);
+    }
+}
+
+#[tokio::test]
+async fn batch_models_and_redacted_cache_roundtrip() {
+    use futures::TryStreamExt;
+    let server = common::mock_classifier(
+        FakeJev {
+            choose: |_, _, _| "NONE".into(),
+            noul: |_, _| 0.8,
+        }
+        .with_model(|instructions| {
+            // Noul dimensions append yes/no explanations after the original instruction.
+            if instructions.lines().next() == Some("first") {
+                "other-model".into()
+            } else {
+                "jev-fake".into()
+            }
+        }),
+    )
+    .await;
+    let mut cfg = classifier_config(&server);
+    cfg.cache_dir = Some(tempfile::tempdir().unwrap().keep());
+    let qs: Questions = [
+        ("a".into(), Question::noul("first")),
+        ("b".into(), Question::noul("second")),
+        ("c".into(), Question::noul("third")),
+    ]
+    .into();
+    let records: Vec<String> = vec!["token=abcdefghijk".into(), "another record".into()];
+    for input in [
+        &records,
+        &records
+            .iter()
+            .map(|r| jevify::input::redact(r))
+            .collect::<Vec<_>>(),
+    ] {
+        let client = Client::new(&cfg).unwrap();
+        let batches: Vec<_> = client.ask_each(input, &qs).try_collect().await.unwrap();
+        for response in &batches[0].1 {
+            assert_eq!(response.model, "other-model, jev-fake");
+            assert!(!response.all_jev());
+        }
+        assert_eq!(cfg.meta().model.as_deref(), Some("other-model, jev-fake"));
+    }
+    assert_eq!(server.received_requests().await.unwrap().len(), 1);
+    assert_eq!(cfg.meta().cache_hits, 1);
+}
+
+#[tokio::test]
+async fn chunk_models_merge_in_question_order_and_survive_cache() {
+    let server = common::mock_classifier(
+        FakeJev {
+            choose: |_, _, _| "NONE".into(),
+            noul: |_, _| 0.8,
+        }
+        .with_model(|instruction| {
+            // Match the original instruction before the appended Noul explanations.
+            if instruction.lines().next() == Some("first") {
+                "other-model".into()
+            } else {
+                "jev-fake".into()
+            }
+        }),
+    )
+    .await;
+    let mut cfg = classifier_config(&server);
+    cfg.cache_dir = Some(tempfile::tempdir().unwrap().keep());
+    let qs: Questions = (0..45)
+        .map(|i| {
+            (
+                format!("q{i:02}"),
+                Question::noul(if i < 20 { "first" } else { "second" }),
+            )
+        })
+        .collect();
+    for _ in 0..2 {
+        let response = Client::new(&cfg)
+            .unwrap()
+            .ask(&serde_json::json!("evidence"), &qs)
+            .await
+            .unwrap();
+        assert_eq!(response.model, "other-model, jev-fake");
+        assert!(!response.all_jev());
+        assert_eq!(cfg.meta().model.as_deref(), Some("other-model, jev-fake"));
+    }
+    assert_eq!(server.received_requests().await.unwrap().len(), 3);
+    assert_eq!(cfg.meta().cache_hits, 1);
+}
+
+#[tokio::test]
+async fn batches_and_question_chunks_are_concurrent_and_obey_the_semaphore() {
+    use futures::TryStreamExt;
+    use std::time::Duration;
+    use wiremock::Respond;
+    for (each, concurrency) in [(false, 3), (true, 3), (true, 1)] {
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .respond_with(|req: &wiremock::Request| {
+                common::FakeClassifier(FakeJev {
+                    choose: |_, _, _| "NONE".into(),
+                    noul: |_, _| 0.8,
+                })
+                .respond(req)
+                .set_delay(Duration::from_secs(1))
+            })
+            .mount(&server)
+            .await;
+        let mut cfg = classifier_config(&server);
+        cfg.concurrency = concurrency;
+        let client = Client::new(&cfg).unwrap();
+        let qs: Questions = (0..if each { 1 } else { 45 })
+            .map(|i| (format!("q{i}"), Question::noul("Is it?")))
+            .collect();
+        let records = vec!["record".into(); 2500];
+        let operation = async {
+            if each {
+                let _: Vec<_> = client.ask_each(&records, &qs).try_collect().await.unwrap();
+            } else {
+                client
+                    .ask(&serde_json::json!("evidence"), &qs)
+                    .await
+                    .unwrap();
+            }
+        };
+        tokio::pin!(operation);
+        tokio::select! {
+            _ = &mut operation => panic!("delayed responses finished before observation"),
+            _ = tokio::time::sleep(Duration::from_millis(500)) => {}
+        }
+        assert_eq!(server.received_requests().await.unwrap().len(), concurrency);
+        operation.await;
+        assert_eq!(server.received_requests().await.unwrap().len(), 3);
+    }
+}
+
+#[tokio::test]
+async fn quota_decisions_stop_daily_and_long_limits_and_retry_minute() {
+    use futures::TryStreamExt;
+    for (code, seconds) in [
+        ("rate_limit_day", 1),
+        ("rate_limit_minute", 61),
+        ("rate_limit_hour", 3600),
+    ] {
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .respond_with(FakeJev::quota(code, seconds))
+            .expect(1)
+            .mount(&server)
+            .await;
+        let cfg = classifier_config(&server);
+        let client = Client::new(&cfg).unwrap();
+        let error = client
+            .ask_each(&["record".into()], &one_noul())
+            .try_collect::<Vec<_>>()
+            .await
+            .unwrap_err();
+        assert_eq!(error.exit().code(), 4);
+        assert!(error.to_string().contains(if code == "rate_limit_day" {
+            "daily quota of the free backend reached"
+        } else {
+            code
+        }));
+    }
+    let server = MockServer::start().await;
+    Mock::given(method("POST"))
+        .respond_with(FakeJev::quota("rate_limit_minute", 1))
+        .up_to_n_times(1)
+        .with_priority(1)
+        .expect(1)
+        .mount(&server)
+        .await;
+    Mock::given(method("POST"))
+        .respond_with(common::FakeClassifier(FakeJev {
+            choose: |_, _, _| "NONE".into(),
+            noul: |_, _| 0.8,
+        }))
+        .with_priority(2)
+        .expect(1)
+        .mount(&server)
+        .await;
+    let cfg = classifier_config(&server);
+    let client = Client::new(&cfg).unwrap();
+    let _: Vec<_> = client
+        .ask_each(&["record".into()], &one_noul())
+        .try_collect()
+        .await
+        .unwrap();
+    assert_eq!(server.received_requests().await.unwrap().len(), 2);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn daily_quota_exits_four_after_one_request() {
+    let server = MockServer::start().await;
+    Mock::given(method("POST"))
+        .respond_with(FakeJev::quota("rate_limit_day", 3600))
+        .expect(1)
+        .mount(&server)
+        .await;
+    let mut cmd = common::jevify_classifier(&server);
+    let out = tokio::task::spawn_blocking(move || {
+        cmd.args(["--json", "is", "it holds"])
+            .write_stdin("record")
+            .output()
+            .unwrap()
+    })
+    .await
+    .unwrap();
+    assert_eq!(out.status.code(), Some(4));
+    let value: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+    assert_eq!(
+        value["error"]["message"],
+        "API unavailable: daily quota of the free backend reached"
+    );
+}
+
+#[tokio::test]
+async fn fake_vectors_express_ties_and_close_none_on_both_backends() {
+    let qs: Questions = [(
+        "pick".into(),
+        Question::choice(
+            "pick",
+            [
+                ("A".into(), None),
+                ("B".into(), None),
+                ("NONE".into(), None),
+            ]
+            .into(),
+        ),
+    )]
+    .into();
+    for vector in [
+        (|_: &str, _: &serde_json::Value, _: &[String]| vec![0.5, 0.5, 0.0])
+            as common::ProbabilityVector,
+        |_, _, _| vec![0.5, 0.01, 0.49],
+    ] {
+        let fake = FakeJev {
+            choose: |_, _, _| "A".into(),
+            noul: |_, _| 0.8,
+        }
+        .with_probabilities(vector)
+        .with_model(|_| "other-model".into());
+        let typed = common::mock(fake.clone()).await;
+        let classifier = common::mock_classifier(fake).await;
+        for cfg in [common::config(&typed), classifier_config(&classifier)] {
+            let response = Client::new(&cfg)
+                .unwrap()
+                .ask(&serde_json::json!("evidence"), &qs)
+                .await
+                .unwrap();
+            assert_eq!(
+                response
+                    .probs("pick")
+                    .unwrap()
+                    .values()
+                    .copied()
+                    .collect::<Vec<_>>(),
+                vector("", &serde_json::Value::Null, &[])
+            );
+            assert_eq!(response.model, "other-model");
+        }
+    }
+}
+
 #[tokio::test(flavor = "multi_thread")]
 async fn pick_works_with_no_key_at_all() {
     let server = common::mock_classifier(FakeJev {

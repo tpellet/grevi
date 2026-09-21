@@ -10,6 +10,175 @@ fn one_noul() -> Questions {
     q
 }
 
+#[tokio::test]
+async fn typesafe_batches_name_records_and_cache_redacted_input() {
+    use futures::TryStreamExt;
+    let server = common::mock(common::FakeJev {
+        choose: |_, _, _| "NONE".into(),
+        noul: |instructions, state| {
+            let id: usize = instructions
+                .strip_prefix("Judge record id ")
+                .unwrap()
+                .split(' ')
+                .next()
+                .unwrap()
+                .parse()
+                .unwrap();
+            assert!(instructions.contains("alone."));
+            let record = &state["items"][id];
+            assert_eq!(record["id"], id);
+            record["text"]
+                .as_str()
+                .unwrap()
+                .split(' ')
+                .next()
+                .unwrap()
+                .parse::<f64>()
+                .unwrap()
+                / 100.0
+        },
+    })
+    .await;
+    let mut cfg = common::config(&server);
+    cfg.cache_dir = Some(tempfile::tempdir().unwrap().keep());
+    let qs = one_noul();
+    let records: Vec<String> = (0..45).map(|i| format!("{i} token=abcdefghijk")).collect();
+    let client = Client::new(&cfg).unwrap();
+    let mut batches: Vec<_> = client.ask_each(&records, &qs).try_collect().await.unwrap();
+    batches.sort_by_key(|b| b.0);
+    assert_eq!(
+        batches.iter().map(|b| b.1.len()).collect::<Vec<_>>(),
+        [20, 20, 5]
+    );
+    for (i, response) in batches.into_iter().flat_map(|b| b.1).enumerate() {
+        assert_eq!(response.noul("q").unwrap(), i as f64 / 100.0);
+    }
+    let requests = server.received_requests().await.unwrap();
+    assert_eq!(requests.len(), 3);
+    for request in requests {
+        assert!(!String::from_utf8_lossy(&request.body).contains("abcdefghijk"));
+        let body: serde_json::Value = serde_json::from_slice(&request.body).unwrap();
+        assert_eq!(
+            body["questions"].as_object().unwrap().len(),
+            body["state"]["items"].as_array().unwrap().len()
+        );
+    }
+    let redacted: Vec<String> = records.iter().map(|r| jevify::input::redact(r)).collect();
+    let second_client = Client::new(&cfg).unwrap();
+    let _: Vec<_> = second_client
+        .ask_each(&redacted, &qs)
+        .try_collect()
+        .await
+        .unwrap();
+    assert_eq!(server.received_requests().await.unwrap().len(), 3);
+    assert_eq!(cfg.meta().cache_hits, 3);
+}
+
+#[tokio::test]
+async fn previous_cache_contract_is_bypassed_and_current_contract_hits() {
+    let server = common::mock(common::FakeJev {
+        choose: |_, _, _| "NONE".into(),
+        noul: |_, _| 0.8,
+    })
+    .await;
+    let mut cfg = common::config(&server);
+    let dir = tempfile::tempdir().unwrap().keep();
+    cfg.cache_dir = Some(dir.clone());
+    let state = serde_json::json!("evidence");
+    let qs = one_noul();
+    let canonical = serde_json::json!({"decision_contract":2,"endpoint":cfg.base_url,"backend":"typesafe","model":cfg.model,"state":state,"questions":qs});
+    let key = jevify::jev::cache::key(&serde_json::to_vec(&canonical).unwrap());
+    jevify::jev::cache::DiskCache::new(dir).unwrap().put(
+        &key,
+        &serde_json::from_value(
+            serde_json::json!({"model":"old-model","answers":{"q":{"noul":0.1}}}),
+        )
+        .unwrap(),
+    );
+    for _ in 0..2 {
+        let response = Client::new(&cfg).unwrap().ask(&state, &qs).await.unwrap();
+        assert_eq!(response.noul("q").unwrap(), 0.8);
+        assert_eq!(response.model, "jev-fake");
+    }
+    assert_eq!(server.received_requests().await.unwrap().len(), 1);
+    assert_eq!(cfg.meta().cache_hits, 1);
+}
+
+#[tokio::test]
+async fn command_helpers_isolate_saved_inputs_in_retained_directories() {
+    let server = MockServer::start().await;
+    let mut dirs = Vec::new();
+    for command in [
+        common::jevify(&server),
+        common::jevify(&server),
+        common::jevify_classifier(&server),
+    ] {
+        let env: Vec<_> = command.get_envs().collect();
+        let dir = env
+            .iter()
+            .find(|(key, _)| *key == "JEVIFY_CACHE_DIR")
+            .unwrap()
+            .1
+            .unwrap();
+        let dir = std::path::PathBuf::from(dir);
+        assert!(dir.is_dir());
+        assert!(!dirs.contains(&dir));
+        dirs.push(dir);
+        assert_eq!(
+            env.iter()
+                .find(|(key, _)| *key == "JEVIFY_NO_CACHE")
+                .unwrap()
+                .1
+                .unwrap(),
+            "1"
+        );
+    }
+}
+
+#[tokio::test]
+async fn empty_and_single_record_batches_work_on_both_backends() {
+    use futures::TryStreamExt;
+    for backend in [
+        jevify::config::Backend::Classifier,
+        jevify::config::Backend::Typesafe,
+    ] {
+        let fake = common::FakeJev {
+            choose: |_, _, _| "NONE".into(),
+            noul: |_, _| 0.8,
+        };
+        let server = match backend {
+            jevify::config::Backend::Classifier => common::mock_classifier(fake).await,
+            jevify::config::Backend::Typesafe => common::mock(fake).await,
+        };
+        let mut cfg = common::config(&server);
+        cfg.backend = backend;
+        let client = Client::new(&cfg).unwrap();
+        let qs = one_noul();
+        let empty: Vec<_> = client.ask_each(&[], &qs).try_collect().await.unwrap();
+        assert!(empty.is_empty());
+        assert!(server.received_requests().await.unwrap().is_empty());
+        let records = vec!["😀".repeat(20_000)];
+        let batches: Vec<_> = client.ask_each(&records, &qs).try_collect().await.unwrap();
+        assert_eq!(batches.len(), 1);
+        assert_eq!(batches[0].0, 0);
+        assert_eq!(batches[0].1.len(), 1);
+        let requests = server.received_requests().await.unwrap();
+        let body: serde_json::Value = serde_json::from_slice(&requests[0].body).unwrap();
+        let item = match backend {
+            jevify::config::Backend::Classifier => &body["items"][0],
+            jevify::config::Backend::Typesafe => &body["state"]["items"][0]["text"],
+        };
+        assert_eq!(item.as_str().unwrap().encode_utf16().count(), 32_000);
+        assert!(
+            client
+                .ask_each(&["x".into()], &Questions::new())
+                .try_collect::<Vec<_>>()
+                .await
+                .is_err()
+        );
+    }
+}
+
 #[test]
 fn configured_endpoints_respect_key_selected_backend() {
     for (key, endpoint, code) in [
@@ -221,7 +390,7 @@ async fn invalid_cached_answers_are_rejected() {
     let mut cfg = common::config(&server);
     cfg.cache_dir = Some(dir.path().to_path_buf());
     let state = serde_json::json!("x");
-    let canonical = serde_json::json!({"decision_contract":2,"endpoint":cfg.base_url,"backend":"typesafe","model":cfg.model,"state":state,"questions":one_noul()});
+    let canonical = serde_json::json!({"decision_contract":3,"endpoint":cfg.base_url,"backend":"typesafe","model":cfg.model,"state":state,"questions":one_noul()});
     let key = jevify::jev::cache::key(&serde_json::to_vec(&canonical).unwrap());
     jevify::jev::cache::DiskCache::new(dir.path().to_path_buf())
         .unwrap()
@@ -507,7 +676,8 @@ async fn classifier_partial_failure_retains_each_physical_attempt() {
         .mount(&server)
         .await;
     Mock::given(method("POST"))
-        .respond_with(ResponseTemplate::new(401))
+        // Let the successful chunk finish before the error cancels its siblings.
+        .respond_with(ResponseTemplate::new(401).set_delay(std::time::Duration::from_millis(100)))
         .with_priority(2)
         .mount(&server)
         .await;
