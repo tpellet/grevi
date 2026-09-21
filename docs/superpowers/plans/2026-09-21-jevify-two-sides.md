@@ -87,7 +87,7 @@ Changed in place:
 | `src/jev/client.rs`, `src/jev/classifier.rs` | `Client::ask_each(records, questions)`, the per-record request of 2.3 |
 | `src/cli.rs` | `Fill`, `Route`, `Why` without `cmd`, `Filter`, `Label`, `Pick --from`, `Is` with several statements and `--context` |
 | `src/lib.rs` | `VERBS` (`:23`), `command_name` (`:128`); the clap error path reads `args_os` and stops at `--` (`:63` uses `env::args()`); `human` written as bytes |
-| `src/cmd/mod.rs` | `Outcome.human: Vec<u8>` (`:15` is `String`) |
+| `src/cmd/mod.rs` | `Outcome.human: Vec<u8>` (`:15` is `String`); `Outcome.exec: Option<Vec<OsString>>`, the command that `run_cli` becomes after it has written everything else |
 | `src/exit.rs` | one variant `JevifyError::Kinded { kind, exit, message, hint, example }` for the new kinds |
 | `src/input.rs` | `read_stdin_bytes()` with the same 64 MiB cap and terminal check |
 | `src/output.rs` | `shell_quote(&[OsString]) -> Vec<u8>`, moved from `run.rs:312` and written over bytes |
@@ -157,11 +157,31 @@ there is no child to wait for, no signal to forward and no tokio `signal` featur
    `'src/@{file:…}'` becomes `src/cmd/add.rs`. A path handle that opens its argument and
    starts with `-` gets `./`. A `flag` that is left out removes its whole argv element.
 8. **`--dry-run`:** print the quoted command on stdout, one line, through `output::shell_quote`;
-   exit 0. With a machine format the envelope carries `data.argv`.
+   exit 0. Quoting works on bytes, so an argument that is not UTF-8 prints and reads back
+   exactly. With a machine format the envelope carries `data.argv`; an argv that is not UTF-8
+   is exit 6 `cannot_run` there, because JSON cannot hold it.
 9. **Run.** Print the evidence lines and `jevify fill: exec <quoted command>` on stderr, flush,
    then `exec` the argv. stdin is `/dev/null` when step 2 consumed it, inherited otherwise.
    From here the process is the command: its output, its signals, its terminal, its exit code.
    A failed `exec` is exit 6 `cannot_run`.
+   - The call is `std::os::unix::process::CommandExt::exec` on a
+     `Command::new(&argv[0]).args(&argv[1..])`, with `.stdin(Stdio::null())` when stdin was
+     consumed. It is a safe function, so `#![deny(unsafe_code)]` holds. It returns only on
+     failure, with the `io::Error`: `NotFound` and `PermissionDenied` become `cannot_run` with
+     the path in the message.
+   - `fill` returns the resolved argv to `run_cli`, and `run_cli` calls `exec` as its last act,
+     after `meta` is computed and the status lines are written. No destructor of jevify runs
+     after `exec`, so everything that must reach the disk is written before it: the answer
+     cache entries of this call (`DiskCache::put` writes through a rename and holds no buffer)
+     and the stderr lines (stderr is unbuffered).
+   - The tokio runtime is current-thread. At `exec` no request is in flight, because every
+     marker is resolved; the blocking pool threads vanish with the process image, and none of
+     them holds work.
+   - The environment and the working directory pass through unchanged. jevify sets no variable
+     for the command.
+   - Tests use a helper binary (`tests/bin/argv.rs`, new) that prints its argv as NUL-separated
+     bytes, reports whether its stdin is at EOF, and exits with the code given in its first
+     argument. It proves the exact argv, the stdin rule and the exit code that comes through.
    - After an `exec` line, the exit code belongs to the command. Without one, the last line is
      `jevify fill: not run: <reason>` and the code is 2 to 6.
    - `fill -q` prints only `not run:` lines. `jevify fill -q -- CMD 2>&1 | jevify why` then
@@ -221,6 +241,15 @@ A recipe kind is the `-` form with a name, one JSON object on one line:
 - jevify reads no recipe from the working directory. A cloned repository never adds a command
   that `fill` runs. A user recipe is the user's own command, as an alias is.
 - The engine is the `-` path: run `list`, hand the bytes to `records.rs`, get a `Listing`.
+  A recipe is `#[derive(Deserialize)] #[serde(deny_unknown_fields)] struct Recipe { kind,
+  list: Vec<String>, field: Option<usize>, key: Option<String>, ordered: bool }`. With `key`
+  the output is read as JSON lines or one array, through `serde_json`; with `field` or
+  neither, as lines. `field` and `key` together, an empty `list`, and a `kind` that does not
+  match `[a-z][a-z-]*` are `recipe_invalid`.
+- The lister runs as a `std::process::Command` on the blocking pool, with stdout and stderr
+  piped and read to the end on two threads (`std::thread::scope`), so a full pipe never blocks
+  it. `tokio::time::timeout` bounds the wait; on a timeout the child is killed and waited for.
+  Output above 64 MiB is `lister_failed`.
 
 Rules for every kind:
 
@@ -267,9 +296,39 @@ The scorer (`filter`, `label`):
   right shape for `pick`, `why`, `is` and `fill`, and the wrong one for per-record verbs:
   10,000 records are 10 requests, not 500, and no record's answer leans on its neighbours.
   On TypeSafe, `ask_each` keeps 20 records per request in one state, as `add.rs:10` does.
-- **Flow.** The answers of a batch are written to stdout as soon as every earlier batch is
-  written. `filter 'x' | head -5` ends early: a closed stdout drops what is queued, exit 0.
-  With a machine format nothing flows.
+- **`ask_each` on the wire.** `Client::ask_each(records: &[String], questions: &Questions)
+  -> impl Stream<Item = Result<(usize, Vec<Response>), JevifyError>>` yields one item per batch:
+  the batch index and one `Response` per record, in record order.
+  - classifier.dev: the body is `{"items": [r1, …, rN], "dimensions": {…}}`, the body
+    `classifier::request_body` builds today with one item (`src/jev/classifier.rs:161`).
+    `request_body` takes a slice of items. `N × questions.len() ≤ 1,000`; each item keeps the
+    32,000-character limit (`MAX_INPUT_CHARS`), and a longer record is clipped as evidence is
+    today. `classifier::parse` reads the first result only (`:200-204`); it becomes
+    `parse_each`, which maps every element of `results` through the same per-dimension code and
+    fails with a protocol error when `results.len() != N`.
+  - A Noul goes out as two semantic labels, as today (`noul_labels`, `:45-55`): for `filter`
+    the labels are "the statement holds" and "the statement does not hold", and the statement
+    goes into `instructions` together with "judge this one record".
+  - TypeSafe: no batch form. `ask_each` builds one state with 20 records and one question per
+    record, the form of `add.rs:10`, and unpacks the answers into one `Response` per record.
+  - Redaction runs per record (`input::redact`), before the cache key is made. The cache key is
+    per batch, as it is per request today (`src/jev/client.rs:260-266`), so a second run over
+    the same input is answered from the disk.
+  - Batches go through `Client::post` and its semaphore and retry policy unchanged.
+  - `ask_classifier` sends its 20-question chunks one after the other today
+    (`src/jev/client.rs:324-329`). It sends them at the same time (`try_join_all`), so `is`
+    with many statements and `fill` with many context markers stay one round.
+- **Flow.** `filter` and `label` hold a `BTreeMap<usize, Vec<Response>>` of finished batches and
+  a cursor. When the batch at the cursor arrives, its kept records are written and the cursor
+  moves; later batches wait in the map. Memory is bounded by the input, which is in memory
+  already. A write error of kind `BrokenPipe` drops the stream, which cancels the queued
+  requests, and the verb ends with exit 0. `filter 'x' | head -5` ends early. With a machine
+  format nothing flows and the envelope comes at the end.
+- **The model.** Every `Response` carries `model` (`src/jev/mod.rs:89`), and classifier.dev
+  names it per dimension (`src/jev/classifier.rs:217-219`). `Stats.model` keeps the last one
+  today (`src/jev/client.rs:278`); it keeps every distinct one. A model whose name does not
+  start with `jev` is named in the status line: `answered by ibm-granite/granite-4.0-h-micro,
+  not Jev`. `meta.model` lists them.
 - **The pace is the backend's.** Keyless: 3,000 decisions a minute and 20,000 a day per IP.
   The verb prints `jevify filter: 10074 records, 3120 distinct, 4 requests` on stderr before
   the first request. A 429 waits and retries (`src/jev/client.rs:418-422`). A daily-quota 429
