@@ -93,7 +93,7 @@ New files:
 |:---|:---|:---|
 | `src/marker.rs` | Pure lexer: `parse(&[OsString]) -> Result<Vec<Arg>, MarkerError>`; `substitute`. No I/O. | inline table tests |
 | `src/records.rs` | The record model of `pick`, `filter`, `label` and of `@{-:…}`, over raw bytes. `Record { handle, evidence: String, raw: Range<usize> }` indexes one input buffer. It also holds the one withholding policy for excerpts (2.2), which `--files` applies on every verb. | inline |
-| `src/source.rs` | `enumerate(kind, scope, limit, env) -> Listing { records, total, omitted }`: the coded kinds and the recipe engine (2.2). Listers run an argv, never a shell, under one deadline. `env` is the injected environment: `PATH`, the configuration directory, the deadline. | inline + `tests/fill.rs`, `tests/pick.rs` |
+| `src/source.rs` | `enumerate(kind, scope, limit, env) -> Listing { records, total, omitted, ordered }`: the coded kinds and the recipe engine (2.2). Listers run an argv, never a shell, under one deadline. `env` is the injected environment: `PATH`, the configuration directory, the deadline. | inline + `tests/fill.rs`, `tests/pick.rs` |
 | `src/kinds.jsonl` | The shipped recipes, one JSON object per line, compiled in with `include_str!`. | the recipe table test |
 | `src/cmd/fill.rs` | lex → read inputs → enumerate → resolve → substitute → print or `exec`. | `tests/fill.rs` |
 | `src/cmd/filter.rs`, `src/cmd/label.rs` | Per-record verbs; the scorer of 2.3 lives in `filter.rs`. | `tests/filter.rs`, `tests/label.rs` |
@@ -108,14 +108,14 @@ Changed in place:
 | `src/lib.rs` | `VERBS` (`:23`), `QUICK_START` (`:37-51`), `command_name` (`:128`); the clap error path reads `args_os` and stops at `--` (`:63` uses `env::args()`); `human` written as bytes (`:151-158`); the `route` dispatch arm calls `cmd::run::run(ctx, intent, machine)` (`:257-275` builds `RunFlags` today) |
 | `src/cmd/mod.rs` | `Outcome` changes once, in bead 1.0: `human: Vec<u8>` (`:15` is `String`) and `exec: Option<Exec>` with `struct Exec { argv: Vec<OsString>, stdin_null: bool }`, `None` at every construction site. Bead 2.0 adds no field; it only makes `run_cli` act on `exec`, after it has written everything else |
 | `src/exit.rs` | one variant `JevifyError::Kinded { kind, exit, message, hint, example }` for the new kinds |
-| `src/input.rs` | `read_stdin_bytes()` with the same 64 MiB cap and terminal check |
+| `src/input.rs` | `read_stdin_bytes()` with the same 64 MiB cap and terminal check; the terminal check (`:54`) becomes a function that takes `is_terminal: bool`, with a unit test, so no verb needs a process-level "stdin is a terminal" test |
 | `src/output.rs` | `shell_quote(&[OsString]) -> Vec<u8>`: `shell_display` of `run.rs:312`, moved and written over bytes |
-| `src/tournament.rs` | `window` becomes `pub(crate)` (`:55`); `decide(&Ranking)`; the pool rule of 2.1 for every caller of `rank` (`:126-127`) |
+| `src/tournament.rs` | `window` becomes `pub(crate)` (`:55`) in bead 1.7, its one change there; in bead 2.2 `decide(&Ranking)` for `fill` and `pick --from`, and the pool rule of 2.1 for `rank` and `shortlist` + `window` (`:126-127`) |
 | `src/cmd/why.rs` | delete `capture` and the `cmd` argument (`:59-`); the saved input; the output format stays |
 | `src/cmd/run.rs` | becomes `route`: bead 1.0 sets the signature `run(ctx, intent, machine)` and removes `RunFlags`; bead 1.4 deletes execution, the confirmation, the argument pass |
 | `src/cmd/pick.rs`, `src/cmd/is.rs` | byte records, `--files` from stdin, `--from KIND`; several statements, `--context FILE` |
 | `src/cmd/agent.rs` | Phase 0: the `health` client follows no redirect (`:127`); capabilities, robot-docs, `init agents` |
-| `src/config.rs` | Phase 0; the save directory; `JEVIFY_CONFIG_DIR` next to `JEVIFY_CACHE_DIR` (`:99`) in Phase 3 |
+| `src/config.rs` | Phase 0. `Config` gains no field in this plan: the file gets pure functions that take the variable's value as a parameter, with unit tests: `save_dir(Option<&str>)` in bead 1.0 (`JEVIFY_CACHE_DIR`, `:99`) and `config_dir(Option<&str>)` in Phase 3 (`JEVIFY_CONFIG_DIR`). The production environment builder for listers lives in `src/source.rs` |
 | `tests/common/mod.rs` | `FakeJev` answers with a probability vector per question |
 | Documents | section 6 |
 
@@ -152,9 +152,13 @@ finals request) and with 9,802 items (`too_many`, no request).
 3. **Enumerate** each distinct `(kind, prefix)` once, in parallel. A lister that fails or passes
    its deadline is killed, and the call is exit 6 `lister_failed` with a bounded tail of the
    tool's stderr. Then, per marker:
-   - A handle that cannot be substituted is dropped and counted in `omitted`: one that holds a
-     newline, a carriage return or a NUL, and one that starts with `-` when the marker opens
-     its argument and the kind is not a path.
+   - A handle that cannot be substituted is dropped and counted in `omitted`. Enumeration does
+     the unconditional part: a handle that holds a newline, a carriage return or a NUL. The
+     leading-`-` rule depends on the marker's position and a listing is shared between
+     markers, so `fill` applies it per marker, with its own omitted count: a handle that
+     starts with `-` is dropped when the marker opens its argument and the kind is not a path.
+     `tests/fill.rs` uses one listing with a standalone marker and an embedded one
+     (`'--value=@{-:…}'`): the embedded marker keeps the handle, the standalone one drops it.
    - Two candidates with the same handle and evidence are one. Candidates with the same
      evidence and different handles stay separate and end as `ambiguous`; the status line says
      `N candidates share the same evidence`.
@@ -172,6 +176,16 @@ finals request) and with 9,802 items (`too_many`, no request).
      tier-two evidence for the first 24 (`MAX_FINALISTS`). A probability is never compared with
      one from another request (`src/tournament.rs:126-127` does that today and keeps 24). With
      one window, round 2 runs only when the ratio failed and the kind has tier-two evidence.
+     This one-window shortcut applies to `fill` and `pick --from`; `pick --files` always runs
+     round two, as today.
+   - Finalist evidence needs no callback. A caller with tier-two evidence makes two calls:
+     `tournament::shortlist` for round 1 (`src/tournament.rs:149`), then it fetches the
+     evidence of the finalists itself (async, inside `spawn_blocking`, after the withholding
+     check), then `tournament::window` for the finals. `fill`, `pick --from` and `pick --files`
+     all use this shape. `rank` stays for callers with no tier two (stdin `pick`, `why`).
+   - `decide` (the ratio, `ambiguous`) serves `fill` and `pick --from` only. stdin `pick` keeps
+     its found rule (`any ≥ threshold` and best > `NONE`, `src/cmd/pick.rs:83-88`) and its
+     `-n N` semantics.
    - A `one` marker holds at most `W` options, because `NONE` takes one slot of the Choice:
      more is exit 2 with the count. The lexer has no backend, so `fill` checks it
      (`tests/fill.rs`: `W` and `W + 1` options on each backend).
@@ -191,10 +205,12 @@ finals request) and with 9,802 items (`too_many`, no request).
 6. **All or nothing.** Any abstention means nothing runs: exit 3, empty stdout, one line per
    failed marker:
    `jevify fill: not run: arg 3 branch: ambiguous; closest: tp/auth (0.41), tp/auth-v2 (0.38)`.
-   With several failed markers, the envelope's `error.kind` and `data.reason` are those of the
-   first failed marker in argv order, and `data.markers[]` lists every marker with its own
-   reason (`tests/fill.rs`: a `no_match` at arg 2 and an `unsure_flag` at arg 4 give
-   `no_match`, and both appear in `data.markers[]`).
+   An abstention is an `Outcome` with exit 3 and `error: null`: `data.reason` is the reason of
+   the first failed marker in argv order, and `data.markers[]` lists every marker with its own
+   reason. There is no `error.kind` for an abstention, so the envelope code of
+   `src/lib.rs:173-214` (outcomes carry `data`, errors carry `error`) does not change
+   (`tests/fill.rs`: a `no_match` at arg 2 and an `unsure_flag` at arg 4 give `data.reason`
+   `no_match`, `error` null, and both markers in `data.markers[]`).
 7. **Substitute.** A handle is an `OsString` and is substituted as bytes, so a path that is not
    UTF-8 reaches the command unchanged. A path handle is relative to the prefix it was listed under, so
    `'src/@{file:…}'` becomes `src/cmd/add.rs`. A path handle that opens its argument and
@@ -281,8 +297,9 @@ A recipe kind is the `-` form with a name, one JSON object on one line:
 - The evidence of a recipe candidate is its whole record. The lister's own flags choose the
   fields (`--json number,title`, `--format`), so a recipe has no evidence option.
 - Shipped recipes live in `src/kinds.jsonl`. User recipes live in `kinds.jsonl` in the user's
-  configuration directory: `JEVIFY_CONFIG_DIR`, read in `src/config.rs` next to
-  `JEVIFY_CACHE_DIR` (`:99`), or `directories::ProjectDirs` (already a dependency). The
+  configuration directory: `JEVIFY_CONFIG_DIR`, through the pure function
+  `config::config_dir(Option<&str>)` (`Config` gains no field), or `directories::ProjectDirs`
+  (already a dependency). The
   sanitized test command of `tests/common/mod.rs` removes `JEVIFY_CONFIG_DIR`, as it does for
   the other variables, so a developer's own recipes never reach a test. A user recipe cannot
   replace a coded kind or a shipped recipe.
@@ -301,14 +318,19 @@ A recipe kind is the `-` form with a name, one JSON object on one line:
 - **The lister runner.** A `std::process::Command` with piped stdout and stderr, two detached
   reader threads that send bytes over a channel, and a `try_wait` poll every 20 ms until the
   deadline. On the deadline: `kill`, `wait`, then at most 200 ms for the readers, then
-  `lister_failed`. A descendant that still holds the pipe cannot block jevify (the
-  `DAEMON_GRACE` pattern of `src/cmd/why.rs:17`). Output above 64 MiB stops the read and is
+  `lister_failed`. **A listing is valid only when the lister exited 0 and both reader threads
+  reached EOF.** If the readers have not finished 200 ms after the exit, or after a kill, the
+  result is `lister_failed`: a descendant that still holds the pipe cannot block jevify, and a
+  partial listing never reaches Jev or `fill`. Output above 64 MiB stops the read and is
   `lister_failed`. No process group, no new `rustix` feature. A `tokio::time::timeout` around
   a blocking task is not the mechanism: a started blocking task cannot be aborted. Inline
-  tests: a lister that sleeps, a lister whose child keeps the pipe open, an oversized output.
+  tests: a lister that sleeps, a lister whose child keeps the pipe open (`lister_failed`, and
+  no request is sent), an oversized output.
 - **The environment is injected.** `source::enumerate` and the runner take `PATH`, the
   configuration directory and the deadline as parameters, and the runner passes them through
-  `Command::env`. No `set_var` in `src/` (`#![deny(unsafe_code)]`). Inline tests pass a
+  `Command::env`. The production builder of that environment lives in `src/source.rs`: it
+  reads the process environment once and calls `config::config_dir`. No `set_var` in `src/`
+  (`#![deny(unsafe_code)]`). Inline tests pass a
   temporary `PATH`; the cases that depend on the process environment (`tool` through
   `inventory::load`, user recipes, fake `git` and `gh`) are process-level tests in
   `tests/fill.rs` and `tests/pick.rs` through `assert_cmd`'s `.env`.
@@ -371,7 +393,7 @@ clipped and redacted. Byte-identical records are judged once. Input above 64 MiB
 
 The scorer (`filter`, `label`):
 
-- **One request judges up to 1,000 records, each alone.** classifier.dev takes `inputs` (up to
+- **One request judges up to 1,000 records, each alone.** classifier.dev takes `items` (up to
   1,000 texts) with `dimensions` in one `POST /v1/classify`, at most 1,000 decisions per
   request, and answers each input on its own. `Client::ask_each` sends that. jevify sends one
   input and 20 dimensions per request today (`src/jev/classifier.rs:119-150`), which is the
@@ -400,7 +422,8 @@ The scorer (`filter`, `label`):
   - Redaction runs per record (`input::redact`), before the cache key is made. The cache key is
     per batch, as it is per request today (`src/jev/client.rs:260-266`), so a second run over
     the same input is answered from the disk.
-  - Batches go through `Client::post` and its semaphore and retry policy unchanged.
+  - Batches go through `Client::post` and its semaphore. The retry policy changes as the
+    "429" bullet below states.
   - `ask_classifier` sends its 20-question chunks one after the other today
     (`src/jev/client.rs:324-329`). It sends them at the same time (`try_join_all`), so `is`
     with many statements and `fill` with many context markers stay one round.
@@ -420,7 +443,10 @@ The scorer (`filter`, `label`):
   and `Stats.model` holds the joined string, so `src/output.rs` and `src/config.rs` do not
   change. Every model that contributed is kept through `classifier::parse_each`, the chunk
   merge in `ask_classifier` and the disk cache; today `src/jev/classifier.rs:217-218` and the
-  chunk loop overwrite it, and `src/jev/client.rs:278` keeps the last one. A part that does
+  chunk loop overwrite it, and `src/jev/client.rs:278` keeps the last one. Bead 1.2 bumps the
+  cache contract to `"decision_contract": 3` (`src/jev/client.rs:261`), so an entry that kept
+  only the last model is never read (`tests/client.rs`: an entry written under contract 2 is
+  bypassed). A part that does
   not start with `jev` is named in the status line:
   `answered by ibm-granite/granite-4.0-h-micro, not Jev`. The model guard of `fill` requires
   every part to start with `jev`. Test: a non-Jev dimension followed by a Jev dimension makes
@@ -434,7 +460,9 @@ The scorer (`filter`, `label`):
   `answered 3000 of 3120`. `rate_limit_minute` and every other 429 are retried after
   `Retry-After` (`src/jev/client.rs:418-422`). For `ask_each` the cap on one wait is 60 s (it
   is 10 s today, `retry_after`, `src/jev/client.rs:442-451`), because a minute limit needs a
-  minute. The FakeJev quota responder returns exactly that status and body.
+  minute. A 429 whose `Retry-After` exceeds the 60 s cap is not retried, and the message
+  names the limit from the body's `code` (`rate_limit_hour` included). The FakeJev quota
+  responder returns exactly that status and body.
 - **The ceiling** is 20,000 distinct records, a day of the free backend: exit 6 `too_many`, and
   the message says to narrow with `grep` or `head`. There is no flag to raise it.
 - **`filter` flags:** `-v` keeps the records where the statement is false, `-c` prints the
@@ -471,6 +499,10 @@ manifests, then the version bump and the release through `bash scripts/release.s
   status lines it quotes exist. The "After" columns below say which beads.
 - **The tracker.** Workers change bead state with `br` only and never stage `.beads/`. The
   lead exports (`br sync --flush-only`) and commits `.beads/` between waves.
+- **`ubs` on a bead whose changed files are only Markdown or JSON**: run `ubs <changed files>`;
+  when it reports that nothing was scanned, record "ubs: not applicable, nothing scanned" in
+  the bead and validate every JSON file with `jq .`. That is a pass. The rule is in the Rules
+  block of the contract, skill, scripts and release beads.
 - **A release bead runs `ubs` on every file it changes**, `Cargo.lock` included. It does not
   require the epic closed; the epic closes when its children close. The evaluation bead
   hunch-lpp is no child of the epic: it depends on the 0.7.0 release bead only.
@@ -507,10 +539,10 @@ Goal: one grammar, one record model, and the output side an agent uses most.
 | 1.4 — new: route is print-only | `src/cmd/run.rs`, `src/manpage.rs`, `tests/run_route.rs`, `tests/run_args.rs`, `tests/live.rs` (`live_run_routes_tar` moves to `route` with its assertions); removes `mod args;` from `src/lib.rs` | 1.0 |
 | 1.5 — hunch-bx6 (filter and the scorer) | `src/cmd/filter.rs`, `tests/filter.rs`, `tests/live.rs` (one added test) | 1.1, 1.2, 1.3, 1.4 (`tests/live.rs`) |
 | 1.6 — new: `is` with several statements and `--context` | `src/cmd/is.rs`, `tests/is.rs` | 1.0 |
-| 1.7 — new: save in `why`, records in `pick` | `src/cmd/why.rs`, `tests/why.rs`, `src/cmd/pick.rs`, `tests/pick.rs` | 1.1, 1.3 |
+| 1.7 — new: save in `why`, records in `pick` | `src/cmd/why.rs`, `tests/why.rs`, `src/cmd/pick.rs`, `tests/pick.rs`, `src/tournament.rs` (one change: `window` becomes `pub(crate)`) | 1.1, 1.3 |
 | 1.8 contract, documents — hunch-7zg.8 | section 6 (README, `docs/`, `src/cmd/agent.rs`, `AGENTS.md`, `PRIVACY.md`, `CHANGELOG.md`) | 1.4, 1.5, 1.6, 1.7 |
 | 1.8 contract, skill — hunch-sb9 | the skill and the two manifests | 1.4, 1.5, 1.6, 1.7 |
-| 1.9 — new: scripts and demo files use the new grammar | `demo.tape`, `demo-record.sh`, `scripts/eval_run.py`, `scripts/eval_why.py`, `benchmarks/bench.sh`, `docs/img/run.svg` | 1.8 documents |
+| 1.9 — new: scripts and recording sources use the new grammar | `demo.tape`, `demo-record.sh`, `scripts/eval_run.py`, `scripts/eval_why.py`, `scripts/eval_e2e.py`, `benchmarks/bench.sh`, `benchmarks/README.md`, `docs/img/run.svg` | 1.8 documents |
 | release 0.5.0 (lead) | the version, `Cargo.lock`, the `CHANGELOG.md` heading | all of the above |
 
 **The cutover of `run` happens in 1.0.** Bead 1.0 removes `--yes`, `--exec`, `--dry-run` and
@@ -532,7 +564,11 @@ stays green. Bead 1.7 puts `pick` on the byte records, adds `-0 --files`, the wi
 function and the relative-path rule of 2.3, and completes those tests in place. `why` gets no
 `-0`, `--para` or `--files` in the parser.
 
-`is 'a' 'b' 'c'`: one Noul per statement in one request; exit 1 when any is no, else 3 when
+Until bead 1.6 the `is` of bead 1.0 refuses more than one statement with an input error; it
+never judges only the first.
+
+`is 'a' 'b' 'c'`: one Noul per statement in one request (21 statements are two requests on
+classifier, one on TypeSafe); exit 1 when any is no, else 3 when
 any is unsure, else 0. One statement prints nothing on stdout, as today; two or more print one
 verdict line per statement, in the order given: `VERDICT<TAB>STATEMENT` with `yes`, `no` or
 `unsure`, so `cut -f1` reads the verdicts. Probabilities stay on stderr and in the envelope.
@@ -564,7 +600,7 @@ branches, and for an option that depends on text it has not read.
 
 | Bead | Writes | After |
 |:---|:---|:---|
-| 2.0 skeleton | the shared files (`Fill`, `Pick --from`, the error kinds, the `fill` line of `QUICK_START`); `run_cli` acts on `Outcome.exec` (no new field); `tests/bin/argv.sh`; stubs `src/marker.rs`, `src/source.rs`, `src/cmd/fill.rs` | release 0.5.0 |
+| 2.0 skeleton | the shared files (`Fill`, `Pick --from`, the error kinds, the `fill` line of `QUICK_START`); `run_cli` acts on `Outcome.exec` (no new field); `src/cmd/pick.rs`, only for the final signature `run(…, from: Option<&str>)` with a "not implemented" input error; `tests/bin/argv.sh`; stubs `src/marker.rs`, `src/source.rs`, `src/cmd/fill.rs` | release 0.5.0 |
 | 2.1 — new: marker lexer | `src/marker.rs` | 2.0 |
 | 2.2 — hunch-q8p (`-`, `branch`, the lister runner) | `src/source.rs` | 2.0 |
 | 2.2 — hunch-zxz (the pool rule for every caller of `rank`) | `src/tournament.rs`, `tests/tournament.rs`; call sites and capacity tests in `src/cmd/why.rs`, `src/cmd/pick.rs`, `src/cmd/run.rs`, `tests/pick.rs`, `tests/why.rs` | 2.0 |
@@ -599,7 +635,7 @@ exit 2; several failed markers report the first in argv order and list all in
 The recipe engine, the shipped recipes, the user's `kinds.jsonl`; `commit`, `file`, `dir`,
 `tool`. All in `src/source.rs` and `src/kinds.jsonl`, serial, then `tests/fill.rs` and
 `tests/pick.rs`, then the contract bead with `docs/guide/kinds.md`. The recipe bead adds
-`JEVIFY_CONFIG_DIR` to `src/config.rs` and removes it in the sanitized test command of
+`config_dir(Option<&str>)` for `JEVIFY_CONFIG_DIR` to `src/config.rs` and removes the variable in the sanitized test command of
 `tests/common/mod.rs`; the contract bead documents it in `docs/guide/configuration.md`. The
 `file` kind calls the withholding function of `src/records.rs` and does not define a second
 one.
@@ -692,7 +728,12 @@ Each item was cut on purpose and names what brings it back.
   the batch responder, a named model per dimension, and the quota responder (HTTP 429 with
   a JSON body whose `code` is `rate_limit_day`, in the error shape of the classifier.dev
   OpenAPI, and the `rate_limit_minute` form with `Retry-After`);
-  `FakeClassifier` is built from it.
+  `FakeClassifier` is built from it. The same bead makes `jevify()` and `jevify_classifier()`
+  (`tests/common/mod.rs:183`, `:192`) point `JEVIFY_CACHE_DIR` at a per-test temporary
+  directory, while `JEVIFY_NO_CACHE` keeps the answer cache off, so a saved input never lands
+  in the developer's cache: no test writes outside its temporary directory.
+- "stdin is a terminal" is covered by the unit test of the terminal-check function of
+  `src/input.rs` (it takes `is_terminal: bool`); no verb has a process-level test for it.
 - `tests/tournament.rs`: the pool rule with `n` = 3, 2 and 1; 4,000 and 9,802 items on the
   classifier backend; the planted answer in every position of every window.
 - `tests/fill.rs`: dry-run output equals the argv a run receives (`sh tests/bin/argv.sh`
@@ -739,11 +780,16 @@ Bead 1.8 (documents) also owns the repository's `AGENTS.md`: the sentences on th
 argument pass (`:14`), on `why -- <cmd>` (`:24`) and on exit 7 in the contract list, and the
 text of `docs/img/`. Its acceptance greps are anchored, so that prose such as "a paid run"
 does not match: `jevify run`, `why -- `, `jevify fill`, `jevify label`, `@\{[a-z-]+:`. Bead 1.9
-gives the scripts and demo files the grammar (`demo.tape`, `demo-record.sh`,
-`scripts/eval_run.py`, `scripts/eval_why.py`, `benchmarks/bench.sh`, `docs/img/run.svg`; they
-call `jevify run`, `why -- cargo build` and `jevify -v` today), and hunch-4ow records
-`demo.gif` after it. hunch-60l (the README voice rewrite) waits for the last contract bead,
-so two beads never hold `README.md` together.
+gives the scripts and recording sources the grammar (`demo.tape`, `demo-record.sh`,
+`scripts/eval_run.py`, `scripts/eval_why.py`, `scripts/eval_e2e.py`, `benchmarks/bench.sh`,
+`benchmarks/README.md`, `docs/img/run.svg`; they call `jevify run`, `why -- cargo build` and
+`jevify -v` today). Its acceptance scan covers every tracked script and text source
+(`git ls-files scripts benchmarks '*.tape' '*.sh'`) with the anchored patterns. The binary
+recordings `demo.gif` and `demo.cast` belong to hunch-4ow and do not block release 0.5.0:
+bead 1.8 removes the README's reference to `demo.gif` (`README.md:117`), and hunch-4ow
+restores it with the new recording. hunch-glz owns the README's quota text and runs after
+the last contract bead; hunch-60l (the README voice rewrite) runs after hunch-glz, so two
+beads never hold `README.md` together.
 
 **README, for a person.** Today it has a section per verb in build order and `jevify run` on
 its first screen. The rewrite:
@@ -815,7 +861,8 @@ Nothing rations requests. What bounds a verb is time: two rounds, the client sem
 6. **A user recipe runs a command.** Only from the user's configuration directory; it cannot
    shadow a shipped kind; `capabilities` prints its argv.
 7. **A lister hangs, or leaves a child that holds the pipe.** The runner of 2.2: a `try_wait`
-   poll, `kill` on the deadline, 200 ms for the readers, then `lister_failed`.
+   poll, `kill` on the deadline, 200 ms for the readers, then `lister_failed`. A listing counts
+   only after exit 0 and EOF on both streams, so a partial list never authorizes a run.
 8. **`--files` reads a secret.** One withholding function in `src/records.rs`, called before
    any excerpt read, on every verb and in the `file` kind.
 9. **Records share a state on TypeSafe.** Each question names its record and says to judge it
@@ -876,10 +923,11 @@ Older open beads that share files with this plan are ordered behind it:
 
 | Bead | Waits for | Reason |
 |:---|:---|:---|
-| hunch-bec (deadlines and retries) | bead 1.2 | both write `src/jev/client.rs` |
-| hunch-glz (keyless quota) | bead 1.2 | the same file; 1.2 delivers the `rate_limit_day` rule |
-| hunch-60l (README voice) | the Phase 3 contract bead, the last one | `README.md` |
-| hunch-4ow (`demo.gif`) | bead 1.9 | it records from `demo.tape` |
+| hunch-glz (keyless quota: measurement and its documentation) | bead 1.2, the Phase 3 contract bead and release 0.7.0 | `README.md`, `src/cmd/agent.rs`, `CHANGELOG.md`; 1.2 delivers the final 429 policy, which it keeps |
+| hunch-bec (deadlines and retries) | bead 1.2, the Phase 3 contract bead, hunch-glz | `src/jev/client.rs`; it reuses the measurement of hunch-glz |
+| hunch-4ow (`demo.gif`, `demo.cast`) | bead 1.9 and hunch-glz | it records from `demo.tape` and restores the README reference; `README.md` has one writer at a time; it blocks no release |
+| hunch-60l (README voice) | the Phase 3 contract bead, hunch-glz and hunch-4ow | `README.md`, last in the line of its writers |
+| hunch-3te (live endpoint coverage) | bead 1.9 | `tests/live.rs` is written by beads 1.4, 1.5 and 2.4 in that order; the `run` execution it targets leaves in 0.5.0 |
 | hunch-lpp (evaluation) | release 0.7.0 | not a child of the epic |
 
 The epic closes when its children close. No release bead requires the epic closed.
