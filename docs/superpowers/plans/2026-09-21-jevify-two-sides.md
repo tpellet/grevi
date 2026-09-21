@@ -488,8 +488,10 @@ The scorer (`filter`, `label`):
   the first request.
 - **429.** The daily limit is HTTP 429 with a JSON body whose `code` is `rate_limit_day`
   (classifier.dev OpenAPI). It is never retried: exit 4, message "daily quota of the free
-  backend reached"; the printed records are a correct prefix and the last line says
-  `answered 3000 of 3120`. `rate_limit_minute` and every other 429 are retried after
+  backend reached"; the printed records are a correct prefix and one status line says
+  `jevify filter: answered 3000 of 3120`. The verb writes it before it returns, so it comes
+  before the error lines of `report_error` (`src/lib.rs:196-205`); tests assert that stderr
+  contains it, not where it stands. `rate_limit_minute` and every other 429 are retried after
   `Retry-After` (`src/jev/client.rs:418-422`). In `ask_each` a `Retry-After` up
   to 60 s is honoured as given, because a minute limit needs a minute; above 60 s the request
   is not retried: exit 4 after one request, and the message names the limit from the body's
@@ -509,9 +511,13 @@ The scorer (`filter`, `label`):
 ### 2.4 The saved input
 
 `why` and `filter` write the full input, as the bytes they read, to
-`<save dir>/outputs/<blake3-16>.log` before the first request, and name the path in one final
+`<save dir>/outputs/<blake3-16>.log` before the first request, and name the path in one summary
 status line, as the vision shows: `jevify filter: kept 31 of 10074, 2 unsure, full output: PATH`
-(or `…, full output: not saved (<reason>)`); `why` ends with `jevify why: full output: PATH`.
+(or `…, full output: not saved (<reason>)`); `why` writes `jevify why: full output: PATH`.
+The requirement on that line: it is one line, prefixed `jevify <verb>:`, written by the verb
+before it returns. It is not required to be the last stderr line: `--verbose` diagnostics
+(`src/lib.rs:160-170`) and the error lines of `report_error` may follow it, and no bead
+changes that renderer for it. Tests assert containment, not position.
 Only these two save. stdin `pick` saves nothing: it returns one record
 of a list the caller can list again. `label` saves nothing: every record comes out.
 
@@ -588,7 +594,7 @@ Goal: one grammar, one record model, and the output side an agent uses most.
 | 1.5 — hunch-bx6 (filter and the scorer) | `src/cmd/filter.rs`, `tests/filter.rs`, `tests/live.rs` (one added test) | 1.1, 1.2, 1.3, 1.4 (`tests/live.rs`) |
 | 1.6 — new: `is` with several statements and `--context` | `src/cmd/is.rs`, `tests/is.rs` | 1.0 |
 | 1.7 — new: save in `why`, records in `pick` | `src/cmd/why.rs`, `tests/why.rs`, `src/cmd/pick.rs`, `tests/pick.rs`, `src/tournament.rs` (one change: `window` becomes `pub(crate)`) | 1.1, 1.3 |
-| 1.8 contract, documents — hunch-7zg.8 | section 6 (README, `docs/`, `src/cmd/agent.rs`, `AGENTS.md`, `PRIVACY.md`, `CHANGELOG.md`) | 1.4, 1.5, 1.6, 1.7 |
+| 1.8 contract, documents — hunch-7zg.8 | section 6 (README, `docs/`, `src/cmd/agent.rs`, `AGENTS.md`, `PRIVACY.md`, `CHANGELOG.md`); `src/cli.rs` for help strings and `--json data:` lines only | 1.4, 1.5, 1.6, 1.7 |
 | 1.8 contract, skill — hunch-sb9 | the skill and the two manifests | 1.4, 1.5, 1.6, 1.7 |
 | 1.9 — new: scripts and recording sources use the new grammar | `demo.tape`, `demo-record.sh`, `scripts/eval_run.py`, `scripts/eval_why.py`, `scripts/eval_e2e.py`, `benchmarks/bench.sh`, `benchmarks/README.md`, `docs/img/run.svg` | 1.8 documents |
 | release 0.5.0 (lead) | the version, `Cargo.lock`, the `CHANGELOG.md` heading | all of the above |
@@ -775,6 +781,23 @@ Each item was cut on purpose and names what brings it back.
 - `Init { shell }` takes `zsh`, `bash` or `agents` (`Shell::{Zsh,Bash}` today,
   `src/cli.rs:154-161`); the enum is renamed if that reads better. Bead 1.0 adds the value and
   the dispatch arm.
+- **Dispatch is final after bead 1.0.** It passes every parsed flag, so no later Phase 1 bead
+  touches `src/lib.rs`. The set of parameters is fixed; a worker may adjust a type if the
+  code demands it:
+  `filter::run(ctx, statement: &str, flags: FilterFlags { invert, count, strict, split, files, no_save }, machine: bool)`,
+  `why::run(ctx, context: usize, top: usize, no_save: bool)`,
+  `pick::run(ctx, intent: &str, top: usize, index: bool, split: Split, files: bool)`,
+  `is::run(ctx, statements: &[String], context: Option<&Path>)`.
+  `Split` is an enum in `src/records.rs` (`Lines`, `Nul`, `Para`) that the 1.0 stub defines.
+- **Help strings.** Bead 1.0 rewrites every clap help string of `src/cli.rs` for the 0.5.0
+  grammar (the top-level `after_help` `:9`, `Pick` `:54` and `:65-66`, `Why` `:69-71`, `Is`
+  `:107`, `Init` `:154`): an anchored grep over `jevify --help` and every
+  `jevify VERB --help` finds no removed form. Bead 1.8 (documents) may then edit the help
+  strings and the `--json data:` lines of `src/cli.rs`, and only those; no other bead writes
+  that file then.
+- `route` prints the tool's synopsis through `manpage::synopsis(cmd) -> Option<String>`
+  (bead 1.4): the SYNOPSIS section, clipped, read inside `spawn_blocking`; null without a man
+  page.
 - `Route { intent }` has no flag of its own. `cmd::run::run(ctx, intent, machine)` is the final
   signature, set in bead 1.0.
 - A `one` marker and `label` take at most `W` options. The parser has no backend, so `fill`
@@ -964,7 +987,12 @@ Nothing rations requests. What bounds a verb is time: two rounds, the client sem
 11. `is` with one statement prints nothing; with several, one verdict line each.
 12. The removal of `run`'s flags in bead 1.0 rewrites seven tests of `tests/run_args.rs` and
     `tests/run_route.rs` to exit-2 and print-only assertions. It is the approved removal of
-    `run`, not a weakened test.
+    `run`, not a weakened test. The cutover changes four more tests, under the same approval:
+    `tests/why.rs:32` (`why_runs_a_command_after_double_dash`) becomes the exit-2 assertion
+    for `why -- CMD`; the two inline `capture` tests (`src/cmd/why.rs:269`, `:283`) leave with
+    `capture`; `tests/cli_basics.rs:218` (`run_flags_after_intent_are_flags`) becomes a
+    `route` parse test; and `data.child_exit` leaves the `why` envelope
+    (`src/cmd/why.rs:223`), with the assertions that name it.
 13. `rate_limit_day` is never retried; `ask_each` honours a `Retry-After` up to 60 s as given
     and does not retry above it.
 14. `{user}@{host:>8}` is an unknown kind, exit 2; the literal is spelled `@@{`.
