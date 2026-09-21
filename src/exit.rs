@@ -1,5 +1,10 @@
 use serde::Serialize;
 
+pub const NO_MATCH: &str = "no_match";
+pub const AMBIGUOUS: &str = "ambiguous";
+pub const UNSURE_FLAG: &str = "unsure_flag";
+pub const INSUFFICIENT_EVIDENCE: &str = "insufficient_evidence";
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Exit {
@@ -67,6 +72,42 @@ pub enum JevifyError {
 }
 
 impl JevifyError {
+    pub fn stdin_is_tty(message: String) -> Self {
+        Self::Kinded {
+            kind: "stdin_is_tty",
+            exit: Exit::Input,
+            message,
+            hint: "pipe candidates or context, or provide a file",
+            example: "jevify fill --candidates input -- CMD '@{-:description}'",
+        }
+    }
+    pub fn lister_failed(message: String) -> Self {
+        Self::Kinded {
+            kind: "lister_failed",
+            exit: Exit::Input,
+            message,
+            hint: "check the lister and narrow its scope",
+            example: "jevify pick --from branch 'description'",
+        }
+    }
+    pub fn cannot_run(message: String) -> Self {
+        Self::Kinded {
+            kind: "cannot_run",
+            exit: Exit::Input,
+            message,
+            hint: "check the command path and executable permissions",
+            example: "jevify fill --dry-run -- CMD '@{-:description}'",
+        }
+    }
+    pub fn recipe_invalid(message: String) -> Self {
+        Self::Kinded {
+            kind: "recipe_invalid",
+            exit: Exit::Input,
+            message,
+            hint: "correct the kind recipe",
+            example: "jevify capabilities --json",
+        }
+    }
     pub fn exit(&self) -> Exit {
         match self {
             Self::Kinded { exit, .. } => *exit,
@@ -138,6 +179,46 @@ impl JevifyError {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn fill_kinds_and_abstention_reasons_are_stable() {
+        use crate::output::{Envelope, ErrorBody, Meta};
+        for (error, kind) in [
+            (JevifyError::stdin_is_tty("terminal".into()), "stdin_is_tty"),
+            (JevifyError::lister_failed("failed".into()), "lister_failed"),
+            (JevifyError::cannot_run("missing".into()), "cannot_run"),
+            (
+                JevifyError::recipe_invalid("invalid".into()),
+                "recipe_invalid",
+            ),
+        ] {
+            let envelope = Envelope {
+                ok: false,
+                command: "fill",
+                version: "test",
+                exit_code: error.exit().code(),
+                data: serde_json::Value::Null,
+                meta: Meta::default(),
+                error: Some(ErrorBody {
+                    kind: error.kind(),
+                    message: error.to_string(),
+                    hint: error.hint(),
+                    example: error.example(),
+                }),
+            };
+            let value = serde_json::to_value(envelope).unwrap();
+            assert_eq!(value["exit_code"], 6);
+            assert_eq!(value["error"]["kind"], kind);
+        }
+        assert_eq!(
+            [NO_MATCH, AMBIGUOUS, UNSURE_FLAG, INSUFFICIENT_EVIDENCE],
+            [
+                "no_match",
+                "ambiguous",
+                "unsure_flag",
+                "insufficient_evidence"
+            ]
+        );
+    }
     #[test]
     fn exit_codes_are_the_documented_contract() {
         let codes: Vec<i32> = Exit::ALL.iter().map(|(e, _)| e.code()).collect();

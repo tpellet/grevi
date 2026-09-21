@@ -112,10 +112,8 @@ fn agent_block_is_bounded_and_public_help_has_no_removed_forms() {
         assert!(out.status.success(), "{args:?}");
         outputs.push(String::from_utf8(out.stdout).unwrap());
     }
-    let removed = regex::Regex::new(
-        r"jevify (?:run|fill|label)(?:\s|$)|why -- |@\{[a-z-]+:|pick --from|jevify -v(?:\s|$)",
-    )
-    .unwrap();
+    let removed =
+        regex::Regex::new(r"jevify (?:run|label)(?:\s|$)|why -- |jevify -v(?:\s|$)").unwrap();
     for output in outputs {
         assert!(!removed.is_match(&output), "{output}");
     }

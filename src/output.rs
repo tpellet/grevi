@@ -1,5 +1,10 @@
 use serde::Serialize;
 
+/// Escape line breaks in status text without changing dry-run shell quoting.
+pub fn status_escape(text: &str) -> String {
+    text.replace('\r', "\\r").replace('\n', "\\n")
+}
+
 pub fn shell_quote(argv: &[std::ffi::OsString]) -> Vec<u8> {
     use std::os::unix::ffi::OsStrExt;
     let mut output = Vec::new();
@@ -138,6 +143,11 @@ pub fn render(format: Format, env: &Envelope) -> anyhow::Result<String> {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn newline_quoting_and_status_escaping_differ() {
+        assert_eq!(super::shell_quote(&["a\nb".into()]), b"'a\nb'");
+        assert_eq!(super::status_escape("a\nb\rc"), "a\\nb\\rc");
+    }
     #[test]
     fn presentation_quotes_each_posix_shell_token_as_bytes() {
         use std::os::unix::ffi::OsStringExt;

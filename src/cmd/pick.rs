@@ -16,7 +16,11 @@ pub async fn run(
     index: bool,
     split: Split,
     files: bool,
+    from: Option<&str>,
 ) -> Result<Outcome, JevifyError> {
+    if from.is_some() {
+        return Err(JevifyError::Input("pick --from is not implemented".into()));
+    }
     if top == 0 {
         return Err(JevifyError::Usage("-n must be at least 1".into()));
     }

@@ -2,6 +2,140 @@ use assert_cmd::Command;
 use assert_cmd::cargo::CommandCargoExt;
 mod common;
 
+#[test]
+fn fill_parser_preserves_command_bytes_and_rejects_conflicts() {
+    use clap::{CommandFactory, FromArgMatches};
+    use std::{ffi::OsString, os::unix::ffi::OsStringExt};
+    let mut args: Vec<OsString> = ["jevify", "fill", "--dry-run", "--", "a", "--", "b"]
+        .into_iter()
+        .map(Into::into)
+        .collect();
+    args.push(OsString::from_vec(vec![0xff]));
+    let matches = jevify::cli::Cli::command()
+        .mut_args(|a| a.env(None))
+        .try_get_matches_from(args)
+        .unwrap();
+    let cli = jevify::cli::Cli::from_arg_matches(&matches).unwrap();
+    let expected = vec![
+        OsString::from("a"),
+        "--".into(),
+        "b".into(),
+        OsString::from_vec(vec![0xff]),
+    ];
+    assert!(matches!(cli.cmd, jevify::cli::Cmd::Fill { cmd, .. } if cmd == expected));
+    for flag in ["--files", "--index", "-0", "--para"] {
+        common::bin()
+            .args(["pick", "--from", "branch", flag, "x"])
+            .assert()
+            .code(2);
+    }
+    common::bin()
+        .args(["fill", "--field", "1", "--key", "name", "--", "true"])
+        .assert()
+        .code(2);
+    common::bin()
+        .args(["fill", "--json", "--", "true", "x"])
+        .assert()
+        .code(2);
+    let out = common::bin()
+        .args(["fill", "git", "switch", "x"])
+        .output()
+        .unwrap();
+    assert_eq!(out.status.code(), Some(2));
+    assert!(String::from_utf8_lossy(&out.stderr).contains("jevify fill -- git switch"));
+    let out = common::bin()
+        .args(["pick", "--from", "branch", "x", "--json"])
+        .output()
+        .unwrap();
+    let value: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+    assert_eq!(out.status.code(), Some(6));
+    assert_eq!(value["meta"]["requests"], 0);
+    assert!(
+        value["error"]["message"]
+            .as_str()
+            .unwrap()
+            .contains("not implemented")
+    );
+}
+
+#[test]
+fn argv_helper_preserves_bytes_stdin_and_exit() {
+    use std::{
+        ffi::OsString,
+        io::Write,
+        os::unix::ffi::OsStringExt,
+        process::{Command, Stdio},
+    };
+    for data in [false, true] {
+        let mut child = Command::new("sh")
+            .arg(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/bin/argv.sh"))
+            .args(["3", "a", "b c"])
+            .arg(OsString::from_vec(vec![0xff]))
+            .stdin(if data { Stdio::piped() } else { Stdio::null() })
+            .stdout(Stdio::piped())
+            .spawn()
+            .unwrap();
+        if data {
+            child.stdin.take().unwrap().write_all(b"x").unwrap();
+        }
+        let out = child.wait_with_output().unwrap();
+        assert_eq!(out.status.code(), Some(3));
+        let mut expected = b"a\0b c\0\xff\0".to_vec();
+        expected.extend_from_slice(if data {
+            b"stdin:data\n"
+        } else {
+            b"stdin:eof\n"
+        });
+        assert_eq!(out.stdout, expected);
+    }
+}
+
+#[test]
+fn fill_errors_share_the_not_run_format() {
+    let out = common::bin().args(["is", "--nope"]).output().unwrap();
+    let stderr = String::from_utf8(out.stderr).unwrap();
+    assert!(stderr.starts_with("jevify is: error:"));
+    assert!(stderr.contains("\n  hint:") && stderr.contains("\n  try:"));
+    for (args, bad_config, kind) in [
+        (vec!["fill", "--nope", "--", "x"], false, "usage"),
+        (vec!["fill", "--", "x"], true, "usage"),
+        (vec!["fill", "--", "x"], false, "input"),
+    ] {
+        let mut command = common::bin();
+        command
+            .args(["--json", "fill", "--dry-run"])
+            .args(&args[1..]);
+        if bad_config {
+            command.env("JEVIFY_BASE_URL", "https://refused.invalid");
+        }
+        let out = command.output().unwrap();
+        let value: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+        assert_eq!(value["error"]["kind"], kind);
+        assert_eq!(value["command"], "fill");
+        assert!(value["data"].is_null());
+        assert!(out.stderr.is_empty());
+        for quiet in [false, true] {
+            let mut command = common::bin();
+            command.args(&args[..1]);
+            if quiet {
+                command.arg("-q");
+            }
+            command.args(&args[1..]);
+            if bad_config {
+                command.env("JEVIFY_BASE_URL", "https://refused.invalid");
+            }
+            let out = command.output().unwrap();
+            let stderr = String::from_utf8(out.stderr).unwrap();
+            assert!(
+                stderr.starts_with(&format!("jevify fill: not run: {kind}:")),
+                "{stderr}"
+            );
+            assert_eq!(stderr.lines().count(), if quiet { 1 } else { 2 });
+            assert!(stderr.lines().all(|line| line.starts_with("jevify fill:")));
+        }
+    }
+}
+
 #[tokio::test(flavor = "multi_thread")]
 async fn health_json_reports_get_attempts_and_no_inference() {
     let server = common::mock(common::FakeJev {
@@ -120,6 +254,7 @@ fn bare_jevify_prints_the_quick_start_card_as_a_usage_error() {
     assert!(out.stdout.is_empty());
     let text = String::from_utf8(out.stderr).unwrap();
     for needle in [
+        "jevify fill",
         "jevify pick",
         "jevify why",
         "jevify is",

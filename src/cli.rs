@@ -49,11 +49,35 @@ impl GlobalOpts {
 
 #[derive(Subcommand, Debug)]
 pub enum Cmd {
+    /// Resolve marked arguments and become the command; --dry-run prints it
+    Fill {
+        #[arg(long)]
+        dry_run: bool,
+        #[arg(short = 'q')]
+        quiet: bool,
+        #[arg(long, value_name = "FILE")]
+        candidates: Option<std::path::PathBuf>,
+        #[arg(long, value_name = "FILE")]
+        context: Option<std::path::PathBuf>,
+        #[arg(long, conflicts_with = "key")]
+        field: Option<usize>,
+        #[arg(long)]
+        key: Option<String>,
+        #[arg(short = '0', conflicts_with = "para")]
+        nul: bool,
+        #[arg(long)]
+        para: bool,
+        #[arg(last = true, required = true)]
+        cmd: Vec<std::ffi::OsString>,
+    },
     /// Find one line in a list by describing it: stdin lines in, the matching line out
     #[command(
         after_help = "Examples:\n  git branch | jevify pick \"the payment timeout fix\"\n  git log --oneline | jevify pick -n 3 \"when we changed the pricing\"\n  git ls-files | jevify pick --files \"where man pages are parsed\"\n\nThe description and the record need no word in common. --files ranks stdin paths first, then reads excerpts of the finalists; hidden or secret-looking paths and symlink files receive no excerpt (stderr: excerpts withheld: N). Selected records keep their bytes and input order. Input is not saved.\nExit: 0 found, 3 no record fits. --json data: matches[{line, text, ordinal, p, lossy?}], any, source. Non-UTF-8 records have lossy: true."
     )]
     Pick {
+        /// List candidates of this kind instead of reading stdin
+        #[arg(long, conflicts_with_all = ["files", "index", "nul", "para"])]
+        from: Option<String>,
         /// Describe the line you want, e.g. "the branch with the payment timeout fix"
         intent: String,
         /// Print up to N matches, each ranked above "nothing fits"

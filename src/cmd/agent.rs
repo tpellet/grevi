@@ -26,6 +26,7 @@ pub fn capabilities() -> Outcome {
         "global_flags": ["--json (alias --robot)", "--format human|json|jsonl|toon", "-t/--threshold <0..1>", "--model <id>", "--no-cache", "--verbose"],
         "output": "human stdout is plain text made for pipes: pick and filter preserve input records; why prints numbered context; is prints nothing for one statement and VERDICT<TAB>STATEMENT lines for several. Pass --json for the envelope; non-UTF-8 records have text, lossy: true, ordinal",
         "commands": [
+            { "name": "fill", "usage": "jevify fill [--dry-run] [-q] -- COMMAND ARGS...", "stdin": true, "exit": [0, 2, 3, 4, 5, 6], "data": "argv, markers, reason", "when": "resolve a description to a real argument before running a command", "example": "jevify fill -- git switch '@{branch:the auth refactor}'" },
             { "name": "pick", "usage": "<stdin> | jevify pick '<intent>' [-n N] [--index | --files] [-0 | --para]", "stdin": true, "exit": [0, 3], "data": "matches[{line,text,ordinal,p,lossy?}], any, source", "when": "choose one record by description; --files reads paths from stdin, ranks names first, then excerpts of at most 24 finalists", "example": "git ls-files | jevify pick --files 'where man pages are parsed'", "note": "hidden or secret-looking paths and symlink files receive no excerpt; stderr reports excerpts withheld: N; selected records retain their bytes and input order; input is not saved" },
             { "name": "why", "usage": "<cmd> 2>&1 | jevify why [-C N] [-n N] [--no-save]", "stdin": true, "exit": [0, 3], "data": "causes[{line,text,p,context[]}], any, considered, total, hint, saved_input, complete", "when": "find the cause in a long build, test or CI log, especially when grep found only the symptom", "example": "gh run view --log-failed | jevify why --json", "note": "prints numbered lines with context; no split options; past 1,500 distinct lines keeps error neighbourhoods within 4,000 lines: compare considered with total" },
             { "name": "route", "usage": "jevify route <intent...>", "stdin": false, "exit": [0, 3], "data": "tool, summary, synopsis, fit, alternatives[]", "when": "find the installed tool for a task", "example": "jevify route 'keep my mac awake for an hour'", "note": "prints a tool, summary and synopsis; starts no command" },
@@ -328,7 +329,9 @@ mod tests {
                 .collect::<Vec<_>>(),
             crate::VERBS
         );
-        for verb in ["pick", "why", "route", "filter", "is", "add", "sort"] {
+        for verb in [
+            "fill", "pick", "why", "route", "filter", "is", "add", "sort",
+        ] {
             let c = d["commands"]
                 .as_array()
                 .unwrap()

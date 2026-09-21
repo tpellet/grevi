@@ -9,9 +9,11 @@ pub mod input;
 pub mod inventory;
 pub mod jev;
 pub mod manpage;
+pub mod marker;
 pub mod output;
 pub mod records;
 pub mod save;
+pub mod source;
 pub mod tournament;
 
 use clap::Parser;
@@ -22,7 +24,8 @@ use std::ffi::OsString;
 use std::io::Write;
 use std::time::Instant;
 
-const VERBS: [&str; 11] = [
+const VERBS: [&str; 12] = [
+    "fill",
     "pick",
     "why",
     "route",
@@ -41,6 +44,7 @@ pub const QUICK_START: &str = concat!(
     "jevify ",
     env!("CARGO_PKG_VERSION"),
     r#": answer questions about text you already have. Selects, never generates.
+  jevify fill -- CMD '@{kind:description}' resolve an argument and run CMD
   <list> | jevify pick "<description>"    find one line by meaning
   <cmd> 2>&1 | jevify why                 find the line that caused a failure
   jevify is "<statement>" < file          yes / no / unsure as exit code 0 / 1 / 3
@@ -86,7 +90,29 @@ pub fn main_exit() -> i32 {
         Err(e) => {
             // A usage error under --json must still be exactly one envelope, not clap's text.
             if e.use_stderr() {
-                if let Some(format) = machine_format(&args) {
+                if name == "fill" {
+                    let message = e
+                        .to_string()
+                        .lines()
+                        .next()
+                        .unwrap_or("usage error")
+                        .trim_start_matches("error: ")
+                        .to_owned();
+                    return report_fill_error(
+                        machine_format(&args).unwrap_or(Format::Human),
+                        &JevifyError::Kinded {
+                            kind: "usage",
+                            exit: Exit::Usage,
+                            message,
+                            hint: "put the command after --: jevify fill -- git switch '@{branch:the auth refactor}'",
+                            example: "jevify fill -- git switch '@{branch:the auth refactor}'",
+                        },
+                        Meta::default(),
+                        raw_quiet(&args),
+                    );
+                }
+                if VERBS.contains(&name) || machine_format(&args).is_some() {
+                    let format = machine_format(&args).unwrap_or(Format::Human);
                     let name = if VERBS.contains(&name) {
                         name
                     } else {
@@ -171,8 +197,13 @@ fn raw_command(args: &[OsString]) -> &str {
     "jevify"
 }
 
+fn raw_quiet(args: &[OsString]) -> bool {
+    args.iter().take_while(|a| *a != "--").any(|a| a == "-q")
+}
+
 fn command_name(cmd: &Cmd) -> &'static str {
     match cmd {
+        Cmd::Fill { .. } => "fill",
         Cmd::Pick { .. } => "pick",
         Cmd::Why { .. } => "why",
         Cmd::Route { .. } => "route",
@@ -191,21 +222,28 @@ async fn run_cli(cli: Cli) -> i32 {
     let start = Instant::now();
     let format = cli.g.format();
     let name = command_name(&cli.cmd);
+    let quiet = matches!(cli.cmd, Cmd::Fill { quiet: true, .. });
+    let report = |e: &JevifyError, meta| {
+        if name == "fill" {
+            report_fill_error(format, e, meta, quiet)
+        } else {
+            report_error(format, name, e, meta)
+        }
+    };
     let ctx = match config::Config::load(&cli.g) {
         Ok(c) => c,
-        Err(e) => return report_error(format, name, &e, Meta::default()),
+        Err(e) => return report(&e, Meta::default()),
     };
     let result = dispatch(&cli, &ctx).await;
     let mut meta = ctx.meta();
     meta.elapsed_ms = start.elapsed().as_millis();
     match result {
         Ok(out) => {
-            debug_assert!(out.exec.is_none());
             if format == Format::Human {
                 if let Err(e) = std::io::stdout().lock().write_all(&out.human) {
                     return stdout_error(e);
                 }
-                if cli.g.verbose {
+                if cli.g.verbose && name != "fill" {
                     eprintln!("jevify: {}", out.data);
                     eprintln!(
                         "jevify: {} ms, {} requests, {} cached, {}",
@@ -224,7 +262,7 @@ async fn run_cli(cli: Cli) -> i32 {
                     version: env!("CARGO_PKG_VERSION"),
                     exit_code: out.exit.code(),
                     data: out.data,
-                    meta,
+                    meta: meta.clone(),
                     error: None,
                 };
                 if let Err(e) = writeln!(
@@ -235,9 +273,54 @@ async fn run_cli(cli: Cli) -> i32 {
                     return stdout_error(e);
                 }
             }
+            if let Some(exec) = out.exec {
+                if let Err(e) = std::io::stdout().flush() {
+                    return stdout_error(e);
+                }
+                return report(&exec_command(&exec), meta);
+            }
             out.exit.code()
         }
-        Err(e) => report_error(format, name, &e, meta),
+        Err(e) => report(&e, meta),
+    }
+}
+
+fn build_command(exec: &cmd::Exec) -> std::process::Command {
+    let mut command = std::process::Command::new(&exec.argv[0]);
+    command.args(&exec.argv[1..]);
+    if exec.stdin_null {
+        command.stdin(std::process::Stdio::null());
+    }
+    command
+}
+
+fn exec_command(exec: &cmd::Exec) -> JevifyError {
+    use std::os::unix::process::CommandExt;
+    let error = build_command(exec).exec();
+    JevifyError::cannot_run(format!("{}: {error}", exec.argv[0].to_string_lossy()))
+}
+
+fn fill_error_text(e: &JevifyError, quiet: bool) -> String {
+    let mut text = format!(
+        "jevify fill: not run: {}: {}\n",
+        e.kind(),
+        output::status_escape(&e.to_string())
+    );
+    if !quiet {
+        text.push_str(&format!(
+            "jevify fill: {}\n",
+            output::status_escape(e.hint())
+        ));
+    }
+    text
+}
+
+fn report_fill_error(format: Format, e: &JevifyError, meta: Meta, quiet: bool) -> i32 {
+    if format == Format::Human {
+        eprint!("{}", fill_error_text(e, quiet));
+        e.exit().code()
+    } else {
+        report_error(format, "fill", e, meta)
     }
 }
 
@@ -291,14 +374,53 @@ fn stdout_error(error: std::io::Error) -> i32 {
 async fn dispatch(cli: &Cli, ctx: &config::Config) -> Result<cmd::Outcome, JevifyError> {
     let machine = cli.g.format() != Format::Human;
     match &cli.cmd {
+        Cmd::Fill {
+            dry_run,
+            quiet,
+            candidates,
+            context,
+            field,
+            key,
+            nul,
+            para,
+            cmd,
+        } => {
+            cmd::fill::run(
+                ctx,
+                cmd::fill::FillFlags {
+                    dry_run: *dry_run,
+                    quiet: *quiet,
+                    candidates: candidates.clone(),
+                    context: context.clone(),
+                    field: *field,
+                    key: key.clone(),
+                    split: split(*nul, *para),
+                },
+                cmd,
+                machine,
+            )
+            .await
+        }
         Cmd::Pick {
+            from,
             intent,
             top,
             index,
             files,
             nul,
             para,
-        } => cmd::pick::run(ctx, intent, *top, *index, split(*nul, *para), *files).await,
+        } => {
+            cmd::pick::run(
+                ctx,
+                intent,
+                *top,
+                *index,
+                split(*nul, *para),
+                *files,
+                from.as_deref(),
+            )
+            .await
+        }
         Cmd::Why {
             context,
             top,
@@ -366,6 +488,37 @@ fn split(nul: bool, para: bool) -> records::Split {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn exec_preserves_argv_and_maps_failures() {
+        use std::os::unix::ffi::OsStringExt;
+        let exec = cmd::Exec {
+            argv: vec![
+                "/nonexistent-jevify-command".into(),
+                "b c".into(),
+                OsString::from_vec(vec![0xff]),
+            ],
+            stdin_null: true,
+        };
+        let command = build_command(&exec);
+        assert_eq!(command.get_program(), &exec.argv[0]);
+        assert_eq!(
+            command.get_args().collect::<Vec<_>>(),
+            exec.argv[1..].iter().collect::<Vec<_>>()
+        );
+        let error = exec_command(&exec);
+        assert_eq!((error.exit().code(), error.kind()), (6, "cannot_run"));
+        assert!(error.to_string().contains("/nonexistent-jevify-command"));
+        let exec = cmd::Exec {
+            argv: vec![concat!(env!("CARGO_MANIFEST_DIR"), "/Cargo.toml").into()],
+            stdin_null: false,
+        };
+        let error = exec_command(&exec);
+        assert_eq!((error.exit().code(), error.kind()), (6, "cannot_run"));
+        assert!(error.to_string().contains("Cargo.toml"));
+        assert!(fill_error_text(&error, false).starts_with("jevify fill: not run: cannot_run:"));
+        assert_eq!(fill_error_text(&error, false).lines().count(), 2);
+        assert_eq!(fill_error_text(&error, true).lines().count(), 1);
+    }
     #[test]
     fn output_errors_only_succeed_for_broken_pipe() {
         assert_eq!(stdout_error(std::io::ErrorKind::BrokenPipe.into()), 0);

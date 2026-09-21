@@ -2,6 +2,7 @@ use crate::exit::{Exit, JevifyError};
 
 pub mod add;
 pub mod agent;
+pub mod fill;
 pub mod filter;
 pub mod is;
 pub mod pick;
