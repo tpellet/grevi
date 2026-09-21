@@ -29,7 +29,7 @@ POEM = "A poem: roses are red, violets are blue."
 FILENAMES = "notes.txt\ninvoice-2026-03.pdf\ncat.jpg\n"
 REFUND = "Please refund my order. I do not want a replacement.\n"
 LOG = "Compiling demo\nerror[E0425]: cannot find value `missing_name` in this scope\nerror: could not compile demo\n"
-ENDPOINTS = ("pick", "why", "run", "is", "add", "sort", "capabilities", "robot-docs", "health", "init")
+ENDPOINTS = ("pick", "why", "route", "filter", "is", "add", "sort", "capabilities", "robot-docs", "health", "init")
 
 
 def sha(data):
@@ -92,6 +92,14 @@ class Matrix:
             {"name": "wc", "summary": "count lines, words, and bytes"},
             {"name": "false", "summary": "return an unsuccessful exit status without doing anything"},
         ])
+        self.route_sentinel = self.root / "route-executed"
+        self.route_bin = self.root / "bin"
+        self.route_bin.mkdir()
+        # A selected tool must never run, even when it would return a failure.
+        for name in ("pwd", "false"):
+            tool = self.route_bin / name
+            tool.write_text('#!/bin/sh\nprintf executed > "$ROUTE_SENTINEL"\nexit 1\n')
+            tool.chmod(0o700)
         self.public_log = (repository / "evals/why/cargo-01.log").read_text()
         self.public_gold = json.loads((repository / "evals/why/cargo-01.expect").read_text())
         save(self.root / "inputs.json", {
@@ -105,6 +113,8 @@ class Matrix:
         env.update(JEVIFY_BACKEND=backend, JEVIFY_BASE_URL={
             "typesafe": "https://api.typesafe.ai", "classifier": "https://classifier.dev"
         }[backend], JEVIFY_INVENTORY_FILE=str(self.inventory))
+        env["PATH"] = str(self.route_bin) + os.pathsep + env.get("PATH", "")
+        env["ROUTE_SENTINEL"] = str(self.route_sentinel)
         if cache is None:
             env["JEVIFY_NO_CACHE"] = "1"
         else:
@@ -213,7 +223,10 @@ class Matrix:
         data = lambda v: v.get("data") or {}
         match = lambda v: {"selected_original_invoice": (data(v).get("matches") or [{}])[0].get("text") == "invoice-2026-03.pdf"}
         why = lambda v: {"root_cause_line": (data(v).get("causes") or [{}])[0].get("line") == 2}
-        picked_pwd = lambda v: {"tool_pwd": data(v).get("tool") == "pwd", "not_executed": data(v).get("executed") is False}
+        picked_pwd = lambda v: {"tool_pwd": data(v).get("tool") == "pwd",
+                                "sentinel_absent": not self.route_sentinel.exists(),
+                                "route_fields": set(data(v)) == {"tool", "summary", "synopsis", "fit", "alternatives"}}
+        filtered = lambda v: {"selected_original_invoice": [r.get("text") for r in data(v).get("records", [])] == ["invoice-2026-03.pdf"]}
         for command, args in [("capabilities", ["capabilities"]), ("robot-docs", ["robot-docs"]), ("init", ["init", "zsh"])]:
             self.run(backend, command, args, network=False)
         for topic in ["commands", "exit-codes", "examples", "privacy"]:
@@ -228,6 +241,7 @@ class Matrix:
         self.run(backend, "pick-none", ["pick", "a railway timetable"], FILENAMES, expected=3)
         self.run(backend, "pick-empty", ["pick", "a line"], expected=6, network=False)
         self.run(backend, "pick-limit", ["pick", "a line"], "".join(f"item-{i}\n" for i in range(20001)), expected=6, network=False)
+        self.run(backend, "filter-match", ["filter", "an invoice"], FILENAMES, check=filtered)
         self.run(backend, "why-cause", ["why"], LOG, check=why)
         self.run(backend, "why-none", ["why"], "Build completed successfully. All tests passed.\n", expected=3)
         self.run(backend, "why-empty", ["why"], expected=6, network=False)
@@ -243,15 +257,16 @@ class Matrix:
         # Gold is whole-input uncertainty: the middle is deliberately outside the retained budget.
         self.run(backend, "is-truncated", ["is", "the document requests a refund"],
                  "Routine status. " * 7000 + "Please refund my order." + "Routine status. " * 7000, expected=3)
-        self.run(backend, "run-dry", ["run", "--dry-run", "--no-args", "print the current working directory"], check=picked_pwd)
-        self.run(backend, "run-none", ["run", "--dry-run", "--no-args", "play a violin melody through speakers"], expected=3)
-        self.run(backend, "run-machine-safe", ["run", "--no-args", "print the current working directory"], check=picked_pwd)
-        self.run(backend, "run-exec", ["run", "--exec", "--yes", "--no-args", "print the current working directory"],
-                 check=lambda v: {"executed": data(v).get("executed") is True, "child_exit": data(v).get("child_exit") == 0})
-        self.run(backend, "run-child-failure", ["run", "--exec", "--yes", "--no-args", "return an unsuccessful exit status without doing anything"],
-                 expected=7, check=lambda v: {"child_failed": data(v).get("child_exit") == 1})
-        self.run(backend, "run-args", ["run", "--dry-run", "print the physical current working directory"],
-                 check=lambda v: {"physical_flag": data(v).get("argv") == ["pwd", "-P"], "not_executed": data(v).get("executed") is False})
+        self.run(backend, "route-found", ["route", "print the current working directory"], check=picked_pwd)
+        self.run(backend, "route-none", ["route", "play a violin melody through speakers"], expected=3,
+                 check=lambda v: {"no_tool": data(v).get("tool") is None, "sentinel_absent": not self.route_sentinel.exists()})
+        self.run(backend, "route-no-child", ["route", "return an unsuccessful exit status without doing anything"],
+                 check=lambda v: {"tool_false": data(v).get("tool") == "false", "sentinel_absent": not self.route_sentinel.exists()})
+        self.run(backend, "route-detailed-request", ["route", "print the physical current working directory"], check=picked_pwd)
+        self.run(backend, "route-reject-exec", ["route", "--exec", "x"], expected=2, network=False)  # Removed flag intentionally rejected.
+        self.run(backend, "route-reject-yes", ["route", "--yes", "x"], expected=2, network=False)  # Removed flag intentionally rejected.
+        self.run(backend, "route-reject-dry-run", ["route", "--dry-run", "x"], expected=2, network=False)  # Removed flag intentionally rejected.
+        self.run(backend, "route-reject-no-args", ["route", "--no-args", "x"], expected=2, network=False)  # Removed flag intentionally rejected.
         git = self.git_fixture(backend)
         show = lambda name: subprocess.check_output(["git", "show", ":" + name], cwd=git, encoding="utf-8", timeout=15, shell=False)
         content = lambda: {"worktree_unchanged": (git / "style.txt").read_text() == "color=green\n" and (git / "logging.txt").read_text() == "level=debug\n"}
@@ -286,7 +301,8 @@ class Matrix:
             ("pick", ["pick", "the invoice from March"], FILENAMES, None, match),
             ("why", ["why"], LOG, None, why),
             ("is", ["is", "the customer requests a refund"], REFUND, None, None),
-            ("run", ["run", "--dry-run", "--no-args", "print the current working directory"], "", None, picked_pwd),
+            ("route", ["route", "print the current working directory"], "", None, picked_pwd),
+            ("filter", ["filter", "an invoice"], FILENAMES, None, filtered),
             ("add", ["add", "--dry-run", "extend authentication token expiry"], "", token, None),
             ("sort", ["sort", "."], "", boundary, None),
         ]

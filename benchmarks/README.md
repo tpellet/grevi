@@ -16,6 +16,11 @@ TYPESAFE_API_KEY_FILE=/path/to/key benchmarks/bench.sh
 p50/p95 table computed from the per-run times). Live API calls: each cold run is one or more real
 Jev requests, so the numbers include the network.
 
+The rows are `pick cold`, `pick warm`, `is cold`, `why cold`, `route cold archive`,
+`route cold dvd` and `rg baseline`. Both `route` rows select a tool and print its name;
+neither measures argument selection or execution. `route` prewarms its connection while
+reading the tool inventory.
+
 ## Conditions
 
 | | |
@@ -27,11 +32,11 @@ Jev requests, so the numbers include the network.
 | Toolchain | jevify 0.1.0, `cargo build --release`, rustc 1.93.1 |
 | hyperfine | 1.20.0, `--warmup 1 --runs 15 --ignore-failure` |
 | ripgrep | 15.2.0 |
-| Inputs | `pick`/`is`: `ls /usr/bin` (924 lines on this macOS); `why`: `fixtures/cargo-fail.log` (a real failing `cargo build`, 12 lines); `run`: the two requests in `bench.sh` |
+| Inputs | `pick`/`is`: `ls /usr/bin` (924 lines on this macOS); `why`: `fixtures/cargo-fail.log` (a real failing `cargo build`, 12 lines); `run`: extract a tar archive; burn a dvd from this iso |
 
 "cold" sets `JEVIFY_NO_CACHE=1` (every answer is a live request); "warm" replays the answer cache.
 `run` numbers include the installed-tool inventory read from its cache (the warm-up run built it);
-"route-only" is `--no-args`, "full" adds the argument round and the man-page renders.
+"route-only" omits argument selection; "full" adds the argument round and the man-page renders.
 
 ## Numbers
 
@@ -48,7 +53,7 @@ mean ± σ from hyperfine's own table. All 15 runs of every row exited 0.
 | `run cold full` | 1,940 ms | 2,251 ms | 1,984.5 ± 129.4 ms |
 | `rg baseline` (`rg -c compress`) | 3 ms | 4 ms | 3.3 ± 0.3 ms |
 
-This is the run of the current script on the current binary (connection prewarm in `run` only,
+These measurements use jevify 0.1.0 on 2026-09-19 (connection prewarm in `run` only,
 see below), later on the same day as the decision run in the next section; that earlier 8-row
 run had `pick cold` 721/799 ms, `is cold` 434/512 ms, `why cold` 602/676 ms, `run cold full`
 1,946/2,110 ms (p50/p95), so the verbs without prewarm moved within run-to-run noise.
@@ -72,7 +77,7 @@ Reading the table:
 Connection prewarm: `Client::prewarm` spawns a `GET /v1/models` before the verb's local work so
 the first real request finds a pooled TLS connection. Decided twice, on the same day, on
 evidence: removed everywhere (Task 12, measured on `pick`), then re-added for `run` alone
-(bead hunch-n2h, measured on `run cold full`). Only `run` calls it today; there is no
+(bead hunch-n2h, measured on `run cold full`). In that measured binary only `run` calls it; there is no
 `JEVIFY_NO_PREWARM` switch.
 
 ### Round 1 (Task 12): removed, measured on `pick`

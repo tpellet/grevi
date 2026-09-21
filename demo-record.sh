@@ -29,38 +29,30 @@ pause 1
 
 # Scene 1: why — the line that broke the build, buried under 300 warnings.
 cd buildfail
-prompt 'jevify -v why -- cargo build'
-jevify -v why -- cargo build
+prompt 'cargo build 2>&1 | jevify --verbose why'
+cargo build 2>&1 | jevify --verbose why
 cd ..
 pause 2
 
 # Scene 2: pick — the fixture file name that matches the request.
-prompt 'ls fixtures/downloads | jevify -v pick "last month'"'"'s electricity bill"'
-ls fixtures/downloads | jevify -v pick "last month's electricity bill"
+prompt 'ls fixtures/downloads | jevify --verbose pick "last month'"'"'s electricity bill"'
+ls fixtures/downloads | jevify --verbose pick "last month's electricity bill"
 pause 2
 
 # Scene 3: is — a predicate on text, answered by exit code.
-prompt 'jevify -v is "asks for a refund" < mail.txt; echo $?'
-jevify -v is "asks for a refund" < mail.txt
+prompt 'jevify --verbose is "asks for a refund" < mail.txt; echo $?'
+jevify --verbose is "asks for a refund" < mail.txt
 echo $?
 pause 2
 
-# Scene 4: run — a proposal, declined at the prompt. jevify reads the confirm
-# answer from the controlling terminal, so `expect` drives the real pty
-# instead of piping stdin (which jevify would not see for the prompt).
-prompt ', burn a dvd from this iso'
-expect -c '
-    set timeout 15
-    spawn jevify -v run "burn a dvd from this iso"
-    expect "Run it?"
-    send "n\r"
-    expect eof
-'
+# Scene 4: filter — keep the billing records, in input order.
+prompt 'ls fixtures/downloads | jevify --verbose filter "a bill or invoice"'
+ls fixtures/downloads | jevify --verbose filter "a bill or invoice"
 pause 1
 
-# Scene 5: run — an honest abstention.
-prompt ', make a qr code'
-jevify -v run "make a qr code"
+# Scene 5: route — an honest abstention.
+prompt 'jevify --verbose route "make a qr code"'
+jevify --verbose route "make a qr code"
 pause 2
 
 prompt 'echo done'

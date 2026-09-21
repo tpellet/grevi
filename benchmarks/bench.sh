@@ -13,8 +13,8 @@ hyperfine --ignore-failure --warmup 1 --runs 15 --export-markdown benchmarks/res
   -n "pick warm"            "$H pick 'compress files' < $LS" \
   -n "is cold"              "JEVIFY_NO_CACHE=1 $H is 'mentions compression' < $LS || true" \
   -n "why cold"             "JEVIFY_NO_CACHE=1 $H why < $LOG" \
-  -n "run cold route-only"  "JEVIFY_NO_CACHE=1 $H run --dry-run --no-args extract a tar archive" \
-  -n "run cold full"        "JEVIFY_NO_CACHE=1 $H run --dry-run burn a dvd from this iso" \
+  -n "route cold archive"   "JEVIFY_NO_CACHE=1 $H route extract a tar archive" \
+  -n "route cold dvd"       "JEVIFY_NO_CACHE=1 $H route burn a dvd from this iso" \
   -n "rg baseline"          "rg -c compress $LS || true"
 # hyperfine's markdown has mean/min/max only; the README quotes p50/p95, so append them from the
 # per-run times (linear interpolation between order statistics). "failed" counts non-zero exits.
