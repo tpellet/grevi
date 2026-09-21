@@ -144,11 +144,13 @@ pub struct Client {
 
 impl Client {
     pub fn new(cfg: &Config) -> Result<Self, JevifyError> {
+        let base = crate::config::base_url(cfg.backend, Some(&cfg.base_url))?;
         let key = match cfg.backend {
             Backend::Typesafe => Some(cfg.api_key()?),
             Backend::Classifier => None,
         };
         let http = reqwest::Client::builder()
+            .redirect(reqwest::redirect::Policy::none())
             .connect_timeout(Duration::from_secs(5))
             .timeout(Duration::from_secs(60))
             .pool_idle_timeout(Duration::from_secs(90))
@@ -158,11 +160,7 @@ impl Client {
         Ok(Self {
             http,
             backend: cfg.backend,
-            base: reqwest::Url::parse(&cfg.base_url)
-                .map_err(|_| JevifyError::Usage("invalid API endpoint URL".into()))?
-                .as_str()
-                .trim_end_matches('/')
-                .to_string(),
+            base,
             key,
             model: cfg.model.clone(),
             sem: Arc::new(Semaphore::new(cfg.concurrency)),

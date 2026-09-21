@@ -9,7 +9,7 @@ jevify has no config file. Every setting is a flag or an environment variable. `
 | `TYPESAFE_API_KEY` | | The API key. Never printed, never logged. Setting it selects the `typesafe` backend. |
 | `TYPESAFE_API_KEY_FILE` | | Path to a file holding the key; read only when a request needs a key. Use it to keep the key out of your environment and shell history: `TYPESAFE_API_KEY_FILE=/path/to/key`. |
 | `JEVIFY_BACKEND` | `typesafe` with a key, `classifier` without one | `typesafe` or `classifier`: which API answers. See [Backends](#backends). |
-| `JEVIFY_BASE_URL` | the active backend's own URL | The API endpoint. jevify sends requests nowhere else. |
+| `JEVIFY_BASE_URL` | the active backend's own URL | HTTPS at `api.typesafe.ai` for TypeSafe or `classifier.dev` for classifier, on port 443. Local test endpoints are also accepted; see below. |
 | `JEVIFY_MODEL` | `jev-1.13.0` on TypeSafe | TypeSafe model or alias; explicit overrides on classifier are usage errors because the service selects its model. `jev-latest` moves with TypeSafe releases. |
 | `JEVIFY_THRESHOLD` | `0.5` | Decision threshold on backend yes/no scores; calibration is task- and backend-specific. |
 | `JEVIFY_CONCURRENCY` | `8` on `typesafe`, `4` on `classifier` | Parallel requests within one round (the windows of a tournament). |
@@ -20,6 +20,13 @@ jevify has no config file. Every setting is a flag or an environment variable. `
 | `JEVIFY_CNF` | | Set to `1` to enable the command-not-found hook printed by `jevify init`. |
 
 A flag beats its variable: `-t 0.7` wins over `JEVIFY_THRESHOLD=0.5`.
+
+`JEVIFY_BASE_URL` accepts only the active backend's host, compared case-insensitively,
+with HTTPS and no port or explicit port 443. Trailing dots, other hosts, other ports,
+userinfo (`user:password@host`) and malformed URLs are configuration errors before any
+request. An empty or blank value uses the backend's default URL. For local testing,
+`localhost` and `127.0.0.1` accept any scheme and port, without userinfo.
+Inference, prewarm and health requests never follow redirects.
 
 ## Backends
 

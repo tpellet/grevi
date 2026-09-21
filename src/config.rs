@@ -86,6 +86,42 @@ fn parse<T: std::str::FromStr>(name: &str, default: T) -> Result<T, JevifyError>
     }
 }
 
+pub(crate) fn base_url(backend: Backend, value: Option<&str>) -> Result<String, JevifyError> {
+    let value = value
+        .map(str::trim)
+        .filter(|v| !v.is_empty())
+        .unwrap_or(backend.default_base_url());
+    // Do not echo the value: a rejected URL can contain credentials.
+    let invalid = || {
+        JevifyError::Usage("invalid API endpoint URL: JEVIFY_BASE_URL requires the backend's HTTPS host on port 443, or localhost/127.0.0.1; userinfo is forbidden".into())
+    };
+    let url = reqwest::Url::parse(value).map_err(|_| invalid())?;
+    // URL parsing discards empty userinfo, so also inspect the original authority.
+    let has_userinfo = value.split_once(':').is_some_and(|(_, rest)| {
+        rest.trim_start_matches(['/', '\\'])
+            .split(['/', '?', '#', '\\'])
+            .next()
+            .is_some_and(|authority| authority.contains('@'))
+    });
+    if has_userinfo || !url.username().is_empty() || url.password().is_some() {
+        return Err(invalid());
+    }
+    let host = url.host_str().ok_or_else(invalid)?;
+    let local = host.eq_ignore_ascii_case("localhost") || host == "127.0.0.1";
+    let expected = match backend {
+        Backend::Typesafe => "api.typesafe.ai",
+        Backend::Classifier => "classifier.dev",
+    };
+    if !local
+        && (url.scheme() != "https"
+            || !host.eq_ignore_ascii_case(expected)
+            || url.port().is_some_and(|port| port != 443))
+    {
+        return Err(invalid());
+    }
+    Ok(url.as_str().trim_end_matches('/').to_string())
+}
+
 impl Config {
     pub fn load(g: &GlobalOpts) -> Result<Self, JevifyError> {
         let threshold = g.threshold.unwrap_or(0.5);
@@ -131,10 +167,7 @@ impl Config {
             backend,
             key,
             key_file,
-            base_url: env("JEVIFY_BASE_URL")
-                .unwrap_or_else(|| backend.default_base_url().into())
-                .trim_end_matches('/')
-                .to_string(),
+            base_url: base_url(backend, env("JEVIFY_BASE_URL").as_deref())?,
             // TypeSafe requests pin this model. classifier.dev chooses its own model and the
             // resolved response identity is reported in meta.model.
             model: g.model.clone().unwrap_or_else(|| "jev-1.13.0".into()),
@@ -208,6 +241,65 @@ impl Config {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn base_urls_are_bound_to_the_backend() {
+        for (backend, input, expected) in [
+            (
+                Backend::Typesafe,
+                "https://API.TypeSafe.AI",
+                Some("https://api.typesafe.ai"),
+            ),
+            (
+                Backend::Typesafe,
+                "https://api.typesafe.ai:443",
+                Some("https://api.typesafe.ai"),
+            ),
+            (
+                Backend::Classifier,
+                "https://classifier.dev:443",
+                Some("https://classifier.dev"),
+            ),
+            (Backend::Typesafe, "https://api.typesafe.ai.", None),
+            (Backend::Classifier, "https://classifier.dev.", None),
+            (Backend::Typesafe, "https://api.typesafe.ai:8443", None),
+            (Backend::Classifier, "https://classifier.dev:8443", None),
+            (
+                Backend::Typesafe,
+                "https://api.typesafe.ai.evil.example",
+                None,
+            ),
+            (Backend::Classifier, "https://api.typesafe.ai", None),
+            (Backend::Typesafe, "https://classifier.dev", None),
+            (Backend::Typesafe, "http://api.typesafe.ai", None),
+            (Backend::Classifier, "http://classifier.dev", None),
+            (Backend::Classifier, "https://user:pw@classifier.dev", None),
+            (Backend::Typesafe, "https://@api.typesafe.ai", None),
+            (Backend::Typesafe, "https:/@api.typesafe.ai", None),
+            (Backend::Typesafe, "https:///@api.typesafe.ai", None),
+            (Backend::Typesafe, "not a URL", None),
+        ] {
+            let result = base_url(backend, Some(input));
+            match expected {
+                Some(expected) => assert_eq!(result.unwrap(), expected, "{input}"),
+                None => assert_eq!(result.unwrap_err().exit().code(), 2, "{input}"),
+            }
+        }
+        for backend in [Backend::Typesafe, Backend::Classifier] {
+            for value in [None, Some(""), Some(" \t ")] {
+                assert_eq!(
+                    base_url(backend, value).unwrap(),
+                    backend.default_base_url()
+                );
+            }
+            for input in [
+                "http://127.0.0.1:1234",
+                "http://localhost:1234",
+                "ftp://localhost:1234",
+            ] {
+                assert_eq!(base_url(backend, Some(input)).unwrap(), input);
+            }
+        }
+    }
     // Built literally: unit tests inside src/ never touch the process environment (AGENTS.md).
     fn cfg(key: Option<&str>, key_file: Option<&str>) -> Config {
         Config {

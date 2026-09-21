@@ -1,11 +1,18 @@
 # What leaves your machine
 
-jevify sends requests to one API, the active backend's (`JEVIFY_BASE_URL` overrides it):
+jevify sends requests to the active backend's API:
 
 | Backend | When | Where the text goes | Authentication |
 |---|---|---|---|
 | `typesafe` | a key is set, or `JEVIFY_BACKEND=typesafe` | the TypeSafe API, `https://api.typesafe.ai` | your key |
 | `classifier` | no key is set | classifier.dev, `https://classifier.dev`, which runs the same Jev model and serves it free | none; no key, no account, no cookie |
+
+`JEVIFY_BASE_URL` is restricted to HTTPS at the active backend's host, with no port or
+explicit port 443. Host comparison ignores case; trailing dots, other hosts and ports,
+userinfo and malformed URLs are refused before any request. Blank values use the default.
+For local testing, `localhost` and `127.0.0.1` accept any scheme and port, without userinfo;
+these endpoints receive the same evidence and, on TypeSafe, the bearer key.
+Inference, prewarm and health requests never follow redirects.
 
 Which one answered is in `meta.backend` of the JSON envelope and in `jevify health`. The table
 below is the same for both.

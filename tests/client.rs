@@ -10,6 +10,95 @@ fn one_noul() -> Questions {
     q
 }
 
+#[test]
+fn configured_endpoints_respect_key_selected_backend() {
+    for (key, endpoint, code) in [
+        (true, "https://API.TypeSafe.AI", 0),
+        (true, "https://classifier.dev", 2),
+        (false, "https://api.typesafe.ai", 2),
+        (false, "https://classifier.dev:443", 0),
+        (true, "http://api.typesafe.ai", 2),
+        (false, "https://unknown.example", 2),
+        (true, "https://user:private-password@api.typesafe.ai", 2),
+        (true, "", 0),
+        (false, "   ", 0),
+        (false, "not a URL", 2),
+    ] {
+        let mut cmd = common::bin();
+        if key {
+            cmd.env("TYPESAFE_API_KEY", "test-key");
+        }
+        let out = cmd
+            .env("JEVIFY_BASE_URL", endpoint)
+            .args(["capabilities", "--json"])
+            .output()
+            .unwrap();
+        assert_eq!(out.status.code(), Some(code), "{endpoint}");
+        let value: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+        assert_eq!(value["exit_code"], code);
+        if code == 2 {
+            assert_eq!(value["error"]["kind"], "usage");
+        }
+        assert!(!String::from_utf8_lossy(&out.stdout).contains("private-password"));
+        assert!(!String::from_utf8_lossy(&out.stderr).contains("private-password"));
+    }
+}
+
+#[tokio::test]
+async fn invalid_endpoints_fail_before_sending_anything() {
+    let server = MockServer::start().await;
+    let mut cfg = common::config(&server);
+    for endpoint in [
+        "http://api.typesafe.ai".to_string(),
+        "https://unknown.example".to_string(),
+        "https://classifier.dev".to_string(),
+        "https://user:pw@api.typesafe.ai".to_string(),
+        server.uri().replace("http://", "http://user:pw@"),
+    ] {
+        cfg.base_url = endpoint;
+        let err = Client::new(&cfg).err().expect("endpoint must be refused");
+        assert_eq!(err.exit().code(), 2);
+    }
+    assert!(server.received_requests().await.unwrap().is_empty());
+}
+
+#[tokio::test]
+async fn redirects_never_receive_key_or_evidence() {
+    let target = MockServer::start().await;
+    let server = MockServer::start().await;
+    Mock::given(method("POST"))
+        .respond_with(ResponseTemplate::new(302).insert_header("location", target.uri()))
+        .expect(1)
+        .mount(&server)
+        .await;
+    let cfg = common::config(&server);
+    assert!(
+        Client::new(&cfg)
+            .unwrap()
+            .ask(&serde_json::json!("evidence"), &one_noul())
+            .await
+            .is_err()
+    );
+    assert!(target.received_requests().await.unwrap().is_empty());
+}
+
+#[tokio::test]
+async fn localhost_endpoint_is_accepted() {
+    let server = common::mock(common::FakeJev {
+        choose: |_, _, _| "NONE".into(),
+        noul: |_, _| 0.8,
+    })
+    .await;
+    let mut cfg = common::config(&server);
+    cfg.base_url = server.uri().replace("127.0.0.1", "localhost");
+    Client::new(&cfg)
+        .unwrap()
+        .ask(&serde_json::json!("x"), &one_noul())
+        .await
+        .unwrap();
+    assert_eq!(server.received_requests().await.unwrap().len(), 1);
+}
+
 #[tokio::test]
 async fn malformed_decisions_are_protocol_errors_and_never_cached() {
     for answer in [

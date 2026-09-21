@@ -35,7 +35,7 @@ pub fn capabilities() -> Outcome {
             { "name": "TYPESAFE_API_KEY", "meaning": "API key (never printed); its presence selects the typesafe backend" },
             { "name": "TYPESAFE_API_KEY_FILE", "meaning": "path to a file holding the key (read only when a key is needed)" },
             { "name": "JEVIFY_BACKEND", "default": "typesafe with a key, classifier without one", "meaning": "typesafe|classifier: which API answers. Both run Jev; classifier.dev is free and needs no key" },
-            { "name": "JEVIFY_BASE_URL", "default": "the active backend's own URL", "meaning": "overrides the base URL of whichever backend is active" },
+            { "name": "JEVIFY_BASE_URL", "default": "the active backend's own URL", "meaning": "HTTPS on port 443 at api.typesafe.ai for typesafe or classifier.dev for classifier; localhost/127.0.0.1 allow any scheme and port; no userinfo or redirects" },
             { "name": "JEVIFY_MODEL", "default": "jev-1.13.0", "meaning": "Default applies to TypeSafe model selection; jev-latest moves with each release. Explicit overrides are rejected on classifier.dev, which controls its model" },
             { "name": "JEVIFY_THRESHOLD", "default": 0.5 },
             { "name": "JEVIFY_CONCURRENCY", "default": 8 },
@@ -118,14 +118,18 @@ pub fn robot_docs(topic: Option<&str>) -> Result<Outcome, JevifyError> {
 }
 
 pub async fn health(ctx: &Config) -> Result<Outcome, JevifyError> {
+    let base = crate::config::base_url(ctx.backend, Some(&ctx.base_url))?;
     // Both backends are probed the same way, at the cheapest endpoint each offers; only
     // TypeSafe needs a key, and only there can the answer be "the key is wrong".
     let (path, key) = match ctx.backend {
         Backend::Typesafe => ("/v1/models", Some(ctx.api_key()?)),
         Backend::Classifier => ("/v1/health", None),
     };
-    let mut req = reqwest::Client::new()
-        .get(format!("{}{path}", ctx.base_url))
+    let mut req = reqwest::Client::builder()
+        .redirect(reqwest::redirect::Policy::none())
+        .build()
+        .map_err(|e| JevifyError::Unavailable(e.to_string()))?
+        .get(format!("{base}{path}"))
         .timeout(std::time::Duration::from_secs(5));
     if let Some(k) = &key {
         req = req.bearer_auth(k);

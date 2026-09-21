@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+Fixed:
+
+- Bind `JEVIFY_BASE_URL` to the active backend's HTTPS host on port 443, with local test endpoints excepted. Reject userinfo and disable redirects for inference, prewarm and health requests so credentials and evidence cannot follow an override to another service.
+
 ## 0.4.0 — 2026-09-20
 
 Added:

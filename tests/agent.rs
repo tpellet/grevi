@@ -1,5 +1,35 @@
 mod common;
 
+#[tokio::test]
+async fn health_never_follows_redirects() {
+    use wiremock::matchers::method;
+    use wiremock::{Mock, MockServer, ResponseTemplate};
+
+    let target = MockServer::start().await;
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .respond_with(ResponseTemplate::new(302).insert_header("location", target.uri()))
+        .expect(1)
+        .mount(&server)
+        .await;
+    let endpoint = server.uri();
+    let out = tokio::task::spawn_blocking(move || {
+        common::bin()
+            .env("TYPESAFE_API_KEY", "test-key")
+            .env("JEVIFY_BASE_URL", endpoint)
+            .args(["health", "--json"])
+            .output()
+            .unwrap()
+    })
+    .await
+    .unwrap();
+    assert_eq!(out.status.code(), Some(4));
+    let value: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+    assert_eq!(value["ok"], false);
+    assert_eq!(value["exit_code"], 4);
+    assert!(target.received_requests().await.unwrap().is_empty());
+}
+
 #[test]
 fn capabilities_lists_verbs_exit_codes_env() {
     let out = common::bin()
