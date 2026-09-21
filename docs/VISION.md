@@ -18,6 +18,25 @@ Three rules follow.
 - **"Nothing fits" is an answer.** When no candidate fits or two are too close, jevify says so
   with exit code 3 and changes nothing.
 
+## Time is the cost
+
+A judgment costs almost nothing. The keyless backend is free. What an agent pays for is time: a
+model turn takes seconds, and a process that waits on the network holds that turn open. The
+design follows from that.
+
+- **One process per question, however many records.** A verb reads the whole stream, asks in
+  parallel, and answers once. A shell loop that starts jevify once per file is the slow form;
+  `filter --files` is the fast one.
+- **At most two rounds of requests per verb.** Inside a round every request is in flight at the
+  same time.
+- **Output flows.** A per-record verb prints a record as soon as every record before it has an
+  answer, so `| head` ends the work early.
+- **Cheap tools go first.** `grep`, `awk`, `jq` and `head` narrow a stream at no cost. jevify
+  judges what is left, and judges identical records once.
+- **Limits protect time, not money.** One ceiling holds in every verb: 20,000 records. A verb
+  states its record and request counts before the first request and then does the work. It
+  never refuses a list because the list is long.
+
 ## Two sides of a command
 
 ```
@@ -74,8 +93,10 @@ quotes inside, so that no shell splits, expands or globs it.
   pass an argument list and no shell.
 - `@{one:a|b|c:question}` lists its options up to the first `:` and splits them on `|`. `\:`,
   `\|` and `\}` are the escapes.
-- `@{flag:--name:question}` is a whole argument. A yes leaves `--name`; a no or an unsure answer
-  removes the argument, and the status line says which. A flag marker never stops the command.
+- `@{flag:--name:question}` is a whole argument. A yes leaves `--name` and a no removes the
+  argument. An unsure answer is an abstention: nothing runs, and the status line gives the
+  probability, so the caller writes or drops the flag itself in one turn. Leaving a flag out is
+  not always the safe direction (`--dry-run`, `--draft`), so doubt never chooses it.
 - An unknown kind, a marker with no closing `}`, and a `fill` with no marker at all are usage
   errors, exit 2, and nothing runs. The error names the nearest kind. A marker that a shell
   damaged never reaches the tool.
@@ -89,10 +110,15 @@ apart. A selection reports what it looked at: the scope, the number of candidate
 left out. A high rank never proves that only one candidate fits, and jevify never picks the
 first of several silently.
 
-`fill` runs a command, so it chooses only among candidates that fit one request to the model:
-200 with a key, 99 without. A longer list of branches, commits, PRs, issues or runs is cut to the
-newest and the status line says so. Any other longer list is refused with the two ways to narrow
-it: a path prefix, or a piped list. `pick --from KIND` searches longer lists and runs nothing.
+A long list is searched in two rounds. Round one splits the list into windows of one request
+each (200 candidates with a key, 99 without), asks every window at the same time, and keeps the
+three best of each window by rank. Round two is one request over all of those finalists with
+their richest evidence, so the winner and its rivals meet in one comparison and their order
+means something. Probabilities from different requests are never compared. `fill` searches
+every list whose finalists fit one request: about 3,200 candidates without a key and 13,000 with
+one. Above that, a list with a recency order keeps its newest part and the status line says so;
+any other list is refused with the two ways to narrow it: a path prefix, or a piped list.
+`pick --from KIND` prints and runs nothing, so it searches up to the ceiling of 20,000.
 
 | Kind | Candidates | Evidence |
 |:---|:---|:---|
@@ -100,19 +126,38 @@ it: a path prefix, or a piped list. `pick --from KIND` searches longer lists and
 | `branch` | local and remote refs | name, last commit subject, age |
 | `commit` | the log of the current branch | subject, body, changed paths |
 | `test`, `script` | the test runner, `package.json`, `just` | the identifier and its description |
-| `pr`, `issue`, `ci-run` | `gh` | title, state, branch |
 | `file`, `dir` | tracked and untracked files that are not ignored, hidden ones included | path, first lines |
-| `stash`, `process`, `container`, `pod`, `host` | the owning tool | name and status |
 | `tool` | the commands on the PATH, for `route` and `pick --from tool` | name and one-line manual summary |
 | `complete` | the tool's own completion protocol, at the marker's position | the completion and its description |
+| `pr`, `issue`, `ci-run`, `stash`, `process`, `container`, `pod` | a recipe: the owning tool's listing | the fields the recipe names |
+
+**A kind is a recipe.** Most kinds are the `-` form with a name: the command that lists, how to
+split its output, which field is the handle, which fields are evidence, and an optional command
+that fetches more about one handle. jevify ships its recipes as data, one JSON object per line,
+and reads more from `kinds.jsonl` in the user's configuration directory:
+
+```
+{"kind":"pod","list":["kubectl","get","pods","--no-headers"],"field":1}
+{"kind":"pr","list":["gh","pr","list","--json","number,title,state"],"key":"number","evidence":["title","state"]}
+```
+
+A new kind is one appended line, and a recipe is shared by copying it. Only kinds that need
+logic are code: `branch` folds a remote ref into its local twin, `file` walks and withholds
+secrets, `test` finds the runner, `complete` speaks a protocol. A recipe runs a command the
+user wrote, so a user recipe is an executing collector and needs `--allow-collectors`.
+`capabilities` lists every kind with its command.
 
 - A literal prefix narrows a list: `'src/cmd/@{file:stages hunks}'` looks only under `src/cmd/`.
 - Candidates come from the directory jevify runs in. `fill -C DIR` changes it. jevify never reads
   the scope out of the tool's own flags.
 - `one` and `flag` judge a context: stdin, or `--context FILE`.
+- stdin has one role per call. It is the candidates of `@{-:…}` or the context of `one` and
+  `flag`, never both; the other one comes from `--candidates FILE` or `--context FILE`. A call
+  that gives stdin two roles is a usage error, exit 2.
 - Markers resolve at the same time against one snapshot. `complete` waits for the arguments on
   its left. If one marker abstains, nothing runs.
-- When two candidates are close, `fill` fetches richer evidence once, then abstains.
+- When two candidates are close, round two fetches richer evidence. If they stay close, `fill`
+  abstains and names both.
 - Code handles order, counts and dates before the model is asked. "The newest branch" is a sort.
 
 **The run.** `fill` executes the resolved argument list directly, with no shell in between.
@@ -123,7 +168,7 @@ exactly, and runs nothing. The printed line is the command that a run executes.
 - stdout and stderr belong to the command. jevify writes to stderr only, every line starts with
   `jevify fill:`, and the last one is `ran, exit N`, `ran, signal N` or `not run:` with a reason.
 - Exit 0 when the command succeeded, 7 when it failed, 2 to 6 when nothing ran. Exit 3 names
-  `no_match`, `ambiguous` or `insufficient_evidence`. `fill` forwards interrupt and termination
+  `no_match`, `ambiguous`, `unsure_flag` or `insufficient_evidence`. `fill` forwards interrupt and termination
   signals to the command.
 - A marker that reads stdin takes all of it, and the command receives an empty stdin.
   `--candidates FILE` and `--context FILE` leave stdin to the command. With no such marker the
@@ -144,14 +189,35 @@ nothing for a name the agent has already seen or a string that a literal search 
 
 The command ran. Its output is long, or it needs a judgment before the next step.
 
-| The agent wants | Verb | Returns |
-|:---|:---|:---|
-| the line that explains a failure | `why` | one line with context |
-| one record out of many | `pick 'description'` | one record |
-| only the records that matter | `filter 'statement'` | a subset, and the path of the full output |
-| a tag on each record, to sort or triage them | `label a,b,c` | each record with its label |
-| a decision to branch on | `is 'statement'` | an exit code |
+| The agent wants | Verb | Classical twin | Returns |
+|:---|:---|:---|:---|
+| the line that explains a failure | `why` | — | one line with context |
+| one record out of many | `pick 'description'` | `fzf --filter` | one record |
+| only the records that matter | `filter 'statement'` | `grep` | a subset, and the path of the full output |
+| a tag on each record, to sort or triage them | `label a,b,c` | an `awk` key | each record with its label |
+| a decision to branch on | `is 'statement'` | `test` | an exit code |
 
+The verbs form a small algebra over one type, the stream of records. Every verb except `is`
+returns records of its input, byte for byte, so `cut`, `awk`, `sort`, `uniq` and another jevify
+verb read its output as they read the input.
+
+```
+gh issue list | jevify filter 'reports a crash' | jevify filter 'names Windows'    # and is a pipe
+jevify filter -e 'reports a crash' -e 'reports a hang'                             # or is -e, one request per batch
+gh issue list | jevify label bug,feature,question | cut -f1 | sort | uniq -c       # a histogram by meaning
+fd -0 -e json | jevify filter -0 --files 'a test fixture'                          # files by content
+until kubectl get pods | jevify is 'every pod is ready'; do sleep 5; done          # wait on a meaning
+cargo test 2>&1 | jevify is 'every failure is a network timeout' && cargo test     # retry only a flaky run
+```
+
+- `why` is for a log of any length: it searches, and returns one line. `filter` is for records:
+  it judges every record, and returns many.
+- A verb takes the flags of its twin, with the twin's meaning. `filter` has `-v` (the records
+  where the statement is false), `-c` (the count), `-n` (line numbers, as `grep -n`), `-A`, `-B`
+  and `-C` (context records, printed and never judged), and `-e` for several statements. `pick -n 3`
+  is the three best, as `head -n 3`.
+- A condition is written so that yes means act. `if`, `&&` and `until` treat exit 1, exit 3 and a
+  network failure alike, as "do not act".
 - Output verbs read stdin and never start a command. They send the evidence to the configured
   backend and may save the input on this machine; they do nothing else.
 - A record is a line. `--para` makes it a block between blank lines, for test failures and stack
@@ -161,12 +227,17 @@ The command ran. Its output is long, or it needs a judgment before the next step
 - `pick --from KIND 'description'` selects among a kind's candidates in place of stdin and prints
   the handle. `route 'task'` is `pick --from tool`: it names the installed tool for a task, with
   its summary and synopsis, and runs nothing. The agent writes the command.
+- A printed handle is for reading. As an argument it goes through `fill`: in
+  `git switch "$(jevify pick …)"` the shell drops jevify's exit code, and an abstention becomes an
+  empty argument that the command accepts.
 - A reduction always leaves a way back: the full input is saved and its path is printed.
   `filter` keeps what it is unsure about and says so: `kept 31 of 10074, 2 unsure, full output:
-  PATH`. `--strict` drops the unsure ones. A reduction that could not save its input says so and
-  never claims to be complete.
+  PATH`. `--strict` drops the unsure ones. The two errors differ in cost: an extra record costs a
+  glance, a dropped record costs the whole input. `pick` and `fill` face the opposite costs and
+  abstain. A reduction that could not save its input says so and never claims to be complete.
 - `is 'a' 'b' 'c'` asks several statements in one request and prints one verdict per line. It
-  exits 0 when all hold, 1 when one does not, 3 otherwise.
+  exits 0 when all hold, 1 when one does not, 3 otherwise. `is --context FILE` judges a file in
+  place of stdin, so `is` is a predicate for `find -exec` and for a `make` rule.
 - `label --ordered low,mid,high` places each record on a scale.
 - The status lines of `fill` are never records, so `jevify fill -- CMD 2>&1 | jevify why` reads
   only the command's output. An output verb that receives only `not run` exits 3. A script that
@@ -190,7 +261,9 @@ Exit codes are the contract: 0 yes or found, 1 no, 2 usage, 3 abstain, and the o
 probabilities go to stderr or to the `--json` envelope, never to stdout where they could become
 an argument.
 
-Flags keep the letters every shell user knows: `-C DIR`, `-0`, `-q`, `--dry-run`, `--json`.
+Flags keep the letters every shell user knows, and a letter means what it means on the verb's
+twin: `-C DIR` on `fill` as on `git` and `make`, `-C N` on `filter` and `why` as on `grep`, and
+`-0`, `-q`, `-v`, `-e`, `--dry-run`, `--json`. An agent that knows `grep` knows `filter`.
 
 ## What jevify is not
 
@@ -209,3 +282,8 @@ The skill file is part of the product. An agent reaches for a tool only when it 
 situations that call for it: a value it can describe and cannot spell, an option that depends on
 text it has not read, an output too long to read, many records and one question. The skill also
 teaches the one quoting habit: the whole marker argument in single quotes.
+
+The README teaches the same language to a person, in the same order: the two sides, the verbs
+with their twins, the marker, the exit codes. `jevify init agents` prints the block that teaches
+it to every agent that reads an `AGENTS.md` file, so the language reaches an agent with no
+plugin system.
