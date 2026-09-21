@@ -33,9 +33,10 @@ design follows from that.
   answer, so `| head` ends the work early.
 - **Cheap tools go first.** `grep`, `awk`, `jq` and `head` narrow a stream at no cost. jevify
   judges what is left, and judges identical records once.
-- **Limits protect time, not money.** One ceiling holds in every verb: 20,000 records. A verb
-  states its record and request counts before the first request and then does the work. It
-  never refuses a list because the list is long.
+- **Limits protect time, not money.** One ceiling holds in every verb: 20,000 records. A
+  selection also has to fit two rounds, which is 9,801 candidates without a key. A verb states
+  its record and request counts before the first request and then does the work. Below those
+  limits it never refuses a list because the list is long.
 
 ## Two sides of a command
 
@@ -118,7 +119,9 @@ means something. Probabilities from different requests are never compared. `fill
 every list whose finalists fit one request: about 3,200 candidates without a key and 13,000 with
 one. Above that, a list with a recency order keeps its newest part and the status line says so;
 any other list is refused with the two ways to narrow it: a path prefix, or a piped list.
-`pick --from KIND` prints and runs nothing, so it searches up to the ceiling of 20,000.
+`pick`, `pick --from KIND` and `why` print and run nothing, so they keep two finalists of each
+window, then one, while the finalists still fit one request: `pick --from KIND` searches up to
+W × W: 9,801 candidates without a key, 20,000 with one.
 
 | Kind | Candidates | Evidence |
 |:---|:---|:---|
@@ -194,9 +197,10 @@ The command ran. Its output is long, or it needs a judgment before the next step
 | a tag on each record, to sort or triage them | `label a,b,c` | an `awk` key | each record with its label |
 | a decision to branch on | `is 'statement'` | `test` | an exit code |
 
-The verbs form a small algebra over one type, the stream of records. Every verb except `is`
-returns records of its input, byte for byte, so `cut`, `awk`, `sort`, `uniq` and another jevify
-verb read its output as they read the input.
+The verbs form a small algebra over one type, the stream of records. `pick` and `filter` return
+records of their input, byte for byte, and `label` puts a tag and a tab in front of each, so
+`cut`, `awk`, `sort`, `uniq` and another jevify verb read their output as they read the input.
+`why` points and does not reduce: it prints the line with its number and its context.
 
 ```
 gh issue list | jevify filter 'reports a crash' | jevify filter 'names Windows'    # and is a pipe
@@ -222,8 +226,10 @@ cargo test 2>&1 | jevify is 'every failure is a network timeout' && cargo test  
   backend and may save the input on this machine; they do nothing else.
 - A record is a line. `--para` makes it a block between blank lines, for test failures and stack
   traces. `-0` reads NUL-separated records. `--files` reads paths and judges each file's first
-  lines. Records come out unchanged and in their input order. Each record is judged alone, up to
-  a thousand in one request, so ten thousand lines are about ten requests.
+  lines. `why` takes none of the three. Records come out unchanged and in their input order.
+  Without a key each record is judged alone, up to a thousand in one request, so ten thousand
+  lines are about ten requests. With a key twenty records share one request, and each question
+  names its record.
 - `pick --from KIND 'description'` selects among a kind's candidates in place of stdin and prints
   the handle. `route 'task'` is `pick --from tool`: it names the installed tool for a task, with
   its summary and synopsis, and runs nothing. The agent writes the command.
@@ -235,8 +241,9 @@ cargo test 2>&1 | jevify is 'every failure is a network timeout' && cargo test  
   PATH`. `--strict` drops the unsure ones. The two errors differ in cost: an extra record costs a
   glance, a dropped record costs the whole input. `pick` and `fill` face the opposite costs and
   abstain. A reduction that could not save its input says so and never claims to be complete.
-- `is 'a' 'b' 'c'` asks several statements in one request and prints one verdict per line. It
-  exits 0 when all hold, 1 when one does not, 3 otherwise. `is --context FILE` judges a file in
+- `is 'a' 'b' 'c'` asks several statements in one request and prints one verdict per line. With
+  one statement it prints nothing, as `test` does. It exits 0 when all hold, 1 when one does
+  not, 3 otherwise. `is --context FILE` judges a file in
   place of stdin, so `is` is a predicate for `find -exec` and for a `make` rule.
 - `jevify fill -q -- CMD 2>&1 | jevify why` reads the command's output alone. When nothing ran,
   the one `not run:` line is the true cause, and `why` may point at it. A script that must stop
