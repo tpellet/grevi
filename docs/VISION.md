@@ -74,8 +74,8 @@ quotes inside, so that no shell splits, expands or globs it.
   pass an argument list and no shell.
 - `@{one:a|b|c:question}` lists its options up to the first `:` and splits them on `|`. `\:`,
   `\|` and `\}` are the escapes.
-- `@{flag:--name:question}` is a whole argument. A yes leaves `--name`; a no removes the
-  argument.
+- `@{flag:--name:question}` is a whole argument. A yes leaves `--name`; a no or an unsure answer
+  removes the argument, and the status line says which. A flag marker never stops the command.
 - An unknown kind, a marker with no closing `}`, and a `fill` with no marker at all are usage
   errors, exit 2, and nothing runs. The error names the nearest kind. A marker that a shell
   damaged never reaches the tool.
@@ -89,16 +89,21 @@ apart. A selection reports what it looked at: the scope, the number of candidate
 left out. A high rank never proves that only one candidate fits, and jevify never picks the
 first of several silently.
 
+`fill` runs a command, so it chooses only among candidates that fit one request to the model:
+200 with a key, 99 without. A longer list of branches, commits, PRs, issues or runs is cut to the
+newest and the status line says so. Any other longer list is refused with the two ways to narrow
+it: a path prefix, or a piped list. `pick --from KIND` searches longer lists and runs nothing.
+
 | Kind | Candidates | Evidence |
 |:---|:---|:---|
 | `-` | records on stdin, or `--candidates FILE` | `--key` or `--field` names the handle, `--evidence` the fields the model reads, `-0` reads NUL-separated records |
 | `branch` | local and remote refs | name, last commit subject, age |
 | `commit` | the log of the current branch | subject, body, changed paths |
-| `test`, `script`, `target` | the test runner, `package.json`, `make`, `just` | the identifier and its description |
+| `test`, `script` | the test runner, `package.json`, `just` | the identifier and its description |
 | `pr`, `issue`, `ci-run` | `gh` | title, state, branch |
 | `file`, `dir` | tracked and untracked files that are not ignored, hidden ones included | path, first lines |
 | `stash`, `process`, `container`, `pod`, `host` | the owning tool | name and status |
-| `tool` | the commands on the PATH | name and one-line manual summary |
+| `tool` | the commands on the PATH, for `route` and `pick --from tool` | name and one-line manual summary |
 | `complete` | the tool's own completion protocol, at the marker's position | the completion and its description |
 
 - A literal prefix narrows a list: `'src/cmd/@{file:stages hunks}'` looks only under `src/cmd/`.
@@ -124,6 +129,10 @@ exactly, and runs nothing. The printed line is the command that a run executes.
   `--candidates FILE` and `--context FILE` leave stdin to the command. With no such marker the
   command inherits stdin and the terminal.
 - Right before it runs a command, jevify checks that each chosen thing is still the same.
+- `test` and `complete` list their candidates by running the project's own code, so they need
+  `--allow-collectors`, under `--dry-run` too.
+- `--json` goes with `--dry-run`. In a run, stdout belongs to the command and jevify reports on
+  stderr.
 - `fill` is the only place where jevify starts a command.
 
 The agent uses it because one call replaces list, read, choose and act, and the listing never

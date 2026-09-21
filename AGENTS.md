@@ -6,7 +6,9 @@ file — using TypeSafe's Jev model, with confidence scores and an honest "nothi
 - Vision: `docs/VISION.md` (decides direction: `fill` on the input side of a command, the
   stdin verbs on the output side; a plan that disagrees with it is out of date)
 - Spec: `docs/superpowers/specs/2026-09-18-hunch-v0-design.md`
-- Plan: `docs/superpowers/plans/2026-09-18-hunch-v0.md` (source of truth for tasks; beads transcribe it)
+- Plan: `docs/superpowers/plans/2026-09-21-jevify-two-sides.md` (source of truth for tasks; beads
+  transcribe it). `docs/superpowers/plans/2026-09-18-hunch-v0.md` is the plan of the verbs that
+  exist.
 
 Principles: point, never generate · at most two rounds of parallel Jev calls per verb (the
 documented `run` argument pass permits a third) · one decision threshold, with calibration
