@@ -296,8 +296,6 @@ async fn interim_refusals_make_no_requests() {
     for args in [
         vec!["pick", "-0", "q"],
         vec!["pick", "--para", "q"],
-        vec!["is", "a", "b"],
-        vec!["is", "a", "--context", "file"],
         vec!["filter", "x"],
         vec!["filter", "-v", "x"],
     ] {

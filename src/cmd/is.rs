@@ -14,14 +14,6 @@ pub async fn run(
     context: Option<&std::path::Path>,
     band: f64,
 ) -> Result<Outcome, JevifyError> {
-    let [condition] = statements else {
-        return Err(JevifyError::Input(
-            "several statements: not implemented".into(),
-        ));
-    };
-    if context.is_some() {
-        return Err(JevifyError::Input("--context: not implemented".into()));
-    }
     // Above 0.5 the "no" verdict becomes unreachable at the default threshold.
     if !(0.0..=0.5).contains(&band) {
         return Err(JevifyError::Usage(format!(
@@ -29,38 +21,98 @@ pub async fn run(
         )));
     }
     let client = Client::new(ctx)?;
-    let lines = crate::input::read_stdin_async().await?;
+    let lines = if let Some(path) = context {
+        let path = path.to_owned();
+        tokio::task::spawn_blocking(move || {
+            use std::io::Read;
+            let file = std::fs::File::open(&path)
+                .map_err(|e| JevifyError::Input(format!("{}: {e}", path.display())))?;
+            let mut bytes = Vec::new();
+            file.take(crate::input::MAX_BYTES as u64 + 1)
+                .read_to_end(&mut bytes)
+                .map_err(|e| JevifyError::Input(e.to_string()))?;
+            if bytes.len() > crate::input::MAX_BYTES {
+                return Err(JevifyError::InputTooLarge("context exceeds 64 MiB".into()));
+            }
+            let lines = crate::input::split_lines(&String::from_utf8_lossy(&bytes));
+            if lines.iter().all(|line| line.trim().is_empty()) {
+                return Err(JevifyError::EmptyInput("context was empty"));
+            }
+            Ok(lines)
+        })
+        .await
+        .map_err(|e| JevifyError::Input(e.to_string()))??
+    } else {
+        crate::input::read_stdin_async().await?
+    };
     let text = crate::input::redact(&lines.join("\n"));
     let max_chars = MAX_CHARS.min(client.backend().max_state_chars());
     // Backend evidence budgets count Unicode characters, not UTF-8 bytes.
     let truncated = text.chars().count() > max_chars;
     if truncated {
         eprintln!("jevify is: input exceeds the evidence budget; whole input not judged");
+        let mut data = serde_json::json!({ "p": null, "verdict": "unsure", "truncated": true, "reason": "input exceeds the evidence budget; whole input not judged" });
+        let mut human = Vec::new();
+        if statements.len() > 1 {
+            data["statements"] = statements
+                .iter()
+                .map(|statement| {
+                    human.extend_from_slice(format!("unsure\t{statement}\n").as_bytes());
+                    serde_json::json!({"statement": statement, "verdict": "unsure", "p": null})
+                })
+                .collect();
+        }
         return Ok(Outcome {
             exit: Exit::Abstain,
-            data: serde_json::json!({ "p": null, "verdict": "unsure", "truncated": true, "reason": "input exceeds the evidence budget; whole input not judged" }),
-            human: Vec::new(),
+            data,
+            human,
             exec: None,
         });
     }
     let mut qs = Questions::new();
-    qs.insert(
-        "is".into(),
-        Question::noul_with(
-            format!("Does the text in the state satisfy this condition: \"{condition}\"?"),
-            "The text clearly satisfies the condition",
-            "The text does not satisfy the condition",
-        ),
-    );
-    let p = client
-        .ask(&serde_json::Value::String(text), &qs)
-        .await?
-        .noul("is")?;
-    let (exit, verdict) = band_verdict(p, ctx.threshold, band);
+    for (i, condition) in statements.iter().enumerate() {
+        qs.insert(
+            if statements.len() == 1 {
+                "is".into()
+            } else {
+                format!("is_{i}")
+            },
+            Question::noul_with(
+                format!("Does the text in the state satisfy this condition: \"{condition}\"?"),
+                "The text clearly satisfies the condition",
+                "The text does not satisfy the condition",
+            ),
+        );
+    }
+    let answer = client.ask(&serde_json::Value::String(text), &qs).await?;
+    if statements.len() == 1 {
+        let p = answer.noul("is")?;
+        let (exit, verdict) = band_verdict(p, ctx.threshold, band);
+        return Ok(Outcome {
+            exit,
+            data: serde_json::json!({ "p": p, "verdict": verdict, "truncated": truncated }),
+            human: Vec::new(),
+            exec: None,
+        });
+    }
+    let mut exit = Exit::Ok;
+    let mut verdict = "yes";
+    let mut entries = Vec::with_capacity(statements.len());
+    let mut human = Vec::new();
+    for (i, statement) in statements.iter().enumerate() {
+        let p = answer.noul(&format!("is_{i}"))?;
+        let (item_exit, item_verdict) = band_verdict(p, ctx.threshold, band);
+        if item_exit == Exit::No || (item_exit == Exit::Abstain && exit == Exit::Ok) {
+            exit = item_exit;
+            verdict = item_verdict;
+        }
+        entries.push(serde_json::json!({"statement": statement, "verdict": item_verdict, "p": p}));
+        human.extend_from_slice(format!("{item_verdict}\t{statement}\n").as_bytes());
+    }
     Ok(Outcome {
         exit,
-        data: serde_json::json!({ "p": p, "verdict": verdict, "truncated": truncated }),
-        human: Vec::new(),
+        data: serde_json::json!({ "statements": entries, "verdict": verdict, "truncated": truncated }),
+        human,
         exec: None,
     })
 }
