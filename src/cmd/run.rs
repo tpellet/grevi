@@ -5,7 +5,7 @@ use crate::inventory::{self, Tool};
 use crate::jev::client::Client;
 use crate::jev::{Question, Questions};
 use crate::manpage;
-use crate::tournament::{Prompts, shortlist};
+use crate::tournament::{Finalists, Prompts, shortlist};
 
 pub struct Route {
     pub tool: Option<Tool>,
@@ -39,12 +39,14 @@ pub async fn route(
         any: "Is there a command in `items` whose purpose is to accomplish `request`?".into(),
     };
     // Round 1: windows only. The absolute fit Nouls below are round 2, so no Choice finals round.
-    let finalists: Vec<usize> = shortlist(client, request, &items, &prompts, 3)
-        .await?
+    let short = shortlist(client, request, &items, &prompts, Finalists::Fixed(3)).await?;
+    let mut pool: Vec<_> = short
+        .windows
         .iter()
-        .take(12)
-        .map(|c| c.index)
+        .flat_map(|r| r.candidates.iter().take(3).copied())
         .collect();
+    pool.sort_by(|a, b| b.p.total_cmp(&a.p));
+    let finalists: Vec<usize> = pool.iter().take(12).map(|c| c.index).collect();
     if finalists.is_empty() {
         return Ok(Route {
             tool: None,

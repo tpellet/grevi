@@ -3,7 +3,7 @@ use crate::config::Config;
 use crate::exit::{Exit, JevifyError};
 use crate::jev::client::Client;
 use crate::records::{self, Split};
-use crate::tournament::{Prompts, Ranking, rank, shortlist, window};
+use crate::tournament::{Finalists, Prompts, Ranking, rank, shortlist, window};
 
 /// 100k lines would be 500 requests: a 429 storm and ~25 s. pick ranks a list, it does not scan.
 pub const MAX_LINES: usize = 20_000;
@@ -63,14 +63,16 @@ pub async fn run(
         }
     };
     let ranking = if files {
-        let mut pool = shortlist(&client, intent, &items, &prompts, 3).await?;
-        pool.retain(|candidate| candidate.p > 0.0);
-        pool.truncate(MAX_FINALISTS);
-        if pool.is_empty() {
+        let short = shortlist(&client, intent, &items, &prompts, Finalists::Auto).await?;
+        let windows = short.windows.len();
+        let pool = short.finalists;
+        if pool.iter().all(|candidate| candidate.p == 0.0) {
             Ranking {
                 candidates: vec![],
                 any: 0.0,
                 none: 1.0,
+                windows,
+                n: short.n,
             }
         } else {
             let mut finalists: Vec<_> = pool
@@ -78,18 +80,25 @@ pub async fn run(
                 .map(|c| records[kept[c.index]].clone())
                 .collect();
             let cwd = std::env::current_dir().map_err(|e| JevifyError::Input(e.to_string()))?;
-            let withheld = records::excerpts(&mut finalists, &cwd).await?;
+            let evidence_count = finalists.len().min(MAX_FINALISTS);
+            let withheld = records::excerpts(&mut finalists[..evidence_count], &cwd).await?;
             eprintln!("jevify pick: excerpts withheld: {withheld}");
             let finals: Vec<_> = pool
                 .iter()
                 .zip(finalists)
                 .map(|(c, r)| (c.index, r.evidence))
                 .collect();
-            window(&client, intent, &finals, &prompts).await?
+            let mut ranking = window(&client, intent, &finals, &prompts).await?;
+            ranking.windows = windows;
+            ranking.n = short.n;
+            ranking
         }
     } else {
-        rank(&client, intent, &items, &prompts, None).await?
+        rank(&client, intent, &items, &prompts, None, Finalists::Auto).await?
     };
+    if ranking.n != 3 {
+        eprintln!("jevify pick: finalists per window: {}", ranking.n);
+    }
     // Found only if the absolute Noul agrees and the best line beats NONE in the Choice.
     let found = ranking.any >= ctx.threshold
         && ranking

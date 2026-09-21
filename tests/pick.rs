@@ -1,5 +1,93 @@
 mod common;
 
+#[tokio::test(flavor = "multi_thread")]
+async fn classifier_capacity_is_too_many_before_any_request() {
+    let server = common::mock_classifier(FakeJev {
+        choose: |_, _, _| "NONE".into(),
+        noul: |_, _| 0.9,
+    })
+    .await;
+    let input = (0..9802).map(|i| format!("item {i}\n")).collect::<String>();
+    let mut cmd = common::jevify_classifier(&server);
+    let out = tokio::task::spawn_blocking(move || {
+        cmd.args(["--json", "pick", "item"])
+            .write_stdin(input)
+            .output()
+            .unwrap()
+    })
+    .await
+    .unwrap();
+    assert_eq!(out.status.code(), Some(6));
+    let value: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+    assert_eq!(value["error"]["kind"], "too_many");
+    let hint = value["error"]["hint"].as_str().unwrap();
+    for way in ["grep", "head", "prefix"] {
+        assert!(hint.contains(way));
+    }
+    assert!(server.received_requests().await.unwrap().is_empty());
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn stdin_pick_keeps_its_non_ratio_rule_and_top_three() {
+    let server = common::mock(
+        FakeJev {
+            choose: |_, _, _| "L000".into(),
+            noul: |_, _| 0.9,
+        }
+        .with_probabilities(|_, _, options| {
+            if options == ["yes", "no"] {
+                return vec![0.9, 0.1];
+            }
+            options
+                .iter()
+                .map(|o| match o.as_str() {
+                    "L000" => 0.4,
+                    "L001" => 0.3,
+                    "L002" => 0.2,
+                    _ => 0.1,
+                })
+                .collect()
+        }),
+    )
+    .await;
+    let mut cmd = common::jevify(&server);
+    let out = tokio::task::spawn_blocking(move || {
+        cmd.args(["pick", "item", "-n", "3"])
+            .write_stdin("a\nb\nc\n")
+            .output()
+            .unwrap()
+    })
+    .await
+    .unwrap();
+    assert_eq!(out.status.code(), Some(0));
+    assert_eq!(out.stdout, b"a\nb\nc\n");
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn files_keep_more_than_24_finalists_and_always_use_round_two() {
+    let server = common::mock(FakeJev {
+        choose: |_, s, o| option_containing(s, o, "file-1799"),
+        noul: |_, _| 0.9,
+    })
+    .await;
+    let mut cmd = common::jevify(&server);
+    let input = (0..1800).map(|i| format!("file-{i}\n")).collect::<String>();
+    let out = tokio::task::spawn_blocking(move || {
+        cmd.args(["pick", "--files", "last"])
+            .write_stdin(input)
+            .output()
+            .unwrap()
+    })
+    .await
+    .unwrap();
+    assert_eq!(out.status.code(), Some(0));
+    assert_eq!(out.stdout, b"file-1799\n");
+    let requests = server.received_requests().await.unwrap();
+    assert_eq!(requests.len(), 10);
+    let body: serde_json::Value = serde_json::from_slice(&requests.last().unwrap().body).unwrap();
+    assert_eq!(body["state"]["items"].as_array().unwrap().len(), 27);
+}
+
 #[tokio::test]
 async fn malformed_choice_labels_return_a_protocol_envelope() {
     use wiremock::matchers::method;

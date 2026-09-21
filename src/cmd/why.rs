@@ -2,7 +2,7 @@ use crate::cmd::Outcome;
 use crate::config::Config;
 use crate::exit::{Exit, JevifyError};
 use crate::jev::client::Client;
-use crate::tournament::{Prompts, rank};
+use crate::tournament::{Finalists, Prompts, rank};
 use regex::Regex;
 use std::collections::BTreeSet;
 use std::sync::LazyLock;
@@ -119,8 +119,12 @@ pub async fn run(
         &items,
         &prompts,
         Some(&with_context),
+        Finalists::Auto,
     )
     .await?;
+    if ranking.n != 3 {
+        eprintln!("jevify why: finalists per window: {}", ranking.n);
+    }
     let found = ranking.any >= ctx.threshold
         && ranking
             .candidates

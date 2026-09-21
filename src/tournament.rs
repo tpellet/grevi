@@ -6,8 +6,42 @@ use std::collections::BTreeMap;
 /// The TypeSafe window, and the largest one jevify ever sends. classifier.dev takes 99 options
 /// plus NONE; the size in force comes from the backend, not from here.
 pub const WINDOW: usize = 200;
-const PER_WINDOW_FINALISTS: usize = 3;
-const MAX_FINALISTS: usize = 24;
+const WINNER_RATIO: f64 = 2.0;
+
+#[derive(Debug, Clone, Copy)]
+pub enum Finalists {
+    ThreeOnly,
+    Auto,
+    /// Route asks its own second question, without a Choice finals capacity.
+    Fixed(usize),
+}
+
+impl Finalists {
+    pub fn per_window(self, count: usize, size: usize) -> Result<usize, JevifyError> {
+        let windows = count.div_ceil(size);
+        let limit = match self {
+            Self::ThreeOnly => size * (size / 3),
+            Self::Auto => size * size,
+            Self::Fixed(n) => return Ok(n),
+        };
+        if count > limit {
+            return Err(JevifyError::Kinded {
+                kind: "too_many",
+                exit: crate::exit::Exit::Input,
+                message: format!("{count} candidates exceed the two-round capacity of {limit}"),
+                hint: "narrow with grep, head or a path prefix",
+                example: "head -n 1000 candidates | jevify pick 'description'",
+            });
+        }
+        Ok(if windows * 3 <= size {
+            3
+        } else if windows * 2 <= size {
+            2
+        } else {
+            1
+        })
+    }
+}
 /// Character budget for all items of one window: ~15k tokens at ~4 chars/token (typical text),
 /// ~24k for dense logs (hashes, paths, JSON) at ~2.5 chars/token, still under the 32k-token
 /// state + question limit. Non-Latin scripts tokenize denser still; the API then answers
@@ -46,6 +80,37 @@ pub struct Ranking {
     pub any: f64,
     /// P(NONE) in the deciding Choice; a candidate that does not beat it is not a match.
     pub none: f64,
+    pub windows: usize,
+    pub n: usize,
+}
+
+#[derive(Debug)]
+pub struct Shortlist {
+    pub windows: Vec<Ranking>,
+    pub finalists: Vec<Candidate>,
+    pub n: usize,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum Decision {
+    Found(Candidate),
+    NoMatch,
+    Ambiguous(Vec<Candidate>),
+}
+
+pub fn decide(ranking: &Ranking, threshold: f64) -> Decision {
+    let Some(best) = ranking.candidates.first() else {
+        return Decision::NoMatch;
+    };
+    if ranking.any < threshold || ranking.none >= best.p {
+        return Decision::NoMatch;
+    }
+    let second = ranking.candidates.get(1).map_or(0.0, |c| c.p);
+    if best.p > second && best.p >= WINNER_RATIO * second.max(ranking.none) {
+        Decision::Found(*best)
+    } else {
+        Decision::Ambiguous(ranking.candidates.iter().take(2).copied().collect())
+    }
 }
 
 fn id(i: usize) -> String {
@@ -95,6 +160,8 @@ pub(crate) async fn window(
         candidates,
         any: r.noul("any")?,
         none,
+        windows: 1,
+        n: 3,
     })
 }
 
@@ -104,35 +171,24 @@ pub async fn rank(
     items: &[String],
     prompts: &Prompts,
     finalist_text: Option<&(dyn Fn(usize) -> String + Sync)>,
+    mode: Finalists,
 ) -> Result<Ranking, JevifyError> {
-    let all: Vec<(usize, String)> = items.iter().cloned().enumerate().collect();
-    let size = client.backend().window();
-    if all.len() <= size && finalist_text.is_none() {
-        return window(client, request, &all, prompts).await;
+    let first = shortlist(client, request, items, prompts, mode).await?;
+    let windows = first.windows.len();
+    if windows == 1 && finalist_text.is_none() {
+        return Ok(first.windows.into_iter().next().unwrap());
     }
-    let first = if all.len() <= size {
-        vec![window(client, request, &all, prompts).await?]
-    } else {
-        futures::future::try_join_all(
-            all.chunks(size)
-                .map(|w| window(client, request, w, prompts)),
-        )
-        .await?
-    };
-    let mut pool: Vec<Candidate> = first
-        .iter()
-        .flat_map(|r| r.candidates.iter().take(PER_WINDOW_FINALISTS).copied())
-        .collect();
-    pool.sort_by(|a, b| b.p.total_cmp(&a.p));
-    pool.truncate(MAX_FINALISTS);
-    if pool.is_empty() {
+    if first.finalists.is_empty() {
         return Ok(Ranking {
             candidates: vec![],
-            any: first.iter().map(|r| r.any).fold(0.0, f64::max),
+            any: 0.0,
             none: 1.0,
+            windows,
+            n: first.n,
         });
     }
-    let finals: Vec<(usize, String)> = pool
+    let finals: Vec<(usize, String)> = first
+        .finalists
         .iter()
         .map(|c| {
             (
@@ -141,35 +197,109 @@ pub async fn rank(
             )
         })
         .collect();
-    window(client, request, &finals, prompts).await
+    let mut ranking = window(client, request, &finals, prompts).await?;
+    ranking.windows = windows;
+    ranking.n = first.n;
+    Ok(ranking)
 }
 
-/// Round 1 only: every window in parallel, the top `per_window` of each, best first.
-/// For callers (such as `run`) whose second round is their own absolute question.
+/// Round one, with finalists ordered by rank, then by window index.
 pub async fn shortlist(
     client: &Client,
     request: &str,
     items: &[String],
     prompts: &Prompts,
-    per_window: usize,
-) -> Result<Vec<Candidate>, JevifyError> {
+    mode: Finalists,
+) -> Result<Shortlist, JevifyError> {
+    let n = mode.per_window(items.len(), client.backend().window())?;
     let all: Vec<(usize, String)> = items.iter().cloned().enumerate().collect();
     let rounds = futures::future::try_join_all(
         all.chunks(client.backend().window())
             .map(|w| window(client, request, w, prompts)),
     )
     .await?;
-    let mut pool: Vec<Candidate> = rounds
-        .iter()
-        .flat_map(|r| r.candidates.iter().take(per_window).copied())
+    let finalists = (0..n)
+        .flat_map(|rank| {
+            rounds
+                .iter()
+                .filter_map(move |r| r.candidates.get(rank).copied())
+        })
         .collect();
-    pool.sort_by(|a, b| b.p.total_cmp(&a.p));
-    Ok(pool)
+    Ok(Shortlist {
+        windows: rounds,
+        finalists,
+        n,
+    })
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn pool_boundaries() {
+        for (w, cases) in [
+            (99, vec![(33, 3), (34, 2), (49, 2), (50, 1), (99, 1)]),
+            (200, vec![(66, 3), (67, 2), (100, 2), (101, 1), (200, 1)]),
+        ] {
+            for (windows, n) in cases {
+                assert_eq!(Finalists::Auto.per_window(windows * w, w).unwrap(), n);
+            }
+            assert!(Finalists::Auto.per_window(w * w + 1, w).is_err());
+            let f = w * (w / 3);
+            assert_eq!(Finalists::ThreeOnly.per_window(f, w).unwrap(), 3);
+            assert!(Finalists::ThreeOnly.per_window(f + 1, w).is_err());
+            assert_eq!(Finalists::Auto.per_window(0, w).unwrap(), 3);
+            assert!(Finalists::Auto.per_window(usize::MAX, w).is_err());
+        }
+    }
+
+    #[test]
+    fn decisions_use_absolute_fit_and_ratio() {
+        for (best, second, none, any, expected) in [
+            (0.6, 0.3, 0.1, 0.9, "found"),
+            (0.5, 0.4, 0.1, 0.9, "ambiguous"),
+            (0.45, 0.45, 0.1, 0.9, "ambiguous"),
+            (0.5, 0.1, 0.4, 0.9, "ambiguous"),
+            (0.8, 0.1, 0.1, 0.4, "no_match"),
+            (0.2, 0.1, 0.7, 0.9, "no_match"),
+        ] {
+            let ranking = Ranking {
+                candidates: vec![
+                    Candidate { index: 0, p: best },
+                    Candidate {
+                        index: 1,
+                        p: second,
+                    },
+                ],
+                any,
+                none,
+                windows: 1,
+                n: 3,
+            };
+            let actual = match decide(&ranking, 0.5) {
+                Decision::Found(_) => "found",
+                Decision::NoMatch => "no_match",
+                Decision::Ambiguous(closest) => {
+                    assert_eq!(closest.len(), 2);
+                    "ambiguous"
+                }
+            };
+            assert_eq!(actual, expected);
+        }
+        assert_eq!(
+            decide(
+                &Ranking {
+                    candidates: vec![],
+                    any: 1.0,
+                    none: 0.0,
+                    windows: 0,
+                    n: 3
+                },
+                0.5
+            ),
+            Decision::NoMatch
+        );
+    }
     #[test]
     fn clip_cuts_on_char_boundaries() {
         assert_eq!(clip("héllo wörld", 3), "hé…");

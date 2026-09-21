@@ -2,6 +2,51 @@ mod common;
 use common::{FakeJev, option_containing};
 
 #[tokio::test(flavor = "multi_thread")]
+async fn classifier_max_keep_and_single_window_preserve_context_finals() {
+    for count in [3, jevify::cmd::why::MAX_KEEP] {
+        let server = common::mock_classifier(FakeJev {
+            choose: |_, s, o| option_containing(s, o, "ROOT"),
+            noul: |_, _| 0.95,
+        })
+        .await;
+        let mut lines: Vec<_> = (0..count).map(|i| format!("error step {i}")).collect();
+        lines[count - 1] = "error ROOT".into();
+        let input = format!("{}\n", lines.join("\n"));
+        let mut cmd = common::jevify_classifier(&server);
+        let out = tokio::task::spawn_blocking(move || {
+            cmd.args(["--json", "why", "--no-save"])
+                .write_stdin(input)
+                .output()
+                .unwrap()
+        })
+        .await
+        .unwrap();
+        assert_eq!(out.status.code(), Some(0));
+        let value: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+        assert_eq!(value["data"]["considered"], count);
+        assert_eq!(value["data"]["causes"][0]["line"], count);
+        assert_eq!(value["data"]["causes"][0]["text"], "error ROOT");
+        assert!(value["data"]["causes"][0]["context"].is_array());
+        let requests = server.received_requests().await.unwrap();
+        assert_eq!(requests.len(), if count == 3 { 2 } else { 42 });
+        let body: serde_json::Value =
+            serde_json::from_slice(&requests.last().unwrap().body).unwrap();
+        let state: serde_json::Value =
+            serde_json::from_str(body["items"][0].as_str().unwrap()).unwrap();
+        let finalists = state["items"].as_array().unwrap();
+        assert_eq!(finalists.len(), if count == 3 { 3 } else { 82 });
+        assert!(finalists.iter().all(|s| {
+            s.as_str()
+                .unwrap()
+                .contains("context only, not a candidate; before:")
+        }));
+        if count > 3 {
+            assert!(String::from_utf8_lossy(&out.stderr).contains("finalists per window: 2"));
+        }
+    }
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn saves_exact_bytes_once_and_reports_path_even_with_verbose() {
     let server = common::mock(FakeJev {
         choose: |_, s, o| option_containing(s, o, "error"),
