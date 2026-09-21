@@ -2,7 +2,7 @@ mod common;
 use common::FakeJev;
 
 #[tokio::test(flavor = "multi_thread")]
-async fn unsupported_cp_grammar_never_executes_even_without_placeholders() {
+async fn route_does_not_propose_arguments() {
     let server = common::mock(FakeJev {
         choose: |_, s, o| common::option_containing(s, o, "cp"),
         noul: |_, _| 0.95,
@@ -24,14 +24,19 @@ async fn unsupported_cp_grammar_never_executes_even_without_placeholders() {
     .unwrap();
     let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
     assert_eq!(out.status.code(), Some(0));
-    assert_eq!(v["data"]["complete"], false);
-    assert_eq!(v["data"]["executed"], false);
-    assert!(
-        v["data"]["blocked"]
-            .as_str()
-            .unwrap()
-            .contains("unvalidated command grammar")
-    );
+    assert_eq!(v["data"]["tool"], "cp");
+    for field in [
+        "argv",
+        "flags",
+        "executed",
+        "child_exit",
+        "blocked",
+        "complete",
+    ] {
+        assert!(v["data"].get(field).is_none(), "{field}: {v}");
+    }
+    let requests = server.received_requests().await.unwrap();
+    assert_eq!(requests.iter().filter(|r| r.method == "POST").count(), 2);
 }
 
 fn inv(dir: &tempfile::TempDir, json: &str) -> std::path::PathBuf {
@@ -68,19 +73,13 @@ async fn removed_execution_flags_are_usage_errors() {
 #[tokio::test(flavor = "multi_thread")]
 async fn route_prints_without_starting_the_selected_tool() {
     let server = common::mock(FakeJev {
-        choose: |_, s, o| common::option_containing(s, o, "true"),
-        noul: |i, _| {
-            if i.contains("ask for the behaviour") {
-                0.0
-            } else {
-                0.95
-            }
-        },
+        choose: |_, s, o| common::option_containing(s, o, "macho-inspect"),
+        noul: |_, _| 0.95,
     })
     .await;
     let dir = tempfile::tempdir().unwrap();
     use std::os::unix::fs::PermissionsExt;
-    let tool = dir.path().join("true");
+    let tool = dir.path().join("macho-inspect");
     std::fs::write(&tool, "#!/bin/sh\nprintf started > sentinel\n").unwrap();
     std::fs::set_permissions(&tool, std::fs::Permissions::from_mode(0o755)).unwrap();
     let mut c = common::jevify(&server);
@@ -88,18 +87,21 @@ async fn route_prints_without_starting_the_selected_tool() {
         "JEVIFY_INVENTORY_FILE",
         inv(
             &dir,
-            r#"[{"name":"true","summary":"do nothing, successfully"}]"#,
+            r#"[{"name":"macho-inspect","summary":"inspect Mach-O metadata"}]"#,
         ),
     )
     .current_dir(dir.path())
     .env("PATH", dir.path());
     let out = tokio::task::spawn_blocking(move || {
-        c.args(["route", "succeed", "quietly"]).output().unwrap()
+        c.args(["route", "inspect Mach-O metadata"])
+            .output()
+            .unwrap()
     })
     .await
     .unwrap();
     assert_eq!(out.status.code(), Some(0));
-    assert_eq!(out.stdout, b"'true'\n");
+    assert_eq!(out.stdout, b"macho-inspect\n");
+    assert!(String::from_utf8_lossy(&out.stderr).contains("inspect Mach-O metadata"));
     assert!(!dir.path().join("sentinel").exists());
 }
 
@@ -126,7 +128,8 @@ async fn route_machine_output_is_one_envelope_without_child_output() {
             r#"[{"name":"ls","summary":"list directory contents"}]"#,
         ),
     )
-    .current_dir(dir.path());
+    .current_dir(dir.path())
+    .env("PATH", dir.path());
     let out = tokio::task::spawn_blocking(move || {
         c.args(["--json", "route", "list", "files"])
             .output()
@@ -136,13 +139,15 @@ async fn route_machine_output_is_one_envelope_without_child_output() {
     .unwrap();
     let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
     assert_eq!(out.status.code(), Some(0));
-    assert_eq!(v["data"]["executed"], false);
+    assert!(v["data"].get("executed").is_none());
+    assert_eq!(v["data"]["synopsis"], serde_json::Value::Null);
+    assert!(v["data"].get("synopsis").is_some());
     assert_eq!(v["command"], "route");
     assert!(out.stderr.is_empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn never_exec_tools_are_shown_not_run() {
+async fn destructive_tools_are_shown_without_an_execution_policy() {
     let server = common::mock(FakeJev {
         choose: |_, s, o| common::option_containing(s, o, "rm"),
         noul: |i, _| {
@@ -173,9 +178,9 @@ async fn never_exec_tools_are_shown_not_run() {
     .unwrap();
     let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
     assert_eq!(out.status.code(), Some(0), "{v}");
-    assert_eq!(v["data"]["executed"], false);
-    assert_eq!(v["data"]["argv"][0], "rm");
-    assert!(v["data"]["blocked"].as_str().unwrap().contains("rm"));
+    assert!(v["data"].get("executed").is_none());
+    assert_eq!(v["data"]["tool"], "rm");
+    assert!(v["data"].get("blocked").is_none());
     assert!(dir.path().join("inv.json").exists());
 }
 

@@ -3,19 +3,9 @@ use std::process::{Command, Stdio};
 use std::sync::LazyLock;
 
 static OVERSTRIKE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r".\x08").unwrap());
-static FLAG: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"^\s{0,10}((?:-{1,2}[A-Za-z0-9][\w-]*)(?:,?\s+-{1,2}[A-Za-z0-9][\w-]*)*)((?:[ =]\[?<?[A-Za-z][\w.-]*>?\]?)*)\s{2,}(\S.*)$").unwrap()
-});
+const SYNOPSIS_MAX_CHARS: usize = 1000;
 
-#[derive(Debug, Clone, PartialEq, serde::Serialize)]
-pub struct Flag {
-    pub flag: String,
-    pub takes_value: bool,
-    pub desc: String,
-}
-
-/// Renders the man page with `man` only; jevify never runs the tool itself (not even `--help`)
-/// to learn its options.
+/// Renders the man page without running the tool itself, even with `--help`.
 fn man_page(cmd: &str) -> Option<String> {
     let out = Command::new("man")
         .arg(cmd)
@@ -26,6 +16,9 @@ fn man_page(cmd: &str) -> Option<String> {
         .stderr(Stdio::null())
         .output()
         .ok()?;
+    if !out.status.success() {
+        return None;
+    }
     let text = OVERSTRIKE
         .replace_all(&String::from_utf8_lossy(&out.stdout), "")
         .into_owned();
@@ -56,64 +49,19 @@ pub fn description(cmd: &str, max_chars: usize) -> Option<String> {
     section(&man_page(cmd)?, "DESCRIPTION").map(|d| d.chars().take(max_chars).collect())
 }
 
-/// The OPTIONS section, preserving line structure for flag parsing.
-pub fn options_text(cmd: &str) -> Option<String> {
-    let page = man_page(cmd)?;
-    let start = page
-        .lines()
-        .position(|l| matches!(l.trim(), "OPTIONS" | "DESCRIPTION"))?;
-    Some(
-        page.lines()
-            .skip(start + 1)
-            .take(600)
-            .collect::<Vec<_>>()
-            .join("\n"),
-    )
+/// The tool's synopsis, bounded to 1000 characters. Call from a blocking worker.
+pub fn synopsis(cmd: &str) -> Option<String> {
+    synopsis_from_page(man_page(cmd).as_deref())
 }
 
-pub fn parse_flags(text: &str) -> Vec<Flag> {
-    let mut out: Vec<Flag> = Vec::new();
-    for line in text.lines() {
-        let Some(c) = FLAG.captures(line) else {
-            continue;
-        };
-        let names: Vec<&str> = c[1]
-            .split(|ch: char| ch == ',' || ch.is_whitespace())
-            .filter(|s| s.starts_with('-'))
-            .collect();
-        let flag = names
-            .iter()
-            .find(|n| n.starts_with("--"))
-            .or(names.first())
-            .map(|s| s.to_string())
-            .unwrap_or_default();
-        if flag.is_empty() || out.iter().any(|f| f.flag == flag) {
-            continue;
-        }
-        out.push(Flag {
-            flag,
-            takes_value: !c[2].trim().is_empty(),
-            desc: c[3].trim().to_string(),
-        });
-        if out.len() == 150 {
-            break;
-        }
-    }
-    out
+fn synopsis_from_page(page: Option<&str>) -> Option<String> {
+    section(page?, "SYNOPSIS").map(|s| s.chars().take(SYNOPSIS_MAX_CHARS).collect())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[test]
-    fn parses_flags_with_values() {
-        let help = "Usage: sips [options]\n  -z pixelsH pixelsW    Resample image at specified size\n  --help                 Show help\n  -v, --verbose          Verbose output\n";
-        let f = parse_flags(help);
-        assert_eq!(f[0].flag, "-z");
-        assert!(f[0].takes_value);
-        assert_eq!(f[2].flag, "--verbose");
-        assert!(!f[2].takes_value);
-    }
+
     #[test]
     fn extracts_description_section() {
         let page = "NAME\n     tar - manipulate tape archives\n\nDESCRIPTION\n     tar creates and manipulates streaming archive files.\n\nOPTIONS\n     -x  extract\n";
@@ -121,5 +69,45 @@ mod tests {
             section(page, "DESCRIPTION").unwrap(),
             "tar creates and manipulates streaming archive files."
         );
+    }
+
+    #[test]
+    fn extracts_synopsis_section() {
+        let page = "NAME\n    tool - inspect files\nSYNOPSIS\n    tool [-v]\n        file ...\n\nDESCRIPTION\n    Inspect files.\n";
+        assert_eq!(
+            synopsis_from_page(Some(page)).as_deref(),
+            Some("tool [-v] file ...")
+        );
+    }
+
+    #[test]
+    fn clips_long_synopsis_at_a_character_boundary() {
+        let text = "é".repeat(SYNOPSIS_MAX_CHARS + 1);
+        let page = format!("SYNOPSIS\n    {text}\nDESCRIPTION\n    description\n");
+        assert_eq!(
+            synopsis_from_page(Some(&page)),
+            Some("é".repeat(SYNOPSIS_MAX_CHARS))
+        );
+        let exact = format!("SYNOPSIS\n    {}", "x".repeat(SYNOPSIS_MAX_CHARS));
+        assert_eq!(
+            synopsis_from_page(Some(&exact)).unwrap().len(),
+            SYNOPSIS_MAX_CHARS
+        );
+    }
+
+    #[test]
+    fn no_man_page_has_no_synopsis() {
+        assert_eq!(synopsis_from_page(None), None);
+    }
+
+    #[test]
+    fn missing_or_empty_synopsis_has_no_text() {
+        for page in [
+            "",
+            "NAME\n    tool\nDESCRIPTION\n    inspect files\n",
+            "SYNOPSIS\n\nDESCRIPTION\n    inspect files\n",
+        ] {
+            assert_eq!(synopsis_from_page(Some(page)), None);
+        }
     }
 }

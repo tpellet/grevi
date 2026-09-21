@@ -99,26 +99,27 @@ fn live_classifier_health_is_reachable() {
 
 #[test]
 #[ignore]
-fn live_run_routes_tar() {
+fn live_route_routes_tar() {
     if !live_key_present() {
         return;
     }
     let out = assert_cmd::Command::cargo_bin("jevify")
         .unwrap()
-        .args([
-            "--json",
-            "run",
-            "--dry-run",
-            "extract",
-            "the",
-            "gzipped",
-            "archive",
-        ])
+        .env("JEVIFY_BACKEND", "typesafe")
+        .args(["--json", "route", "extract", "the", "gzipped", "archive"])
         .output()
         .unwrap();
     let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
     assert!(
         ["tar", "bsdtar", "gunzip", "gzip"].contains(&v["data"]["tool"].as_str().unwrap_or("")),
         "{v}"
+    );
+    assert_eq!(out.status.code(), Some(0), "{v}");
+    assert_eq!(v["meta"]["backend"], "typesafe");
+    assert!(
+        v["meta"]["model"]
+            .as_str()
+            .unwrap_or_default()
+            .starts_with("jev")
     );
 }
