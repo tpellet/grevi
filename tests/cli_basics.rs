@@ -49,7 +49,7 @@ async fn missing_usage_is_null_in_json_and_unknown_in_verbose_output() {
             1
         );
         let out = common::jevify(&server)
-            .args(["is", "condition", "-v"])
+            .args(["is", "condition", "--verbose"])
             .write_stdin("x")
             .output()
             .unwrap();
@@ -94,7 +94,8 @@ fn help_lists_every_verb() {
     for verb in [
         "pick",
         "why",
-        "run",
+        "route",
+        "filter",
         "is",
         "capabilities",
         "robot-docs",
@@ -122,7 +123,8 @@ fn bare_jevify_prints_the_quick_start_card_as_a_usage_error() {
         "jevify pick",
         "jevify why",
         "jevify is",
-        "jevify run",
+        "jevify route",
+        "jevify filter",
         "jevify add",
         "jevify sort",
         "--json",
@@ -132,6 +134,7 @@ fn bare_jevify_prints_the_quick_start_card_as_a_usage_error() {
         assert!(text.contains(needle), "{needle} missing from:\n{text}");
     }
     assert!(text.len() < 1000, "{} bytes", text.len());
+    assert!(!text.contains("jevify run"));
 }
 
 // An agent that runs `jevify <verb> --help` gets an example to copy and the exit codes, and the
@@ -216,22 +219,146 @@ fn toon_format_renders() {
 
 // `trailing_var_arg` would swallow these into the intent (clap_builder Arg::trailing_var_arg docs).
 #[test]
-fn run_flags_after_intent_are_flags() {
+fn route_text_after_intent_is_text_and_removed_flags_are_errors() {
     use clap::{CommandFactory, FromArgMatches};
     // In-process parse: clap would read `env = "JEVIFY_THRESHOLD"` from this test's own
     // environment, so the env fallbacks are cleared and only argv is parsed.
     let cmd = jevify::cli::Cli::command().mut_args(|a| a.env(None));
     let m = cmd
-        .try_get_matches_from(["jevify", "run", "burn", "a", "dvd", "--dry-run", "--json"])
+        .try_get_matches_from(["jevify", "route", "burn", "a", "dvd", "--json"])
         .unwrap();
     let c = jevify::cli::Cli::from_arg_matches(&m).unwrap();
     assert!(c.g.json);
-    let jevify::cli::Cmd::Run {
-        intent, dry_run, ..
-    } = c.cmd
-    else {
-        unreachable!("expected run")
+    let jevify::cli::Cmd::Route { intent } = c.cmd else {
+        unreachable!("expected route")
     };
-    assert!(dry_run);
     assert_eq!(intent, ["burn", "a", "dvd"]);
+    assert!(
+        jevify::cli::Cli::command()
+            .mut_args(|a| a.env(None))
+            .try_get_matches_from(["jevify", "route", "burn", "--yes"])
+            .is_err()
+    );
+}
+
+#[test]
+fn removed_commands_report_one_corrected_line_and_usage_envelopes() {
+    for (args, command, correction) in [
+        (vec!["run", "x"], "jevify", "jevify route 'x'"),
+        (vec!["why", "--", "true"], "why", "CMD 2>&1 | jevify why"),
+    ] {
+        let out = common::bin().args(&args).output().unwrap();
+        assert_eq!(out.status.code(), Some(2));
+        let stderr = String::from_utf8(out.stderr).unwrap();
+        assert_eq!(stderr.lines().count(), 1);
+        assert!(stderr.contains(correction));
+        let out = common::bin().arg("--json").args(&args).output().unwrap();
+        let value: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+        assert_eq!(out.status.code(), Some(2));
+        assert_eq!(value["exit_code"], 2);
+        assert_eq!(value["command"], command);
+        assert_eq!(value["error"]["kind"], "usage");
+        assert_eq!(value["meta"]["requests"], 0);
+    }
+}
+
+#[test]
+fn clap_errors_preserve_non_utf8_args_and_stop_format_scanning_at_double_dash() {
+    use std::os::unix::ffi::OsStringExt;
+    for json in [false, true] {
+        let mut cmd = common::bin();
+        if json {
+            cmd.arg("--json");
+        }
+        let out = cmd
+            .args(["pick", "q", "--", "--json"])
+            .arg(std::ffi::OsString::from_vec(vec![0xff]))
+            .output()
+            .unwrap();
+        assert_eq!(out.status.code(), Some(2));
+        assert!(!String::from_utf8_lossy(&out.stderr).contains("panicked"));
+        if json {
+            let value: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+            assert_eq!(value["error"]["kind"], "usage");
+        } else {
+            assert!(out.stdout.is_empty());
+        }
+    }
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn interim_refusals_make_no_requests() {
+    let server = common::mock(common::FakeJev {
+        choose: |_, _, _| "NONE".into(),
+        noul: |_, _| 0.9,
+    })
+    .await;
+    for args in [
+        vec!["pick", "-0", "q"],
+        vec!["pick", "--para", "q"],
+        vec!["is", "a", "b"],
+        vec!["is", "a", "--context", "file"],
+        vec!["filter", "x"],
+        vec!["filter", "-v", "x"],
+    ] {
+        let mut cmd = common::jevify(&server);
+        let out = tokio::task::spawn_blocking(move || {
+            cmd.arg("--json")
+                .args(args)
+                .write_stdin("input")
+                .output()
+                .unwrap()
+        })
+        .await
+        .unwrap();
+        assert_eq!(out.status.code(), Some(6));
+        let value: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+        assert!(
+            value["error"]["message"]
+                .as_str()
+                .unwrap()
+                .contains("not implemented")
+        );
+        assert_eq!(value["meta"]["requests"], 0);
+    }
+    assert!(server.received_requests().await.unwrap().is_empty());
+}
+
+#[test]
+fn all_help_uses_the_cutover_grammar() {
+    for verb in [
+        "",
+        "pick",
+        "why",
+        "route",
+        "filter",
+        "is",
+        "add",
+        "sort",
+        "capabilities",
+        "robot-docs",
+        "health",
+        "init",
+    ] {
+        let mut cmd = common::bin();
+        if !verb.is_empty() {
+            cmd.arg(verb);
+        }
+        let out = cmd.arg("--help").output().unwrap();
+        assert!(out.status.success());
+        let text = String::from_utf8(out.stdout).unwrap();
+        for removed in [
+            "jevify run",
+            "why -- ",
+            "-- <cmd>",
+            "--exec",
+            "--no-args",
+            "--files DIR",
+            "--files <DIR>",
+            "child_exit",
+            "jevify -v",
+        ] {
+            assert!(!text.contains(removed), "{verb}: {removed}");
+        }
+    }
 }

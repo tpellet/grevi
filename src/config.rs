@@ -77,6 +77,17 @@ fn env(name: &str) -> Option<String> {
         .filter(|v| !v.is_empty())
 }
 
+pub fn save_dir(value: Option<&str>) -> Option<PathBuf> {
+    value
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .map(PathBuf::from)
+        .or_else(|| {
+            directories::ProjectDirs::from("", "", "jevify")
+                .map(|dirs| dirs.cache_dir().to_path_buf())
+        })
+}
+
 fn parse<T: std::str::FromStr>(name: &str, default: T) -> Result<T, JevifyError> {
     match env(name) {
         None => Ok(default),
@@ -241,6 +252,17 @@ impl Config {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn save_directory_uses_override_or_platform_default() {
+        assert_eq!(
+            save_dir(Some(" saved-inputs ")),
+            Some(PathBuf::from("saved-inputs"))
+        );
+        let platform = directories::ProjectDirs::from("", "", "jevify")
+            .map(|dirs| dirs.cache_dir().to_path_buf());
+        assert_eq!(save_dir(None), platform);
+        assert_eq!(save_dir(Some(" \t")), platform);
+    }
     #[test]
     fn base_urls_are_bound_to_the_backend() {
         for (backend, input, expected) in [

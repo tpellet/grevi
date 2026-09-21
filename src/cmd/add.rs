@@ -127,7 +127,8 @@ pub async fn run(
         return Ok(Outcome {
             exit: Exit::Abstain,
             data: serde_json::json!({ "hunks": rows }),
-            human: String::new(),
+            human: Vec::new(),
+            exec: None,
         });
     }
     let mut summary = String::new();
@@ -144,7 +145,8 @@ pub async fn run(
         return Ok(Outcome {
             exit: Exit::Ok,
             data: serde_json::json!({ "hunks": rows }),
-            human: summary,
+            human: summary.into_bytes(),
+            exec: None,
         });
     }
     // Machine mode requires --yes; humans confirm on /dev/tty (no TTY → declined, nothing staged).
@@ -187,6 +189,7 @@ pub async fn run(
     Ok(Outcome {
         exit: Exit::Ok,
         data: serde_json::json!({ "hunks": rows }),
-        human: summary,
+        human: summary.into_bytes(),
+        exec: None,
     })
 }

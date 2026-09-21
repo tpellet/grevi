@@ -320,7 +320,8 @@ fn undo(log: &Path) -> Result<Outcome, JevifyError> {
         } else {
             Exit::Ok
         },
-        human: format!("restored {} file(s)\n", restored.len()),
+        human: format!("restored {} file(s)\n", restored.len()).into_bytes(),
+        exec: None,
         data: serde_json::json!({ "moves": restored, "skipped": skipped, "undo_log": null, "applied": true }),
     })
 }
@@ -480,7 +481,8 @@ pub async fn run(
             Exit::Ok
         },
         data: serde_json::json!({ "moves": moves.iter().map(|(f, t, p)| serde_json::json!({ "from": f.display().to_string(), "to": t.display().to_string(), "p": p })).collect::<Vec<_>>(), "skipped": skipped, "undo_log": undo_path, "applied": apply }),
-        human,
+        human: human.into_bytes(),
+        exec: None,
     })
 }
 

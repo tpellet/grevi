@@ -141,7 +141,9 @@ async fn files_are_ranked_by_name_first_and_found_by_content_in_the_finals() {
     let server = common::mock(FakeJev {
         choose: |_, s, o| {
             let items = s["items"].as_array().unwrap();
-            if items.len() == 5 {
+            assert!(!s.to_string().contains("TOKEN=1099"));
+            if items.len() == 6 {
+                assert!(s.to_string().contains(".env"));
                 assert!(
                     !s.to_string().contains("1099"),
                     "file content left the machine in round one"
@@ -154,7 +156,10 @@ async fn files_are_ranked_by_name_first_and_found_by_content_in_the_finals() {
         noul: |_, _| 0.9,
     })
     .await;
-    let dir = tempfile::tempdir().unwrap();
+    let dir = tempfile::Builder::new()
+        .prefix("jevify-pick-")
+        .tempdir()
+        .unwrap();
     for (name, body) in [
         ("document(3).txt", "Form 1099-INT interest income"),
         ("notes.txt", "buy milk"),
@@ -167,9 +172,20 @@ async fn files_are_ranked_by_name_first_and_found_by_content_in_the_finals() {
     }
     let root = dir.path().to_str().unwrap().to_string();
     let mut c = common::jevify(&server);
-    let arg = root.clone();
+    let input = [
+        "document(3).txt",
+        "notes.txt",
+        "photo.txt",
+        "report.txt",
+        "zeta.txt",
+        ".env",
+    ]
+    .iter()
+    .map(|name| format!("{root}/{name}\n"))
+    .collect::<String>();
     let out = tokio::task::spawn_blocking(move || {
-        c.args(["--json", "pick", "--files", &arg, "the tax form"])
+        c.args(["--json", "pick", "--files", "the tax form"])
+            .write_stdin(input)
             .output()
             .unwrap()
     })
@@ -183,10 +199,18 @@ async fn files_are_ranked_by_name_first_and_found_by_content_in_the_finals() {
         format!("{root}/document(3).txt")
     );
     assert_eq!(v["meta"]["requests"], 2, "two rounds, no more: {v}");
+    assert!(
+        server
+            .received_requests()
+            .await
+            .unwrap()
+            .iter()
+            .all(|request| !String::from_utf8_lossy(&request.body).contains("TOKEN=1099"))
+    );
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn files_mode_rejects_index_and_an_empty_directory_and_abstains_honestly() {
+async fn files_mode_rejects_index_and_empty_input_and_abstains_honestly() {
     let server = common::mock(FakeJev {
         choose: |_, _, _| "NONE".into(),
         noul: |_, _| 0.05,
@@ -194,42 +218,41 @@ async fn files_mode_rejects_index_and_an_empty_directory_and_abstains_honestly()
     .await;
     let dir = tempfile::tempdir().unwrap();
     let root = dir.path().to_str().unwrap().to_string();
-    let run = |args: Vec<String>| {
+    let run = |args: Vec<String>, input: &str| {
         let mut c = common::jevify(&server);
-        c.args(args).output().unwrap()
+        c.args(args).write_stdin(input).output().unwrap()
     };
     let v = |o: &std::process::Output| -> serde_json::Value {
         serde_json::from_slice(&o.stdout).unwrap()
     };
     let args = |extra: &[&str]| -> Vec<String> {
-        let mut a = vec![
-            "--json".to_string(),
-            "pick".into(),
-            "--files".into(),
-            root.clone(),
-        ];
+        let mut a = vec!["--json".to_string(), "pick".into(), "--files".into()];
         a.extend(extra.iter().map(|s| s.to_string()));
         a
     };
-    let out = run(args(&["--index", "x"]));
+    let out = run(args(&["--index", "x"]), "a.txt\n");
     assert_eq!(out.status.code(), Some(2));
     assert_eq!(v(&out)["error"]["kind"], "usage");
-    // Only a hidden file: nothing to choose from, and no request is made.
+    // No piped paths: nothing to choose from, even if files exist on disk.
     std::fs::write(dir.path().join(".env"), "x").unwrap();
-    let out = run(args(&["x"]));
+    let out = run(args(&["x"]), "");
     assert_eq!(out.status.code(), Some(6));
     assert_eq!(v(&out)["error"]["kind"], "empty_input");
     assert_eq!(v(&out)["meta"]["requests"], 0);
     std::fs::write(dir.path().join("a.txt"), "x").unwrap();
-    let out = run(args(&["a spaceship"]));
+    let out = run(args(&["a spaceship"]), &format!("{root}/a.txt\n"));
     assert_eq!(out.status.code(), Some(3));
     assert_eq!(v(&out)["data"]["matches"], serde_json::json!([]));
-    let out = run(vec![
-        "--json".into(),
-        "pick".into(),
-        "--files".into(),
-        format!("{root}/missing"),
-        "x".into(),
-    ]);
-    assert_eq!(out.status.code(), Some(6));
+    let out = run(
+        vec![
+            "--json".into(),
+            "pick".into(),
+            "--files".into(),
+            format!("{root}/missing"),
+            "x".into(),
+        ],
+        "a.txt\n",
+    );
+    assert_eq!(out.status.code(), Some(2));
+    assert_eq!(v(&out)["error"]["kind"], "usage");
 }

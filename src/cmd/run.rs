@@ -63,14 +63,6 @@ const NEVER_EXEC_PREFIX: &[&str] = &[
     "mkfs", "newfs", "python", "perl", "ruby", "node", "php", "lua",
 ];
 
-pub struct RunFlags {
-    pub yes: bool,
-    pub exec: bool,
-    pub dry_run: bool,
-    pub no_args: bool,
-    pub machine: bool,
-}
-
 pub struct Route {
     pub tool: Option<Tool>,
     pub fit: f64,
@@ -170,7 +162,9 @@ pub async fn route(
     })
 }
 
-pub async fn run(ctx: &Config, intent: &str, flags: RunFlags) -> Result<Outcome, JevifyError> {
+pub async fn run(ctx: &Config, intent: &str, machine: bool) -> Result<Outcome, JevifyError> {
+    let dry_run = true;
+    let no_args = true;
     let client = Client::new(ctx)?;
     // Open the connection now; the inventory read below is the local work it overlaps with
     // (measured in benchmarks/README.md; the other verbs have no such work and do not prewarm).
@@ -186,7 +180,7 @@ pub async fn run(ctx: &Config, intent: &str, flags: RunFlags) -> Result<Outcome,
         .map(|(n, p)| serde_json::json!({ "tool": n, "fit": p }))
         .collect();
     let Some(tool) = r.tool else {
-        if !flags.machine {
+        if !machine {
             eprintln!(
                 "jevify: nothing installed does this (best fit {:.2})",
                 r.fit
@@ -198,7 +192,8 @@ pub async fn run(ctx: &Config, intent: &str, flags: RunFlags) -> Result<Outcome,
         return Ok(Outcome {
             exit: Exit::Abstain,
             data: serde_json::json!({ "tool": null, "fit": r.fit, "alternatives": alts }),
-            human: String::new(),
+            human: Vec::new(),
+            exec: None,
         });
     };
     let mut argv = vec![tool.name.clone()];
@@ -206,7 +201,7 @@ pub async fn run(ctx: &Config, intent: &str, flags: RunFlags) -> Result<Outcome,
     let mut chosen_flags = serde_json::Value::Array(vec![]);
     let mut parsed: Vec<manpage::Flag> = Vec::new();
     let mut chosen: Vec<String> = Vec::new();
-    if !flags.no_args {
+    if !no_args {
         // Flags come from the man page only; jevify never runs a binary with --help to learn them.
         let name = tool.name.clone();
         parsed = tokio::task::spawn_blocking(move || {
@@ -237,12 +232,17 @@ pub async fn run(ctx: &Config, intent: &str, flags: RunFlags) -> Result<Outcome,
             );
         }
     }
-    let shown = shell_display(&argv);
+    let mut shown = crate::output::shell_quote(
+        &argv
+            .iter()
+            .map(std::ffi::OsString::from)
+            .collect::<Vec<_>>(),
+    );
     let complete = placeholders == 0 && validated_argv(&argv);
     let blocked = blocked_reason(&tool.name)
         .or_else(|| (!complete).then(|| "unvalidated command grammar; proposal only".to_string()));
-    if !flags.machine {
-        if flags.dry_run {
+    if !machine {
+        if dry_run {
             eprintln!("jevify: {} ({:.2}) — {}", tool.name, r.fit, tool.summary);
         }
         // Each chosen flag with its man-page line, so the user can check the proposal.
@@ -255,15 +255,15 @@ pub async fn run(ctx: &Config, intent: &str, flags: RunFlags) -> Result<Outcome,
     }
     let may_execute = complete
         && blocked.is_none()
-        && !flags.dry_run
-        && if flags.machine {
-            flags.exec && flags.yes
-        } else if flags.yes {
-            true
+        && !dry_run
+        && if machine {
+            false
         } else {
             let prompt = format!(
                 "jevify: {} ({:.2})\n  {shown}\nRun it? [y/N] ",
-                tool.name, r.fit
+                tool.name,
+                r.fit,
+                shown = String::from_utf8_lossy(&shown)
             );
             match crate::cmd::confirm_tty(&prompt)? {
                 Some(true) => true,
@@ -277,7 +277,7 @@ pub async fn run(ctx: &Config, intent: &str, flags: RunFlags) -> Result<Outcome,
     if may_execute {
         let mut child = std::process::Command::new(&argv[0]);
         child.args(&argv[1..]);
-        if flags.machine {
+        if machine {
             // stdout carries exactly one envelope; the child's stdout goes to stderr.
             child.stdout(std::io::stderr());
         }
@@ -296,10 +296,12 @@ pub async fn run(ctx: &Config, intent: &str, flags: RunFlags) -> Result<Outcome,
         data: serde_json::json!({ "tool": tool.name, "summary": tool.summary, "fit": r.fit, "argv": argv, "flags": chosen_flags,
                                   "complete": complete, "blocked": blocked, "executed": executed, "child_exit": child_code, "alternatives": alts }),
         human: if executed {
-            String::new()
+            Vec::new()
         } else {
-            format!("{shown}\n")
+            shown.push(b'\n');
+            shown
         },
+        exec: None,
     })
 }
 
@@ -307,13 +309,6 @@ pub async fn run(ctx: &Config, intent: &str, flags: RunFlags) -> Result<Outcome,
 /// In particular a leading-dash filename cannot become an option in an executable proposal.
 fn validated_argv(argv: &[String]) -> bool {
     matches!(argv, [name] if matches!(name.as_str(), "true" | "false" | "pwd" | "ls"))
-}
-
-fn shell_display(argv: &[String]) -> String {
-    argv.iter()
-        .map(|arg| format!("'{}'", arg.replace('\'', "'\\''")))
-        .collect::<Vec<_>>()
-        .join(" ")
 }
 
 /// Name-based denylist; passing this check alone does not validate the command grammar.
@@ -348,18 +343,6 @@ pub fn relevant_files(intent: &str, cwd: &[String]) -> Vec<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[test]
-    fn presentation_quotes_each_posix_shell_token() {
-        assert_eq!(
-            shell_display(&[
-                "cp".into(),
-                "report copy.txt".into(),
-                "it's;$HOME".into(),
-                "".into()
-            ]),
-            "'cp' 'report copy.txt' 'it'\\''s;$HOME' ''"
-        );
-    }
     #[test]
     fn execution_grammar_accepts_only_explicit_zero_argument_recipes() {
         for name in ["true", "false", "pwd", "ls"] {

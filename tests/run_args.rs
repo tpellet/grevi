@@ -16,16 +16,9 @@ async fn unsupported_cp_grammar_never_executes_even_without_placeholders() {
     )
     .current_dir(dir.path());
     let out = tokio::task::spawn_blocking(move || {
-        c.args([
-            "--json",
-            "run",
-            "--no-args",
-            "--exec",
-            "--yes",
-            "copy source.txt to destination.txt",
-        ])
-        .output()
-        .unwrap()
+        c.args(["--json", "route", "copy source.txt to destination.txt"])
+            .output()
+            .unwrap()
     })
     .await
     .unwrap();
@@ -48,35 +41,32 @@ fn inv(dir: &tempfile::TempDir, json: &str) -> std::path::PathBuf {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn machine_mode_never_executes_without_exec_and_yes() {
+async fn removed_execution_flags_are_usage_errors() {
     let server = common::mock(FakeJev {
         choose: |_, s, o| common::option_containing(s, o, "true"),
         noul: |_, _| 0.95,
     })
     .await;
-    let dir = tempfile::tempdir().unwrap();
-    let mut c = common::jevify(&server);
-    c.env(
-        "JEVIFY_INVENTORY_FILE",
-        inv(
-            &dir,
-            r#"[{"name":"true","summary":"do nothing, successfully"}]"#,
-        ),
-    )
-    .current_dir(dir.path());
-    let out = tokio::task::spawn_blocking(move || {
-        c.args(["--json", "run", "--yes", "succeed", "quietly"])
-            .output()
-            .unwrap()
-    })
-    .await
-    .unwrap();
-    let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
-    assert_eq!(v["data"]["executed"], false);
+    for flag in ["--yes", "--exec", "--dry-run", "--no-args"] {
+        let mut cmd = common::jevify(&server);
+        tokio::task::spawn_blocking(move || {
+            let out = cmd
+                .args(["--json", "route", "succeed", flag])
+                .output()
+                .unwrap();
+            let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+            assert_eq!(out.status.code(), Some(2));
+            assert_eq!(v["error"]["kind"], "usage");
+            assert_eq!(v["meta"]["requests"], 0);
+        })
+        .await
+        .unwrap();
+    }
+    assert!(server.received_requests().await.unwrap().is_empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn exec_and_yes_run_the_command_via_argv() {
+async fn route_prints_without_starting_the_selected_tool() {
     let server = common::mock(FakeJev {
         choose: |_, s, o| common::option_containing(s, o, "true"),
         noul: |i, _| {
@@ -89,6 +79,10 @@ async fn exec_and_yes_run_the_command_via_argv() {
     })
     .await;
     let dir = tempfile::tempdir().unwrap();
+    use std::os::unix::fs::PermissionsExt;
+    let tool = dir.path().join("true");
+    std::fs::write(&tool, "#!/bin/sh\nprintf started > sentinel\n").unwrap();
+    std::fs::set_permissions(&tool, std::fs::Permissions::from_mode(0o755)).unwrap();
     let mut c = common::jevify(&server);
     c.env(
         "JEVIFY_INVENTORY_FILE",
@@ -97,22 +91,21 @@ async fn exec_and_yes_run_the_command_via_argv() {
             r#"[{"name":"true","summary":"do nothing, successfully"}]"#,
         ),
     )
-    .current_dir(dir.path());
+    .current_dir(dir.path())
+    .env("PATH", dir.path());
     let out = tokio::task::spawn_blocking(move || {
-        c.args(["--json", "run", "--exec", "--yes", "succeed", "quietly"])
-            .output()
-            .unwrap()
+        c.args(["route", "succeed", "quietly"]).output().unwrap()
     })
     .await
     .unwrap();
-    let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
-    assert_eq!(v["data"]["executed"], true);
-    assert_eq!(v["data"]["child_exit"], 0);
+    assert_eq!(out.status.code(), Some(0));
+    assert_eq!(out.stdout, b"'true'\n");
+    assert!(!dir.path().join("sentinel").exists());
 }
 
-// `ls` prints to stdout; in machine mode that output must land on stderr, not in the envelope.
+// A routed `ls` starts no child and prints only the envelope.
 #[tokio::test(flavor = "multi_thread")]
-async fn executed_child_output_never_corrupts_the_envelope() {
+async fn route_machine_output_is_one_envelope_without_child_output() {
     let server = common::mock(FakeJev {
         choose: |_, s, o| common::option_containing(s, o, "ls"),
         noul: |i, _| {
@@ -135,15 +128,17 @@ async fn executed_child_output_never_corrupts_the_envelope() {
     )
     .current_dir(dir.path());
     let out = tokio::task::spawn_blocking(move || {
-        c.args(["--json", "run", "--exec", "--yes", "list", "files"])
+        c.args(["--json", "route", "list", "files"])
             .output()
             .unwrap()
     })
     .await
     .unwrap();
     let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
-    assert_eq!(v["data"]["executed"], true);
-    assert!(String::from_utf8(out.stderr).unwrap().contains("inv.json"));
+    assert_eq!(out.status.code(), Some(0));
+    assert_eq!(v["data"]["executed"], false);
+    assert_eq!(v["command"], "route");
+    assert!(out.stderr.is_empty());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -170,11 +165,9 @@ async fn never_exec_tools_are_shown_not_run() {
     )
     .current_dir(dir.path());
     let out = tokio::task::spawn_blocking(move || {
-        c.args([
-            "--json", "run", "--exec", "--yes", "delete", "the", "temp", "file",
-        ])
-        .output()
-        .unwrap()
+        c.args(["--json", "route", "delete", "the", "temp", "file"])
+            .output()
+            .unwrap()
     })
     .await
     .unwrap();
@@ -192,5 +185,5 @@ fn init_zsh_defines_comma_alias() {
         .args(["init", "zsh"])
         .assert()
         .success()
-        .stdout(predicates::str::contains("alias ,="));
+        .stdout(predicates::str::contains("alias ,='noglob jevify route'"));
 }

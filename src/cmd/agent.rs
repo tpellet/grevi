@@ -20,7 +20,8 @@ pub fn capabilities() -> Outcome {
         "commands": [
             { "name": "pick", "usage": "<stdin> | jevify pick \"<intent>\" [-n N] [--index]  |  jevify pick --files <DIR> \"<intent>\" [-n N]", "stdin": true, "exit": [0, 3], "data": "matches[{line,text,p}], any, source", "when": "choose one item out of many by description (a branch, a commit, a file, a process, a history line); the description and the line need no word in common. --files chooses among the files under DIR by what they are about (path names first, then the beginning of at most 24 finalist files) and prints a path", "example": "git log --oneline | jevify pick --json \"the commit that renamed the project\"" },
             { "name": "why", "usage": "<cmd> 2>&1 | jevify why [-C N] [-n N]  |  jevify why [-C N] -- <cmd...>", "stdin": true, "exit": [0, 3], "data": "causes[{line,text,p,context[]}], any, considered, total, hint, child_exit", "when": "root-cause a build, test or CI log, above all a long one or one where grep for error|fail found the symptom and not the reason", "example": "gh run view --log-failed | jevify why --json", "note": "past 1,500 distinct lines it keeps the neighbourhoods of error-like lines within a 4,000-line budget: compare considered with total" },
-            { "name": "run", "usage": "jevify run [--dry-run|--yes|--exec --yes] [--no-args] <intent...>", "stdin": false, "exit": [0, 3, 7, 130], "data": "tool, fit, argv[], flags[], complete, blocked, executed, child_exit, alternatives[]", "when": "you do not know which installed command does a task, or which of several candidates is installed; it searches every command on the PATH by its man-page summary", "example": "jevify run --json --dry-run --no-args \"keep my mac awake for an hour\"", "note": "read tool and alternatives[], then check the flags in the man page yourself: argv is a proposal" },
+            { "name": "route", "usage": "jevify route <intent...>", "stdin": false, "exit": [0, 3], "data": "tool, summary, fit, alternatives[]", "when": "find the installed tool for a task", "example": "jevify route 'keep my mac awake for an hour'", "note": "prints a tool; starts no command" },
+            { "name": "filter", "usage": "<stdin> | jevify filter [-v] [-c] [--strict] [-0|--para] [--files] [--no-save] '<statement>'", "stdin": true, "when": "keep matching records", "example": "cargo test 2>&1 | jevify filter 'reports a failed assertion'", "note": "not implemented" },
             { "name": "is", "usage": "<stdin> | jevify is \"<condition>\" [--band 0.15]", "stdin": true, "exit": [0, 1, 3], "data": "p, verdict, truncated, reason (when oversized)", "when": "triage or gate on meaning; loop over bounded texts and read the exit codes", "example": "jevify is \"the customer is about to stop being a customer\" < ticket.txt; echo $?", "note": "oversized evidence abstains before API requests, with p null and a stderr warning" },
             { "name": "add", "usage": "jevify add [--dry-run|--yes] \"<topic>\"", "stdin": false, "exit": [0, 3, 6, 130], "data": "hunks[{file,header,p,staged}]", "when": "stage part of a working tree without a terminal: git add -p is interactive, add is not", "example": "jevify add --json --dry-run \"the token expiry fix\"", "note": "stages single hunks of tracked files; rejects oversized hunks or batches before requests or staging; index only, never commits; works from any subdirectory" },
             { "name": "sort", "usage": "jevify sort <dir> [--into <root>] [--apply | --undo <log>]", "stdin": false, "exit": [0, 3, 6], "data": "moves[{from,to,p}], skipped[{file,reason}], undo_log, applied", "when": "files whose names say nothing need a home among the folders that already exist; it reads an excerpt", "example": "jevify sort --json ~/Downloads", "note": "dry-run by default; atomic no-replace apply/undo; unique durable JSONL recovery journal; symlink entries skipped; same volume only; concurrent source replacement unsupported; failures identify recovery log and progress" },
@@ -91,7 +92,8 @@ pub fn capabilities() -> Outcome {
     });
     Outcome {
         exit: Exit::Ok,
-        human: format!("{}\n", serde_json::to_string_pretty(&data).unwrap()),
+        human: format!("{}\n", serde_json::to_string_pretty(&data).unwrap()).into_bytes(),
+        exec: None,
         data,
     }
 }
@@ -113,7 +115,8 @@ pub fn robot_docs(topic: Option<&str>) -> Result<Outcome, JevifyError> {
     Ok(Outcome {
         exit: Exit::Ok,
         data: serde_json::json!({ "topic": topic.unwrap_or("guide"), "text": text }),
-        human: format!("{text}\n"),
+        human: format!("{text}\n").into_bytes(),
+        exec: None,
     })
 }
 
@@ -163,7 +166,9 @@ pub async fn health(ctx: &Config) -> Result<Outcome, JevifyError> {
             };
             Ok(Outcome {
                 exit: Exit::Ok,
-                human: format!("ok: {backend} reachable in {ms} ms (key {key_state})\n"),
+                human: format!("ok: {backend} reachable in {ms} ms (key {key_state})\n")
+                    .into_bytes(),
+                exec: None,
                 data: serde_json::json!({
                     "backend": backend,
                     "base_url": ctx.base_url,
@@ -186,14 +191,33 @@ pub async fn health(ctx: &Config) -> Result<Outcome, JevifyError> {
 }
 
 pub fn init(shell: Shell) -> Outcome {
+    if matches!(shell, Shell::Agents) {
+        let capabilities = capabilities().data;
+        let verbs = capabilities["commands"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter_map(|command| command["name"].as_str())
+            .collect::<Vec<_>>()
+            .join(", ");
+        let block = format!(
+            "# jevify\nSelect existing items by meaning with: {verbs}.\nUse jevify capabilities --json as the source of truth for commands and flags.\n"
+        );
+        return Outcome {
+            exit: Exit::Ok,
+            data: serde_json::json!({ "script": block }),
+            human: block.into_bytes(),
+            exec: None,
+        };
+    }
     let body = match shell {
         Shell::Zsh => {
             r#"# jevify shell integration — add to ~/.zshrc: eval "$(jevify init zsh)"
-alias ,='noglob jevify run'
+alias ,='noglob jevify route'
 # Opt-in: route unknown commands of 3+ words to jevify (export JEVIFY_CNF=1).
 if [[ -n $JEVIFY_CNF ]] && ! (( $+functions[command_not_found_handler] )); then
   command_not_found_handler() {
-    if (( $# >= 3 )); then jevify run "$*"; return $?; fi
+    if (( $# >= 3 )); then jevify route "$*"; return $?; fi
     print -u2 "zsh: command not found: $1"; return 127
   }
 fi
@@ -201,20 +225,22 @@ fi
         }
         Shell::Bash => {
             r#"# jevify shell integration — add to ~/.bashrc: eval "$(jevify init bash)"
-alias ,='jevify run'
+alias ,='jevify route'
 if [[ -n $JEVIFY_CNF ]] && ! declare -F command_not_found_handle >/dev/null; then
   command_not_found_handle() {
-    if (( $# >= 3 )); then jevify run "$*"; return $?; fi
+    if (( $# >= 3 )); then jevify route "$*"; return $?; fi
     echo "bash: $1: command not found" >&2; return 127
   }
 fi
 "#
         }
+        Shell::Agents => unreachable!("handled above"),
     };
     Outcome {
         exit: Exit::Ok,
         data: serde_json::json!({ "script": body }),
-        human: body.to_string(),
+        human: body.as_bytes().to_vec(),
+        exec: None,
     }
 }
 
@@ -266,7 +292,16 @@ mod tests {
                 .all(|c| c["name"].is_string() && c["usage"].is_string())
         );
         // An agent must learn from here when each verb is worth a call, with a command to copy.
-        for verb in ["pick", "why", "run", "is", "add", "sort"] {
+        assert_eq!(
+            d["commands"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|c| c["name"].as_str().unwrap())
+                .collect::<Vec<_>>(),
+            crate::VERBS
+        );
+        for verb in ["pick", "why", "route", "filter", "is", "add", "sort"] {
             let c = d["commands"]
                 .as_array()
                 .unwrap()
@@ -291,7 +326,18 @@ mod tests {
     #[test]
     fn init_prints_the_comma_alias_for_both_shells() {
         for shell in [Shell::Zsh, Shell::Bash] {
-            assert!(init(shell).human.contains("alias ,="));
+            let script = String::from_utf8(init(shell).human).unwrap();
+            assert!(script.contains("alias ,=") && script.contains("jevify route"));
+            assert!(!script.contains("jevify run"));
         }
+    }
+    #[test]
+    fn init_agents_names_every_verb_and_the_capability_contract() {
+        let block = String::from_utf8(init(Shell::Agents).human).unwrap();
+        for verb in crate::VERBS {
+            assert!(block.contains(verb));
+        }
+        assert!(block.contains("jevify capabilities --json"));
+        assert!(block.lines().count() <= 25);
     }
 }

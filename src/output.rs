@@ -1,5 +1,25 @@
 use serde::Serialize;
 
+pub fn shell_quote(argv: &[std::ffi::OsString]) -> Vec<u8> {
+    use std::os::unix::ffi::OsStrExt;
+    let mut output = Vec::new();
+    for (index, arg) in argv.iter().enumerate() {
+        if index > 0 {
+            output.push(b' ');
+        }
+        output.push(b'\'');
+        for &byte in arg.as_bytes() {
+            if byte == b'\'' {
+                output.extend_from_slice(b"'\\''");
+            } else {
+                output.push(byte);
+            }
+        }
+        output.push(b'\'');
+    }
+    output
+}
+
 #[derive(Serialize, Default, Debug, Clone)]
 pub struct AttemptCounts {
     pub attempted: u64,
@@ -118,6 +138,21 @@ pub fn render(format: Format, env: &Envelope) -> anyhow::Result<String> {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn presentation_quotes_each_posix_shell_token_as_bytes() {
+        use std::os::unix::ffi::OsStringExt;
+        assert_eq!(
+            super::shell_quote(&[
+                "cp".into(),
+                "report copy.txt".into(),
+                "it's;$HOME".into(),
+                "".into(),
+                std::ffi::OsString::from_vec(vec![0xff, b'\n']),
+            ]),
+            b"'cp' 'report copy.txt' 'it'\\''s;$HOME' '' '\xff\n'"
+        );
+        assert!(super::shell_quote(&[]).is_empty());
+    }
     use super::*;
     fn envelope() -> Envelope<'static> {
         Envelope {

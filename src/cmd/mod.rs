@@ -2,6 +2,7 @@ use crate::exit::{Exit, JevifyError};
 
 pub mod add;
 pub mod agent;
+pub mod filter;
 pub mod is;
 pub mod pick;
 pub mod run;
@@ -12,7 +13,13 @@ pub mod why;
 pub struct Outcome {
     pub exit: Exit,
     pub data: serde_json::Value,
-    pub human: String,
+    pub human: Vec<u8>,
+    pub exec: Option<Exec>,
+}
+
+pub struct Exec {
+    pub argv: Vec<std::ffi::OsString>,
+    pub stdin_null: bool,
 }
 
 /// Asks on /dev/tty so it works when stdout is piped. `Ok(None)` means there is no TTY

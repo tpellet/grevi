@@ -50,13 +50,30 @@ pub fn split_lines(text: &str) -> Vec<String> {
 }
 
 pub fn read_stdin() -> Result<Vec<String>, JevifyError> {
-    let mut stdin = std::io::stdin();
-    if stdin.is_terminal() {
+    let buf = read_stdin_bytes()?;
+    let lines = split_lines(&String::from_utf8_lossy(&buf));
+    if lines.iter().all(|l| l.trim().is_empty()) {
+        return Err(JevifyError::EmptyInput("stdin was empty"));
+    }
+    Ok(lines)
+}
+
+fn check_terminal(is_terminal: bool) -> Result<(), JevifyError> {
+    if is_terminal {
         return Err(JevifyError::EmptyInput("pipe text into jevify"));
     }
+    Ok(())
+}
+
+pub fn read_stdin_bytes() -> Result<Vec<u8>, JevifyError> {
+    let stdin = std::io::stdin();
+    check_terminal(stdin.is_terminal())?;
+    read_bytes(stdin.lock())
+}
+
+fn read_bytes(reader: impl Read) -> Result<Vec<u8>, JevifyError> {
     let mut buf = Vec::new();
-    stdin
-        .by_ref()
+    reader
         .take(MAX_BYTES as u64 + 1)
         .read_to_end(&mut buf)
         .map_err(|e| JevifyError::Input(e.to_string()))?;
@@ -66,11 +83,10 @@ pub fn read_stdin() -> Result<Vec<String>, JevifyError> {
             MAX_BYTES / 1024 / 1024
         )));
     }
-    let lines = split_lines(&String::from_utf8_lossy(&buf));
-    if lines.iter().all(|l| l.trim().is_empty()) {
+    if buf.is_empty() {
         return Err(JevifyError::EmptyInput("stdin was empty"));
     }
-    Ok(lines)
+    Ok(buf)
 }
 
 /// Reads stdin on the blocking pool so a slow producer never stalls the runtime.
@@ -83,6 +99,32 @@ pub async fn read_stdin_async() -> Result<Vec<String>, JevifyError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn terminal_check_requires_a_pipe() {
+        assert!(check_terminal(false).is_ok());
+        assert!(matches!(
+            check_terminal(true),
+            Err(JevifyError::EmptyInput(_))
+        ));
+    }
+    #[test]
+    fn byte_reader_preserves_bytes_and_enforces_the_cap() {
+        assert_eq!(read_bytes(&b"\xff\r\n\0 "[..]).unwrap(), b"\xff\r\n\0 ");
+        assert!(matches!(
+            read_bytes(&b""[..]),
+            Err(JevifyError::EmptyInput(_))
+        ));
+        assert_eq!(
+            read_bytes(std::io::repeat(b'x').take(MAX_BYTES as u64))
+                .unwrap()
+                .len(),
+            MAX_BYTES
+        );
+        assert!(matches!(
+            read_bytes(std::io::repeat(b'x').take(MAX_BYTES as u64 + 1)),
+            Err(JevifyError::InputTooLarge(_))
+        ));
+    }
     #[test]
     fn strips_ansi_and_carriage_returns() {
         let got = split_lines("\x1b[31merror\x1b[0m: boom\n 10%\r 50%\r100% done  \n");

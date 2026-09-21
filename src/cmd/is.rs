@@ -8,7 +8,20 @@ use crate::jev::{Question, Questions};
 /// Denser text (non-Latin scripts) can exceed it and surfaces as `api_rejected_request` (exit 6).
 const MAX_CHARS: usize = 96_000;
 
-pub async fn run(ctx: &Config, condition: &str, band: f64) -> Result<Outcome, JevifyError> {
+pub async fn run(
+    ctx: &Config,
+    statements: &[String],
+    context: Option<&std::path::Path>,
+    band: f64,
+) -> Result<Outcome, JevifyError> {
+    let [condition] = statements else {
+        return Err(JevifyError::Input(
+            "several statements: not implemented".into(),
+        ));
+    };
+    if context.is_some() {
+        return Err(JevifyError::Input("--context: not implemented".into()));
+    }
     // Above 0.5 the "no" verdict becomes unreachable at the default threshold.
     if !(0.0..=0.5).contains(&band) {
         return Err(JevifyError::Usage(format!(
@@ -26,7 +39,8 @@ pub async fn run(ctx: &Config, condition: &str, band: f64) -> Result<Outcome, Je
         return Ok(Outcome {
             exit: Exit::Abstain,
             data: serde_json::json!({ "p": null, "verdict": "unsure", "truncated": true, "reason": "input exceeds the evidence budget; whole input not judged" }),
-            human: String::new(),
+            human: Vec::new(),
+            exec: None,
         });
     }
     let mut qs = Questions::new();
@@ -46,7 +60,8 @@ pub async fn run(ctx: &Config, condition: &str, band: f64) -> Result<Outcome, Je
     Ok(Outcome {
         exit,
         data: serde_json::json!({ "p": p, "verdict": verdict, "truncated": truncated }),
-        human: String::new(),
+        human: Vec::new(),
+        exec: None,
     })
 }
 

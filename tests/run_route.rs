@@ -28,17 +28,9 @@ async fn routes_to_the_tool() {
     let mut c = common::jevify(&server);
     c.env("JEVIFY_INVENTORY_FILE", inv(&dir));
     let out = tokio::task::spawn_blocking(move || {
-        c.args([
-            "--json",
-            "run",
-            "--dry-run",
-            "--no-args",
-            "burn",
-            "a",
-            "dvd",
-        ])
-        .output()
-        .unwrap()
+        c.args(["--json", "route", "burn", "a", "dvd"])
+            .output()
+            .unwrap()
     })
     .await
     .unwrap();
@@ -58,7 +50,7 @@ async fn abstains_when_nothing_installed_fits() {
     let mut c = common::jevify(&server);
     c.env("JEVIFY_INVENTORY_FILE", inv(&dir));
     let out = tokio::task::spawn_blocking(move || {
-        c.args(["run", "--dry-run", "make", "a", "qr", "code"])
+        c.args(["route", "make", "a", "qr", "code"])
             .output()
             .unwrap()
     })

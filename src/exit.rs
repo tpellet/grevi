@@ -19,20 +19,28 @@ impl Exit {
         self as i32
     }
     pub const ALL: [(Exit, &'static str); 9] = [
-        (Exit::Ok, "success: yes / found / executed"),
+        (Exit::Ok, "success: yes / found"),
         (Exit::No, "`is`: the condition does not hold"),
         (Exit::Usage, "usage error: bad flag or missing argument"),
         (Exit::Abstain, "abstain: nothing fits, or unsure"),
         (Exit::Unavailable, "the API is unavailable after retries"),
         (Exit::Auth, "API key missing or rejected"),
         (Exit::Input, "input error: empty, too large, or unreadable"),
-        (Exit::ChildFailed, "`run`: the executed command failed"),
+        (Exit::ChildFailed, "reserved"),
         (Exit::Interrupted, "interrupted or declined at confirmation"),
     ];
 }
 
 #[derive(Debug, thiserror::Error)]
 pub enum JevifyError {
+    #[error("{message}")]
+    Kinded {
+        kind: &'static str,
+        exit: Exit,
+        message: String,
+        hint: &'static str,
+        example: &'static str,
+    },
     /// Only reachable with `JEVIFY_BACKEND=typesafe`: without a key jevify uses classifier.dev.
     #[error("the typesafe backend needs a key: set TYPESAFE_API_KEY or TYPESAFE_API_KEY_FILE")]
     MissingKey,
@@ -61,6 +69,7 @@ pub enum JevifyError {
 impl JevifyError {
     pub fn exit(&self) -> Exit {
         match self {
+            Self::Kinded { exit, .. } => *exit,
             Self::MissingKey | Self::BadKey(_) => Exit::Auth,
             Self::Unavailable(_) | Self::Protocol(_) => Exit::Unavailable,
             Self::EmptyInput(_)
@@ -73,6 +82,7 @@ impl JevifyError {
     }
     pub fn kind(&self) -> &'static str {
         match self {
+            Self::Kinded { kind, .. } => kind,
             Self::MissingKey => "missing_api_key",
             Self::BadKey(_) => "bad_api_key",
             Self::Unavailable(_) => "api_unavailable",
@@ -87,6 +97,7 @@ impl JevifyError {
     }
     pub fn hint(&self) -> &'static str {
         match self {
+            Self::Kinded { hint, .. } => hint,
             Self::MissingKey => {
                 "unset JEVIFY_BACKEND to run keyless through classifier.dev, or create a key at https://console.typesafe.ai/settings/keys and export it in your shell profile; jevify never prints it"
             }
@@ -110,6 +121,7 @@ impl JevifyError {
     }
     pub fn example(&self) -> &'static str {
         match self {
+            Self::Kinded { example, .. } => example,
             Self::MissingKey => "export TYPESAFE_API_KEY=...; jevify health",
             Self::EmptyInput(msg) if msg.starts_with("no unstaged changes") => {
                 "jevify add \"finish the login flow\""
@@ -130,10 +142,22 @@ mod tests {
     fn exit_codes_are_the_documented_contract() {
         let codes: Vec<i32> = Exit::ALL.iter().map(|(e, _)| e.code()).collect();
         assert_eq!(codes, [0, 1, 2, 3, 4, 5, 6, 7, 130]);
+        assert!(
+            Exit::ALL
+                .iter()
+                .all(|(_, text)| !text.contains("executed") && !text.contains("`run`"))
+        );
     }
     #[test]
     fn every_error_maps_to_a_stable_kind_and_exit() {
         let errors = [
+            JevifyError::Kinded {
+                kind: "too_many",
+                exit: Exit::Input,
+                message: "too many records".into(),
+                hint: "narrow the input",
+                example: "head -n 100 input | jevify pick 'q'",
+            },
             JevifyError::MissingKey,
             JevifyError::BadKey(401),
             JevifyError::Unavailable(String::new()),
@@ -146,6 +170,7 @@ mod tests {
             JevifyError::Declined,
         ];
         let expected = [
+            ("too_many", 6),
             ("missing_api_key", 5),
             ("bad_api_key", 5),
             ("api_unavailable", 4),

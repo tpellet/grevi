@@ -38,7 +38,7 @@ fn capabilities_lists_verbs_exit_codes_env() {
         .unwrap();
     let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
     let d = &v["data"];
-    for verb in ["pick", "why", "run", "is"] {
+    for verb in ["pick", "why", "route", "filter", "is"] {
         assert!(
             d["commands"]
                 .as_array()

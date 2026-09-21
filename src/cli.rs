@@ -6,7 +6,7 @@ use clap::{Args, Parser, Subcommand, ValueEnum};
     name = "jevify",
     version,
     about = "Answer questions about text you already have: find a line, an error, a command or a folder by meaning. jevify selects and never generates, with backend-specific decision scores.",
-    after_help = "Examples:\n  gh run view --log-failed | jevify why\n  git branch | jevify pick \"the payment timeout fix\"\n  jevify is \"the customer asks for a refund\" < mail.txt && ./refund\n  jevify run --dry-run \"keep my mac awake for an hour\"\n  jevify add --dry-run \"the token expiry fix\"\n  jevify sort ~/Downloads\n\nExit codes: 0 ok, 1 no (is), 2 usage, 3 nothing fits or unsure, 4 API unavailable, 5 auth, 6 input, 7 child failed, 130 declined.\nAgents: jevify capabilities --json | jevify robot-docs"
+    after_help = "Examples:\n  gh run view --log-failed | jevify why\n  git branch | jevify pick \"the payment timeout fix\"\n  cargo test 2>&1 | jevify filter \"reports a failed assertion\"\n  jevify is \"the customer asks for a refund\" < mail.txt && ./refund\n  jevify route \"keep my mac awake for an hour\"\n  jevify add --dry-run \"the token expiry fix\"\n  jevify sort ~/Downloads\n\nExit codes: 0 ok, 1 no, 2 usage, 3 nothing fits or unsure, 4 API unavailable, 5 auth, 6 input, 7 reserved, 130 declined.\nAgents: jevify capabilities --json | jevify init agents"
 )]
 pub struct Cli {
     #[command(flatten)]
@@ -33,7 +33,7 @@ pub struct GlobalOpts {
     #[arg(long, global = true)]
     pub no_cache: bool,
     /// Print probabilities and timing on stderr
-    #[arg(short, long, global = true)]
+    #[arg(long, global = true)]
     pub verbose: bool,
 }
 
@@ -51,7 +51,7 @@ impl GlobalOpts {
 pub enum Cmd {
     /// Find one line in a list by describing it: stdin lines in, the matching line out
     #[command(
-        after_help = "Examples:\n  git branch | jevify pick \"the payment timeout fix\"\n  git log --oneline | jevify pick -n 3 \"when we changed the pricing\"\n  code \"$(jevify pick --files . \"where man pages are parsed\")\"\n\nThe description and the line need no word in common. --files ranks the path names under DIR first, then reads the beginning of at most 24 finalist files; hidden files, git-ignored files and symlinks are skipped.\nExit: 0 found, 3 no line fits. --json data: matches[{line, text, p}], any, source."
+        after_help = "Examples:\n  git branch | jevify pick \"the payment timeout fix\"\n  git log --oneline | jevify pick -n 3 \"when we changed the pricing\"\n  git ls-files | jevify pick --files \"where man pages are parsed\"\n\nThe description and the line need no word in common. --files ranks stdin paths first, then reads excerpts of the finalists; hidden paths receive no excerpt.\nExit: 0 found, 3 no line fits. --json data: matches[{line, text, p}], any, source."
     )]
     Pick {
         /// Describe the line you want, e.g. "the branch with the payment timeout fix"
@@ -60,15 +60,21 @@ pub enum Cmd {
         #[arg(short = 'n', long, default_value_t = 1)]
         top: usize,
         /// Print 1-based line numbers instead of lines
-        #[arg(long)]
+        #[arg(long, conflicts_with = "files")]
         index: bool,
-        /// Choose among the files under DIR instead of stdin lines; prints the path
-        #[arg(long, value_name = "DIR")]
-        files: Option<std::path::PathBuf>,
+        /// Read paths from stdin and use file excerpts as evidence
+        #[arg(long)]
+        files: bool,
+        /// Split stdin on NUL bytes
+        #[arg(short = '0', conflicts_with = "para")]
+        nul: bool,
+        /// Split stdin into paragraphs
+        #[arg(long)]
+        para: bool,
     },
-    /// Find the line that caused a failure in build, test or CI output (stdin, or `-- <cmd>` to run it)
+    /// Find the line that caused a failure in build, test or CI output on stdin
     #[command(
-        after_help = "Examples:\n  cargo build 2>&1 | jevify why\n  gh run view --log-failed | jevify why --json\n  jevify why -- cargo test\n\nPipe 2>&1: compilers write errors to stderr. Works on logs of thousands of lines, and finds a cause that holds no word like \"error\".\nExit: 0 found, 3 no line looks like a failure. --json data: causes[{line, text, p, context[]}], any, considered, total, hint, child_exit."
+        after_help = "Examples:\n  cargo build 2>&1 | jevify why\n  gh run view --log-failed | jevify why --json\n\nPipe 2>&1: compilers write errors to stderr. Finds a cause that holds no word like \"error\" and prints numbered context.\nExit: 0 found, 3 no line looks like a failure. --json data: causes[{line, text, p, context[]}], any, considered, total, hint."
     )]
     Why {
         /// Lines of context around the root cause
@@ -77,38 +83,51 @@ pub enum Cmd {
         /// Report up to N causes, each ranked above "no failure"
         #[arg(short = 'n', long, default_value_t = 1)]
         top: usize,
-        /// Run this command and read its stdout+stderr instead of stdin: `jevify why -- cargo build`
-        #[arg(last = true)]
-        cmd: Vec<String>,
+        /// Do not save the full input
+        #[arg(long)]
+        no_save: bool,
     },
-    /// Describe a task in plain English and get a command proposal; only validated recipes can run
+    /// Describe a task and print the installed tool that fits it
     #[command(
-        after_help = "Examples:\n  jevify run --dry-run \"keep my mac awake for an hour\"\n  jevify run --json --dry-run --no-args \"test how fast my connection is\"\n\nSearches commands on PATH by their man pages. Flags form proposals to check yourself. Only exact zero-argument true, false, pwd, and ls recipes are complete and eligible to execute; all other argv have complete=false and a blocked reason. Human proposals use POSIX shell quoting.\nExit: 0 found (or ran), 3 no tool fits, 7 the command failed, 130 declined. --json data: tool, fit, argv[], flags[], complete, blocked, executed, child_exit, alternatives[]."
+        after_help = "Examples:\n  jevify route \"keep my mac awake for an hour\"\n  jevify route --json \"test how fast my connection is\"\n\nSearches commands on PATH by their man pages and prints a tool. Starts no command.\nExit: 0 found, 3 no tool fits. --json data: tool, summary, fit, alternatives[]."
     )]
-    Run {
-        /// The task, e.g. "count the lines in notes.txt"; flags may follow it (`jevify run burn a dvd --dry-run`)
+    Route {
+        /// The task, e.g. "count the lines in notes.txt"
         #[arg(required = true, num_args = 1..)]
         intent: Vec<String>,
-        /// Run a validated recipe without asking (only zero-argument true, false, pwd, ls)
-        #[arg(short, long)]
-        yes: bool,
-        /// Allow validated recipes in machine mode (requires --yes)
+    },
+    /// Keep stdin records that satisfy a statement
+    #[command(
+        after_help = "Example:\n  cargo test 2>&1 | jevify filter 'reports a failed assertion'\n\n-v inverts the statement; unsure records are kept unless --strict is set.\nExit: 0 kept some, 1 kept none, 3 every record unsure."
+    )]
+    Filter {
+        statement: String,
+        #[arg(short = 'v')]
+        invert: bool,
+        #[arg(short = 'c')]
+        count: bool,
         #[arg(long)]
-        exec: bool,
-        /// Only route and propose; never execute
+        strict: bool,
+        #[arg(short = '0', conflicts_with = "para")]
+        nul: bool,
         #[arg(long)]
-        dry_run: bool,
-        /// Route only; do not point at flags or files
+        para: bool,
         #[arg(long)]
-        no_args: bool,
+        files: bool,
+        #[arg(long)]
+        no_save: bool,
     },
     /// Ask a yes-or-no question about the text on stdin; the answer is the exit code (0 yes, 1 no, 3 unsure)
     #[command(
-        after_help = "Examples:\n  jevify is \"the customer asks for a refund\" < mail.txt && ./refund\n  for f in mail/*; do jevify is \"asks for a refund\" < \"$f\"; echo \"$f $?\"; done\n\nWrite the statement literally: it is judged word for word. No counting, arithmetic, dates or quality judgments. Oversized input is not judged: no API call, exit 3, p=null, verdict=unsure, truncated=true, and a reason.\nPrints nothing on human stdout; oversized input warns on stderr. Exit: 0 yes, 1 no, 3 unsure. --json data: p, verdict, truncated, reason (when oversized)."
+        after_help = "Examples:\n  jevify is \"the customer asks for a refund\" < mail.txt && ./refund\n  jevify is 'asks for a refund' 'mentions an order' --context mail.txt\n\nWrite each statement literally: it is judged word for word. No counting, arithmetic, dates or quality judgments. Oversized input is not judged.\nOne statement prints nothing on human stdout; several print one verdict each. Exit: 0 all yes, 1 one no, 3 otherwise. --json data: p, verdict, truncated, reason; several statements: verdicts[]."
     )]
     Is {
         /// A statement that must be true of the text, e.g. "the customer asks for a refund"
-        condition: String,
+        #[arg(required = true, num_args = 1..)]
+        statements: Vec<String>,
+        /// Read the context from a file instead of stdin
+        #[arg(long, value_name = "FILE")]
+        context: Option<std::path::PathBuf>,
         /// Unsure band around the threshold (0..=0.5)
         #[arg(long, default_value_t = 0.15)]
         band: f64,
@@ -151,7 +170,7 @@ pub enum Cmd {
     RobotDocs { topic: Option<String> },
     /// Check which backend answers, whether a key is needed, and how fast it replies
     Health,
-    /// Print shell integration (`,` alias for `jevify run`)
+    /// Print shell integration (`,` alias for `jevify route`) or an agent instruction block
     Init { shell: Shell },
 }
 
@@ -159,6 +178,7 @@ pub enum Cmd {
 pub enum Shell {
     Zsh,
     Bash,
+    Agents,
 }
 
 #[cfg(test)]
@@ -190,5 +210,66 @@ mod tests {
             parse(&["jevify", "is", "x", "--format", "jsonl"]),
             Format::Jsonl
         );
+    }
+
+    #[test]
+    fn output_verb_flags_parse_without_stealing_text() {
+        let cli = parse_without_env(&[
+            "jevify",
+            "filter",
+            "-v",
+            "-c",
+            "--strict",
+            "-0",
+            "--files",
+            "--no-save",
+            "--verbose",
+            "--",
+            "-statement",
+        ]);
+        assert!(cli.g.verbose);
+        assert!(
+            matches!(cli.cmd, Cmd::Filter { statement, invert: true, count: true, strict: true, nul: true, para: false, files: true, no_save: true } if statement == "-statement")
+        );
+        assert!(
+            matches!(parse_without_env(&["jevify", "is", "a", "b", "--context", "FILE"]).cmd, Cmd::Is { statements, context: Some(path), .. } if statements == ["a", "b"] && path == std::path::Path::new("FILE"))
+        );
+        assert!(
+            matches!(parse_without_env(&["jevify", "pick", "--files", "--para", "--", "-query"]).cmd, Cmd::Pick { intent, files: true, para: true, .. } if intent == "-query")
+        );
+        assert!(matches!(
+            parse_without_env(&["jevify", "why", "--no-save", "-C", "2", "-n", "3"]).cmd,
+            Cmd::Why {
+                context: 2,
+                top: 3,
+                no_save: true
+            }
+        ));
+        assert!(matches!(
+            parse_without_env(&["jevify", "init", "agents"]).cmd,
+            Cmd::Init {
+                shell: Shell::Agents
+            }
+        ));
+    }
+
+    #[test]
+    fn invalid_output_verb_flag_combinations_are_usage_errors() {
+        for args in [
+            vec!["jevify", "is", "x", "-v"],
+            vec!["jevify", "pick", "-0", "--para", "q"],
+            vec!["jevify", "filter", "-0", "--para", "q"],
+            vec!["jevify", "why", "-0"],
+            vec!["jevify", "why", "--para"],
+            vec!["jevify", "why", "--files"],
+            vec!["jevify", "pick", "--files", "DIR", "q"],
+            vec!["jevify", "pick", "--files", "--index", "q"],
+        ] {
+            let error = Cli::command()
+                .mut_args(|a| a.env(None))
+                .try_get_matches_from(&args)
+                .unwrap_err();
+            assert_eq!(error.exit_code(), 2, "{args:?}");
+        }
     }
 }

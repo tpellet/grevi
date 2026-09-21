@@ -6,15 +6,11 @@ use crate::tournament::{Prompts, rank};
 use regex::Regex;
 use std::collections::BTreeSet;
 use std::sync::LazyLock;
-use std::time::{Duration, Instant};
 
 pub const SMALL: usize = 1500;
 pub const TAIL: usize = 1000;
 pub const NEIGHBOURS: usize = 5;
 pub const MAX_KEEP: usize = 4000;
-/// A daemon left behind by the command (a build server, a file watcher) can keep the pipe open
-/// after the command itself has exited; wait this long for it, then use what was captured.
-const DAEMON_GRACE: Duration = Duration::from_secs(1);
 
 static SIGNAL: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"(?i)\b(error|err!|fail(ed|ure|s)?|fatal|panic(ked)?|exception|traceback|denied|not found|no such|cannot|can't|couldn't|undefined|unresolved|refused|timed? ?out|segmentation|abort(ed)?|killed|exit (code|status) [1-9]|assert)").unwrap()
@@ -54,94 +50,17 @@ pub fn prefilter(lines: &[String]) -> Vec<usize> {
     keep.into_iter().collect()
 }
 
-/// Runs `cmd` via argv (never a shell) with stdout and stderr on one pipe, so the lines
-/// interleave as they would on a terminal. Returns the lines and the child's exit code.
-fn capture(cmd: &[String]) -> Result<(Vec<String>, Option<i32>), JevifyError> {
-    use std::io::Read;
-    use std::sync::{Arc, Mutex};
-    let io = |e: std::io::Error| JevifyError::Input(e.to_string());
-    let (mut reader, writer) = std::io::pipe().map_err(io)?;
-    let err = writer.try_clone().map_err(io)?;
-    // The temporary `Command` owns our two write ends and is dropped at the end of this
-    // statement, so the child holds the only copies and EOF arrives when it exits.
-    // The user's own `-- <cmd>` run via argv, never a shell: a false positive for the scanner.
-    let mut child = std::process::Command::new(&cmd[0]) // ubs:ignore
-        .args(&cmd[1..])
-        .stdin(std::process::Stdio::null())
-        .stdout(writer)
-        .stderr(err)
-        .spawn()
-        .map_err(|e| JevifyError::Input(format!("failed to start {}: {e}", cmd[0])))?;
-    // Reading happens on its own thread, so a child that has exited is not waited on forever
-    // when a daemon it spawned still holds the write end (EOF would never come).
-    let buf = Arc::new(Mutex::new(Vec::new()));
-    let sink = Arc::clone(&buf);
-    let reading = std::thread::spawn(move || {
-        let mut chunk = [0u8; 8192];
-        loop {
-            match reader.read(&mut chunk) {
-                Ok(0) | Err(_) => break,
-                Ok(n) => {
-                    let mut b = sink.lock().unwrap();
-                    b.extend_from_slice(&chunk[..n]);
-                    if b.len() >= crate::input::MAX_BYTES {
-                        break;
-                    }
-                }
-            }
-        }
-    });
-    let mut exited: Option<Instant> = None;
-    let code = loop {
-        if reading.is_finished() {
-            if buf.lock().unwrap().len() >= crate::input::MAX_BYTES {
-                // Nobody drains the pipe any more; a chatty child would block on write forever.
-                let _ = child.kill();
-            }
-            // Already finished: joining cannot block. The daemon path below leaves the thread
-            // detached on purpose, since a blocked `read` would never let a join return.
-            let _ = reading.join();
-            break child.wait().map_err(io)?.code();
-        }
-        if let Some(status) = child.try_wait().map_err(io)? {
-            if exited.get_or_insert_with(Instant::now).elapsed() >= DAEMON_GRACE {
-                eprintln!(
-                    "jevify why: {} exited but a process it left behind still holds its output open; using what was captured",
-                    cmd[0]
-                );
-                break status.code();
-            }
-        }
-        std::thread::sleep(Duration::from_millis(5));
-    };
-    let bytes = std::mem::take(&mut *buf.lock().unwrap());
-    Ok((
-        crate::input::split_lines(&String::from_utf8_lossy(&bytes)),
-        code,
-    ))
-}
-
 pub async fn run(
     ctx: &Config,
     context: usize,
     top: usize,
-    cmd: &[String],
+    _no_save: bool,
 ) -> Result<Outcome, JevifyError> {
     if top == 0 {
         return Err(JevifyError::Usage("-n must be at least 1".into()));
     }
     let client = Client::new(ctx)?;
-    let (lines, child_exit) = if cmd.is_empty() {
-        (crate::input::read_stdin_async().await?, None)
-    } else {
-        let cmd = cmd.to_vec();
-        tokio::task::spawn_blocking(move || capture(&cmd))
-            .await
-            .map_err(|e| JevifyError::Input(e.to_string()))??
-    };
-    if lines.iter().all(|l| l.trim().is_empty()) {
-        return Err(JevifyError::EmptyInput("the command printed nothing"));
-    }
+    let lines = crate::input::read_stdin_async().await?;
     let kept = prefilter(&lines);
     let no_signal = !kept.iter().any(|&i| SIGNAL.is_match(&lines[i]));
     let items: Vec<String> = kept
@@ -208,8 +127,8 @@ pub async fn run(
         human.push('\n');
     }
     // The first thing most people get wrong: compilers write errors to stderr.
-    let hint = (causes.is_empty() && no_signal && cmd.is_empty()).then(|| {
-        "no error-like lines on stdin; most tools write errors to stderr: `cmd 2>&1 | jevify why` or `jevify why -- cmd`".to_string()
+    let hint = (causes.is_empty() && no_signal).then(|| {
+        "no error-like lines on stdin; most tools write errors to stderr: `cmd 2>&1 | jevify why`".to_string()
     });
     if let Some(h) = &hint {
         eprintln!("jevify why: {h}");
@@ -220,8 +139,9 @@ pub async fn run(
         } else {
             Exit::Ok
         },
-        data: serde_json::json!({ "causes": causes, "any": ranking.any, "considered": kept.len(), "total": lines.len(), "hint": hint, "child_exit": child_exit }),
-        human,
+        data: serde_json::json!({ "causes": causes, "any": ranking.any, "considered": kept.len(), "total": lines.len(), "hint": hint }),
+        human: human.into_bytes(),
+        exec: None,
     })
 }
 
@@ -264,34 +184,5 @@ mod tests {
         let kept = prefilter(&lines);
         assert!(kept.contains(&10) && kept.contains(&49_999));
         assert!(kept.len() <= MAX_KEEP);
-    }
-    #[test]
-    fn capture_interleaves_stdout_and_stderr_and_keeps_the_exit_code() {
-        let cmd: Vec<String> = ["sh", "-c", "echo out; echo err >&2; exit 3"]
-            .iter()
-            .map(|s| s.to_string())
-            .collect();
-        let t0 = Instant::now();
-        let (lines, code) = capture(&cmd).unwrap();
-        // Under the grace period: this return must come from EOF, not from the daemon fallback.
-        assert!(t0.elapsed() < DAEMON_GRACE, "EOF not seen");
-        assert_eq!(lines, ["out", "err"]);
-        assert_eq!(code, Some(3));
-    }
-    // A background process that inherits the pipe must not make `why -- cmd` wait for it.
-    #[test]
-    fn capture_returns_once_the_child_exits_even_if_a_daemon_keeps_the_pipe_open() {
-        let cmd: Vec<String> = ["sh", "-c", "sleep 10 & echo out; exit 2"]
-            .iter()
-            .map(|s| s.to_string())
-            .collect();
-        let t0 = Instant::now();
-        let (lines, code) = capture(&cmd).unwrap();
-        assert!(
-            t0.elapsed() < Duration::from_secs(8),
-            "waited for the daemon"
-        );
-        assert_eq!(lines, ["out"]);
-        assert_eq!(code, Some(2));
     }
 }

@@ -11,19 +11,23 @@ pub mod inventory;
 pub mod jev;
 pub mod manpage;
 pub mod output;
+pub mod records;
+pub mod save;
 pub mod tournament;
 
 use clap::Parser;
 use cli::{Cli, Cmd};
 use exit::{Exit, JevifyError};
 use output::{Envelope, ErrorBody, Format, Meta};
+use std::ffi::OsString;
 use std::io::Write;
 use std::time::Instant;
 
-const VERBS: [&str; 10] = [
+const VERBS: [&str; 11] = [
     "pick",
     "why",
-    "run",
+    "route",
+    "filter",
     "is",
     "add",
     "sort",
@@ -41,7 +45,8 @@ pub const QUICK_START: &str = concat!(
   <list> | jevify pick "<description>"    find one line by meaning
   <cmd> 2>&1 | jevify why                 find the line that caused a failure
   jevify is "<statement>" < file          yes / no / unsure as exit code 0 / 1 / 3
-  jevify run --dry-run "<task>"           find the installed command for a task
+  jevify route "<task>"                  find the installed command for a task
+  <list> | jevify filter "<statement>"    keep matching records
   jevify add --dry-run "<topic>"          stage only the git changes about a topic
   jevify sort <dir>                       propose a folder for each file (dry run)
 Add --json for one JSON object on stdout. No key needed.
@@ -51,22 +56,43 @@ More: jevify <verb> --help | jevify --help | agents: jevify capabilities --json,
 );
 
 pub fn main_exit() -> i32 {
+    let args: Vec<OsString> = std::env::args_os().skip(1).collect();
     // Bare `jevify` stays a usage error (exit 2, stderr), as it was with clap's full help.
     if std::env::args_os().len() == 1 {
         eprint!("{QUICK_START}");
+        return Exit::Usage.code();
+    }
+    let name = raw_command(&args);
+    let removed = if name == "run" {
+        Some(("jevify", "use jevify route 'x'"))
+    } else if name == "why" && args.iter().any(|a| a == "--") {
+        Some(("why", "use CMD 2>&1 | jevify why"))
+    } else {
+        None
+    };
+    if let Some((command, message)) = removed {
+        if let Some(format) = machine_format(&args) {
+            return report_error(
+                format,
+                command,
+                &JevifyError::Usage(message.into()),
+                Meta::default(),
+            );
+        }
+        eprintln!("jevify: {message}");
         return Exit::Usage.code();
     }
     let cli = match Cli::try_parse() {
         Ok(c) => c,
         Err(e) => {
             // A usage error under --json must still be exactly one envelope, not clap's text.
-            let args: Vec<String> = std::env::args().skip(1).collect();
             if e.use_stderr() {
                 if let Some(format) = machine_format(&args) {
-                    let name = args
-                        .iter()
-                        .find(|a| VERBS.contains(&a.as_str()))
-                        .map_or("jevify", String::as_str);
+                    let name = if VERBS.contains(&name) {
+                        name
+                    } else {
+                        "jevify"
+                    };
                     let message = e
                         .to_string()
                         .lines()
@@ -104,15 +130,21 @@ pub fn main_exit() -> i32 {
 }
 
 /// Clap failed before a `Cli` existed, so the requested machine format is read from the raw args.
-fn machine_format(args: &[String]) -> Option<Format> {
+fn machine_format(args: &[OsString]) -> Option<Format> {
     use clap::ValueEnum;
     let mut json = false;
     let mut format = None;
-    let mut it = args.iter();
+    let mut it = args.iter().take_while(|arg| *arg != "--");
     while let Some(a) = it.next() {
-        match a.as_str() {
+        let Some(a) = a.to_str() else { continue };
+        match a {
             "--json" | "--robot" => json = true,
-            "--format" => format = it.next().and_then(|v| Format::from_str(v, true).ok()),
+            "--format" => {
+                format = it
+                    .next()
+                    .and_then(|v| v.to_str())
+                    .and_then(|v| Format::from_str(v, true).ok())
+            }
             other => {
                 if let Some(v) = other.strip_prefix("--format=") {
                     format = Format::from_str(v, true).ok();
@@ -125,11 +157,27 @@ fn machine_format(args: &[String]) -> Option<Format> {
         .filter(|f| *f != Format::Human)
 }
 
+fn raw_command(args: &[OsString]) -> &str {
+    let mut args = args.iter().take_while(|arg| *arg != "--");
+    while let Some(arg) = args.next() {
+        match arg.to_str() {
+            Some("--format" | "--threshold" | "-t" | "--model") => {
+                args.next();
+            }
+            Some(value) if value.starts_with('-') => {}
+            Some(value) => return value,
+            None => return "jevify",
+        }
+    }
+    "jevify"
+}
+
 fn command_name(cmd: &Cmd) -> &'static str {
     match cmd {
         Cmd::Pick { .. } => "pick",
         Cmd::Why { .. } => "why",
-        Cmd::Run { .. } => "run",
+        Cmd::Route { .. } => "route",
+        Cmd::Filter { .. } => "filter",
         Cmd::Is { .. } => "is",
         Cmd::Add { .. } => "add",
         Cmd::Sort { .. } => "sort",
@@ -153,8 +201,9 @@ async fn run_cli(cli: Cli) -> i32 {
     meta.elapsed_ms = start.elapsed().as_millis();
     match result {
         Ok(out) => {
+            debug_assert!(out.exec.is_none());
             if format == Format::Human {
-                if let Err(e) = std::io::stdout().lock().write_all(out.human.as_bytes()) {
+                if let Err(e) = std::io::stdout().lock().write_all(&out.human) {
                     return stdout_error(e);
                 }
                 if cli.g.verbose {
@@ -248,33 +297,45 @@ async fn dispatch(cli: &Cli, ctx: &config::Config) -> Result<cmd::Outcome, Jevif
             top,
             index,
             files,
-        } => cmd::pick::run(ctx, intent, *top, *index, files.as_deref()).await,
+            nul,
+            para,
+        } => cmd::pick::run(ctx, intent, *top, *index, split(*nul, *para), *files).await,
         Cmd::Why {
             context,
             top,
-            cmd: child,
-        } => cmd::why::run(ctx, *context, *top, child).await,
-        Cmd::Run {
-            intent,
-            yes,
-            exec,
-            dry_run,
-            no_args,
+            no_save,
+        } => cmd::why::run(ctx, *context, *top, *no_save).await,
+        Cmd::Route { intent } => cmd::run::run(ctx, &intent.join(" "), machine).await,
+        Cmd::Filter {
+            statement,
+            invert,
+            count,
+            strict,
+            nul,
+            para,
+            files,
+            no_save,
         } => {
-            cmd::run::run(
+            cmd::filter::run(
                 ctx,
-                &intent.join(" "),
-                cmd::run::RunFlags {
-                    yes: *yes,
-                    exec: *exec,
-                    dry_run: *dry_run,
-                    no_args: *no_args,
-                    machine,
+                statement,
+                cmd::filter::FilterFlags {
+                    invert: *invert,
+                    count: *count,
+                    strict: *strict,
+                    split: split(*nul, *para),
+                    files: *files,
+                    no_save: *no_save,
                 },
+                machine,
             )
             .await
         }
-        Cmd::Is { condition, band } => cmd::is::run(ctx, condition, *band).await,
+        Cmd::Is {
+            statements,
+            context,
+            band,
+        } => cmd::is::run(ctx, statements, context.as_deref(), *band).await,
         Cmd::Add {
             topic,
             yes,
@@ -293,6 +354,16 @@ async fn dispatch(cli: &Cli, ctx: &config::Config) -> Result<cmd::Outcome, Jevif
     }
 }
 
+fn split(nul: bool, para: bool) -> records::Split {
+    if nul {
+        records::Split::Nul
+    } else if para {
+        records::Split::Para
+    } else {
+        records::Split::Lines
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -301,11 +372,13 @@ mod tests {
         assert_eq!(stdout_error(std::io::ErrorKind::BrokenPipe.into()), 0);
         assert_eq!(stdout_error(std::io::ErrorKind::PermissionDenied.into()), 6);
     }
-    fn args(a: &[&str]) -> Vec<String> {
-        a.iter().map(|s| s.to_string()).collect()
+    fn args(a: &[&str]) -> Vec<OsString> {
+        a.iter().map(OsString::from).collect()
     }
     #[test]
     fn machine_format_is_read_from_raw_args_when_clap_fails() {
+        assert_eq!(machine_format(&args(&["--format", "--", "--json"])), None);
+        assert_eq!(raw_command(&args(&["--format", "--", "run"])), "jevify");
         assert_eq!(machine_format(&args(&["pick", "--nope"])), None);
         assert_eq!(
             machine_format(&args(&["--json", "pick"])),
