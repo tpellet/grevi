@@ -13,6 +13,43 @@ pub fn live_key_present() -> bool {
     false
 }
 
+#[test]
+#[ignore]
+fn live_filter_one_batch_per_backend() {
+    for backend in ["classifier", "typesafe"] {
+        if backend == "typesafe" && !live_key_present() {
+            continue;
+        }
+        let mut cmd = assert_cmd::Command::cargo_bin("jevify").unwrap();
+        cmd.env("JEVIFY_BACKEND", backend)
+            .env("JEVIFY_NO_CACHE", "1")
+            .env("JEVIFY_CACHE_DIR", tempfile::tempdir().unwrap().keep());
+        if backend == "classifier" {
+            cmd.env_remove("TYPESAFE_API_KEY")
+                .env_remove("TYPESAFE_API_KEY_FILE");
+        }
+        let out = cmd
+            .args([
+                "filter",
+                "reports a failed assertion",
+                "--json",
+                "--no-save",
+            ])
+            .write_stdin("assertion failed: left == right\ntest result: ok. 12 passed\n")
+            .output()
+            .unwrap();
+        let value: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+        assert_eq!(out.status.code(), Some(0), "{value}");
+        assert_eq!(
+            value["data"]["records"][0]["text"],
+            "assertion failed: left == right\n"
+        );
+        assert_eq!(value["meta"]["backend"], backend);
+        assert_eq!(value["meta"]["requests"], 1);
+        assert!(value["meta"]["model"].is_string());
+    }
+}
+
 // Needs no key: `man` and PATH only. Records the machine's inventory size and cache speed.
 #[test]
 #[ignore]

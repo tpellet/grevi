@@ -183,7 +183,7 @@ pub fn distinct(input: &[u8], records: &[Record]) -> (Vec<usize>, Vec<usize>) {
     (representatives, occurrences)
 }
 
-/// Shared lexical policy. `.` and `..` navigation are not hidden components.
+/// Judge caller-written components only. `.` and `..` navigation are not hidden components.
 pub(crate) fn withheld(path: &Path) -> bool {
     path.components().any(|component| {
         let std::path::Component::Normal(name) = component else {
@@ -194,8 +194,8 @@ pub(crate) fn withheld(path: &Path) -> bool {
             || bytes.starts_with(b"id_")
             || bytes.ends_with(b".pem")
             || bytes.ends_with(b".key")
-            || bytes.windows(11).any(|w| w == b"credentials")
-            || bytes.windows(6).any(|w| w == b"secret")
+            || bytes.windows(11).any(|w| matches!(w, b"credentials"))
+            || bytes.windows(6).any(|w| matches!(w, b"secret"))
     })
 }
 
@@ -226,7 +226,7 @@ pub async fn excerpts(records: &mut [Record], cwd: &Path) -> Result<usize, Jevif
                 let Ok(metadata) = resolved.symlink_metadata() else {
                     return fallback;
                 };
-                if metadata.is_symlink() || withheld(&resolved) {
+                if metadata.is_symlink() {
                     count += 1;
                     return fallback;
                 }
@@ -249,6 +249,44 @@ pub async fn excerpts(records: &mut [Record], cwd: &Path) -> Result<usize, Jevif
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn excerpts_judge_caller_paths_not_working_directory_ancestors() {
+        let root = tempfile::Builder::new()
+            .prefix(".jevify-records-")
+            .tempdir()
+            .unwrap()
+            .keep();
+        eprintln!("retained records fixture: {}", root.display());
+        std::fs::write(root.join("source.rs"), "VISIBLE_EXCERPT_MARKER").unwrap();
+        let mut records = parse(b"./source.rs\n", Split::Lines).unwrap();
+        assert_eq!(excerpts(&mut records, &root).await.unwrap(), 0);
+        assert!(records[0].evidence.contains("VISIBLE_EXCERPT_MARKER"));
+
+        let absolute = root.join("source.rs");
+        let mut records = parse(absolute.as_os_str().as_bytes(), Split::Nul).unwrap();
+        assert_eq!(excerpts(&mut records, &root).await.unwrap(), 1);
+        assert_eq!(
+            records[0].evidence,
+            evidence(absolute.as_os_str().as_bytes())
+        );
+    }
+
+    #[test]
+    fn withheld_uses_lexical_caller_components() {
+        for path in ["", ".", "./source.rs", "a/./source.rs", "../source.rs"] {
+            assert!(!withheld(Path::new(path)), "{path}");
+        }
+        for path in [
+            ".npmrc",
+            "a/.hidden/b.txt",
+            "conf/.env.local",
+            "/project/.hidden/source.rs",
+            "a/.hidden/../source.rs",
+        ] {
+            assert!(withheld(Path::new(path)), "{path}");
+        }
+    }
 
     #[test]
     fn split_boundaries_and_blank_records() {
