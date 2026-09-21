@@ -5,6 +5,27 @@ pub mod client;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
+pub const UNKNOWN_MODEL: &str = "unknown";
+
+fn normalize_model(model: &str) -> &str {
+    if model.trim().is_empty() {
+        UNKNOWN_MODEL
+    } else {
+        model
+    }
+}
+
+fn unknown_model() -> String {
+    UNKNOWN_MODEL.to_owned()
+}
+
+fn deserialize_model<'de, D: serde::Deserializer<'de>>(
+    deserializer: D,
+) -> Result<String, D::Error> {
+    let model = String::deserialize(deserializer)?;
+    Ok(normalize_model(&model).to_owned())
+}
+
 #[derive(Serialize, Clone, Debug)]
 pub struct NoulCriteria {
     #[serde(rename = "true")]
@@ -85,7 +106,7 @@ pub struct Answer {
 /// field must degrade `meta`, not fail every command with exit 4. `answers` stays required.
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct Response {
-    #[serde(default)]
+    #[serde(default = "unknown_model", deserialize_with = "deserialize_model")]
     pub model: String,
     pub answers: BTreeMap<String, Answer>,
     #[serde(default)]
@@ -162,7 +183,7 @@ pub fn all_jev(model: &str) -> bool {
 }
 
 pub(crate) fn join_models(into: &mut String, models: &str) {
-    for model in models.split(", ").filter(|s| !s.is_empty()) {
+    for model in models.split(", ").map(normalize_model) {
         if !into.split(", ").any(|seen| seen == model) {
             if !into.is_empty() {
                 into.push_str(", ");
@@ -185,6 +206,11 @@ mod tests {
         assert!(all_jev("jev-fake, jev-next"));
         assert!(!all_jev(""));
         assert!(!all_jev("jev-fake, "));
+        join_models(&mut model, "unknown, jev-fake, unknown");
+        assert_eq!(model, "other-model, jev-fake, jev-next, unknown");
+        for model in ["unknown", "unknown, jev-fake", "jev-fake, unknown"] {
+            assert!(!all_jev(model));
+        }
     }
     #[test]
     fn decision_validation_requires_complete_finite_member_scores() {
@@ -240,6 +266,12 @@ mod tests {
         let r: Response = serde_json::from_str(r#"{"answers":{"q":{"noul":0.5}}}"#).unwrap();
         assert_eq!(r.noul("q").unwrap(), 0.5);
         assert_eq!(r.usage.input_tokens, 0);
+        assert_eq!(r.model, "unknown");
+        for model in ["", "  ", "\t\n"] {
+            let r: Response =
+                serde_json::from_value(serde_json::json!({"model": model, "answers": {}})).unwrap();
+            assert_eq!(r.model, "unknown");
+        }
         assert!(r.noul("missing").unwrap_err().exit().code() == 4);
     }
 }

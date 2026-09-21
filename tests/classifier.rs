@@ -40,6 +40,36 @@ fn one_noul() -> Questions {
 }
 
 #[tokio::test]
+async fn missing_dimension_model_reaches_the_output_envelope() {
+    let server = MockServer::start().await;
+    Mock::given(method("POST"))
+        .and(path("/v1/classify"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "results":[{"dimensions":{
+                "is_0":{"label":"The text clearly satisfies the condition","confidence":0.95},
+                "is_1":{"label":"The text clearly satisfies the condition","confidence":0.95,"model":"jev-fake"}
+            }}]
+        })))
+        .mount(&server)
+        .await;
+    let mut command = common::jevify_classifier(&server);
+    let output = tokio::task::spawn_blocking(move || {
+        command
+            .args(["--json", "is", "first", "second"])
+            .write_stdin("evidence")
+            .output()
+            .unwrap()
+    })
+    .await
+    .unwrap();
+    assert_eq!(output.status.code(), Some(0));
+    let envelope: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(envelope["meta"]["model"], "unknown, jev-fake");
+    assert_eq!(envelope["data"]["statements"][0]["verdict"], "yes");
+    assert_eq!(envelope["data"]["statements"][1]["verdict"], "yes");
+}
+
+#[tokio::test]
 async fn each_batches_by_decision_count_and_returns_every_record_in_order() {
     use futures::TryStreamExt;
     for (count, dimensions, sizes) in [(2500, 1, vec![1000, 1000, 500]), (1000, 2, vec![500, 500])]

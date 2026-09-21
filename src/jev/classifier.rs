@@ -238,7 +238,8 @@ fn parse_item(
                 "invalid confidence for `{id}`"
             )));
         }
-        super::join_models(&mut model, r.model.as_deref().unwrap_or(fallback_model));
+        let dimension_model = super::normalize_model(r.model.as_deref().unwrap_or(fallback_model));
+        super::join_models(&mut model, dimension_model);
         let answer = match q {
             Question::Noul { criteria, .. } => {
                 let (yes, no) = noul_labels(criteria.as_ref());
@@ -314,6 +315,38 @@ pub fn error_message(text: &str) -> Option<String> {
 mod tests {
     use super::*;
     use crate::jev::Question;
+
+    #[test]
+    fn missing_and_blank_dimension_models_keep_unknown_after_fallback() {
+        let qs: Questions = [("a".into(), Question::noul("a"))].into();
+        for model in [None, Some(""), Some("  ")] {
+            let mut dimension = serde_json::json!({"label":"yes", "confidence":0.8});
+            if let Some(model) = model {
+                dimension["model"] = model.into();
+            }
+            let mut body = serde_json::json!({"results":[{"dimensions":{"a":dimension}}]});
+            let response = parse_each(&serde_json::to_vec(&body).unwrap(), &qs, 1).unwrap();
+            assert_eq!(response[0].model, "unknown");
+            body["model"] = "jev-fallback".into();
+            let response = parse_each(&serde_json::to_vec(&body).unwrap(), &qs, 1).unwrap();
+            assert_eq!(
+                response[0].model,
+                if model.is_none() {
+                    "jev-fallback"
+                } else {
+                    "unknown"
+                }
+            );
+            body.as_object_mut().unwrap().remove("model");
+            body["results"][0]["dimensions"]["b"] =
+                serde_json::json!({"label":"yes", "confidence":0.8, "model":"jev-fake"});
+            let mut mixed = qs.clone();
+            mixed.insert("b".into(), Question::noul("b"));
+            let response = parse_each(&serde_json::to_vec(&body).unwrap(), &mixed, 1).unwrap();
+            assert_eq!(response[0].model, "unknown, jev-fake");
+            assert!(!response[0].all_jev());
+        }
+    }
 
     #[test]
     fn batch_result_count_must_match_and_models_keep_first_seen_order() {

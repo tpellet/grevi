@@ -11,6 +11,124 @@ fn one_noul() -> Questions {
 }
 
 #[tokio::test]
+async fn typesafe_missing_model_survives_requests_batches_and_cache() {
+    use futures::TryStreamExt;
+    let server = MockServer::start().await;
+    Mock::given(method("POST"))
+        .respond_with(|request: &wiremock::Request| {
+            let body: serde_json::Value = serde_json::from_slice(&request.body).unwrap();
+            let answers: serde_json::Map<String, serde_json::Value> = body["questions"]
+                .as_object()
+                .unwrap()
+                .keys()
+                .map(|id| (id.clone(), serde_json::json!({"noul":0.9})))
+                .collect();
+            ResponseTemplate::new(200).set_body_json(serde_json::json!({"answers":answers}))
+        })
+        .mount(&server)
+        .await;
+    let dir = tempfile::tempdir().unwrap().keep();
+    for _ in 0..2 {
+        let mut cfg = common::config(&server);
+        cfg.cache_dir = Some(dir.clone());
+        assert!(cfg.meta().model.is_none());
+        let client = Client::new(&cfg).unwrap();
+        let response = client
+            .ask(&serde_json::json!("evidence"), &one_noul())
+            .await
+            .unwrap();
+        assert_eq!(response.model, "unknown");
+        assert!(!response.all_jev());
+        let batches: Vec<_> = client
+            .ask_each(&["first".into(), "second".into()], &one_noul())
+            .try_collect()
+            .await
+            .unwrap();
+        assert_eq!(batches[0].1.len(), 2);
+        for response in &batches[0].1 {
+            assert_eq!(response.model, "unknown");
+            assert!(!response.all_jev());
+        }
+        assert_eq!(cfg.meta().model.as_deref(), Some("unknown"));
+    }
+    assert_eq!(server.received_requests().await.unwrap().len(), 2);
+    let mut command = common::jevify(&server);
+    let output = tokio::task::spawn_blocking(move || {
+        command
+            .args(["--json", "is", "holds"])
+            .write_stdin("evidence")
+            .output()
+            .unwrap()
+    })
+    .await
+    .unwrap();
+    assert_eq!(output.status.code(), Some(0));
+    let envelope: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(envelope["meta"]["model"], "unknown");
+}
+
+#[tokio::test]
+async fn classifier_unknown_chunks_and_record_models_survive_cache() {
+    use futures::TryStreamExt;
+    let server = MockServer::start().await;
+    Mock::given(method("POST"))
+        .respond_with(|request: &wiremock::Request| {
+            let body: serde_json::Value = serde_json::from_slice(&request.body).unwrap();
+            let results: Vec<_> = body["items"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|item| {
+                    let dimensions: serde_json::Map<String, serde_json::Value> = body["dimensions"]
+                        .as_object()
+                        .unwrap()
+                        .keys()
+                        .map(|id| {
+                            let mut answer = serde_json::json!({"label":"yes","confidence":0.9});
+                            if id == "q20" || item == "known" {
+                                answer["model"] = "jev-fake".into();
+                            }
+                            (id.clone(), answer)
+                        })
+                        .collect();
+                    serde_json::json!({"dimensions":dimensions})
+                })
+                .collect();
+            ResponseTemplate::new(200).set_body_json(serde_json::json!({"results":results}))
+        })
+        .mount(&server)
+        .await;
+    let dir = tempfile::tempdir().unwrap().keep();
+    let qs: Questions = (0..21)
+        .map(|i| (format!("q{i:02}"), Question::noul("holds")))
+        .collect();
+    for cached in [false, true] {
+        let mut cfg = common::config(&server);
+        cfg.backend = jevify::config::Backend::Classifier;
+        cfg.cache_dir = Some(dir.clone());
+        let client = Client::new(&cfg).unwrap();
+        let response = client
+            .ask(&serde_json::json!("evidence"), &qs)
+            .await
+            .unwrap();
+        assert_eq!(response.model, "unknown, jev-fake");
+        assert!(!response.all_jev());
+        let batches: Vec<_> = client
+            .ask_each(&["unknown".into(), "known".into()], &one_noul())
+            .try_collect()
+            .await
+            .unwrap();
+        assert_eq!(batches[0].1[0].model, "unknown");
+        assert!(!batches[0].1[0].all_jev());
+        assert_eq!(batches[0].1[1].model, "jev-fake");
+        assert!(batches[0].1[1].all_jev());
+        assert_eq!(cfg.meta().model.as_deref(), Some("unknown, jev-fake"));
+        assert_eq!(cfg.meta().cache_hits, if cached { 2 } else { 0 });
+    }
+    assert_eq!(server.received_requests().await.unwrap().len(), 3);
+}
+
+#[tokio::test]
 async fn typesafe_batches_name_records_and_cache_redacted_input() {
     use futures::TryStreamExt;
     let server = common::mock(common::FakeJev {
@@ -86,7 +204,7 @@ async fn previous_cache_contract_is_bypassed_and_current_contract_hits() {
     cfg.cache_dir = Some(dir.clone());
     let state = serde_json::json!("evidence");
     let qs = one_noul();
-    let canonical = serde_json::json!({"decision_contract":2,"endpoint":cfg.base_url,"backend":"typesafe","model":cfg.model,"state":state,"questions":qs});
+    let canonical = serde_json::json!({"decision_contract":3,"endpoint":cfg.base_url,"backend":"typesafe","model":cfg.model,"state":state,"questions":qs});
     let key = jevify::jev::cache::key(&serde_json::to_vec(&canonical).unwrap());
     jevify::jev::cache::DiskCache::new(dir).unwrap().put(
         &key,
@@ -390,7 +508,7 @@ async fn invalid_cached_answers_are_rejected() {
     let mut cfg = common::config(&server);
     cfg.cache_dir = Some(dir.path().to_path_buf());
     let state = serde_json::json!("x");
-    let canonical = serde_json::json!({"decision_contract":3,"endpoint":cfg.base_url,"backend":"typesafe","model":cfg.model,"state":state,"questions":one_noul()});
+    let canonical = serde_json::json!({"decision_contract":4,"endpoint":cfg.base_url,"backend":"typesafe","model":cfg.model,"state":state,"questions":one_noul()});
     let key = jevify::jev::cache::key(&serde_json::to_vec(&canonical).unwrap());
     jevify::jev::cache::DiskCache::new(dir.path().to_path_buf())
         .unwrap()

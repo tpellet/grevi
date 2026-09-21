@@ -241,7 +241,7 @@ impl Client {
         // The cache key names the backend: the same questions get the same model but a
         // different wire shape, and an entry must never cross from one to the other.
         let canonical = serde_json::json!({
-            "decision_contract": 3, "endpoint": self.base,
+            "decision_contract": 4, "endpoint": self.base,
             "backend": self.backend.as_str(), "model": self.model, "state": state, "questions": questions
         });
         let k = cache_key(
@@ -320,7 +320,7 @@ impl Client {
         let questions = redact_questions(questions);
         let expanded = record_questions(records.len(), &questions);
         let canonical = serde_json::json!({
-            "decision_contract": 3, "endpoint": self.base,
+            "decision_contract": 4, "endpoint": self.base,
             "backend": self.backend.as_str(), "model": self.model,
             "records": records, "questions": questions
         });
@@ -742,6 +742,19 @@ mod tests {
         assert!(!responses[0].all_jev());
         assert!(responses[1].all_jev());
         assert!(unpack_batch(batch, 3, &questions).is_err());
+        let unknown: Response = serde_json::from_value(serde_json::json!({
+            "model": "unknown, jev-fake",
+            "answers": {
+                "0:q": {"noul": 0.2}, "1:q": {"noul": 0.8},
+                "model:0": {"choice": "unknown"}, "model:1": {"choice": "jev-fake"}
+            }
+        }))
+        .unwrap();
+        let responses = unpack_batch(unknown, 2, &questions).unwrap();
+        assert_eq!(responses[0].model, "unknown");
+        assert!(!responses[0].all_jev());
+        assert_eq!(responses[1].model, "jev-fake");
+        assert!(responses[1].all_jev());
         for (id, question) in expanded {
             let super::super::Question::Noul { instructions, .. } = question else {
                 unreachable!()
