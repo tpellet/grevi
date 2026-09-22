@@ -1,0 +1,30 @@
+bug	1	App panics when stdin is empty
+feature	0	Add a --since flag to the commit kind
+docs	0	README shows double-quoted markers
+bug	0	label prints nothing for three-line inputs
+feature	0	Pod kind should read the current namespace
+docs	0	Typo in CHANGELOG 0.6.0 entry
+feature	0	Ship a Windows build
+bug	0	filter -c counts duplicates once
+docs	0	Explain cache invalidation in the FAQ
+bug	1	why hangs forever on a 2 GB log
+bug	0	sort undo lost two files
+question	0	Is there a way to use jevify offline?
+bug	1	Segmentation fault after upgrading to macOS 26
+bug	1	jevify fill freezes when gh asks for a login in the terminal
+feature	0	Support fish shell completions
+question	0	How do I point jevify at a self-hosted backend?
+bug	0	Wrong exit code when the key file is unreadable
+docs	0	Guide page on kinds links to a missing anchor
+bug	1	Crash with SIGABRT when the cache directory is read-only
+feature	0	Add a pr kind for GitLab merge requests
+question	0	Why does pick abstain on my 5-line list?
+bug	0	route suggests a tool that is not installed
+bug	1	Process stuck at 100% CPU with --files on a FIFO
+docs	0	Document the exit code 7 reservation
+feature	0	A --json-lines output mode for label
+bug	0	Excerpts include the first line of .env files
+question	0	Can I cap the number of requests per call?
+bug	1	Thread panicked at 'index out of bounds' in records.rs
+feature	0	Let filter read gzip-compressed logs
+docs	0	Fix broken example in the verbs page
