@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.8.1
+
+Fixed:
+
+- `fill --dry-run` ends its stderr with `would run …` instead of `exec …`; only a real run
+  prints `exec`.
+- `fill` and `pick --from branch` name a branch that exists only on one remote by its short name
+  (`ticket/TPE-791`), which `git switch` accepts, instead of `origin/ticket/TPE-791`; the ref
+  stays in the evidence.
+- `why` shows each finalist next to the nearest failure statement and asks for the failing
+  step's own line rather than the first loud one; `data.any` is taken over both rounds.
+- A `file` or `dir` marker whose names round is undecided sends every name not ruled out to the
+  finals (up to 24), not the top three, so a content phrase whose file ranks low on its name
+  reaches the excerpt round instead of losing to a related sibling.
+
 ## 0.8.0
 
 Added:
