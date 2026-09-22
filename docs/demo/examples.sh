@@ -25,11 +25,13 @@ why() {
 }
 fill() {
     show "jevify fill -- git show --stat --format=%s '@{commit:stopped sending the free backend batches it refuses}'"
-    show "jevify fill --dry-run -- cat 'src/@{file:reads the recipes of the kinds}'"
+    show "printf 'retry_backoff\nparse_header\n' | jevify fill --dry-run -- cargo test '@{-:the retry test}'"
+    show "printf 'A crash with no reproduction steps.\n' | jevify fill --dry-run -- printf '%s\n' '@{one:bug|feature|docs:what kind of report is this}' '@{flag:--draft:the report lacks steps to reproduce}'"
 }
 label() {
     show "jevify label bug,feature,question < $DEMO/issues.txt"
     show "jevify label bug,feature,question < $DEMO/issues.txt | cut -f1 | sort | uniq -c"
+    show "jevify filter 'reports a crash' < $DEMO/issues.txt"
 }
 nothing_fits() {
     show "jevify pick \"last month's electricity bill\" < $DEMO/downloads.txt"
@@ -38,11 +40,11 @@ nothing_fits() {
 }
 is() {
     show "jevify is 'asks for a refund' < $DEMO/mail.txt && echo refund"
-    show "jevify filter 'reports a crash' < $DEMO/issues.txt"
+    show "cargo build 2>&1 | jevify is 'the build failed' || echo 'build is fine'"
 }
 try() {
     show "printf 'build started\nerror: connection timed out\nbuild stopped\n' | jevify filter 'reports a network failure'"
-    show "jevify pick --from file 'where the marker is parsed'"
+    show "git ls-files | jevify pick --files 'where the command-line flags are defined'"
     show "jevify route 'keep my mac awake for an hour'"
 }
 
