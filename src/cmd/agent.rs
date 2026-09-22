@@ -32,6 +32,7 @@ fn kinds() -> (Vec<serde_json::Value>, Option<String>) {
                 "branch" => serde_json::json!({
                     "enrich": ["git", "log", "-5", "--format=%x00%s%x00", "--name-only", "-z", "--no-renames", "--no-ext-diff", "--end-of-options", "<handle>", "--"],
                     "evidence": "name, subject, age; local and remote twins collapse; newest first",
+                    "forms": "bare '@{branch:x}' substitutes the short name a branch-taking command accepts (git switch, checkout, push); a literal prefix 'origin/@{branch:x}' lists that remote's refs and substitutes the qualified ref a revision-taking command resolves (git log, rev-parse, diff)",
                     "ordered": true,
                 }),
                 "commit" => serde_json::json!({

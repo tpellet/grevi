@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased
+
+Fixed:
+
+- `fill`: a literal prefix scopes the `branch` kind. `'origin/@{branch:x}'` lists that remote's
+  refs and substitutes the qualified ref (`origin/ticket/TPE-791`) that `git log`, `git rev-parse`
+  and every other revision-taking command resolve; the bare marker keeps substituting the short
+  name (`ticket/TPE-791`) that `git switch` takes for a remote-only branch. No one spelling
+  satisfies both commands, and the caller's literal is the only signal jevify uses. Capabilities
+  state both forms under `kinds[branch].forms`.
+- `filter`, `label`, `pick --files`: a file jevify cannot read is never judged by its name. An
+  unreadable excerpt (a missing path, a directory in a file's place, a denied file or a denied
+  ancestor directory) is missing evidence, not a policy withholding: `filter` and `label` never
+  ask about the record, print it unsure with p 0, add `unreadable: REASON` to its `--json` record
+  and name it on stderr (`excerpt unreadable: PATH: REASON`); all records unreadable exits 3 with
+  no request. `pick` counts and names an unreadable finalist and lets it compete on its name.
+  Both kinds share `excerpts_withheld`, so the envelope keeps its shape.
+
 ## 0.9.1
 
 Added:

@@ -340,6 +340,19 @@ fn capabilities_lists_verbs_exit_codes_env() {
             "--"
         ])
     );
+    let forms = d["kinds"][1]["forms"].as_str().unwrap();
+    assert!(
+        forms.contains("bare '@{branch:x}' substitutes the short name"),
+        "{forms}"
+    );
+    assert!(forms.contains("git switch"), "{forms}");
+    assert!(
+        forms.contains(
+            "'origin/@{branch:x}' lists that remote's refs and substitutes the qualified ref"
+        ),
+        "{forms}"
+    );
+    assert!(forms.contains("git log, rev-parse"), "{forms}");
     for (backend, window, fill, pick) in [
         ("typesafe", 200, 13200, 20000),
         ("classifier", 99, 3267, 9801),

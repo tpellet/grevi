@@ -25,7 +25,7 @@ it by eye, or read a long output or many files one by one. Each situation has on
 
 | Situation | Command |
 |:---|:---|
-| Which branch holds some work | `jevify fill -- git log -1 --format=%H '@{branch:the allergy model and its schema migration}'` |
+| Which branch holds some work | `jevify fill -- git log -1 --format=%H 'origin/@{branch:the allergy model and its schema migration}'` (a revision takes the prefixed form; `git switch '@{branch:…}'` takes the bare one) |
 | Which commit did something | `jevify fill -- git show '@{commit:restricted the correction to the primary metrics}'` |
 | Which CI run failed, and why | `jevify fill -- gh run view --log-failed '@{ci-run:the failed run on tag v0.7.0}' \| jevify why` |
 | The cause in a long log | `jevify why < ci.log`, then read the numbered cause, not the whole log |
