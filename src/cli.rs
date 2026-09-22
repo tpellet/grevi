@@ -72,7 +72,7 @@ pub enum Cmd {
     },
     /// Find one line in a list by describing it: stdin lines in, the matching line out
     #[command(
-        after_help = "Examples:\n  git branch | jevify pick \"the payment timeout fix\"\n  git log --oneline | jevify pick -n 3 \"when we changed the pricing\"\n  git ls-files | jevify pick --files \"where man pages are parsed\"\n\nThe description and the record need no word in common. --files ranks stdin paths first, then reads excerpts of the finalists; hidden or secret-looking paths and symlink files receive no excerpt (stderr: excerpts withheld: N). Selected records keep their bytes and input order. Input is not saved.\nExit: 0 found, 3 no record fits. --json data: matches[{line, text, ordinal, p, lossy?}], any, source. Non-UTF-8 records have lossy: true."
+        after_help = "Examples:\n  git branch | jevify pick \"the payment timeout fix\"\n  git log --oneline | jevify pick -n 3 \"when we changed the pricing\"\n  git ls-files | jevify pick --files \"where man pages are parsed\"\n\nThe description and the record need no word in common. --files ranks stdin paths first, then reads excerpts of the finalists; hidden or secret-looking paths and symlink files receive no excerpt, and a file that cannot be read (missing, a directory, denied) is named on stderr; both count in excerpts withheld: N. Selected records keep their bytes and input order. Input is not saved.\nExit: 0 found, 3 no record fits. --json data: matches[{line, text, ordinal, p, lossy?}], any, source. Non-UTF-8 records have lossy: true."
     )]
     Pick {
         /// List candidates of this kind instead of reading stdin
@@ -122,7 +122,7 @@ pub enum Cmd {
     },
     /// Keep stdin records that satisfy a statement
     #[command(
-        after_help = "Example:\n  cargo test 2>&1 | jevify filter 'reports a failed assertion'\n\n-v inverts; -c prints the count. Unsure records stay unless --strict. --verbose has no short flag. --files reads stdin paths; hidden or secret-looking paths and symlink files receive no excerpt (excerpts withheld: N). Saves raw input, secrets included, unless --no-save. Status: jevify filter: kept N of M, U unsure, full output: PATH.\nExit: 0 kept some, 1 kept none, 3 every record unsure. --json data: records[{text, ordinal, p, verdict, lossy?}], kept, total, unsure, complete, saved_input, excerpts_withheld. A skipped or failed save sets complete: false. Non-UTF-8 records have lossy: true."
+        after_help = "Example:\n  cargo test 2>&1 | jevify filter 'reports a failed assertion'\n\n-v inverts; -c prints the count. Unsure records stay unless --strict. --verbose has no short flag. --files reads stdin paths; hidden or secret-looking paths and symlink files receive no excerpt, and a file that cannot be read is named on stderr and comes out unsure (both count in excerpts withheld: N; records carry unreadable: REASON). Saves raw input, secrets included, unless --no-save. Status: jevify filter: kept N of M, U unsure, full output: PATH.\nExit: 0 kept some, 1 kept none, 3 every record unsure. --json data: records[{text, ordinal, p, verdict, lossy?}], kept, total, unsure, complete, saved_input, excerpts_withheld. A skipped or failed save sets complete: false. Non-UTF-8 records have lossy: true."
     )]
     Filter {
         statement: String,

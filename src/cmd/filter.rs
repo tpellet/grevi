@@ -48,19 +48,26 @@ pub async fn run(
     })
     .await
     .map_err(|e| JevifyError::Input(e.to_string()))?;
-    let withheld = if flags.files {
+    let unread = if flags.files {
         let cwd = std::env::current_dir().map_err(|e| JevifyError::Input(e.to_string()))?;
         records::excerpts(&mut records, &cwd).await?
     } else {
-        0
+        records::Unread::default()
     };
+    let withheld = unread.count;
     if !machine && withheld > 0 {
         eprintln!("jevify filter: excerpts withheld: {withheld}");
     }
+    unread.report("filter", &records);
     let client = Client::new(ctx)?;
-    let evidence: Vec<_> = unique
+    // An unreadable file is never asked about: its name alone is not the evidence the caller
+    // asked for, and it comes out unsure with p 0, kept unless --strict.
+    let asked: Vec<usize> = (0..unique.len())
+        .filter(|&u| !unread.unreadable.contains_key(&unique[u]))
+        .collect();
+    let evidence: Vec<_> = asked
         .iter()
-        .map(|&i| records[i].evidence.clone())
+        .map(|&u| records[unique[u]].evidence.clone())
         .collect();
     let questions = Questions::from([("filter".into(), question(statement))]);
     let size = batch_size(client.backend(), questions.len());
@@ -68,27 +75,17 @@ pub async fn run(
         "jevify filter: {} records, {} distinct, {} requests",
         records.len(),
         unique.len(),
-        unique.len().div_ceil(size)
+        asked.len().div_ceil(size)
     );
-    let mut answers = Vec::with_capacity(unique.len());
+    let mut answers: Vec<(f64, &str)> = Vec::with_capacity(unique.len());
+    let mut asked_done = 0;
     let mut cursor = 0;
     let mut kept = 0;
     let mut unsure = 0;
     let mut entries = Vec::new();
     let stdout = std::io::stdout();
     let mut stdout = stdout.lock();
-    let result = score(&client, &evidence, &questions, |batch| {
-        for response in batch {
-            let scores = response.probs("filter")?;
-            let (p, fails, silent) = (scores[HOLDS], scores[FAILS], scores[SILENT]);
-            ctx.stats.gate(crate::output::Gate {
-                any: Some(p),
-                none: Some(silent),
-                ..Default::default()
-            });
-            let verdict = verdict(p, fails, ctx.threshold, 0.15);
-            answers.push((p, verdict));
-        }
+    let mut emit = |answers: &[(f64, &str)]| -> Result<bool, JevifyError> {
         while cursor < records.len() && occurrences[cursor] < answers.len() {
             let (p, verdict) = answers[occurrences[cursor]];
             unsure += usize::from(verdict == "unsure");
@@ -99,6 +96,9 @@ pub async fn run(
                     let mut entry = records::envelope(&input, &records[cursor], cursor + 1);
                     entry["p"] = p.into();
                     entry["verdict"] = verdict.into();
+                    if let Some(reason) = unread.unreadable.get(&cursor) {
+                        entry["unreadable"] = reason.as_str().into();
+                    }
                     entries.push(entry);
                 } else if !flags.count
                     && !write_record(&mut stdout, &input[records[cursor].raw.clone()])?
@@ -109,8 +109,31 @@ pub async fn run(
             cursor += 1;
         }
         Ok(true)
+    };
+    let result = score(&client, &evidence, &questions, |batch| {
+        for response in batch {
+            let scores = response.probs("filter")?;
+            let (p, fails, silent) = (scores[HOLDS], scores[FAILS], scores[SILENT]);
+            ctx.stats.gate(crate::output::Gate {
+                any: Some(p),
+                none: Some(silent),
+                ..Default::default()
+            });
+            let verdict = verdict(p, fails, ctx.threshold, 0.15);
+            answers.resize(asked[asked_done], (0.0, "unsure"));
+            answers.push((p, verdict));
+            asked_done += 1;
+        }
+        emit(&answers)
     })
     .await;
+    let result = match result {
+        Ok(true) => {
+            answers.resize(unique.len(), (0.0, "unsure"));
+            emit(&answers)
+        }
+        other => other,
+    };
     let completed = match result {
         Ok(completed) => completed,
         Err(error) => {

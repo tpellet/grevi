@@ -45,6 +45,9 @@ distinguish a no (1), an abstention (3), and backend or input errors.
 The caller supplies the paths on stdin. A hidden or secret-looking path remains a candidate,
 but its content is withheld before reading an excerpt. The name can still reach the backend.
 The status reports `excerpts withheld: N`; this is not a guarantee that every secret is detected.
+The same count includes files jevify could not read, each named on stderr as
+`excerpt unreadable: PATH: REASON`; `filter` and `label` leave those unsure instead of judging
+the name.
 
 ## Does it run a command or invent flags?
 

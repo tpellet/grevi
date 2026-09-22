@@ -43,8 +43,20 @@ fn folders(root: &Path, skipped: &mut Vec<serde_json::Value>) -> Vec<PathBuf> {
     out
 }
 
-/// `p` must be absolute and normalized (`open_regular`). Shared with `pick --files`.
+/// `p` must be absolute and normalized (`open_regular`). A file that cannot be opened or read
+/// is described by its name alone.
 pub(crate) fn excerpt(p: &Path) -> String {
+    read_excerpt(p).unwrap_or_else(|_| {
+        p.file_name()
+            .map(|n| n.to_string_lossy().into_owned())
+            .unwrap_or_default()
+    })
+}
+
+/// The excerpt of a regular file, or the error that kept its bytes from being read (a denied
+/// directory on the way, a missing file, a directory in its place). Binary content is not an
+/// error: the name alone describes it. Shared with `--files` on the record verbs.
+pub(crate) fn read_excerpt(p: &Path) -> io::Result<String> {
     use std::io::Read;
     let name = p
         .file_name()
@@ -52,10 +64,12 @@ pub(crate) fn excerpt(p: &Path) -> String {
         .unwrap_or_default();
     // Read at most 8 KiB: `read_to_string` would load a multi-GB video before failing UTF-8.
     let mut head = Vec::new();
-    if let Ok(f) = open_regular(p) {
-        let _ = f.take(8192).read_to_end(&mut head);
-    }
-    let text = match std::str::from_utf8(&head) {
+    open_regular(p)?.take(8192).read_to_end(&mut head)?;
+    Ok(excerpt_text(p, name, &head))
+}
+
+fn excerpt_text(p: &Path, name: String, head: &[u8]) -> String {
+    let text = match std::str::from_utf8(head) {
         Ok(s) => Some(s),
         Err(e) if e.error_len().is_none() => std::str::from_utf8(&head[..e.valid_up_to()]).ok(),
         Err(_) => None,

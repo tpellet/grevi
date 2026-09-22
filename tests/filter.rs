@@ -628,3 +628,86 @@ async fn stdout_flows_before_last_answer_and_closed_pipe_cancels() {
     writer.join().unwrap();
     assert!(responder.requests.load(Ordering::SeqCst) < 11);
 }
+
+/// A file jevify cannot read is unsure with p 0: kept unless --strict, counted with the
+/// withheld excerpts, named on stderr with the reason, and never sent.
+#[tokio::test]
+async fn unreadable_files_are_named_counted_and_kept_as_unsure() {
+    let server = common::mock_classifier(fake()).await;
+    let root = tempfile::tempdir().unwrap().keep();
+    std::fs::write(root.join("source.rs"), "VISIBLE_EXCERPT").unwrap();
+    std::fs::create_dir(root.join("adir")).unwrap();
+    for (strict, machine) in [(false, false), (false, true), (true, false), (true, true)] {
+        let mut cmd = common::jevify_classifier(&server);
+        cmd.current_dir(&root)
+            .args(["filter", "x", "-0", "--files"]);
+        if strict {
+            cmd.arg("--strict");
+        }
+        if machine {
+            cmd.arg("--json");
+        }
+        let out = cmd
+            .write_stdin(b"./source.rs\0adir\0missing.rs\0")
+            .output()
+            .unwrap();
+        let stderr = String::from_utf8_lossy(&out.stderr);
+        assert!(
+            stderr
+                .lines()
+                .any(|line| line == "jevify filter: excerpt unreadable: adir: is a directory"),
+            "{stderr}"
+        );
+        assert!(
+            stderr.contains("jevify filter: excerpt unreadable: missing.rs: No such file"),
+            "{stderr}"
+        );
+        let kept = if strict { 1 } else { 3 };
+        assert!(
+            stderr.contains(&format!("kept {kept} of 3, 2 unsure")),
+            "{stderr}"
+        );
+        assert!(stderr.contains("excerpts withheld: 2"), "{stderr}");
+        if machine {
+            let value = envelope(&out, 0);
+            let records = value["data"]["records"].as_array().unwrap();
+            assert_eq!(records.len(), kept);
+            assert_eq!(records[0]["verdict"], "yes");
+            assert!(records[0].get("unreadable").is_none());
+            if !strict {
+                assert_eq!(records[1]["text"], "adir\0");
+                assert_eq!(records[1]["verdict"], "unsure");
+                assert_eq!(records[1]["p"], 0.0);
+                assert_eq!(records[1]["unreadable"], "is a directory");
+                assert!(
+                    records[2]["unreadable"]
+                        .as_str()
+                        .unwrap()
+                        .contains("No such file")
+                );
+            }
+            assert_eq!(value["data"]["excerpts_withheld"], 2);
+            assert_eq!(value["data"]["unsure"], 2);
+        } else {
+            assert_eq!(out.status.code(), Some(0), "{stderr}");
+            let expected: &[u8] = if strict {
+                b"./source.rs\0"
+            } else {
+                b"./source.rs\0adir\0missing.rs\0"
+            };
+            assert_eq!(out.stdout, expected);
+        }
+    }
+    for request in server
+        .received_requests()
+        .await
+        .unwrap()
+        .iter()
+        .filter(|r| r.method == "POST")
+    {
+        let body = String::from_utf8_lossy(&request.body);
+        assert!(body.contains("VISIBLE_EXCERPT"), "{body}");
+        assert!(!body.contains("adir"), "{body}");
+        assert!(!body.contains("missing.rs"), "{body}");
+    }
+}

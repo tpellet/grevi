@@ -249,57 +249,113 @@ fn meaningful(text: &str) -> String {
     kept.join("\n")
 }
 
-/// Enrich only the supplied records (all records or pick's finalists), returning withheld count.
-pub async fn excerpts(records: &mut [Record], cwd: &Path) -> Result<usize, JevifyError> {
+/// The records of a `--files` read that carry their name and no excerpt.
+///
+/// Two reasons keep an excerpt out, and they are told apart: the policy of `withheld`
+/// (a hidden or secret-looking path, a symlink file) is a choice jevify makes, and the caller
+/// can predict it from the name; an unreadable file (missing, a directory in its place, a
+/// permission or sandbox denial on the file or on a directory on the way to it) is a failure
+/// the caller cannot predict, and a verdict on its name alone would pass for a verdict on its
+/// content. `count` is the status line's `excerpts withheld: N`, both reasons together, so a
+/// caller who reads one number learns that N records were judged without their content.
+/// `unreadable` names the second kind, by record index, with the operating system's reason;
+/// a verb prints them on stderr and leaves those records unsure instead of asking.
+#[derive(Debug, Default)]
+pub struct Unread {
+    pub count: usize,
+    pub unreadable: std::collections::BTreeMap<usize, String>,
+}
+
+impl Unread {
+    /// Name every unreadable record on stderr under `verb`, the first ten in full.
+    pub fn report(&self, verb: &str, records: &[Record]) {
+        const NAMED: usize = 10;
+        for (&index, reason) in self.unreadable.iter().take(NAMED) {
+            let name = records[index].handle.to_string_lossy();
+            let name: String = name
+                .chars()
+                .map(|c| if c.is_control() { '\u{fffd}' } else { c })
+                .collect();
+            eprintln!("jevify {verb}: excerpt unreadable: {name}: {reason}");
+        }
+        if self.unreadable.len() > NAMED {
+            eprintln!(
+                "jevify {verb}: excerpt unreadable: {} more",
+                self.unreadable.len() - NAMED
+            );
+        }
+    }
+}
+
+/// Enrich only the supplied records (all records or pick's finalists). A record whose excerpt
+/// is withheld or unreadable keeps its name as evidence and is counted in the result.
+pub async fn excerpts(records: &mut [Record], cwd: &Path) -> Result<Unread, JevifyError> {
     let paths: Vec<_> = records.iter().map(|r| r.handle.clone()).collect();
     let cwd = cwd.to_path_buf();
-    let (values, count) = tokio::task::spawn_blocking(move || {
-        let mut count = 0;
+    let (values, unread) = tokio::task::spawn_blocking(move || {
+        let mut unread = Unread::default();
         let values: Vec<_> = paths
             .into_iter()
-            .map(|handle| {
-                let path = Path::new(&handle);
+            .enumerate()
+            .map(|(index, handle)| {
                 let fallback = evidence(handle.as_bytes());
-                if withheld(path) {
-                    count += 1;
-                    return fallback;
+                match excerpt_of(&cwd, Path::new(&handle)) {
+                    Ok(Some(text)) => evidence(text.as_bytes()),
+                    Ok(None) => {
+                        unread.count += 1;
+                        fallback
+                    }
+                    Err(reason) => {
+                        unread.count += 1;
+                        unread.unreadable.insert(index, reason);
+                        fallback
+                    }
                 }
-                let joined = cwd.join(path);
-                let normalized: std::path::PathBuf = joined.components().collect();
-                let Some(name) = normalized.file_name() else {
-                    return fallback;
-                };
-                let Some(parent) = normalized.parent().and_then(|p| p.canonicalize().ok()) else {
-                    return fallback;
-                };
-                let resolved = parent.join(name);
-                let Ok(metadata) = resolved.symlink_metadata() else {
-                    return fallback;
-                };
-                if metadata.is_symlink() {
-                    count += 1;
-                    return fallback;
-                }
-                if !metadata.is_file() {
-                    return fallback;
-                }
-                let excerpt = crate::cmd::sort::excerpt(&resolved);
-                let name = name.to_string_lossy();
-                let text = match excerpt.strip_prefix(&format!("{name}: ")) {
-                    Some(body) => format!("{name}: {}", meaningful(body)),
-                    None => excerpt,
-                };
-                evidence(text.as_bytes())
             })
             .collect();
-        (values, count)
+        (values, unread)
     })
     .await
     .map_err(|e| JevifyError::Input(format!("excerpt worker failed: {e}")))?;
     for (record, value) in records.iter_mut().zip(values) {
         record.evidence = value;
     }
-    Ok(count)
+    Ok(unread)
+}
+
+/// `Ok(Some)` is the excerpt, `Ok(None)` a path the policy withholds, `Err` the reason a
+/// file's bytes could not be read.
+fn excerpt_of(cwd: &Path, path: &Path) -> Result<Option<String>, String> {
+    if withheld(path) {
+        return Ok(None);
+    }
+    let joined = cwd.join(path);
+    let normalized: std::path::PathBuf = joined.components().collect();
+    let Some(name) = normalized.file_name() else {
+        return Err("not a file name".into());
+    };
+    let parent = normalized
+        .parent()
+        .ok_or_else(|| "not a file name".to_string())?
+        .canonicalize()
+        .map_err(|e| e.to_string())?;
+    let resolved = parent.join(name);
+    let metadata = resolved.symlink_metadata().map_err(|e| e.to_string())?;
+    if metadata.is_symlink() {
+        return Ok(None);
+    }
+    if metadata.is_dir() {
+        return Err("is a directory".into());
+    }
+    if !metadata.is_file() {
+        return Err("not a regular file".into());
+    }
+    let excerpt = crate::cmd::sort::read_excerpt(&resolved).map_err(|e| e.to_string())?;
+    let name = name.to_string_lossy();
+    Ok(Some(match excerpt.strip_prefix(&format!("{name}: ")) {
+        Some(body) => format!("{name}: {}", meaningful(body)),
+        None => excerpt,
+    }))
 }
 
 #[cfg(test)]
@@ -327,12 +383,13 @@ mod tests {
         eprintln!("retained records fixture: {}", root.display());
         std::fs::write(root.join("source.rs"), "VISIBLE_EXCERPT_MARKER").unwrap();
         let mut records = parse(b"./source.rs\n", Split::Lines).unwrap();
-        assert_eq!(excerpts(&mut records, &root).await.unwrap(), 0);
+        assert_eq!(excerpts(&mut records, &root).await.unwrap().count, 0);
         assert!(records[0].evidence.contains("VISIBLE_EXCERPT_MARKER"));
 
         let absolute = root.join("source.rs");
         let mut records = parse(absolute.as_os_str().as_bytes(), Split::Nul).unwrap();
-        assert_eq!(excerpts(&mut records, &root).await.unwrap(), 1);
+        let unread = excerpts(&mut records, &root).await.unwrap();
+        assert_eq!((unread.count, unread.unreadable.len()), (1, 0));
         assert_eq!(
             records[0].evidence,
             evidence(absolute.as_os_str().as_bytes())
@@ -512,7 +569,15 @@ mod tests {
         std::os::unix::fs::symlink(&root, root.join("ancestor")).unwrap();
         let input = b"./a.txt\0a/../b.txt\0ancestor/a.txt\0src/main.rs\0missing\0a\0.npmrc\0.env.local\0id_rsa\0x.pem\0a/.hidden/b.txt\0my-credentials.json\0link.txt\0x.key\0my-secret.txt\0";
         let mut records = parse(input, Split::Nul).unwrap();
-        assert_eq!(excerpts(&mut records, &root).await.unwrap(), 9);
+        // Nine withheld by policy; the missing path and the directory are unreadable.
+        let unread = excerpts(&mut records, &root).await.unwrap();
+        assert_eq!(unread.count, 11);
+        assert_eq!(
+            unread.unreadable.keys().copied().collect::<Vec<_>>(),
+            [4, 5]
+        );
+        assert!(unread.unreadable[&4].contains("No such file"), "{unread:?}");
+        assert_eq!(unread.unreadable[&5], "is a directory");
         for r in &records[..4] {
             assert!(
                 r.evidence.contains("VISIBLE_EXCERPT_MARKER"),
@@ -526,7 +591,7 @@ mod tests {
         assert!(records.iter().all(|r| !r.evidence.contains(marker)));
         assert_eq!(records.len(), 15);
         let mut subset = parse(b"a.txt\nmissing\n", Split::Lines).unwrap();
-        excerpts(&mut subset[..1], &root).await.unwrap();
+        assert_eq!(excerpts(&mut subset[..1], &root).await.unwrap().count, 0);
         assert_eq!(subset[1].evidence, "missing");
         eprintln!("retained records fixture: {}", root.display());
     }
@@ -558,7 +623,9 @@ mod tests {
             }
         };
         let mut records = parse(b"file-\xff\0", Split::Nul).unwrap();
-        assert_eq!(excerpts(&mut records, &root).await.unwrap(), 0);
+        let unread = excerpts(&mut records, &root).await.unwrap();
+        assert_eq!(unread.count, usize::from(!file_created));
+        assert_eq!(unread.unreadable.len(), usize::from(!file_created));
         assert_eq!(records[0].handle.as_bytes(), b"file-\xff");
         if file_created {
             assert!(records[0].evidence.contains("VISIBLE_EXCERPT_MARKER"));

@@ -68,13 +68,13 @@ argument; unchecked substitution can turn abstention into an empty argument.
   not say. A record that says nothing either way (`Merge branch 'pr-248'` under "is a bug fix")
   is unsure, not a no; `p` is the probability that the statement holds, and the gate's `none`
   in `meta.decision` is the probability that the record does not say.
-  Data: `records[{text,ordinal,p,verdict,lossy?}]`, `kept`, `total`, `unsure`, `complete`,
-  `saved_input`, `excerpts_withheld`. Exit 0 kept some, 1 kept none, 3 every record unsure.
+  Data: `records[{text,ordinal,p,verdict,lossy?,unreadable?}]`, `kept`, `total`, `unsure`,
+  `complete`, `saved_input`, `excerpts_withheld`. Exit 0 kept some, 1 kept none, 3 every record unsure.
 - `label a,b,c [-0 | --para] [--files]` tags every record with one of the labels and prints
   `LABEL<TAB>RECORD` in input order; `?` marks an unsure record. Labels: at least two, distinct,
   none empty, none `?` or `NONE`, at most the backend window (99 on classifier.dev, 200 on
-  TypeSafe), else exit 2. Data: `records[{label,text,ordinal,p,lossy?}]`, `labelled`, `total`,
-  `unsure`, `complete`, `excerpts_withheld`. Exit 0 labelled, 3 every record unsure. Saves nothing.
+  TypeSafe), else exit 2. Data: `records[{label,text,ordinal,p,lossy?,unreadable?}]`, `labelled`,
+  `total`, `unsure`, `complete`, `excerpts_withheld`. Exit 0 labelled, 3 every record unsure. Saves nothing.
   Stderr: `jevify label: labelled N of M, U unsure`. `cut -f2-` gives line records back without
   their blank lines; with `-0` and `--para` the record follows the tab unchanged.
 - `is '<statement>' ['<statement>' ...] [--context FILE] [--band 0.15]` reads one context.
@@ -105,7 +105,11 @@ identical records once and restore all occurrences. Non-UTF-8 machine records ca
 human output preserves exact bytes. `pick` also uses `line` for its 1-based input position.
 
 `--files` paths remain candidates when excerpts are withheld. Hidden or secret-looking components
-and symlink file entries receive no excerpt; status reports `excerpts withheld: N`. See
+and symlink file entries receive no excerpt. A file whose bytes cannot be read (missing, a
+directory in its place, a permission or sandbox denial on it or on a directory above it) is
+named on stderr as `excerpt unreadable: PATH: REASON`; `filter` and `label` never judge it by
+its name: it is unsure (`?`, p 0) without a request, and its record carries `unreadable: REASON`.
+`pick` finalists compete on their names. Status counts both kinds as `excerpts withheld: N`. See
 [Privacy](../PRIVACY.md) for the exact checks. Excerpts are not complete file evidence.
 
 Only `why` and `filter` save raw inputs, secrets included, never pruned. The directory is

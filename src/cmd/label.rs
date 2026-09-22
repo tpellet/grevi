@@ -57,19 +57,26 @@ pub async fn run(
             example: "head -n 20000 input | jevify label bug,feature",
         });
     }
-    let withheld = if flags.files {
+    let unread = if flags.files {
         let cwd = std::env::current_dir().map_err(|e| JevifyError::Input(e.to_string()))?;
         records::excerpts(&mut records, &cwd).await?
     } else {
-        0
+        records::Unread::default()
     };
+    let withheld = unread.count;
     if !machine && withheld > 0 {
         eprintln!("jevify label: excerpts withheld: {withheld}");
     }
+    unread.report("label", &records);
     let client = Client::new(ctx)?;
-    let evidence: Vec<_> = unique
+    // An unreadable file is never asked about: its name alone is not the evidence the caller
+    // asked for, and it comes out `?` with p 0.
+    let asked: Vec<usize> = (0..unique.len())
+        .filter(|&u| !unread.unreadable.contains_key(&unique[u]))
+        .collect();
+    let evidence: Vec<_> = asked
         .iter()
-        .map(|&i| records[i].evidence.clone())
+        .map(|&u| records[unique[u]].evidence.clone())
         .collect();
     let questions = Questions::from([("label".into(), question(&labels))]);
     let size = batch_size(client.backend(), questions.len());
@@ -77,21 +84,17 @@ pub async fn run(
         "jevify label: {} records, {} distinct, {} requests",
         records.len(),
         unique.len(),
-        unique.len().div_ceil(size)
+        asked.len().div_ceil(size)
     );
     let mut answers: Vec<(String, f64)> = Vec::with_capacity(unique.len());
+    let mut asked_done = 0;
     let mut cursor = 0;
     let mut labelled = 0;
     let mut unsure = 0;
     let mut entries = Vec::new();
     let stdout = std::io::stdout();
     let mut stdout = stdout.lock();
-    let result = score(&client, &evidence, &questions, |batch| {
-        for response in batch {
-            let (label, p, gate) = verdict(&labels, response.probs("label")?, ctx.threshold);
-            ctx.stats.gate(gate);
-            answers.push((label, p));
-        }
+    let mut emit = |answers: &[(String, f64)]| -> Result<bool, JevifyError> {
         while cursor < records.len() && occurrences[cursor] < answers.len() {
             let (label, p) = &answers[occurrences[cursor]];
             if label == UNSURE {
@@ -103,6 +106,9 @@ pub async fn run(
                 let mut entry = records::envelope(&input, &records[cursor], cursor + 1);
                 entry["label"] = label.as_str().into();
                 entry["p"] = (*p).into();
+                if let Some(reason) = unread.unreadable.get(&cursor) {
+                    entry["unreadable"] = reason.as_str().into();
+                }
                 entries.push(entry);
             } else {
                 let mut line = Vec::with_capacity(label.len() + 1 + records[cursor].raw.len());
@@ -116,8 +122,25 @@ pub async fn run(
             cursor += 1;
         }
         Ok(true)
+    };
+    let result = score(&client, &evidence, &questions, |batch| {
+        for response in batch {
+            let (label, p, gate) = verdict(&labels, response.probs("label")?, ctx.threshold);
+            ctx.stats.gate(gate);
+            answers.resize(asked[asked_done], (UNSURE.into(), 0.0));
+            answers.push((label, p));
+            asked_done += 1;
+        }
+        emit(&answers)
     })
     .await;
+    let result = match result {
+        Ok(true) => {
+            answers.resize(unique.len(), (UNSURE.into(), 0.0));
+            emit(&answers)
+        }
+        other => other,
+    };
     let completed = match result {
         Ok(completed) => completed,
         Err(error) => {

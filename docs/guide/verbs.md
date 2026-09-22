@@ -135,7 +135,8 @@ Exit 0 found, 3 nothing fits. Input is not saved.
 
 `--files` reads paths from stdin, ranks their names, then reads eligible excerpts of at most
 24 finalists. Hidden and secret-looking paths remain candidates but receive no excerpt;
-symlink files also receive no excerpt. Stderr reports `excerpts withheld: N`. There is no
+symlink files also receive no excerpt; a file that cannot be read is named on stderr with the
+reason and competes on its name. Stderr reports `excerpts withheld: N` for both. There is no
 directory enumeration by this flag and it conflicts with `--index`.
 
 Data: `matches[{line,text,ordinal,p,lossy?}]`, `any`, `source` (`stdin` or `files`). Non-UTF-8
@@ -191,8 +192,11 @@ defines unsure. Hidden or secret-looking paths and symlink files receive no exce
 Up to 60 records per classifier request are judged independently; TypeSafe batches 20 records
 in shared state. The ceiling is 20,000 distinct records (`too_many`, exit 6).
 
-Data: `records[{text,ordinal,p,verdict,lossy?}]`, `kept`, `total`, `unsure`, `complete`,
-`saved_input`, `excerpts_withheld`. `records` contains the kept subset, including under `-c`.
+Data: `records[{text,ordinal,p,verdict,lossy?,unreadable?}]`, `kept`, `total`, `unsure`,
+`complete`, `saved_input`, `excerpts_withheld`. `records` contains the kept subset, including
+under `-c`. Under `--files`, a file that cannot be read (missing, a directory, a permission or
+sandbox denial) is never judged by its name: it is unsure with p 0, kept unless `--strict`, named
+on stderr as `excerpt unreadable: PATH: REASON` and carries `unreadable`.
 Stderr reports `jevify filter: kept N of M, U unsure, full output: PATH`, with withholding and
 non-Jev model details when relevant. A skipped or failed save sets `complete=false`.
 Human output can be a prefix if a later batch fails; an error exits nonzero and reports progress.
@@ -222,8 +226,11 @@ gives the input back without its blank lines; with `-0` and `--para` the record 
 tab unchanged. Nothing is saved. The record limits of `filter` apply: 60 records per
 request on classifier.dev, 20 on TypeSafe, 20,000 distinct records (`too_many`, exit 6).
 
-Data: `records[{label,text,ordinal,p,lossy?}]`, `labelled`, `total`, `unsure`, `complete`,
-`excerpts_withheld`. `p` is the winning label's probability, or the best label's under `?`.
+Data: `records[{label,text,ordinal,p,lossy?,unreadable?}]`, `labelled`, `total`, `unsure`,
+`complete`, `excerpts_withheld`. `p` is the winning label's probability, or the best label's
+under `?`. Under `--files`, a file that cannot be read is never labelled by its name: it is `?`
+with p 0 without a request, named on stderr as `excerpt unreadable: PATH: REASON`, and its
+record carries `unreadable`; it counts in `excerpts_withheld`.
 Stderr reports `jevify label: N records, D distinct, R requests` before the first request and
 `jevify label: labelled N of M, U unsure` at the end, with withholding and non-Jev model
 details when relevant. Human output can be a prefix if a later batch fails.

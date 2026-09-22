@@ -1106,3 +1106,37 @@ fn from_kind_reads_user_recipes_and_reports_a_bad_line() {
         "{v}"
     );
 }
+
+/// A finalist jevify cannot read competes on its name, as a withheld one does, but it is
+/// counted and named on stderr with the reason.
+#[tokio::test(flavor = "multi_thread")]
+async fn unreadable_file_finalists_are_counted_and_named() {
+    let server = common::mock(FakeJev {
+        choose: |_, s, o| option_containing(s, o, "invoice"),
+        noul: |_, _| 0.9,
+    })
+    .await;
+    let root = tempfile::tempdir().unwrap().keep();
+    std::fs::write(root.join("invoice.txt"), "VISIBLE_FILE_BODY").unwrap();
+    std::fs::create_dir(root.join("bills")).unwrap();
+    let mut cmd = common::jevify(&server);
+    cmd.current_dir(root);
+    let out = tokio::task::spawn_blocking(move || {
+        cmd.args(["pick", "-0", "--files", "bill"])
+            .write_stdin(b"./invoice.txt\0bills\0".as_slice())
+            .output()
+            .unwrap()
+    })
+    .await
+    .unwrap();
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert_eq!(out.status.code(), Some(0), "{stderr}");
+    assert_eq!(out.stdout, b"./invoice.txt\0");
+    assert!(stderr.contains("excerpts withheld: 1"), "{stderr}");
+    assert!(
+        stderr
+            .lines()
+            .any(|line| line == "jevify pick: excerpt unreadable: bills: is a directory"),
+        "{stderr}"
+    );
+}

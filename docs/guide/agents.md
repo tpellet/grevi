@@ -106,8 +106,8 @@ map an unsure exit 3 to 125. Do not silently retry abstention until it agrees.
 | `pick --from` | `matches[{text,ordinal,p,lossy}]`, `reason`, `any`, `source`, `candidates`, `total`, `omitted`, `windows`, `finalists_per_window` |
 | `pick` | `matches[{line,text,ordinal,p,lossy?}]`, `any`, `source` |
 | `why` | `causes[{line,text,p,context[]}]`, `any`, `considered`, `total`, `hint`, `saved_input`, `complete` |
-| `filter` | `records[{text,ordinal,p,verdict,lossy?}]`, `kept`, `total`, `unsure`, `saved_input`, `complete`, `excerpts_withheld` |
-| `label` | `records[{label,text,ordinal,p,lossy?}]`, `labelled`, `total`, `unsure`, `complete`, `excerpts_withheld` |
+| `filter` | `records[{text,ordinal,p,verdict,lossy?,unreadable?}]`, `kept`, `total`, `unsure`, `saved_input`, `complete`, `excerpts_withheld` |
+| `label` | `records[{label,text,ordinal,p,lossy?,unreadable?}]`, `labelled`, `total`, `unsure`, `complete`, `excerpts_withheld` |
 | `is`, one statement | `p`, `verdict`, `truncated`, `reason` when oversized |
 | `is`, several statements | `statements[{statement,verdict,p}]`, aggregate `verdict`, `truncated`, `reason` when oversized |
 | `route` | `tool`, `summary`, `synopsis`, `fit`, `alternatives[]` |

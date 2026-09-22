@@ -24,8 +24,8 @@ by `", "`. A free-backend response is service-controlled and can name a differen
 | `pick --from` | the same evidence as `fill` for the kind | no user command executes |
 | `pick` | description and distinct stdin records, clipped to 200–2,000 characters per selection item | unselected evidence beyond the clipping budget |
 | `pick --files` | description, stdin paths, masked excerpts of at most 24 finalists | withheld file contents; other files not listed on stdin |
-| `filter` | statement and distinct record evidence; with `--files`, stdin paths and eligible file excerpts | file content beyond excerpts, or content withheld by the path rules |
-| `label` | the labels and distinct record evidence, redacted on a best-effort basis; with `--files`, stdin paths and eligible file excerpts | file content beyond excerpts, or content withheld by the path rules; nothing is saved |
+| `filter` | statement and distinct record evidence; with `--files`, stdin paths and eligible file excerpts | file content beyond excerpts, or content withheld by the path rules; the path of a file that cannot be read, which is unsure without a request |
+| `label` | the labels and distinct record evidence, redacted on a best-effort basis; with `--files`, stdin paths and eligible file excerpts | file content beyond excerpts, or content withheld by the path rules; the path of a file that cannot be read, which is `?` without a request; nothing is saved |
 | `why` | filtered stdin log, at most 4,000 selected lines, each clipped | lines filtered out locally |
 | `is` | statements and complete supported context from stdin or `--context FILE` | oversized context: it abstains before inference |
 | `route` | intent, installed tool names and summaries, man-page excerpts of at most 12 finalists | directory file contents, shell history, environment values |

@@ -63,7 +63,8 @@ twins and uses recent commit subjects and changed paths as richer evidence.
 
 `pick --files` reads paths from stdin, selects finalists by name, then reads eligible excerpts
 for the second round. Hidden and secret-looking path components and symlink files receive no
-excerpt. Paths remain candidates; the status reports `excerpts withheld: N`.
+excerpt, and a file that cannot be read is named on stderr with the reason. Paths remain
+candidates; the status reports `excerpts withheld: N` for both.
 `-n` requests more candidates, but ranks past the third have no reliability claim.
 
 ## The `why` prefilter

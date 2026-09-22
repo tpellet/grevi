@@ -174,12 +174,9 @@ fn capabilities_lists_verbs_exit_codes_env() {
         label["usage"],
         "CMD | jevify label a,b,c [-0|--para] [--files]"
     );
-    assert!(
-        label["data"]
-            .as_str()
-            .unwrap()
-            .starts_with("records[{label,text,ordinal,p,lossy?}], labelled, total, unsure")
-    );
+    assert!(label["data"].as_str().unwrap().starts_with(
+        "records[{label,text,ordinal,p,lossy?,unreadable?}], labelled, total, unsure"
+    ));
     let note = label["note"].as_str().unwrap();
     assert!(note.contains("? marks an unsure record"), "{note}");
     assert!(

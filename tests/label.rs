@@ -607,3 +607,122 @@ async fn stdout_flows_before_last_answer_and_closed_pipe_cancels() {
     writer.join().unwrap();
     assert!(responder.requests.load(Ordering::SeqCst) < 11);
 }
+
+/// A file jevify cannot read is not judged on its name: it comes out `?` with p 0, is counted
+/// with the withheld excerpts, is named on stderr with the reason, and is never sent.
+#[tokio::test]
+async fn unreadable_files_are_named_counted_and_left_unsure_not_labelled_by_name() {
+    use std::os::unix::fs::PermissionsExt;
+    let server = common::mock_classifier(fake()).await;
+    let root = tempfile::tempdir().unwrap().keep();
+    std::fs::write(root.join("readable.md"), "VISIBLE_EXCERPT feature").unwrap();
+    std::fs::create_dir(root.join("adir")).unwrap();
+    let denied = root.join("denied.md");
+    std::fs::write(&denied, "VISIBLE_EXCERPT feature").unwrap();
+    std::fs::set_permissions(&denied, std::fs::Permissions::from_mode(0o000)).unwrap();
+    // Under root the permission bits do not deny; the directory and the missing file do.
+    let denied_unreadable = std::fs::read(&denied).is_err();
+    let unreadable = 2 + usize::from(denied_unreadable);
+    let denied_label = if denied_unreadable { "?" } else { "feature" };
+    for machine in [false, true] {
+        let mut cmd = common::jevify_classifier(&server);
+        cmd.current_dir(&root)
+            .args(["label", "bug,feature", "-0", "--files"]);
+        if machine {
+            cmd.arg("--json");
+        }
+        let out = cmd
+            .write_stdin(b"./readable.md\0adir\0denied.md\0missing.md\0")
+            .output()
+            .unwrap();
+        let stderr = String::from_utf8_lossy(&out.stderr);
+        assert!(
+            stderr
+                .lines()
+                .any(|line| line == "jevify label: excerpt unreadable: adir: is a directory"),
+            "{stderr}"
+        );
+        assert!(
+            stderr.contains("jevify label: excerpt unreadable: missing.md: No such file"),
+            "{stderr}"
+        );
+        assert_eq!(
+            stderr.contains("excerpt unreadable: denied.md: Permission denied"),
+            denied_unreadable,
+            "{stderr}"
+        );
+        assert!(
+            stderr.contains(&format!(
+                "labelled {} of 4, {} unsure, excerpts withheld: {unreadable}",
+                4 - unreadable,
+                unreadable
+            )),
+            "{stderr}"
+        );
+        if machine {
+            let value = envelope(&out, 0);
+            let records = value["data"]["records"].as_array().unwrap();
+            assert_eq!(records[0]["label"], "feature");
+            assert!(records[0].get("unreadable").is_none());
+            assert_eq!(records[1]["label"], "?");
+            assert_eq!(records[1]["p"], 0.0);
+            assert_eq!(records[1]["unreadable"], "is a directory");
+            assert_eq!(records[2]["label"], denied_label);
+            assert_eq!(records[3]["label"], "?");
+            assert!(
+                records[3]["unreadable"]
+                    .as_str()
+                    .unwrap()
+                    .contains("No such file")
+            );
+            assert_eq!(value["data"]["excerpts_withheld"], unreadable);
+            assert_eq!(value["data"]["unsure"], unreadable);
+            assert_eq!(value["data"]["labelled"], 4 - unreadable);
+        } else {
+            assert_eq!(out.status.code(), Some(0), "{stderr}");
+            assert_eq!(
+                String::from_utf8_lossy(&out.stdout),
+                format!(
+                    "feature\t./readable.md\0?\tadir\0{denied_label}\tdenied.md\0?\tmissing.md\0"
+                )
+            );
+            assert!(
+                stderr
+                    .lines()
+                    .any(|line| line == format!("jevify label: excerpts withheld: {unreadable}")),
+                "{stderr}"
+            );
+        }
+    }
+    for request in server
+        .received_requests()
+        .await
+        .unwrap()
+        .iter()
+        .filter(|r| r.method == "POST")
+    {
+        let body = String::from_utf8_lossy(&request.body);
+        assert!(body.contains("VISIBLE_EXCERPT"), "{body}");
+        assert!(!body.contains("adir"), "{body}");
+        assert!(!body.contains("missing.md"), "{body}");
+        assert_eq!(body.contains("denied.md"), !denied_unreadable, "{body}");
+    }
+
+    // Nothing readable: every record is unsure, exit 3, and no request is made.
+    let mut cmd = common::jevify_classifier(&server);
+    let before = server.received_requests().await.unwrap().len();
+    let out = cmd
+        .current_dir(&root)
+        .args(["label", "bug,feature", "-0", "--files"])
+        .write_stdin(b"adir\0missing.md\0")
+        .output()
+        .unwrap();
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert_eq!(out.status.code(), Some(3), "{stderr}");
+    assert_eq!(out.stdout, b"?\tadir\0?\tmissing.md\0");
+    assert!(
+        stderr.contains("labelled 0 of 2, 2 unsure, excerpts withheld: 2"),
+        "{stderr}"
+    );
+    assert_eq!(server.received_requests().await.unwrap().len(), before);
+}

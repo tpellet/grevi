@@ -90,8 +90,9 @@ pub async fn run(
                 .collect();
             let cwd = std::env::current_dir().map_err(|e| JevifyError::Input(e.to_string()))?;
             let evidence_count = finalists.len().min(MAX_FINALISTS);
-            let withheld = records::excerpts(&mut finalists[..evidence_count], &cwd).await?;
-            eprintln!("jevify pick: excerpts withheld: {withheld}");
+            let unread = records::excerpts(&mut finalists[..evidence_count], &cwd).await?;
+            eprintln!("jevify pick: excerpts withheld: {}", unread.count);
+            unread.report("pick", &finalists);
             let finals: Vec<_> = pool
                 .iter()
                 .zip(finalists)
