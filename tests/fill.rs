@@ -97,6 +97,8 @@ async fn dry_run_round_trips_raw_argv_and_consumes_stdin() {
     let stderr = String::from_utf8_lossy(&dry.stderr);
     assert!(stderr.lines().all(|line| line.starts_with("jevify fill:")));
     assert!(stderr.contains("\\nline"));
+    assert!(stderr.contains("jevify fill: would run "), "{stderr}");
+    assert!(!stderr.contains("jevify fill: exec "), "{stderr}");
     let out = run(
         common::jevify(&server),
         &[
@@ -678,8 +680,6 @@ async fn ties_none_and_duplicate_evidence_never_execute() {
 }
 
 fn branch_fixture(count: usize, twin: bool) -> std::path::PathBuf {
-    use std::os::unix::fs::PermissionsExt;
-    let dir = tempfile::tempdir().unwrap().keep();
     let mut listing = Vec::new();
     for i in 0..count {
         listing.extend_from_slice(
@@ -689,6 +689,13 @@ fn branch_fixture(count: usize, twin: bool) -> std::path::PathBuf {
     if twin {
         listing.extend_from_slice(b"refs/remotes/origin/b0\0\x001700000000\0subject 0\0\n");
     }
+    refs_fixture(&listing)
+}
+
+/// A fake `git` whose `for-each-ref` prints `listing` and whose `log` prints one commit.
+fn refs_fixture(listing: &[u8]) -> std::path::PathBuf {
+    use std::os::unix::fs::PermissionsExt;
+    let dir = tempfile::tempdir().unwrap().keep();
     std::fs::write(dir.join("refs"), listing).unwrap();
     std::fs::write(dir.join("git"), b"#!/bin/sh\nprintf '%s\\n' \"$*\" >> \"$FILL_FIXTURE/calls\"\ncase \"$1\" in\nfor-each-ref) cat \"$FILL_FIXTURE/refs\";;\nlog) printf '\\000rich evidence\\000src/code.rs\\000';;\nesac\n").unwrap();
     std::fs::set_permissions(dir.join("git"), std::fs::Permissions::from_mode(0o755)).unwrap();
@@ -722,6 +729,41 @@ fn fixture_command(server: &MockServer, dir: &std::path::Path) -> assert_cmd::Co
     cmd.env("FILL_FIXTURE", dir)
         .env("PATH", format!("{}:/usr/bin:/bin", dir.display()));
     cmd
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn remote_only_branch_substitutes_the_short_name_that_git_switch_accepts() {
+    let server = common::mock(fake()).await;
+    let dir = refs_fixture(
+        b"refs/remotes/origin/ticket/TPE-791\0\x001700000000\0feat(TPE-791): add Allergy model\0\n",
+    );
+    let out = run(
+        fixture_command(&server, &dir),
+        &[
+            "fill",
+            "--dry-run",
+            "--json",
+            "--",
+            "git",
+            "switch",
+            "@{branch:x}",
+        ],
+        "",
+    );
+    let value = envelope(&out, 0);
+    assert_eq!(
+        value["data"]["argv"],
+        serde_json::json!(["git", "switch", "ticket/TPE-791"])
+    );
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert!(
+        stderr.contains("'git' 'switch' 'ticket/TPE-791'"),
+        "{stderr}"
+    );
+    assert!(
+        stderr.contains("origin/ticket/TPE-791 — feat(TPE-791)"),
+        "{stderr}"
+    );
 }
 
 #[tokio::test(flavor = "multi_thread")]

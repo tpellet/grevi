@@ -4,7 +4,7 @@ use crate::{
 };
 use std::{
     borrow::Cow,
-    collections::{BTreeSet, HashSet},
+    collections::{BTreeSet, HashMap, HashSet},
     ffi::{OsStr, OsString},
     io::Read,
     os::unix::ffi::{OsStrExt, OsStringExt},
@@ -686,21 +686,41 @@ fn branches(limit: usize, env: &Env) -> Result<Listing, JevifyError> {
         .iter()
         .filter_map(|(name, _, _)| name.strip_prefix(b"refs/heads/"))
         .collect();
+    // `refs/remotes/<remote>/<short>` splits at the first slash. How many remotes track each
+    // short name decides whether git's DWIM (`git switch <short>`) can resolve it.
+    fn remote_short(remote: &[u8]) -> &[u8] {
+        remote
+            .iter()
+            .position(|b| *b == b'/')
+            .map_or(remote, |slash| &remote[slash + 1..])
+    }
+    let mut tracked: HashMap<&[u8], usize> = HashMap::new();
+    for (name, _, _) in &refs {
+        if let Some(remote) = name.strip_prefix(b"refs/remotes/") {
+            *tracked.entry(remote_short(remote)).or_default() += 1;
+        }
+    }
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()
         .as_secs();
     let mut records = Vec::new();
     for (name, subject, timestamp) in &refs {
-        let handle = if let Some(local) = name.strip_prefix(b"refs/heads/") {
-            local
+        let (handle, shown) = if let Some(local) = name.strip_prefix(b"refs/heads/") {
+            (local, local)
         } else if let Some(remote) = name.strip_prefix(b"refs/remotes/") {
-            if let Some(slash) = remote.iter().position(|b| *b == b'/') {
-                if locals.contains(&remote[slash + 1..]) {
-                    continue;
-                }
+            let short = remote_short(remote);
+            if locals.contains(short) {
+                continue;
             }
-            remote
+            // One remote tracks it: the short name, which `git switch` and `git checkout`
+            // resolve to a local tracking branch. Several do: git refuses the short name as
+            // ambiguous, so the qualified ref stays.
+            if tracked.get(short) == Some(&1) {
+                (short, remote)
+            } else {
+                (remote, remote)
+            }
         } else {
             return Err(JevifyError::lister_failed(
                 "unexpected git ref namespace".into(),
@@ -710,7 +730,7 @@ fn branches(limit: usize, env: &Env) -> Result<Listing, JevifyError> {
             handle: OsString::from_vec(handle.to_vec()),
             evidence: format!(
                 "{} — {} — {}",
-                String::from_utf8_lossy(handle),
+                String::from_utf8_lossy(shown),
                 String::from_utf8_lossy(subject),
                 age(now, *timestamp)
             ),
@@ -735,23 +755,33 @@ fn age(now: u64, timestamp: u64) -> String {
 }
 
 fn branch_evidence(handle: &OsStr, env: &Env) -> Result<String, JevifyError> {
-    let bytes = run_lister_blocking(
-        &[
-            "git".into(),
-            "log".into(),
-            "-5".into(),
-            "--format=%x00%s%x00".into(),
-            "--name-only".into(),
-            "-z".into(),
-            "--no-renames".into(),
-            "--no-ext-diff".into(),
-            "--end-of-options".into(),
-            handle.to_owned(),
-            "--".into(),
-        ],
-        env,
-        OUTPUT_CAP,
-    )?;
+    let log = |revs: [OsString; 2]| {
+        let mut argv: Vec<OsString> = [
+            "git",
+            "log",
+            "-5",
+            "--format=%x00%s%x00",
+            "--name-only",
+            "-z",
+            "--no-renames",
+            "--no-ext-diff",
+        ]
+        .map(OsString::from)
+        .to_vec();
+        argv.extend(revs);
+        argv.push("--".into());
+        run_lister_blocking(&argv, env, OUTPUT_CAP)
+    };
+    // A remote-only branch is listed by its short name, which is not a rev: read it from the
+    // remote-tracking refs instead.
+    let bytes = match log(["--end-of-options".into(), handle.to_owned()]) {
+        Ok(bytes) => bytes,
+        Err(error) => {
+            let mut remotes = OsString::from("--remotes=*/");
+            remotes.push(handle);
+            log([remotes, "--end-of-options".into()]).map_err(|_| error)?
+        }
+    };
     // Each commit starts with an empty NUL field, then its subject. Paths follow.
     let fields: Vec<_> = bytes.split(|b| *b == 0).collect();
     let mut subjects = Vec::new();
@@ -1280,6 +1310,7 @@ mod tests {
             ("refs/heads/middle", &commits[3]),
             ("refs/remotes/origin/remote-only", &commits[4]),
             ("refs/remotes/upstream/ancient", &commits[0]),
+            ("refs/remotes/origin/ancient", &commits[0]),
             ("refs/remotes/origin/main", &commits[5]),
         ] {
             git(&dir, &["update-ref", name, commit], 1700000000);
@@ -1297,7 +1328,7 @@ mod tests {
         let result = enumerate("branch", Scope::Prefix(None), 3, &env)
             .await
             .unwrap();
-        assert_eq!((result.total, result.omitted, result.ordered), (5, 0, true));
+        assert_eq!((result.total, result.omitted, result.ordered), (6, 0, true));
         assert_eq!(
             result
                 .records
@@ -1306,7 +1337,7 @@ mod tests {
                 .collect::<Vec<_>>(),
             [
                 OsStr::new("main"),
-                OsStr::new("origin/remote-only"),
+                OsStr::new("remote-only"),
                 OsStr::new("middle")
             ]
         );
@@ -1315,6 +1346,32 @@ mod tests {
         }
         assert!(result.records[0].evidence.contains("subject-5"));
         assert!(result.records[0].evidence.contains("days ago"));
+        // The short name is the handle; the evidence keeps the remote-tracking ref.
+        assert!(
+            result.records[1]
+                .evidence
+                .starts_with("origin/remote-only — subject-4"),
+            "{}",
+            result.records[1].evidence
+        );
+        // Two remotes track `ancient`: git refuses the short name, so the refs stay qualified.
+        let all = enumerate("branch", Scope::Prefix(None), 10, &env)
+            .await
+            .unwrap();
+        let handles: HashSet<_> = all.records.iter().map(|r| r.handle.clone()).collect();
+        assert!(
+            handles.contains(OsStr::new("origin/ancient")),
+            "{handles:?}"
+        );
+        assert!(
+            handles.contains(OsStr::new("upstream/ancient")),
+            "{handles:?}"
+        );
+        assert!(!handles.contains(OsStr::new("ancient")), "{handles:?}");
+        let remote = enrich_with_env("branch", &["remote-only".into()], &env).await;
+        assert!(remote[0].starts_with("remote-only\n"), "{}", remote[0]);
+        assert!(remote[0].contains("subject-4"), "{}", remote[0]);
+        assert!(!remote[0].contains("subject-5"), "{}", remote[0]);
         assert!(
             enumerate("branch", Scope::Prefix(None), 0, &env)
                 .await
