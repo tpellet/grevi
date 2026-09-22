@@ -5,6 +5,10 @@ For the next evaluation, see the [per-endpoint A/B protocol](EXPERIMENT.md) and 
 measurement and claim criteria; the audit records operational checks and remaining gaps.
 Neither turns the spot checks below into confirmatory results.
 
+The [paired pilot](PILOT.md) measures eight tasks with and without jevify on the seven verbs, with
+the adoption, correctness and resource figures kept apart and the limits of each one stated. It is
+a pilot: both arms answer the same tasks and neither figure is confirmatory.
+
 Does jevify help a coding agent that already has `grep`, can read files and knows the usual
 command-line tools? Two experiments. The first gives an agent one question about a text (`why`,
 `is`). The second gives it a seven-step job where it has to choose tools (`run`). Few runs per
