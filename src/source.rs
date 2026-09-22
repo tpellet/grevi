@@ -2004,9 +2004,15 @@ esac
             .await
             .unwrap();
         assert_eq!(sorted(&dirs), [b"cmd".to_vec(), b"cmd/.hidden".to_vec()]);
+        // The non-UTF-8 name renders lossily (U+FFFD sorts after ASCII) where it exists.
+        let listing = if with_bytes(&env, "", Vec::new()).is_empty() {
+            "3 entries: .hidden/, a.rs, new.rs"
+        } else {
+            "4 entries: .hidden/, a.rs, new.rs, \u{FFFD}.rs"
+        };
         assert_eq!(
             enrich_in("dir", Path::new("src/"), &["cmd".into()], &env).await,
-            (vec!["3 entries: .hidden/, a.rs, new.rs".to_owned()], 0)
+            (vec![listing.to_owned()], 0)
         );
     }
 
