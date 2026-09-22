@@ -19,6 +19,9 @@ async fn documented_input_side_shell_examples_run_against_the_binary() {
     let mut paths = vec![binary_dir.to_path_buf()];
     paths.extend(std::env::split_paths(&std::env::var_os("PATH").unwrap()));
     let path = std::env::join_paths(paths).unwrap();
+    // The examples name branches, commits and files under `src/`. A tag checkout in CI has
+    // no branch refs, so the examples run in a repository of their own with known content.
+    let repo = example_repository();
     let mut count = 0;
     for document in [
         include_str!("../README.md"),
@@ -52,6 +55,7 @@ async fn documented_input_side_shell_examples_run_against_the_binary() {
                 assert!(!command.contains("jevify fill") || command.contains("--dry-run"));
                 let out = std::process::Command::new("sh")
                     .args(["-c", &command])
+                    .current_dir(&repo)
                     .env_clear()
                     .env("PATH", &path)
                     .env("JEVIFY_BACKEND", "typesafe")
@@ -73,6 +77,39 @@ async fn documented_input_side_shell_examples_run_against_the_binary() {
         }
     }
     assert!(count >= 15, "only {count} documented examples exercised");
+}
+
+/// A git repository with two commits, two branches and files under `src/`: everything the
+/// documented `fill` and `pick --from` examples list, independent of the checkout running the test.
+fn example_repository() -> std::path::PathBuf {
+    let root = tempfile::tempdir().unwrap().keep();
+    let git = |args: &[&str]| {
+        let status = std::process::Command::new("git")
+            .current_dir(&root)
+            .args([
+                "-c",
+                "user.name=example",
+                "-c",
+                "user.email=example@example.invalid",
+                "-c",
+                "commit.gpgsign=false",
+            ])
+            .args(args)
+            .status()
+            .unwrap();
+        assert!(status.success(), "git {args:?}");
+    };
+    std::fs::create_dir(root.join("src")).unwrap();
+    std::fs::write(root.join("src/marker.rs"), "pub fn parse_marker() {}\n").unwrap();
+    git(&["init", "-q", "-b", "main"]);
+    git(&["add", "-A"]);
+    git(&["commit", "-q", "-m", "parse the marker"]);
+    std::fs::write(root.join("src/moves.rs"), "pub fn move_all() {}\n").unwrap();
+    git(&["add", "-A"]);
+    git(&["commit", "-q", "-m", "make folder moves atomic"]);
+    git(&["branch", "auth-refactor"]);
+    git(&["branch", "payment-timeout"]);
+    root
 }
 
 #[tokio::test]
