@@ -1,0 +1,54 @@
+#!/bin/bash
+# Runs every example of README.md, in README order, on the fixtures of this directory and on
+# this repository's own history. Run it from any directory on a typical macOS dev machine
+# with jevify on the PATH; the free backend answers without a key, and
+# TYPESAFE_API_KEY_FILE=/path/to/key selects TypeSafe.
+#
+#   bash docs/demo/examples.sh            every example
+#   bash docs/demo/examples.sh why        one of: why, fill, label, nothing-fits, is, try
+#
+# The fixtures: build.log is the output of `cargo build` in benchmarks/fixtures/demo/buildfail
+# (one error under 300 warnings); issues.txt is ten issue titles; downloads.txt is the listing
+# of a downloads folder; mail.txt is a customer mail.
+set -u
+cd "$(dirname "$0")/../.." || exit 1
+DEMO=docs/demo
+
+show() {
+    printf '\n$ %s\n' "$*"
+    eval "$*"
+    printf '(exit %s)\n' "$?"
+}
+
+why() {
+    show "jevify why < $DEMO/build.log"
+}
+fill() {
+    show "jevify fill -- git show --stat --format=%s '@{commit:stopped sending the free backend batches it refuses}'"
+    show "jevify fill --dry-run -- cat 'src/@{file:reads the recipes of the kinds}'"
+}
+label() {
+    show "jevify label bug,feature,question < $DEMO/issues.txt"
+    show "jevify label bug,feature,question < $DEMO/issues.txt | cut -f1 | sort | uniq -c"
+}
+nothing_fits() {
+    show "jevify pick \"last month's electricity bill\" < $DEMO/downloads.txt"
+    show "jevify pick 'the tax return' < $DEMO/downloads.txt"
+    show "jevify fill --dry-run -- git show '@{commit:rewrote everything in Go}'"
+}
+is() {
+    show "jevify is 'asks for a refund' < $DEMO/mail.txt && echo refund"
+    show "jevify filter 'reports a crash' < $DEMO/issues.txt"
+}
+try() {
+    show "printf 'build started\nerror: connection timed out\nbuild stopped\n' | jevify filter 'reports a network failure'"
+    show "jevify pick --from file 'where the marker is parsed'"
+    show "jevify route 'keep my mac awake for an hour'"
+}
+
+want=${1:-all}
+for name in why fill label nothing-fits is try; do
+    if [ "$want" = all ] || [ "$want" = "$name" ]; then
+        "${name//-/_}"
+    fi
+done

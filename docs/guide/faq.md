@@ -103,7 +103,7 @@ A model or prompt change needs fresh calibration evidence.
 ## Why not a loop of `is` calls?
 
 Use one `filter` process for many records or files, or one `label` process when every record
-needs a bucket. Both judge identical records once and send batches of up to 1,000 records on
+needs a bucket. Both judge identical records once and send batches of up to 60 records on
 classifier.dev or 20 on TypeSafe. Only classifier records are
 judged independently; TypeSafe records share state. `is` instead judges several statements
 about one context, reading stdin or `--context FILE`.

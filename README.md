@@ -1,287 +1,269 @@
 # jevify
 
-jevify gives command-line tools an understanding of meaning, using [Jev](https://docs.typesafe.ai) from [TypeSafe AI](https://typesafe.ai).
+jevify finds the thing you can describe but cannot name: the error in a long build, the commit
+that did something, the file that does something, the issues that report a crash. It looks only
+at things that exist, prints the one that fits, and tells you when none does. Under it is
+[Jev](https://docs.typesafe.ai), a small model from [TypeSafe AI](https://typesafe.ai) that
+answers "which one", "is it true" and "how much" with a probability, and writes no text.
 
 [![CI](https://github.com/tpellet/jevify/actions/workflows/ci.yml/badge.svg)](https://github.com/tpellet/jevify/actions/workflows/ci.yml)
 [![crates.io](https://img.shields.io/crates/v/jevify)](https://crates.io/crates/jevify)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-```text
-                         input side
-jevify fill -- git switch '@{branch:…}'       → a real argument, then the command
-                         output side
-command output ──┬── jevify why              → a cause with numbered context
-                 ├── jevify pick '…'         → one record
-                 ├── jevify filter '…'       → matching records
-                 ├── jevify label a,b,c      → each record with its tag
-                 └── jevify is '…'           → an exit code
+The examples run on the fixtures in [docs/demo](docs/demo) and on this repository's own
+history; `bash docs/demo/examples.sh` runs them all.
+
+## Find the error in a long build
+
+Your build fails with 1,812 lines of output, 300 of them warnings. `why` reads all of it and
+prints the line that explains the failure, with the lines around it.
+
+![jevify why finds the one error in 1,812 lines of cargo output](docs/img/why.svg)
+
+```console
+$ jevify why < docs/demo/build.log
+jevify why: full output: ~/Library/Caches/jevify/outputs/1a419395094f905c.log
+jevify why: 1812 lines, candidates 1212, windows 7
+      1 │    Compiling buildfail v0.1.0 (benchmarks/fixtures/demo/buildfail)
+>     2 │ error[E0425]: cannot find value `conifg` in this scope
+      3 │    --> src/main.rs:306:20
+      4 │     |
+      5 │ 306 |     println!("{}", conifg);
 ```
 
-It selects existing text, never invents an answer, and says when nothing fits. Your description
-and the record need no word in common.
+On a live build, pipe both streams: `cargo build 2>&1 | jevify why`. The whole log is saved
+and its path printed, so you can always go back to it.
 
-## Thirty seconds
+## Run git on the commit you can describe
 
-Install with Rust 1.87 or newer, on macOS or Linux:
+You know what a commit did, not its hash. Write the git command as usual and put
+`'@{commit:what it did}'` where the hash goes. jevify lists the commits, picks the one that
+fits, and hands the command to git.
+
+![jevify fill turns a description of a commit into the real commit, then runs git show on it](docs/img/fill.svg)
+
+```console
+$ jevify fill -- git show --stat --format=%s '@{commit:stopped sending the free backend batches it refuses}'
+jevify fill: commit 7bcf70cd91fc3d9e306d60ea0436a02983be3d6f 0.96 (next 0.02, none 0.02) fix: keyless batches of at most 60 records, 402 named (hunch-0it); candidates 173, windows 1; model jev-1.13.0
+jevify fill: exec 'git' 'show' '--stat' '--format=%s' '7bcf70cd91fc3d9e306d60ea0436a02983be3d6f'
+fix: keyless batches of at most 60 records, 402 named (hunch-0it)
+
+ CHANGELOG.md                |  8 ++++++++
+ docs/ROBOT_MODE.md          |  2 +-
+ …
+ 11 files changed, 97 insertions(+), 38 deletions(-)
+```
+
+The same marker works for a branch, a file, a directory, a PR, an issue, a CI run, a stash, a
+process, a container or a pod: `'@{branch:the auth refactor}'`, `'src/@{file:parses the marker}'`,
+`'@{pod:the payment worker}'`. Anything a tool can list works through a pipe:
+`cargo test -- --list | sed 's/: test$//' | jevify fill -- cargo test '@{-:the retry test}'`.
+`--dry-run` prints the command it would run and runs nothing.
+
+```console
+$ jevify fill --dry-run -- cat 'src/@{file:reads the recipes of the kinds}'
+jevify fill: file kinds.jsonl 0.63 (next 0.02, none 0.19) kinds.jsonl; candidates 32, windows 1; model jev-1.13.0
+jevify fill: exec 'cat' 'src/kinds.jsonl'
+'cat' 'src/kinds.jsonl'
+```
+
+## Sort issues into buckets
+
+Ten issue titles, three buckets, one request. `label` puts the bucket and a tab in front of
+each line, so `cut`, `sort` and `uniq` count them as they count anything.
+
+![jevify label tags ten issue titles as bug, feature or question, and a pipe counts them](docs/img/label.svg)
+
+```console
+$ jevify label bug,feature,question < docs/demo/issues.txt
+jevify label: 10 records, 10 distinct, 1 requests
+bug	#312 Crash when the config file is empty
+feature	#309 Add a dark theme to the settings page
+question	#305 How do I run this behind a corporate proxy?
+bug	#301 Export to CSV drops the last row
+feature	#298 Support Windows paths in the installer
+question	#294 Is there a way to disable telemetry?
+bug	#290 Panic on non-UTF-8 file names
+feature	#287 Keyboard shortcut to jump to the next match
+question	#283 Does the free plan include the API?
+bug	#281 Memory grows without bound on long sessions
+jevify label: labelled 10 of 10, 0 unsure
+
+$ jevify label bug,feature,question < docs/demo/issues.txt | cut -f1 | sort | uniq -c
+   4 bug
+   3 feature
+   3 question
+```
+
+`filter` keeps the lines where a statement holds, and `pick` returns the one line you describe:
+
+```console
+$ jevify filter 'reports a crash' < docs/demo/issues.txt
+jevify filter: 10 records, 10 distinct, 1 requests
+#312 Crash when the config file is empty
+#290 Panic on non-UTF-8 file names
+jevify filter: kept 2 of 10, 0 unsure, full output: ~/Library/Caches/jevify/outputs/c85c7cb6f33fc1f7.log
+```
+
+## It says no when nothing fits
+
+Eight file names. The electricity bill is there; the tax return is not. A question about
+something that is not there gets nothing on stdout and exit code 3, so a script stops instead
+of acting on the best of a bad list.
+
+![jevify pick finds the electricity bill among eight downloads, then refuses to guess a tax return that is not there](docs/img/nothing-fits.svg)
+
+```console
+$ jevify pick "last month's electricity bill" < docs/demo/downloads.txt
+con_edison_electric_bill_august.pdf
+
+$ jevify pick 'the tax return' < docs/demo/downloads.txt
+$ echo $?
+3
+```
+
+The same holds for `fill`: if the description fits no commit, no command runs.
+
+## Branch a script on a fact
+
+`is` answers a yes/no question about its input with an exit code, like `test`, so it goes
+straight into `&&`, `if` and `until`.
+
+```console
+$ jevify is 'asks for a refund' < docs/demo/mail.txt && echo refund
+refund
+```
+
+```sh
+until kubectl get pods | jevify is 'every pod is ready'; do sleep 5; done
+cargo test 2>&1 | jevify is 'every failure is a network timeout' && cargo test
+```
+
+## Try it
+
+With Rust 1.87 or newer, on macOS or Linux:
 
 ```sh
 cargo install jevify --locked
+```
+
+No key and no account: [classifier.dev](https://classifier.dev) answers 20,000 classifications
+a day per IP for free. A TypeSafe key uses your own quota instead:
+`export TYPESAFE_API_KEY_FILE=/path/to/key`. `jevify health` tells you which backend answers.
+
+Three commands that work in any repository:
+
+```sh
 printf 'build started\nerror: connection timed out\nbuild stopped\n' | jevify filter 'reports a network failure'
-printf 'All tests passed.\n' | jevify is 'the tests passed' && printf 'ready\n'
+git ls-files | jevify pick --files 'where the command-line flags are defined'
 jevify fill --dry-run -- git switch '@{branch:the auth refactor}'
 ```
 
-No key or account is needed: [classifier.dev](https://classifier.dev) serves the free backend,
-20,000 classifications a day per IP: about 380 `route` calls, 10,000 `pick` calls under 100
-lines, or 20,000 records through `filter` (see [Limits](#privacy-and-limits)).
-A TypeSafe key selects your own TypeSafe quota: `export TYPESAFE_API_KEY_FILE=/path/to/key`.
-`jevify health` names the backend and checks the connection. [Getting started](docs/guide/getting-started.md)
-covers installation and backend settings.
+## The verbs
 
-## The output side
+| You want | Command | Like |
+|:---|:---|:---|
+| the line that explains a failure | `jevify why < log` | |
+| one line out of many | `jevify pick 'description' < lines` | `fzf --filter` |
+| only the lines that matter | `jevify filter 'statement' < lines` | `grep` |
+| a bucket for each line | `jevify label a,b,c < lines` | an `awk` key |
+| a yes or no to act on | `jevify is 'statement' < text` | `test` |
+| a command run on the thing you describe | `jevify fill -- CMD '@{kind:description}'` | |
+| the handle alone, no command | `jevify pick --from KIND 'description'` | |
+| the installed tool for a task | `jevify route 'task'` | `apropos` |
 
-| You want | Verb | Classical twin | Returns |
-|:---|:---|:---|:---|
-| the line that explains a failure | `why` | — | numbered lines with context |
-| one record out of many | `pick 'description'` | `fzf --filter` | an input record |
-| only the records that matter | `filter 'statement'` | `grep` | a subset of the input |
-| a tag on each record, to sort or count them | `label a,b,c` | an `awk` key | each record with its label |
-| a decision to branch on | `is 'statement'` | `test` | an exit code |
+`pick`, `filter` and `label` read lines; `--para` reads paragraphs and `-0` NUL-separated
+records; `--files` reads paths and judges the first lines of each file. `pick` and `filter`
+print input lines unchanged, in input order. `why` and `filter` save their whole input and
+print its path.
 
-Cheap tools narrow the input first. `pick` and `filter` preserve selected records byte for byte
-and in input order, and `label` puts a tag and a tab in front of each, so ordinary pipes keep
-working:
-
-```sh
-gh pr list --json number,title | jq -c '.[]' | jevify filter 'touches the installer' | jq -r .number
-gh issue list | jevify filter 'reports a crash' | cut -f1
-gh issue list | jevify label bug,feature,question | cut -f1 | sort | uniq -c
-grep -i 'error' build.log | jevify pick 'the network failure'
-fd -0 -e json | jevify filter -0 --files 'a test fixture'
-jevify filter 'reports a failure' < build.log | head -n 10
-grep -n -C2 -F -f <(jevify filter 'reports a failure' < build.log) build.log
-```
-
-A record is a line. `--para` selects paragraphs; `-0` selects NUL-separated records. These
-options belong to `pick`, `filter` and `label`. `why` takes none of them: pipe a log with `2>&1`
-and it prints a cause with its line number and context. `-C 5` widens that context.
-
-`filter -v` inverts the statement; `-c` prints the count. Unsure records stay unless
-`--strict` drops them. `--verbose` prints diagnostics and has no short flag.
-
-`label a,b,c` prints `LABEL<TAB>RECORD` for every record, in input order; an unsure record
-gets `?`. Labels are comma-separated: at least two, distinct, none empty, none `?` or `NONE`,
-and at most 99 on classifier.dev or 200 on TypeSafe. The way back: for line records,
-`cut -f2-` gives the input back without its blank lines; with `-0` and `--para` the record
-follows the tab unchanged. `label` saves nothing.
-
-`--files` is a boolean on `pick`, `filter` and `label`: paths come from stdin. For example,
-`git ls-files | jevify pick --files 'where man pages are parsed'` ranks paths, then reads
-excerpts of the finalists. Hidden and secret-looking paths remain candidates but receive no
-excerpt; symlink files receive no excerpt either. The status reports `excerpts withheld: N`.
-
-Only `why` and `filter` save their full raw input. The stderr status names the way back:
-`jevify why: full output: PATH` or
-`jevify filter: kept N of M, U unsure, full output: PATH`.
-`--no-save` disables this store; a skipped or failed save reports
-`full output: not saved (REASON)` and sets `data.complete=false`. Saved inputs include secrets
-and are never pruned. [Privacy](PRIVACY.md) names the directory and both stores.
-
-One `is` statement prints nothing. Several print `VERDICT<TAB>STATEMENT` lines:
+`fill` takes any command after `--`. A marker is `@{kind:description}`, and the whole argument
+goes in single quotes so that the shell leaves it alone. The kinds are `branch`, `commit`,
+`file`, `dir`, `tool`, `pr`, `issue`, `ci-run`, `stash`, `process`, `container`, `pod`, `-` for
+lines on stdin, and two that judge a text instead of listing things:
+`'@{one:bug|feature|docs:what kind of report is this}'` picks one of the options you wrote,
+and `'@{flag:--draft:the report lacks steps to reproduce}'` keeps or drops a flag. A kind is one
+line of JSON naming the command that lists and the field that is the handle; your own go in
+`kinds.jsonl` in the configuration directory. Several markers resolve together; if one fails,
+nothing runs.
 
 ```sh
-printf 'Please refund order 42.\n' | jevify is 'asks for a refund' 'mentions an order'
-jevify is 'asks for a refund' --context mail.txt
-```
-
-The verdicts are `yes`, `no` or `unsure`. `is` exits 0 when all are yes, 1 when any is no,
-and 3 otherwise. It abstains before a request if the whole context exceeds its evidence budget.
-
-## The input side
-
-`fill` resolves descriptions to existing handles, then becomes the command you wrote, without
-a shell. Several markers resolve together; if any abstains, nothing runs. Free text such as
-titles and messages stays yours to write.
-
-```sh
-jevify fill --dry-run -- git switch '@{branch:the auth refactor}'
-printf 'retry_backoff\nparse_header\n' | jevify fill --dry-run -- cargo test '@{-:the retry test}'
+jevify fill --dry-run -- git revert '@{commit:made folder moves atomic}'
 printf 'A crash with no reproduction steps.\n' | jevify fill --dry-run -- printf '%s\n' \
   '@{one:bug|feature|docs:what kind of report is this}' '@{flag:--draft:the report lacks steps to reproduce}'
 jevify pick --from branch 'the auth refactor'
 ```
 
-`--dry-run` prints shell-quoted argv; inspect it, never `eval` it. Omit `--dry-run` to execute.
-Use `pick --from KIND` when you want the handle alone. Plain `pick` selects from stdin.
+## How it answers
 
-## Kinds
+Code does the listing: `git log` for commits, `git ls-files` for files, your pipe for lines.
+Each candidate comes with evidence, such as a commit's subject and changed paths or a file's
+first lines. Jev gets the description, the candidates and one more option, "none of them", and
+returns a probability for each. A long list is judged in windows of 200 candidates (99 without
+a key), all at the same time, and the best of each window meet in one final comparison, so a
+selection takes at most two rounds. jevify prints the answer on stdout and the probabilities on
+stderr, and prints no candidate it is unsure about: the winner has to lead the runner-up
+clearly.
 
-| Kind | Candidates | Evidence |
-|:---|:---|:---|
-| `-` | records on stdin, or `--candidates FILE` | the whole record; `--key` or `--field` names the handle inside it |
-| `branch` | local and remote refs | name, last commit subject, age |
-| `commit` | the log of the current branch | subject, body, changed paths |
-| `file`, `dir` | tracked and untracked files that are not ignored, hidden ones included | path, first lines |
-| `tool` | the commands on the PATH, for `route` and `pick --from tool` | name and one-line manual summary |
-| `pr`, `issue`, `ci-run`, `stash`, `process`, `container`, `pod` | a recipe: the owning tool's listing | the whole line of the listing |
-| `one`, `flag` | options written in the marker | stdin, or `--context FILE` |
-
-```sh
-jevify fill --dry-run -- git revert '@{commit:made folder moves atomic}'
-jevify fill --dry-run -- cat 'src/@{file:parses the marker}'
-jevify pick --from commit 'made folder moves atomic'
-```
-
-A kind is a recipe: the command that lists, and which field is the handle. jevify's own
-recipes are data, one JSON object per line, and `jevify capabilities --json` lists every kind
-with its command:
-
-```text
-{"kind":"pod","list":["kubectl","get","pods","--no-headers"],"field":1}
-```
-
-Your own kinds go in `kinds.jsonl` in the configuration directory: `JEVIFY_CONFIG_DIR`, or
-`~/Library/Application Support/jevify` on macOS and `~/.config/jevify` on Linux. A new kind is
-one appended line. jevify reads no recipe from a repository, and a user recipe cannot replace
-a shipped kind. A list with no kind is a pipe into `'@{-:…}'`. [Kinds](docs/guide/kinds.md)
-has the fields, the rules and the status line.
-
-### The marker
-
-Put the whole marker argument in single quotes: `'--value=@{-:the retry test}'`.
-An apostrophe uses the shell spelling `'\''`. A marker ends at the first unescaped `}`;
-`\}`, `\:` and `\|` escape marker delimiters. `one` separates options with `|` before the
-question's `:`. A `flag` occupies a whole argument: yes keeps it, no removes it, unsure abstains.
-A literal `@{word:` is spelled `@@{word:`. The format string `'{user}@{host:>8}'` has an
-unknown kind and exits 2; use `'{user}@@{host:>8}'` for the literal. A marker does not survive
-a second shell (`ssh`, `make`, `xargs`); call the intended command directly.
-
-stdin has one role: candidates for `-`, or context for `one` and `flag`. Supply one side with
-`--candidates FILE` or `--context FILE` when both are needed. Consumed stdin becomes empty for
-the command; file inputs leave stdin available. Candidates come from the current directory.
+Jev writes nothing, so jevify invents nothing: every value it prints already existed. It does
+not count, compute or compare dates; `sort`, `awk` and `jq` do that before or after it. A text
+under judgment can argue with the judge, so keep security decisions out of it.
 
 ## Exit codes
 
-Write the condition so that yes means act. `&&` acts only on exit 0; a no, an unsure answer,
-and a network failure all stop that chain. Use `case` when those outcomes need different handling.
+Write the condition so that yes means act; `&&` acts on 0 only.
 
 | Code | Meaning |
 |---:|:---|
-| 0 | yes, found, or successful operation |
-| 1 | `is`: at least one no; `filter`: kept none |
+| 0 | yes, found, done |
+| 1 | no (`is`), nothing kept (`filter`) |
 | 2 | usage error |
-| 3 | nothing fits, or unsure; `filter` and `label`: every record unsure |
-| 4 | backend unavailable or quota exhausted |
+| 3 | nothing fits, or unsure |
+| 4 | backend unavailable or daily quota reached |
 | 5 | TypeSafe key missing or rejected |
 | 6 | empty, oversized or unreadable input |
-| 7 | reserved |
-| 130 | declined at `add` confirmation |
+| 130 | declined at the `add` confirmation |
 
-Do not pass an unchecked `pick` substitution straight into another command: abstention prints
-nothing, and the shell can turn it into an empty argument. Check the selection's exit code first.
-
-For `fill`, exits 2–6 mean nothing ran; after execution the command owns its exit code, including
-2–6. Stderr lines start with `jevify fill:` and report `exec` or `not run:`; `-q` keeps only
-`not run:`. A successful dry run exits 0. `--json` requires `--dry-run` and returns `data.argv`.
-An abstention has `error: null`: `data.reason` names the first failed marker in argv order;
-`data.markers[]` reports every marker. Reasons are `no_match`, `ambiguous`, `unsure_flag` and
-`insufficient_evidence`. A non-Jev answer refuses execution with exit 4, `api_unavailable`,
-and `answered by <model>, not Jev`; a missing model name is `unknown` in `meta.model`.
+`fill` exits 2 to 6 when nothing ran; once the command runs, its exit code is the command's.
 
 ## For agents
 
-```sh
-jevify capabilities --json
-jevify init agents
-jevify robot-docs
-```
+`jevify init agents` prints a block for your `AGENTS.md`: each situation with its complete
+command. The [skill](plugins/jevify/skills/jevify/SKILL.md) teaches the same to Claude Code
+(install the `tpellet/jevify` marketplace and the `jevify@jevify` plugin) and to Codex (copy
+the skill directory into `~/.agents/skills/`). Every command takes `--json` and answers with one envelope,
+`{ok, command, version, exit_code, data, meta, error}`; `jevify capabilities --json` lists every
+command, flag, kind and limit. Allow `jevify fill --dry-run` freely and `fill` per command
+prefix, `jevify fill -- git switch:*`, exactly as you allow the command itself.
 
-`capabilities` is the source of truth for commands, flags, data fields and limits. `init agents`
-prints a block of at most 25 lines for an agent instruction file. Every command accepts `--json`
-(alias `--robot`) for one envelope, including usage errors (`fill` requires `--dry-run`):
+## Reference
 
-```text
-{ok, command, version, exit_code, data, meta, error{kind, message, hint, example} | null}
-```
+- [Getting started](docs/guide/getting-started.md): install, backends, first commands
+- [Verbs](docs/guide/verbs.md): every flag, every data field, every exit code per verb
+- [Kinds](docs/guide/kinds.md): the kinds, the recipe line, `kinds.jsonl`, the status line
+- [Agents](docs/guide/agents.md) and the [robot mode contract](docs/ROBOT_MODE.md): the envelope
+- [How it works](docs/guide/how-it-works.md): selection, thresholds, measurements
+- [Configuration](docs/guide/configuration.md): variables, limits, where files live
+- [FAQ](docs/guide/faq.md), [Privacy](PRIVACY.md), [Changelog](CHANGELOG.md)
 
-`meta.model` is a string, with several answering models joined by `", "`. Non-UTF-8 records
-use `text`, `lossy: true` and `ordinal` in machine output. See the [agent contract](docs/ROBOT_MODE.md).
-
-The [agent skill](plugins/jevify/skills/jevify/SKILL.md) teaches when to use each verb. For Claude
-Code, install the `tpellet/jevify` marketplace and `jevify@jevify` plugin. For Codex, place the
-skill directory in `~/.agents/skills/`. Output verbs start no user command; the caller's
-permissions govern staging with `add` and moving files with `sort`.
-Allow `jevify fill --dry-run` freely; allow execution per command prefix, for example
-`jevify fill -- git switch:*`, exactly as the command itself is allowed. jevify is not a
-permission system.
-
-## What it is not
-
-jevify does not write commands, flags, messages or file names. It does not count, calculate,
-compare dates or judge quality; use code for those jobs. It is not a security gate: text under
-judgment can contain instructions that influence the model. Scores require calibration evidence
-for the particular backend and task.
-
-## add, sort, route
-
-`add` scores unstaged hunks of tracked files against a topic. `--dry-run` stages nothing;
-`--yes` stages qualifying hunks without asking. It changes only the index and never commits.
-
-```sh
-jevify add --dry-run 'the token expiry fix'
-```
-
-`sort` proposes a home among existing folders. It moves files only with `--apply`; the resulting
-JSONL journal supports `--undo`. Atomic no-replace moves preserve occupied destinations. Source
-symlink entries are skipped, one volume is required, and concurrent source replacement is unsupported.
-
-```sh
-jevify sort ~/Downloads
-```
-
-`route` prints an installed tool with its summary and synopsis. It starts no user command and
-supplies no arguments. It helps with the long tail of a large PATH.
-
-```sh
-jevify route 'keep my mac awake for an hour'
-eval "$(jevify init zsh)"
-, "what's using port 8080"
-```
-
-The alias and opt-in command-not-found hook both call `route`.
-
-![jevify route: keep my mac awake for an hour points to caffeinate](docs/img/run.svg)
+`add` stages the hunks that belong to a topic (`jevify add --dry-run 'the token expiry fix'`),
+`sort` proposes a folder for each file of a directory (`jevify sort ~/Downloads`), and
+`eval "$(jevify init zsh)"` gives you `, "what's using port 8080"` for `route`.
 
 ## Privacy and limits
 
-Requests go to the configured backend. Secret masking is best effort; file paths themselves
-can disclose information. The answer cache uses redacted requests and expires after seven days
-(`--no-cache`). Saved inputs are separate, raw and never pruned (`--no-save`).
-[PRIVACY.md](PRIVACY.md) lists the data sent per verb.
+Requests go to the backend you chose, with the description and the evidence and nothing else;
+[PRIVACY.md](PRIVACY.md) lists what each verb sends. Answers are cached for seven days
+(`--no-cache`). `why` and `filter` save their raw input under the cache directory, secrets
+included, until you delete it (`--no-save`).
 
-`pick` accepts 9,801 candidates on classifier.dev and 20,000 on TypeSafe; `filter` and `label`
-accept 20,000 distinct records, within the 64 MiB input limit. `fill` accepts 3,267 candidates
-per marker on classifier.dev and 13,200 on TypeSafe. Ordered kinds retain the newest candidates
-and report coverage; unordered overflow is `too_many` (exit 6). Narrow with a prefix or pipe.
-`filter` and `label` batch up to 1,000 records per request on classifier.dev and 20 on TypeSafe.
-Only the classifier backend judges records independently; TypeSafe records share a request state.
-A `rate_limit_day` HTTP 429 exits 4 with `daily quota of the free backend reached`, without retry.
-
-Without a key the quota is 3,000 classifications a minute and 20,000 a day per IP; one
-classification is one record under one question. `is` costs one per statement; `filter` and
-`label` cost one per distinct record, and the service accepts a call of 60 records and refuses
-one of 75 (HTTP 402); `pick` and `why` cost two per window of 99 lines plus two for the final
-round; `route` costs two per window of 99 commands plus one per finalist, at most 12. On one IP
-a day holds 6,600 to 20,000 `is` calls (three statements down to one), 20,000 records through
-`filter` or `label`, 830 to 10,000 `pick` or `why` calls (1,000 lines down to 99), and about 380
-`route` calls over a PATH of 1,900 commands (measured 2026-09-22 with `JEVIFY_CONCURRENCY=4`,
-[benchmarks/results.md](benchmarks/results.md)).
-
-Selection uses at most two rounds. Long lists and clipped evidence can hide a relevant candidate;
-`why` reports `considered` and `total`, and `filter` retains unsure records. `p` is a backend score,
-not a promise of correctness. [How it works and measurements](docs/guide/how-it-works.md),
-[verbs](docs/guide/verbs.md), [configuration](docs/guide/configuration.md), and the
-[FAQ](docs/guide/faq.md) give the details.
+Without a key, one classification is one record under one question, and a day holds 20,000
+per IP: 20,000 records through `filter` or `label`, at most 60 records per request; 830 to
+10,000 `pick` or `why` calls, from 1,000 lines down to 99; about 380 `route` calls over a PATH
+of 1,900 commands (measured 2026-09-22, [benchmarks/results.md](benchmarks/results.md)). A verb
+takes 20,000 distinct records at most, and `fill` 3,267 candidates per marker without a key or
+13,200 with one. A probability is the backend's score, not a promise; the
+[measurements](docs/guide/how-it-works.md#numbers) say where it was checked.
 
 ## Credits and license
 

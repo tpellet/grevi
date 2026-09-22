@@ -132,7 +132,7 @@ git log --oneline | jevify pick --json 'the commit that renamed the project'
 jevify route --json 'keep my mac awake for an hour'
 ```
 
-`filter` and `label` send up to 1,000 records per request on classifier.dev, each judged alone.
+`filter` and `label` send up to 60 records per request on classifier.dev, each judged alone.
 On TypeSafe, 20 records share a request and each question names its record; independence is
 not claimed. `pick`, `filter` and `label` cap distinct records at 20,000. `label` takes at most
 99 labels on classifier.dev and 200 on TypeSafe. `--files` reads paths from stdin and

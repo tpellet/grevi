@@ -1,9 +1,11 @@
 # jevify guide
 
-jevify gives command-line tools an understanding of meaning. On the input side, `fill` resolves
-real arguments and runs the command; on the output side, verbs select records or judge facts.
-It selects existing text even when your words do not appear in it. It abstains when
-nothing fits. Scores are specific to the backend and task, not universally calibrated probabilities.
+jevify finds the thing you can describe but cannot name, among things that exist. `fill` puts
+that thing into a command and runs it; `why`, `pick`, `filter`, `label` and `is` read a
+command's output and return a line, a subset, a tag per line or an exit code. Your words and
+the text need no word in common. When nothing fits, jevify says so and prints nothing. A
+probability is the backend's score for that task; it is calibrated only where a measurement
+says so.
 
 | Page | Contents |
 |:---|:---|

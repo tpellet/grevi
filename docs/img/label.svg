@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 420" width="960" height="420" role="img" aria-labelledby="t d">
+  <title id="t">jevify label tags ten issue titles as bug, feature or question, and a pipe counts them</title>
+  <desc id="d">The command jevify label bug,feature,question with issues.txt on stdin, piped into cut -f1, sort and uniq -c, is typed. Ten issue titles appear. A label appears in front of each one, in input order, from one request: bug for the crash on an empty config file, feature for the dark theme, question for the corporate proxy, and so on. The pipe then prints the histogram: 4 bug, 3 feature, 3 question. Output of jevify 0.8.0 on Jev 1.13.0.</desc>
+  <style>
+    text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size: 15px; fill: #e6edf3; }
+    .dim { fill: #7d8590; }
+    .small { font-size: 12.5px; }
+    .label { font-size: 12.5px; fill: #7d8590; letter-spacing: .04em; }
+    .bug { fill: #f85149; font-weight: 700; }
+    .feat { fill: #3fb950; font-weight: 700; }
+    .q { fill: #58a6ff; font-weight: 700; }
+    .bbug { fill: #f85149; transform-box: fill-box; transform-origin: left center; }
+    .bfeat { fill: #3fb950; transform-box: fill-box; transform-origin: left center; }
+    .bq { fill: #58a6ff; transform-box: fill-box; transform-origin: left center; }
+    .a { animation-duration: 15s; animation-iteration-count: infinite; animation-timing-function: ease-out; }
+    #cover { animation: type 15s steps(70) infinite; }
+    #rows { animation-name: rows; } #status { animation-name: status; }
+    #l1 { animation-name: l1; } #l2 { animation-name: l2; } #l3 { animation-name: l3; } #l4 { animation-name: l4; } #l5 { animation-name: l5; }
+    #l6 { animation-name: l6; } #l7 { animation-name: l7; } #l8 { animation-name: l8; } #l9 { animation-name: l9; } #l10 { animation-name: l10; }
+    #hist { animation-name: hist; } #h1 { animation-name: h1; } #h2 { animation-name: h2; } #h3 { animation-name: h3; }
+    #foot { animation-name: foot; } #all { animation-name: all; }
+    @keyframes type { 0% { transform: translateX(0); } 12%, 100% { transform: translateX(780px); } }
+    @keyframes rows { 0%, 12% { opacity: 0; } 15%, 100% { opacity: 1; } }
+    @keyframes status { 0%, 18% { opacity: 0; } 21%, 100% { opacity: 1; } }
+    @keyframes l1 { 0%, 26% { opacity: 0; } 28%, 100% { opacity: 1; } }
+    @keyframes l2 { 0%, 29% { opacity: 0; } 31%, 100% { opacity: 1; } }
+    @keyframes l3 { 0%, 32% { opacity: 0; } 34%, 100% { opacity: 1; } }
+    @keyframes l4 { 0%, 35% { opacity: 0; } 37%, 100% { opacity: 1; } }
+    @keyframes l5 { 0%, 38% { opacity: 0; } 40%, 100% { opacity: 1; } }
+    @keyframes l6 { 0%, 41% { opacity: 0; } 43%, 100% { opacity: 1; } }
+    @keyframes l7 { 0%, 44% { opacity: 0; } 46%, 100% { opacity: 1; } }
+    @keyframes l8 { 0%, 47% { opacity: 0; } 49%, 100% { opacity: 1; } }
+    @keyframes l9 { 0%, 50% { opacity: 0; } 52%, 100% { opacity: 1; } }
+    @keyframes l10 { 0%, 53% { opacity: 0; } 55%, 100% { opacity: 1; } }
+    @keyframes hist { 0%, 60% { opacity: 0; } 63%, 100% { opacity: 1; } }
+    @keyframes h1 { 0%, 62% { transform: scaleX(0); } 70%, 100% { transform: scaleX(1); } }
+    @keyframes h2 { 0%, 65% { transform: scaleX(0); } 73%, 100% { transform: scaleX(1); } }
+    @keyframes h3 { 0%, 68% { transform: scaleX(0); } 76%, 100% { transform: scaleX(1); } }
+    @keyframes foot { 0%, 76% { opacity: 0; } 80%, 100% { opacity: 1; } }
+    @keyframes all { 0% { opacity: 0; } 2%, 96% { opacity: 1; } 100% { opacity: 0; } }
+    @media (prefers-reduced-motion: reduce) { .a, #cover { animation: none !important; } #cover { display: none; } }
+  </style>
+
+  <rect width="960" height="420" rx="10" fill="#0d1117"/>
+  <g id="all" class="a">
+    <text x="24" y="40"><tspan class="dim">$ </tspan>jevify label bug,feature,question &lt; issues.txt | cut -f1 | sort | uniq -c</text>
+    <rect id="cover" x="42" y="22" width="800" height="26" fill="#0d1117"/>
+
+    <g id="status" class="a">
+      <text x="24" y="76" class="label">jevify label: 10 records, 10 distinct, 1 requests</text>
+    </g>
+
+    <g id="rows" class="a">
+      <text x="140" y="108">#312 Crash when the config file is empty</text>
+      <text x="140" y="132">#309 Add a dark theme to the settings page</text>
+      <text x="140" y="156">#305 How do I run this behind a corporate proxy?</text>
+      <text x="140" y="180">#301 Export to CSV drops the last row</text>
+      <text x="140" y="204">#298 Support Windows paths in the installer</text>
+      <text x="140" y="228">#294 Is there a way to disable telemetry?</text>
+      <text x="140" y="252">#290 Panic on non-UTF-8 file names</text>
+      <text x="140" y="276">#287 Keyboard shortcut to jump to the next match</text>
+      <text x="140" y="300">#283 Does the free plan include the API?</text>
+      <text x="140" y="324">#281 Memory grows without bound on long sessions</text>
+    </g>
+    <text id="l1" class="bug a" x="24" y="108">bug</text>
+    <text id="l2" class="feat a" x="24" y="132">feature</text>
+    <text id="l3" class="q a" x="24" y="156">question</text>
+    <text id="l4" class="bug a" x="24" y="180">bug</text>
+    <text id="l5" class="feat a" x="24" y="204">feature</text>
+    <text id="l6" class="q a" x="24" y="228">question</text>
+    <text id="l7" class="bug a" x="24" y="252">bug</text>
+    <text id="l8" class="feat a" x="24" y="276">feature</text>
+    <text id="l9" class="q a" x="24" y="300">question</text>
+    <text id="l10" class="bug a" x="24" y="324">bug</text>
+
+    <g id="hist" class="a">
+      <text x="640" y="108" class="label">AFTER cut -f1 | sort | uniq -c</text>
+      <text x="640" y="140">   4 <tspan class="bug">bug</tspan></text>
+      <rect x="760" y="129" width="160" height="12" rx="3" class="bbug a" id="h1"/>
+      <text x="640" y="172">   3 <tspan class="feat">feature</tspan></text>
+      <rect x="760" y="161" width="120" height="12" rx="3" class="bfeat a" id="h2"/>
+      <text x="640" y="204">   3 <tspan class="q">question</tspan></text>
+      <rect x="760" y="193" width="120" height="12" rx="3" class="bq a" id="h3"/>
+    </g>
+
+    <g id="foot" class="a">
+      <line x1="24" y1="352" x2="936" y2="352" stroke="#21262d"/>
+      <text x="24" y="380" class="dim">one request for the ten records, 0.4 s; a record that fits no label, or two labels equally, gets <tspan class="q">?</tspan></text>
+      <text x="24" y="404" class="dim small">the record follows the tab unchanged, so cut, sort, uniq and awk read it as they read the input</text>
+    </g>
+  </g>
+</svg>

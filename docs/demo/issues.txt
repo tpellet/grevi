@@ -1,0 +1,10 @@
+#312 Crash when the config file is empty
+#309 Add a dark theme to the settings page
+#305 How do I run this behind a corporate proxy?
+#301 Export to CSV drops the last row
+#298 Support Windows paths in the installer
+#294 Is there a way to disable telemetry?
+#290 Panic on non-UTF-8 file names
+#287 Keyboard shortcut to jump to the next match
+#283 Does the free plan include the API?
+#281 Memory grows without bound on long sessions

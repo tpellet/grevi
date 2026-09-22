@@ -32,7 +32,7 @@ Identical records are judged once. `filter` maps answers back to every occurrenc
 returns the first occurrence of a selected distinct record. Both limit distinct records to
 20,000, with `error.kind=too_many`, exit 6 above that ceiling. Input is bounded at 64 MiB.
 
-`filter` sends up to 1,000 records per request on classifier.dev and 20 on TypeSafe, in parallel
+`filter` sends up to 60 records per request on classifier.dev and 20 on TypeSafe, in parallel
 subject to `JEVIFY_CONCURRENCY`. Classifier records are judged alone. TypeSafe records share one
 request state, with each question identifying its record; independence is not claimed there.
 Answers flow in input order as soon as earlier records are answered. A closed stdout stops work

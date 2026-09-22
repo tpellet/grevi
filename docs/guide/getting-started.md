@@ -18,95 +18,165 @@ Build from `main` with `cargo install --git https://github.com/tpellet/jevify --
 
 ## No key needed
 
-Without a key, jevify asks [classifier.dev](https://classifier.dev), which serves the free backend
-without an account. A TypeSafe key selects TypeSafe and its quota:
+Without a key, jevify asks [classifier.dev](https://classifier.dev), which serves Jev free and
+without an account: 20,000 classifications a day per IP. A TypeSafe key uses your own quota:
 
 ```sh
 export TYPESAFE_API_KEY_FILE=/path/to/key
 ```
 
-`TYPESAFE_API_KEY` is also supported. jevify reads the key file only when it needs the key, and
-never prints or logs the key. `JEVIFY_BACKEND=typesafe|classifier` forces a backend.
-Scores and thresholds are not assumed interchangeable between the two backends.
+`TYPESAFE_API_KEY` works too. jevify reads the key file only when a request needs the key, and
+never prints or logs it. `JEVIFY_BACKEND=typesafe|classifier` forces a backend. The two
+backends give the same verbs and exit codes; their probabilities are not the same scale.
 
 ```sh
 jevify health
 ```
 
-`health` names the backend, key status and response latency: exit 0 reachable, 4 unavailable,
-5 missing or rejected TypeSafe key.
+`health` names the backend, whether it has a key, and the response time: exit 0 reachable,
+4 unavailable, 5 missing or rejected TypeSafe key.
 
 ## First commands
 
-```sh
-printf 'build started\nerror: connection timed out\nbuild stopped\n' | jevify filter 'reports a network failure'
-printf 'All tests passed.\n' | jevify is 'the tests passed' && printf 'ready\n'
-jevify fill --dry-run -- git switch '@{branch:the auth refactor}'
-jevify pick --from branch 'the auth refactor'
-cargo build 2>&1 | jevify why
-git branch | jevify pick 'the payment timeout fix'
-git ls-files | jevify pick --files 'where man pages are parsed'
-jevify route 'keep my mac awake for an hour'
+The fixtures live in [docs/demo](../demo) of the repository; `bash docs/demo/examples.sh`
+runs every example of the README.
+
+Find the error in a failed build. On a live build, pipe both streams, since compilers write
+errors to stderr: `cargo build 2>&1 | jevify why`.
+
+```console
+$ jevify why < docs/demo/build.log
+jevify why: full output: ~/Library/Caches/jevify/outputs/1a419395094f905c.log
+jevify why: 1812 lines, candidates 1212, windows 7
+      1 │    Compiling buildfail v0.1.0 (benchmarks/fixtures/demo/buildfail)
+>     2 │ error[E0425]: cannot find value `conifg` in this scope
+      3 │    --> src/main.rs:306:20
+      4 │     |
+      5 │ 306 |     println!("{}", conifg);
 ```
 
-`why` prints numbered lines with context. Compilers write errors to stderr, so pipe `2>&1`.
-`pick` prints selected input records. `filter` keeps matching and unsure records, with `--strict`
-to drop unsure ones. `filter -v` inverts; `--verbose` prints diagnostics and has no short flag.
+Keep the lines where a statement holds, or pick the one line you describe:
 
-Only `why` and `filter` save full raw input, secrets included, under the cache directory's
-`outputs/` subdirectory. Stderr names the saved path. `--no-save` skips the save independently
-of the answer cache; a skipped or failed save sets `data.complete=false`.
+```console
+$ jevify filter 'reports a crash' < docs/demo/issues.txt
+jevify filter: 10 records, 10 distinct, 1 requests
+#312 Crash when the config file is empty
+#290 Panic on non-UTF-8 file names
+jevify filter: kept 2 of 10, 0 unsure, full output: ~/Library/Caches/jevify/outputs/c85c7cb6f33fc1f7.log
+
+$ jevify pick "last month's electricity bill" < docs/demo/downloads.txt
+con_edison_electric_bill_august.pdf
+```
+
+Put a bucket in front of each line, then count the buckets with `cut`, `sort` and `uniq`:
+
+```console
+$ jevify label bug,feature,question < docs/demo/issues.txt | cut -f1 | sort | uniq -c
+   4 bug
+   3 feature
+   3 question
+```
+
+Ask a yes/no question and get the answer as an exit code:
+
+```console
+$ jevify is 'asks for a refund' < docs/demo/mail.txt && echo refund
+refund
+```
+
+Find the file that does something, among the files of a repository:
+
+```console
+$ git ls-files | jevify pick --files 'where the command-line flags are defined'
+src/cli.rs
+```
+
+When nothing fits, stdout stays empty and the exit code is 3:
+
+```console
+$ jevify pick 'the tax return' < docs/demo/downloads.txt
+$ echo $?
+3
+```
+
+`why` and `filter` save their whole input, secrets included, under the cache directory's
+`outputs/` and print the path on stderr. `--no-save` skips the save.
 
 ## Fill an argument
 
-`fill` selects existing handles and becomes the command you wrote. `--dry-run` prints its argv
-without executing; inspect the preview, never `eval` it. Omit `--dry-run` only when the command
-is authorized. Several markers are all-or-nothing: if any abstains, nothing runs.
+`fill` puts a real value where you wrote a description, then becomes the command. The
+description goes in a marker, `@{kind:description}`, and the whole argument goes in single
+quotes so that the shell leaves it alone.
+
+```console
+$ jevify fill -- git show --stat --format=%s '@{commit:stopped sending the free backend batches it refuses}'
+jevify fill: commit 7bcf70cd91fc3d9e306d60ea0436a02983be3d6f 0.96 (next 0.02, none 0.02) fix: keyless batches of at most 60 records, 402 named (hunch-0it); candidates 173, windows 1; model jev-1.13.0
+jevify fill: exec 'git' 'show' '--stat' '--format=%s' '7bcf70cd91fc3d9e306d60ea0436a02983be3d6f'
+fix: keyless batches of at most 60 records, 402 named (hunch-0it)
+…
+```
+
+The status line on stderr gives the winner, its probability, the probabilities of the next
+candidate and of "none of them", the evidence, the number of candidates and the model. Then
+`exec` names the command, and the command owns everything after that: its output, its exit
+code, your terminal.
+
+`--dry-run` prints the command instead of running it. Look at it; never `eval` it.
 
 ```sh
+jevify fill --dry-run -- git switch '@{branch:the auth refactor}'
 printf 'retry_backoff\nparse_header\n' | jevify fill --dry-run -- cargo test '@{-:the retry test}'
 ```
 
-Single-quote the whole marker argument. Three families supply values: existing branches with
-`branch`, supplied records with `-`, or caller-written options with `one` and `flag`.
-`'@{one:bug|feature|docs:what kind of report is this}'` chooses an option from context;
-`'@{flag:--draft:the report lacks steps to reproduce}'` keeps or removes a whole flag argument,
-abstaining on doubt. Context comes from stdin or `--context FILE`; candidates come from stdin
-or `--candidates FILE`. stdin cannot serve both roles. File inputs leave stdin for the command.
+Three families of value exist. Things a tool can list: `branch`, `commit`, `file`, `dir`,
+`tool`, `pr`, `issue`, `ci-run`, `stash`, `process`, `container`, `pod`. Lines you pipe in:
+`@{-:…}`. Options you write yourself, judged against a text on stdin or in `--context FILE`:
+`'@{one:bug|feature|docs:what kind of report is this}'` picks one option, and
+`'@{flag:--draft:the report lacks steps to reproduce}'` keeps the flag on yes, drops it on no,
+and stops on doubt. Several markers resolve together; if one fails, nothing runs. stdin has one
+role per call: the lines of `@{-:…}`, or the context of `one` and `flag`; the other side comes
+from `--candidates FILE` or `--context FILE`.
 
-Use `pick --from branch` for the handle without execution. Use cheap literal tools when you
-already know its name. [Verbs](verbs.md#fill) covers marker escaping and the exact input rules.
+`pick --from KIND` gives you the handle without a command:
+
+```sh
+jevify pick --from branch 'the auth refactor'
+```
+
+[Verbs](verbs.md#fill) covers escaping and the exact input rules; [Kinds](kinds.md) lists every
+kind and how to add your own.
 
 ## The comma alias
 
-`init` prints shell integration; it does not edit a shell profile. The comma alias and opt-in
-command-not-found hook call `route`, which prints a tool and starts no user command.
+`init` prints shell integration and edits no profile. The comma alias calls `route`, which
+prints the installed tool for a task and starts nothing:
 
 ```sh
 eval "$(jevify init zsh)"
 , "what's using port 8080"
 ```
 
-Use `jevify init bash` for bash. The zsh alias includes `noglob`. Quote requests with apostrophes.
-When `JEVIFY_CNF=1` is set and no handler exists, the snippet defines a hook for unknown commands
-of three or more words. Shorter unknown commands return 127.
+`jevify init bash` is the bash form. The zsh alias includes `noglob`. Quote requests with
+apostrophes. With `JEVIFY_CNF=1` and no other handler, the snippet also passes unknown commands
+of three or more words to `route`; shorter unknown commands return 127.
 
 ## Scripting on exit codes
 
 Write the condition so that yes means act. One `is` statement prints nothing; several print
-`VERDICT<TAB>STATEMENT` lines. `--context FILE` uses a file instead of stdin.
+`VERDICT<TAB>STATEMENT` lines. `--context FILE` reads a file instead of stdin.
 
 ```sh
 printf 'Please refund order 42.\n' | jevify is 'asks for a refund' 'mentions an order'
 jevify is 'asks for a refund' --context mail.txt
 ```
 
-Exit 0 means all yes, 1 means at least one no, and 3 means unsure otherwise. `&&` acts only on 0.
-Use `case` to distinguish no, unsure and backend errors. Check a `pick` call's exit before using
-its output as an argument; an unchecked substitution can pass an empty argument on abstention.
+Exit 0 means all yes, 1 at least one no, 3 unsure. `&&` acts on 0 only; use `case` when no,
+unsure and backend errors need different handling. Check a `pick` call's exit code before its
+output becomes an argument: on abstention the output is empty, and an empty argument is one
+that many commands accept.
 
-The common codes are 0 ok, 1 no, 2 usage, 3 abstain, 4 unavailable, 5 auth, 6 input, 7 reserved
-and 130 declined at `add` confirmation. [Verbs](verbs.md) lists the per-command data and flags.
-For machine output, use `--json`; [Agents](agents.md) describes the envelope.
-`fill --json` requires `--dry-run`. Before execution, exits 2–6 mean nothing ran; after execution,
-the command owns its exit code. A dry run exits 0 when all markers resolve.
+The codes are 0 ok, 1 no, 2 usage, 3 abstain, 4 unavailable, 5 auth, 6 input, 7 reserved and
+130 declined at the `add` confirmation. [Verbs](verbs.md) lists the data and flags of each
+command. `--json` gives one machine envelope; [Agents](agents.md) describes it. `fill --json`
+requires `--dry-run`. `fill` exits 2 to 6 when nothing ran; once the command runs, the exit
+code is the command's. A dry run exits 0 when every marker resolves.

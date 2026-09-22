@@ -1,0 +1,1812 @@
+   Compiling buildfail v0.1.0 (benchmarks/fixtures/demo/buildfail)
+error[E0425]: cannot find value `conifg` in this scope
+   --> src/main.rs:306:20
+    |
+306 |     println!("{}", conifg);
+    |                    ^^^^^^ not found in this scope
+
+warning: unused variable: `unused_0`
+ --> src/main.rs:2:9
+  |
+2 |     let unused_0 = 0;
+  |         ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_0`
+  |
+  = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `unused_1`
+ --> src/main.rs:3:9
+  |
+3 |     let unused_1 = 1;
+  |         ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_1`
+
+warning: unused variable: `unused_2`
+ --> src/main.rs:4:9
+  |
+4 |     let unused_2 = 2;
+  |         ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_2`
+
+warning: unused variable: `unused_3`
+ --> src/main.rs:5:9
+  |
+5 |     let unused_3 = 3;
+  |         ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_3`
+
+warning: unused variable: `unused_4`
+ --> src/main.rs:6:9
+  |
+6 |     let unused_4 = 4;
+  |         ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_4`
+
+warning: unused variable: `unused_5`
+ --> src/main.rs:7:9
+  |
+7 |     let unused_5 = 5;
+  |         ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_5`
+
+warning: unused variable: `unused_6`
+ --> src/main.rs:8:9
+  |
+8 |     let unused_6 = 6;
+  |         ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_6`
+
+warning: unused variable: `unused_7`
+ --> src/main.rs:9:9
+  |
+9 |     let unused_7 = 7;
+  |         ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_7`
+
+warning: unused variable: `unused_8`
+  --> src/main.rs:10:9
+   |
+10 |     let unused_8 = 8;
+   |         ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_8`
+
+warning: unused variable: `unused_9`
+  --> src/main.rs:11:9
+   |
+11 |     let unused_9 = 9;
+   |         ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_9`
+
+warning: unused variable: `unused_10`
+  --> src/main.rs:12:9
+   |
+12 |     let unused_10 = 10;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_10`
+
+warning: unused variable: `unused_11`
+  --> src/main.rs:13:9
+   |
+13 |     let unused_11 = 11;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_11`
+
+warning: unused variable: `unused_12`
+  --> src/main.rs:14:9
+   |
+14 |     let unused_12 = 12;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_12`
+
+warning: unused variable: `unused_13`
+  --> src/main.rs:15:9
+   |
+15 |     let unused_13 = 13;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_13`
+
+warning: unused variable: `unused_14`
+  --> src/main.rs:16:9
+   |
+16 |     let unused_14 = 14;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_14`
+
+warning: unused variable: `unused_15`
+  --> src/main.rs:17:9
+   |
+17 |     let unused_15 = 15;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_15`
+
+warning: unused variable: `unused_16`
+  --> src/main.rs:18:9
+   |
+18 |     let unused_16 = 16;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_16`
+
+warning: unused variable: `unused_17`
+  --> src/main.rs:19:9
+   |
+19 |     let unused_17 = 17;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_17`
+
+warning: unused variable: `unused_18`
+  --> src/main.rs:20:9
+   |
+20 |     let unused_18 = 18;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_18`
+
+warning: unused variable: `unused_19`
+  --> src/main.rs:21:9
+   |
+21 |     let unused_19 = 19;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_19`
+
+warning: unused variable: `unused_20`
+  --> src/main.rs:22:9
+   |
+22 |     let unused_20 = 20;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_20`
+
+warning: unused variable: `unused_21`
+  --> src/main.rs:23:9
+   |
+23 |     let unused_21 = 21;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_21`
+
+warning: unused variable: `unused_22`
+  --> src/main.rs:24:9
+   |
+24 |     let unused_22 = 22;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_22`
+
+warning: unused variable: `unused_23`
+  --> src/main.rs:25:9
+   |
+25 |     let unused_23 = 23;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_23`
+
+warning: unused variable: `unused_24`
+  --> src/main.rs:26:9
+   |
+26 |     let unused_24 = 24;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_24`
+
+warning: unused variable: `unused_25`
+  --> src/main.rs:27:9
+   |
+27 |     let unused_25 = 25;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_25`
+
+warning: unused variable: `unused_26`
+  --> src/main.rs:28:9
+   |
+28 |     let unused_26 = 26;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_26`
+
+warning: unused variable: `unused_27`
+  --> src/main.rs:29:9
+   |
+29 |     let unused_27 = 27;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_27`
+
+warning: unused variable: `unused_28`
+  --> src/main.rs:30:9
+   |
+30 |     let unused_28 = 28;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_28`
+
+warning: unused variable: `unused_29`
+  --> src/main.rs:31:9
+   |
+31 |     let unused_29 = 29;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_29`
+
+warning: unused variable: `unused_30`
+  --> src/main.rs:32:9
+   |
+32 |     let unused_30 = 30;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_30`
+
+warning: unused variable: `unused_31`
+  --> src/main.rs:33:9
+   |
+33 |     let unused_31 = 31;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_31`
+
+warning: unused variable: `unused_32`
+  --> src/main.rs:34:9
+   |
+34 |     let unused_32 = 32;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_32`
+
+warning: unused variable: `unused_33`
+  --> src/main.rs:35:9
+   |
+35 |     let unused_33 = 33;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_33`
+
+warning: unused variable: `unused_34`
+  --> src/main.rs:36:9
+   |
+36 |     let unused_34 = 34;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_34`
+
+warning: unused variable: `unused_35`
+  --> src/main.rs:37:9
+   |
+37 |     let unused_35 = 35;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_35`
+
+warning: unused variable: `unused_36`
+  --> src/main.rs:38:9
+   |
+38 |     let unused_36 = 36;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_36`
+
+warning: unused variable: `unused_37`
+  --> src/main.rs:39:9
+   |
+39 |     let unused_37 = 37;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_37`
+
+warning: unused variable: `unused_38`
+  --> src/main.rs:40:9
+   |
+40 |     let unused_38 = 38;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_38`
+
+warning: unused variable: `unused_39`
+  --> src/main.rs:41:9
+   |
+41 |     let unused_39 = 39;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_39`
+
+warning: unused variable: `unused_40`
+  --> src/main.rs:42:9
+   |
+42 |     let unused_40 = 40;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_40`
+
+warning: unused variable: `unused_41`
+  --> src/main.rs:43:9
+   |
+43 |     let unused_41 = 41;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_41`
+
+warning: unused variable: `unused_42`
+  --> src/main.rs:44:9
+   |
+44 |     let unused_42 = 42;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_42`
+
+warning: unused variable: `unused_43`
+  --> src/main.rs:45:9
+   |
+45 |     let unused_43 = 43;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_43`
+
+warning: unused variable: `unused_44`
+  --> src/main.rs:46:9
+   |
+46 |     let unused_44 = 44;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_44`
+
+warning: unused variable: `unused_45`
+  --> src/main.rs:47:9
+   |
+47 |     let unused_45 = 45;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_45`
+
+warning: unused variable: `unused_46`
+  --> src/main.rs:48:9
+   |
+48 |     let unused_46 = 46;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_46`
+
+warning: unused variable: `unused_47`
+  --> src/main.rs:49:9
+   |
+49 |     let unused_47 = 47;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_47`
+
+warning: unused variable: `unused_48`
+  --> src/main.rs:50:9
+   |
+50 |     let unused_48 = 48;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_48`
+
+warning: unused variable: `unused_49`
+  --> src/main.rs:51:9
+   |
+51 |     let unused_49 = 49;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_49`
+
+warning: unused variable: `unused_50`
+  --> src/main.rs:52:9
+   |
+52 |     let unused_50 = 50;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_50`
+
+warning: unused variable: `unused_51`
+  --> src/main.rs:53:9
+   |
+53 |     let unused_51 = 51;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_51`
+
+warning: unused variable: `unused_52`
+  --> src/main.rs:54:9
+   |
+54 |     let unused_52 = 52;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_52`
+
+warning: unused variable: `unused_53`
+  --> src/main.rs:55:9
+   |
+55 |     let unused_53 = 53;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_53`
+
+warning: unused variable: `unused_54`
+  --> src/main.rs:56:9
+   |
+56 |     let unused_54 = 54;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_54`
+
+warning: unused variable: `unused_55`
+  --> src/main.rs:57:9
+   |
+57 |     let unused_55 = 55;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_55`
+
+warning: unused variable: `unused_56`
+  --> src/main.rs:58:9
+   |
+58 |     let unused_56 = 56;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_56`
+
+warning: unused variable: `unused_57`
+  --> src/main.rs:59:9
+   |
+59 |     let unused_57 = 57;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_57`
+
+warning: unused variable: `unused_58`
+  --> src/main.rs:60:9
+   |
+60 |     let unused_58 = 58;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_58`
+
+warning: unused variable: `unused_59`
+  --> src/main.rs:61:9
+   |
+61 |     let unused_59 = 59;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_59`
+
+warning: unused variable: `unused_60`
+  --> src/main.rs:62:9
+   |
+62 |     let unused_60 = 60;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_60`
+
+warning: unused variable: `unused_61`
+  --> src/main.rs:63:9
+   |
+63 |     let unused_61 = 61;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_61`
+
+warning: unused variable: `unused_62`
+  --> src/main.rs:64:9
+   |
+64 |     let unused_62 = 62;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_62`
+
+warning: unused variable: `unused_63`
+  --> src/main.rs:65:9
+   |
+65 |     let unused_63 = 63;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_63`
+
+warning: unused variable: `unused_64`
+  --> src/main.rs:66:9
+   |
+66 |     let unused_64 = 64;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_64`
+
+warning: unused variable: `unused_65`
+  --> src/main.rs:67:9
+   |
+67 |     let unused_65 = 65;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_65`
+
+warning: unused variable: `unused_66`
+  --> src/main.rs:68:9
+   |
+68 |     let unused_66 = 66;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_66`
+
+warning: unused variable: `unused_67`
+  --> src/main.rs:69:9
+   |
+69 |     let unused_67 = 67;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_67`
+
+warning: unused variable: `unused_68`
+  --> src/main.rs:70:9
+   |
+70 |     let unused_68 = 68;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_68`
+
+warning: unused variable: `unused_69`
+  --> src/main.rs:71:9
+   |
+71 |     let unused_69 = 69;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_69`
+
+warning: unused variable: `unused_70`
+  --> src/main.rs:72:9
+   |
+72 |     let unused_70 = 70;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_70`
+
+warning: unused variable: `unused_71`
+  --> src/main.rs:73:9
+   |
+73 |     let unused_71 = 71;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_71`
+
+warning: unused variable: `unused_72`
+  --> src/main.rs:74:9
+   |
+74 |     let unused_72 = 72;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_72`
+
+warning: unused variable: `unused_73`
+  --> src/main.rs:75:9
+   |
+75 |     let unused_73 = 73;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_73`
+
+warning: unused variable: `unused_74`
+  --> src/main.rs:76:9
+   |
+76 |     let unused_74 = 74;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_74`
+
+warning: unused variable: `unused_75`
+  --> src/main.rs:77:9
+   |
+77 |     let unused_75 = 75;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_75`
+
+warning: unused variable: `unused_76`
+  --> src/main.rs:78:9
+   |
+78 |     let unused_76 = 76;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_76`
+
+warning: unused variable: `unused_77`
+  --> src/main.rs:79:9
+   |
+79 |     let unused_77 = 77;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_77`
+
+warning: unused variable: `unused_78`
+  --> src/main.rs:80:9
+   |
+80 |     let unused_78 = 78;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_78`
+
+warning: unused variable: `unused_79`
+  --> src/main.rs:81:9
+   |
+81 |     let unused_79 = 79;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_79`
+
+warning: unused variable: `unused_80`
+  --> src/main.rs:82:9
+   |
+82 |     let unused_80 = 80;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_80`
+
+warning: unused variable: `unused_81`
+  --> src/main.rs:83:9
+   |
+83 |     let unused_81 = 81;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_81`
+
+warning: unused variable: `unused_82`
+  --> src/main.rs:84:9
+   |
+84 |     let unused_82 = 82;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_82`
+
+warning: unused variable: `unused_83`
+  --> src/main.rs:85:9
+   |
+85 |     let unused_83 = 83;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_83`
+
+warning: unused variable: `unused_84`
+  --> src/main.rs:86:9
+   |
+86 |     let unused_84 = 84;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_84`
+
+warning: unused variable: `unused_85`
+  --> src/main.rs:87:9
+   |
+87 |     let unused_85 = 85;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_85`
+
+warning: unused variable: `unused_86`
+  --> src/main.rs:88:9
+   |
+88 |     let unused_86 = 86;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_86`
+
+warning: unused variable: `unused_87`
+  --> src/main.rs:89:9
+   |
+89 |     let unused_87 = 87;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_87`
+
+warning: unused variable: `unused_88`
+  --> src/main.rs:90:9
+   |
+90 |     let unused_88 = 88;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_88`
+
+warning: unused variable: `unused_89`
+  --> src/main.rs:91:9
+   |
+91 |     let unused_89 = 89;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_89`
+
+warning: unused variable: `unused_90`
+  --> src/main.rs:92:9
+   |
+92 |     let unused_90 = 90;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_90`
+
+warning: unused variable: `unused_91`
+  --> src/main.rs:93:9
+   |
+93 |     let unused_91 = 91;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_91`
+
+warning: unused variable: `unused_92`
+  --> src/main.rs:94:9
+   |
+94 |     let unused_92 = 92;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_92`
+
+warning: unused variable: `unused_93`
+  --> src/main.rs:95:9
+   |
+95 |     let unused_93 = 93;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_93`
+
+warning: unused variable: `unused_94`
+  --> src/main.rs:96:9
+   |
+96 |     let unused_94 = 94;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_94`
+
+warning: unused variable: `unused_95`
+  --> src/main.rs:97:9
+   |
+97 |     let unused_95 = 95;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_95`
+
+warning: unused variable: `unused_96`
+  --> src/main.rs:98:9
+   |
+98 |     let unused_96 = 96;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_96`
+
+warning: unused variable: `unused_97`
+  --> src/main.rs:99:9
+   |
+99 |     let unused_97 = 97;
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_97`
+
+warning: unused variable: `unused_98`
+   --> src/main.rs:100:9
+    |
+100 |     let unused_98 = 98;
+    |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_98`
+
+warning: unused variable: `unused_99`
+   --> src/main.rs:101:9
+    |
+101 |     let unused_99 = 99;
+    |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_99`
+
+warning: unused variable: `unused_100`
+   --> src/main.rs:102:9
+    |
+102 |     let unused_100 = 100;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_100`
+
+warning: unused variable: `unused_101`
+   --> src/main.rs:103:9
+    |
+103 |     let unused_101 = 101;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_101`
+
+warning: unused variable: `unused_102`
+   --> src/main.rs:104:9
+    |
+104 |     let unused_102 = 102;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_102`
+
+warning: unused variable: `unused_103`
+   --> src/main.rs:105:9
+    |
+105 |     let unused_103 = 103;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_103`
+
+warning: unused variable: `unused_104`
+   --> src/main.rs:106:9
+    |
+106 |     let unused_104 = 104;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_104`
+
+warning: unused variable: `unused_105`
+   --> src/main.rs:107:9
+    |
+107 |     let unused_105 = 105;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_105`
+
+warning: unused variable: `unused_106`
+   --> src/main.rs:108:9
+    |
+108 |     let unused_106 = 106;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_106`
+
+warning: unused variable: `unused_107`
+   --> src/main.rs:109:9
+    |
+109 |     let unused_107 = 107;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_107`
+
+warning: unused variable: `unused_108`
+   --> src/main.rs:110:9
+    |
+110 |     let unused_108 = 108;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_108`
+
+warning: unused variable: `unused_109`
+   --> src/main.rs:111:9
+    |
+111 |     let unused_109 = 109;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_109`
+
+warning: unused variable: `unused_110`
+   --> src/main.rs:112:9
+    |
+112 |     let unused_110 = 110;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_110`
+
+warning: unused variable: `unused_111`
+   --> src/main.rs:113:9
+    |
+113 |     let unused_111 = 111;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_111`
+
+warning: unused variable: `unused_112`
+   --> src/main.rs:114:9
+    |
+114 |     let unused_112 = 112;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_112`
+
+warning: unused variable: `unused_113`
+   --> src/main.rs:115:9
+    |
+115 |     let unused_113 = 113;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_113`
+
+warning: unused variable: `unused_114`
+   --> src/main.rs:116:9
+    |
+116 |     let unused_114 = 114;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_114`
+
+warning: unused variable: `unused_115`
+   --> src/main.rs:117:9
+    |
+117 |     let unused_115 = 115;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_115`
+
+warning: unused variable: `unused_116`
+   --> src/main.rs:118:9
+    |
+118 |     let unused_116 = 116;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_116`
+
+warning: unused variable: `unused_117`
+   --> src/main.rs:119:9
+    |
+119 |     let unused_117 = 117;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_117`
+
+warning: unused variable: `unused_118`
+   --> src/main.rs:120:9
+    |
+120 |     let unused_118 = 118;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_118`
+
+warning: unused variable: `unused_119`
+   --> src/main.rs:121:9
+    |
+121 |     let unused_119 = 119;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_119`
+
+warning: unused variable: `unused_120`
+   --> src/main.rs:122:9
+    |
+122 |     let unused_120 = 120;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_120`
+
+warning: unused variable: `unused_121`
+   --> src/main.rs:123:9
+    |
+123 |     let unused_121 = 121;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_121`
+
+warning: unused variable: `unused_122`
+   --> src/main.rs:124:9
+    |
+124 |     let unused_122 = 122;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_122`
+
+warning: unused variable: `unused_123`
+   --> src/main.rs:125:9
+    |
+125 |     let unused_123 = 123;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_123`
+
+warning: unused variable: `unused_124`
+   --> src/main.rs:126:9
+    |
+126 |     let unused_124 = 124;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_124`
+
+warning: unused variable: `unused_125`
+   --> src/main.rs:127:9
+    |
+127 |     let unused_125 = 125;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_125`
+
+warning: unused variable: `unused_126`
+   --> src/main.rs:128:9
+    |
+128 |     let unused_126 = 126;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_126`
+
+warning: unused variable: `unused_127`
+   --> src/main.rs:129:9
+    |
+129 |     let unused_127 = 127;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_127`
+
+warning: unused variable: `unused_128`
+   --> src/main.rs:130:9
+    |
+130 |     let unused_128 = 128;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_128`
+
+warning: unused variable: `unused_129`
+   --> src/main.rs:131:9
+    |
+131 |     let unused_129 = 129;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_129`
+
+warning: unused variable: `unused_130`
+   --> src/main.rs:132:9
+    |
+132 |     let unused_130 = 130;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_130`
+
+warning: unused variable: `unused_131`
+   --> src/main.rs:133:9
+    |
+133 |     let unused_131 = 131;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_131`
+
+warning: unused variable: `unused_132`
+   --> src/main.rs:134:9
+    |
+134 |     let unused_132 = 132;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_132`
+
+warning: unused variable: `unused_133`
+   --> src/main.rs:135:9
+    |
+135 |     let unused_133 = 133;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_133`
+
+warning: unused variable: `unused_134`
+   --> src/main.rs:136:9
+    |
+136 |     let unused_134 = 134;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_134`
+
+warning: unused variable: `unused_135`
+   --> src/main.rs:137:9
+    |
+137 |     let unused_135 = 135;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_135`
+
+warning: unused variable: `unused_136`
+   --> src/main.rs:138:9
+    |
+138 |     let unused_136 = 136;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_136`
+
+warning: unused variable: `unused_137`
+   --> src/main.rs:139:9
+    |
+139 |     let unused_137 = 137;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_137`
+
+warning: unused variable: `unused_138`
+   --> src/main.rs:140:9
+    |
+140 |     let unused_138 = 138;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_138`
+
+warning: unused variable: `unused_139`
+   --> src/main.rs:141:9
+    |
+141 |     let unused_139 = 139;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_139`
+
+warning: unused variable: `unused_140`
+   --> src/main.rs:142:9
+    |
+142 |     let unused_140 = 140;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_140`
+
+warning: unused variable: `unused_141`
+   --> src/main.rs:143:9
+    |
+143 |     let unused_141 = 141;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_141`
+
+warning: unused variable: `unused_142`
+   --> src/main.rs:144:9
+    |
+144 |     let unused_142 = 142;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_142`
+
+warning: unused variable: `unused_143`
+   --> src/main.rs:145:9
+    |
+145 |     let unused_143 = 143;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_143`
+
+warning: unused variable: `unused_144`
+   --> src/main.rs:146:9
+    |
+146 |     let unused_144 = 144;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_144`
+
+warning: unused variable: `unused_145`
+   --> src/main.rs:147:9
+    |
+147 |     let unused_145 = 145;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_145`
+
+warning: unused variable: `unused_146`
+   --> src/main.rs:148:9
+    |
+148 |     let unused_146 = 146;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_146`
+
+warning: unused variable: `unused_147`
+   --> src/main.rs:149:9
+    |
+149 |     let unused_147 = 147;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_147`
+
+warning: unused variable: `unused_148`
+   --> src/main.rs:150:9
+    |
+150 |     let unused_148 = 148;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_148`
+
+warning: unused variable: `unused_149`
+   --> src/main.rs:151:9
+    |
+151 |     let unused_149 = 149;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_149`
+
+warning: unused variable: `unused_150`
+   --> src/main.rs:152:9
+    |
+152 |     let unused_150 = 150;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_150`
+
+warning: unused variable: `unused_151`
+   --> src/main.rs:153:9
+    |
+153 |     let unused_151 = 151;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_151`
+
+warning: unused variable: `unused_152`
+   --> src/main.rs:154:9
+    |
+154 |     let unused_152 = 152;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_152`
+
+warning: unused variable: `unused_153`
+   --> src/main.rs:155:9
+    |
+155 |     let unused_153 = 153;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_153`
+
+warning: unused variable: `unused_154`
+   --> src/main.rs:156:9
+    |
+156 |     let unused_154 = 154;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_154`
+
+warning: unused variable: `unused_155`
+   --> src/main.rs:157:9
+    |
+157 |     let unused_155 = 155;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_155`
+
+warning: unused variable: `unused_156`
+   --> src/main.rs:158:9
+    |
+158 |     let unused_156 = 156;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_156`
+
+warning: unused variable: `unused_157`
+   --> src/main.rs:159:9
+    |
+159 |     let unused_157 = 157;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_157`
+
+warning: unused variable: `unused_158`
+   --> src/main.rs:160:9
+    |
+160 |     let unused_158 = 158;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_158`
+
+warning: unused variable: `unused_159`
+   --> src/main.rs:161:9
+    |
+161 |     let unused_159 = 159;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_159`
+
+warning: unused variable: `unused_160`
+   --> src/main.rs:162:9
+    |
+162 |     let unused_160 = 160;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_160`
+
+warning: unused variable: `unused_161`
+   --> src/main.rs:163:9
+    |
+163 |     let unused_161 = 161;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_161`
+
+warning: unused variable: `unused_162`
+   --> src/main.rs:164:9
+    |
+164 |     let unused_162 = 162;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_162`
+
+warning: unused variable: `unused_163`
+   --> src/main.rs:165:9
+    |
+165 |     let unused_163 = 163;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_163`
+
+warning: unused variable: `unused_164`
+   --> src/main.rs:166:9
+    |
+166 |     let unused_164 = 164;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_164`
+
+warning: unused variable: `unused_165`
+   --> src/main.rs:167:9
+    |
+167 |     let unused_165 = 165;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_165`
+
+warning: unused variable: `unused_166`
+   --> src/main.rs:168:9
+    |
+168 |     let unused_166 = 166;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_166`
+
+warning: unused variable: `unused_167`
+   --> src/main.rs:169:9
+    |
+169 |     let unused_167 = 167;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_167`
+
+warning: unused variable: `unused_168`
+   --> src/main.rs:170:9
+    |
+170 |     let unused_168 = 168;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_168`
+
+warning: unused variable: `unused_169`
+   --> src/main.rs:171:9
+    |
+171 |     let unused_169 = 169;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_169`
+
+warning: unused variable: `unused_170`
+   --> src/main.rs:172:9
+    |
+172 |     let unused_170 = 170;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_170`
+
+warning: unused variable: `unused_171`
+   --> src/main.rs:173:9
+    |
+173 |     let unused_171 = 171;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_171`
+
+warning: unused variable: `unused_172`
+   --> src/main.rs:174:9
+    |
+174 |     let unused_172 = 172;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_172`
+
+warning: unused variable: `unused_173`
+   --> src/main.rs:175:9
+    |
+175 |     let unused_173 = 173;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_173`
+
+warning: unused variable: `unused_174`
+   --> src/main.rs:176:9
+    |
+176 |     let unused_174 = 174;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_174`
+
+warning: unused variable: `unused_175`
+   --> src/main.rs:177:9
+    |
+177 |     let unused_175 = 175;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_175`
+
+warning: unused variable: `unused_176`
+   --> src/main.rs:178:9
+    |
+178 |     let unused_176 = 176;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_176`
+
+warning: unused variable: `unused_177`
+   --> src/main.rs:179:9
+    |
+179 |     let unused_177 = 177;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_177`
+
+warning: unused variable: `unused_178`
+   --> src/main.rs:180:9
+    |
+180 |     let unused_178 = 178;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_178`
+
+warning: unused variable: `unused_179`
+   --> src/main.rs:181:9
+    |
+181 |     let unused_179 = 179;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_179`
+
+warning: unused variable: `unused_180`
+   --> src/main.rs:182:9
+    |
+182 |     let unused_180 = 180;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_180`
+
+warning: unused variable: `unused_181`
+   --> src/main.rs:183:9
+    |
+183 |     let unused_181 = 181;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_181`
+
+warning: unused variable: `unused_182`
+   --> src/main.rs:184:9
+    |
+184 |     let unused_182 = 182;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_182`
+
+warning: unused variable: `unused_183`
+   --> src/main.rs:185:9
+    |
+185 |     let unused_183 = 183;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_183`
+
+warning: unused variable: `unused_184`
+   --> src/main.rs:186:9
+    |
+186 |     let unused_184 = 184;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_184`
+
+warning: unused variable: `unused_185`
+   --> src/main.rs:187:9
+    |
+187 |     let unused_185 = 185;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_185`
+
+warning: unused variable: `unused_186`
+   --> src/main.rs:188:9
+    |
+188 |     let unused_186 = 186;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_186`
+
+warning: unused variable: `unused_187`
+   --> src/main.rs:189:9
+    |
+189 |     let unused_187 = 187;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_187`
+
+warning: unused variable: `unused_188`
+   --> src/main.rs:190:9
+    |
+190 |     let unused_188 = 188;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_188`
+
+warning: unused variable: `unused_189`
+   --> src/main.rs:191:9
+    |
+191 |     let unused_189 = 189;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_189`
+
+warning: unused variable: `unused_190`
+   --> src/main.rs:192:9
+    |
+192 |     let unused_190 = 190;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_190`
+
+warning: unused variable: `unused_191`
+   --> src/main.rs:193:9
+    |
+193 |     let unused_191 = 191;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_191`
+
+warning: unused variable: `unused_192`
+   --> src/main.rs:194:9
+    |
+194 |     let unused_192 = 192;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_192`
+
+warning: unused variable: `unused_193`
+   --> src/main.rs:195:9
+    |
+195 |     let unused_193 = 193;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_193`
+
+warning: unused variable: `unused_194`
+   --> src/main.rs:196:9
+    |
+196 |     let unused_194 = 194;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_194`
+
+warning: unused variable: `unused_195`
+   --> src/main.rs:197:9
+    |
+197 |     let unused_195 = 195;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_195`
+
+warning: unused variable: `unused_196`
+   --> src/main.rs:198:9
+    |
+198 |     let unused_196 = 196;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_196`
+
+warning: unused variable: `unused_197`
+   --> src/main.rs:199:9
+    |
+199 |     let unused_197 = 197;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_197`
+
+warning: unused variable: `unused_198`
+   --> src/main.rs:200:9
+    |
+200 |     let unused_198 = 198;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_198`
+
+warning: unused variable: `unused_199`
+   --> src/main.rs:201:9
+    |
+201 |     let unused_199 = 199;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_199`
+
+warning: unused variable: `unused_200`
+   --> src/main.rs:202:9
+    |
+202 |     let unused_200 = 200;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_200`
+
+warning: unused variable: `unused_201`
+   --> src/main.rs:203:9
+    |
+203 |     let unused_201 = 201;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_201`
+
+warning: unused variable: `unused_202`
+   --> src/main.rs:204:9
+    |
+204 |     let unused_202 = 202;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_202`
+
+warning: unused variable: `unused_203`
+   --> src/main.rs:205:9
+    |
+205 |     let unused_203 = 203;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_203`
+
+warning: unused variable: `unused_204`
+   --> src/main.rs:206:9
+    |
+206 |     let unused_204 = 204;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_204`
+
+warning: unused variable: `unused_205`
+   --> src/main.rs:207:9
+    |
+207 |     let unused_205 = 205;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_205`
+
+warning: unused variable: `unused_206`
+   --> src/main.rs:208:9
+    |
+208 |     let unused_206 = 206;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_206`
+
+warning: unused variable: `unused_207`
+   --> src/main.rs:209:9
+    |
+209 |     let unused_207 = 207;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_207`
+
+warning: unused variable: `unused_208`
+   --> src/main.rs:210:9
+    |
+210 |     let unused_208 = 208;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_208`
+
+warning: unused variable: `unused_209`
+   --> src/main.rs:211:9
+    |
+211 |     let unused_209 = 209;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_209`
+
+warning: unused variable: `unused_210`
+   --> src/main.rs:212:9
+    |
+212 |     let unused_210 = 210;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_210`
+
+warning: unused variable: `unused_211`
+   --> src/main.rs:213:9
+    |
+213 |     let unused_211 = 211;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_211`
+
+warning: unused variable: `unused_212`
+   --> src/main.rs:214:9
+    |
+214 |     let unused_212 = 212;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_212`
+
+warning: unused variable: `unused_213`
+   --> src/main.rs:215:9
+    |
+215 |     let unused_213 = 213;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_213`
+
+warning: unused variable: `unused_214`
+   --> src/main.rs:216:9
+    |
+216 |     let unused_214 = 214;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_214`
+
+warning: unused variable: `unused_215`
+   --> src/main.rs:217:9
+    |
+217 |     let unused_215 = 215;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_215`
+
+warning: unused variable: `unused_216`
+   --> src/main.rs:218:9
+    |
+218 |     let unused_216 = 216;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_216`
+
+warning: unused variable: `unused_217`
+   --> src/main.rs:219:9
+    |
+219 |     let unused_217 = 217;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_217`
+
+warning: unused variable: `unused_218`
+   --> src/main.rs:220:9
+    |
+220 |     let unused_218 = 218;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_218`
+
+warning: unused variable: `unused_219`
+   --> src/main.rs:221:9
+    |
+221 |     let unused_219 = 219;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_219`
+
+warning: unused variable: `unused_220`
+   --> src/main.rs:222:9
+    |
+222 |     let unused_220 = 220;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_220`
+
+warning: unused variable: `unused_221`
+   --> src/main.rs:223:9
+    |
+223 |     let unused_221 = 221;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_221`
+
+warning: unused variable: `unused_222`
+   --> src/main.rs:224:9
+    |
+224 |     let unused_222 = 222;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_222`
+
+warning: unused variable: `unused_223`
+   --> src/main.rs:225:9
+    |
+225 |     let unused_223 = 223;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_223`
+
+warning: unused variable: `unused_224`
+   --> src/main.rs:226:9
+    |
+226 |     let unused_224 = 224;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_224`
+
+warning: unused variable: `unused_225`
+   --> src/main.rs:227:9
+    |
+227 |     let unused_225 = 225;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_225`
+
+warning: unused variable: `unused_226`
+   --> src/main.rs:228:9
+    |
+228 |     let unused_226 = 226;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_226`
+
+warning: unused variable: `unused_227`
+   --> src/main.rs:229:9
+    |
+229 |     let unused_227 = 227;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_227`
+
+warning: unused variable: `unused_228`
+   --> src/main.rs:230:9
+    |
+230 |     let unused_228 = 228;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_228`
+
+warning: unused variable: `unused_229`
+   --> src/main.rs:231:9
+    |
+231 |     let unused_229 = 229;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_229`
+
+warning: unused variable: `unused_230`
+   --> src/main.rs:232:9
+    |
+232 |     let unused_230 = 230;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_230`
+
+warning: unused variable: `unused_231`
+   --> src/main.rs:233:9
+    |
+233 |     let unused_231 = 231;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_231`
+
+warning: unused variable: `unused_232`
+   --> src/main.rs:234:9
+    |
+234 |     let unused_232 = 232;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_232`
+
+warning: unused variable: `unused_233`
+   --> src/main.rs:235:9
+    |
+235 |     let unused_233 = 233;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_233`
+
+warning: unused variable: `unused_234`
+   --> src/main.rs:236:9
+    |
+236 |     let unused_234 = 234;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_234`
+
+warning: unused variable: `unused_235`
+   --> src/main.rs:237:9
+    |
+237 |     let unused_235 = 235;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_235`
+
+warning: unused variable: `unused_236`
+   --> src/main.rs:238:9
+    |
+238 |     let unused_236 = 236;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_236`
+
+warning: unused variable: `unused_237`
+   --> src/main.rs:239:9
+    |
+239 |     let unused_237 = 237;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_237`
+
+warning: unused variable: `unused_238`
+   --> src/main.rs:240:9
+    |
+240 |     let unused_238 = 238;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_238`
+
+warning: unused variable: `unused_239`
+   --> src/main.rs:241:9
+    |
+241 |     let unused_239 = 239;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_239`
+
+warning: unused variable: `unused_240`
+   --> src/main.rs:242:9
+    |
+242 |     let unused_240 = 240;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_240`
+
+warning: unused variable: `unused_241`
+   --> src/main.rs:243:9
+    |
+243 |     let unused_241 = 241;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_241`
+
+warning: unused variable: `unused_242`
+   --> src/main.rs:244:9
+    |
+244 |     let unused_242 = 242;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_242`
+
+warning: unused variable: `unused_243`
+   --> src/main.rs:245:9
+    |
+245 |     let unused_243 = 243;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_243`
+
+warning: unused variable: `unused_244`
+   --> src/main.rs:246:9
+    |
+246 |     let unused_244 = 244;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_244`
+
+warning: unused variable: `unused_245`
+   --> src/main.rs:247:9
+    |
+247 |     let unused_245 = 245;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_245`
+
+warning: unused variable: `unused_246`
+   --> src/main.rs:248:9
+    |
+248 |     let unused_246 = 246;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_246`
+
+warning: unused variable: `unused_247`
+   --> src/main.rs:249:9
+    |
+249 |     let unused_247 = 247;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_247`
+
+warning: unused variable: `unused_248`
+   --> src/main.rs:250:9
+    |
+250 |     let unused_248 = 248;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_248`
+
+warning: unused variable: `unused_249`
+   --> src/main.rs:251:9
+    |
+251 |     let unused_249 = 249;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_249`
+
+warning: unused variable: `unused_250`
+   --> src/main.rs:252:9
+    |
+252 |     let unused_250 = 250;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_250`
+
+warning: unused variable: `unused_251`
+   --> src/main.rs:253:9
+    |
+253 |     let unused_251 = 251;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_251`
+
+warning: unused variable: `unused_252`
+   --> src/main.rs:254:9
+    |
+254 |     let unused_252 = 252;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_252`
+
+warning: unused variable: `unused_253`
+   --> src/main.rs:255:9
+    |
+255 |     let unused_253 = 253;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_253`
+
+warning: unused variable: `unused_254`
+   --> src/main.rs:256:9
+    |
+256 |     let unused_254 = 254;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_254`
+
+warning: unused variable: `unused_255`
+   --> src/main.rs:257:9
+    |
+257 |     let unused_255 = 255;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_255`
+
+warning: unused variable: `unused_256`
+   --> src/main.rs:258:9
+    |
+258 |     let unused_256 = 256;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_256`
+
+warning: unused variable: `unused_257`
+   --> src/main.rs:259:9
+    |
+259 |     let unused_257 = 257;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_257`
+
+warning: unused variable: `unused_258`
+   --> src/main.rs:260:9
+    |
+260 |     let unused_258 = 258;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_258`
+
+warning: unused variable: `unused_259`
+   --> src/main.rs:261:9
+    |
+261 |     let unused_259 = 259;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_259`
+
+warning: unused variable: `unused_260`
+   --> src/main.rs:262:9
+    |
+262 |     let unused_260 = 260;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_260`
+
+warning: unused variable: `unused_261`
+   --> src/main.rs:263:9
+    |
+263 |     let unused_261 = 261;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_261`
+
+warning: unused variable: `unused_262`
+   --> src/main.rs:264:9
+    |
+264 |     let unused_262 = 262;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_262`
+
+warning: unused variable: `unused_263`
+   --> src/main.rs:265:9
+    |
+265 |     let unused_263 = 263;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_263`
+
+warning: unused variable: `unused_264`
+   --> src/main.rs:266:9
+    |
+266 |     let unused_264 = 264;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_264`
+
+warning: unused variable: `unused_265`
+   --> src/main.rs:267:9
+    |
+267 |     let unused_265 = 265;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_265`
+
+warning: unused variable: `unused_266`
+   --> src/main.rs:268:9
+    |
+268 |     let unused_266 = 266;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_266`
+
+warning: unused variable: `unused_267`
+   --> src/main.rs:269:9
+    |
+269 |     let unused_267 = 267;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_267`
+
+warning: unused variable: `unused_268`
+   --> src/main.rs:270:9
+    |
+270 |     let unused_268 = 268;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_268`
+
+warning: unused variable: `unused_269`
+   --> src/main.rs:271:9
+    |
+271 |     let unused_269 = 269;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_269`
+
+warning: unused variable: `unused_270`
+   --> src/main.rs:272:9
+    |
+272 |     let unused_270 = 270;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_270`
+
+warning: unused variable: `unused_271`
+   --> src/main.rs:273:9
+    |
+273 |     let unused_271 = 271;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_271`
+
+warning: unused variable: `unused_272`
+   --> src/main.rs:274:9
+    |
+274 |     let unused_272 = 272;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_272`
+
+warning: unused variable: `unused_273`
+   --> src/main.rs:275:9
+    |
+275 |     let unused_273 = 273;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_273`
+
+warning: unused variable: `unused_274`
+   --> src/main.rs:276:9
+    |
+276 |     let unused_274 = 274;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_274`
+
+warning: unused variable: `unused_275`
+   --> src/main.rs:277:9
+    |
+277 |     let unused_275 = 275;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_275`
+
+warning: unused variable: `unused_276`
+   --> src/main.rs:278:9
+    |
+278 |     let unused_276 = 276;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_276`
+
+warning: unused variable: `unused_277`
+   --> src/main.rs:279:9
+    |
+279 |     let unused_277 = 277;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_277`
+
+warning: unused variable: `unused_278`
+   --> src/main.rs:280:9
+    |
+280 |     let unused_278 = 278;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_278`
+
+warning: unused variable: `unused_279`
+   --> src/main.rs:281:9
+    |
+281 |     let unused_279 = 279;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_279`
+
+warning: unused variable: `unused_280`
+   --> src/main.rs:282:9
+    |
+282 |     let unused_280 = 280;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_280`
+
+warning: unused variable: `unused_281`
+   --> src/main.rs:283:9
+    |
+283 |     let unused_281 = 281;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_281`
+
+warning: unused variable: `unused_282`
+   --> src/main.rs:284:9
+    |
+284 |     let unused_282 = 282;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_282`
+
+warning: unused variable: `unused_283`
+   --> src/main.rs:285:9
+    |
+285 |     let unused_283 = 283;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_283`
+
+warning: unused variable: `unused_284`
+   --> src/main.rs:286:9
+    |
+286 |     let unused_284 = 284;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_284`
+
+warning: unused variable: `unused_285`
+   --> src/main.rs:287:9
+    |
+287 |     let unused_285 = 285;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_285`
+
+warning: unused variable: `unused_286`
+   --> src/main.rs:288:9
+    |
+288 |     let unused_286 = 286;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_286`
+
+warning: unused variable: `unused_287`
+   --> src/main.rs:289:9
+    |
+289 |     let unused_287 = 287;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_287`
+
+warning: unused variable: `unused_288`
+   --> src/main.rs:290:9
+    |
+290 |     let unused_288 = 288;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_288`
+
+warning: unused variable: `unused_289`
+   --> src/main.rs:291:9
+    |
+291 |     let unused_289 = 289;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_289`
+
+warning: unused variable: `unused_290`
+   --> src/main.rs:292:9
+    |
+292 |     let unused_290 = 290;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_290`
+
+warning: unused variable: `unused_291`
+   --> src/main.rs:293:9
+    |
+293 |     let unused_291 = 291;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_291`
+
+warning: unused variable: `unused_292`
+   --> src/main.rs:294:9
+    |
+294 |     let unused_292 = 292;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_292`
+
+warning: unused variable: `unused_293`
+   --> src/main.rs:295:9
+    |
+295 |     let unused_293 = 293;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_293`
+
+warning: unused variable: `unused_294`
+   --> src/main.rs:296:9
+    |
+296 |     let unused_294 = 294;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_294`
+
+warning: unused variable: `unused_295`
+   --> src/main.rs:297:9
+    |
+297 |     let unused_295 = 295;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_295`
+
+warning: unused variable: `unused_296`
+   --> src/main.rs:298:9
+    |
+298 |     let unused_296 = 296;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_296`
+
+warning: unused variable: `unused_297`
+   --> src/main.rs:299:9
+    |
+299 |     let unused_297 = 297;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_297`
+
+warning: unused variable: `unused_298`
+   --> src/main.rs:300:9
+    |
+300 |     let unused_298 = 298;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_298`
+
+warning: unused variable: `unused_299`
+   --> src/main.rs:301:9
+    |
+301 |     let unused_299 = 299;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_unused_299`
+
+For more information about this error, try `rustc --explain E0425`.
+warning: `buildfail` (bin "buildfail") generated 300 warnings
+error: could not compile `buildfail` (bin "buildfail") due to 1 previous error; 300 warnings emitted

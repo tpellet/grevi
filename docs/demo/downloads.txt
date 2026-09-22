@@ -1,0 +1,8 @@
+con_edison_electric_bill_august.pdf
+con_edison_electric_bill_july.pdf
+invoice_acme_corp_march.pdf
+quarterly_report_draft.docx
+spotify_receipt.pdf
+vacation_photos_2026.zip
+vacation.iso
+warranty_card_laptop.pdf

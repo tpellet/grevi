@@ -22,8 +22,10 @@ Every command accepts these before or after the verb:
 | one record out of many | `pick 'description'` | `fzf --filter` | an input record |
 | only the records that matter | `filter 'statement'` | `grep` | a subset of the input |
 | a tag on each record, to sort or count them | `label a,b,c` | an `awk` key | each record with its label |
-| a decision to branch on | `is 'statement'` | `test` | an exit code | Text beginning with `-` goes after `--`.
-The threshold applies to yes/no fit scores, not relative selection ranks.
+| a decision to branch on | `is 'statement'` | `test` | an exit code |
+
+Text beginning with `-` goes after `--`. The threshold applies to yes/no fit scores, not to
+relative selection ranks.
 
 ## fill
 
@@ -105,8 +107,9 @@ gh run view --log-failed | jevify why --json
 ```
 
 `why [-C N] [-n N] [--no-save]` reads stdin and prints numbered cause lines with context.
-`-C, --context` defaults to 3; `-n, --top` defaults to 1. No split options are accepted.
-Exit 0 found, 3 no cause fits. Compare `considered` with `total` for evidence coverage.
+`-C, --context` defaults to 3; `-n, --top` defaults to 1. `why` takes none of the split
+options. It exits 0 when a cause is found and 3 when none fits. Compare `considered` with
+`total` for evidence coverage.
 
 Data: `causes[{line,text,p,context[]}]`, `any`, `considered`, `total`, `hint`, `saved_input`,
 `complete`. The full raw input is saved unless `--no-save`; stderr says
@@ -181,7 +184,7 @@ distinct record and prints matching records, retaining repeated occurrences and 
 
 Exit 0 kept some, 1 kept none, 3 every record unsure. A fixed band of 0.15 around the threshold
 defines unsure. Hidden or secret-looking paths and symlink files receive no excerpt.
-Up to 1,000 records per classifier request are judged independently; TypeSafe batches 20 records
+Up to 60 records per classifier request are judged independently; TypeSafe batches 20 records
 in shared state. The ceiling is 20,000 distinct records (`too_many`, exit 6).
 
 Data: `records[{text,ordinal,p,verdict,lossy?}]`, `kept`, `total`, `unsure`, `complete`,
@@ -212,7 +215,7 @@ classifier.dev and 200 on TypeSafe; more is exit 2 with the count.
 Exit 0 labelled, 3 every record unsure. The threshold plays no part: a label wins when it
 beats the other labels and "none of them" clearly. The way back: for line records `cut -f2-`
 gives the input back without its blank lines; with `-0` and `--para` the record follows the
-tab unchanged. Nothing is saved. The record limits of `filter` apply: 1,000 records per
+tab unchanged. Nothing is saved. The record limits of `filter` apply: 60 records per
 request on classifier.dev, 20 on TypeSafe, 20,000 distinct records (`too_many`, exit 6).
 
 Data: `records[{label,text,ordinal,p,lossy?}]`, `labelled`, `total`, `unsure`, `complete`,
