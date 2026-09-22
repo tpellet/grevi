@@ -157,6 +157,7 @@ pub fn capabilities() -> Outcome {
             { "name": "JEVIFY_MODEL", "default": "jev-1.13.0", "meaning": "Default applies to TypeSafe model selection; jev-latest moves with each release. Explicit overrides are rejected on classifier.dev, which controls its model" },
             { "name": "JEVIFY_THRESHOLD", "default": 0.5 },
             { "name": "JEVIFY_CONCURRENCY", "default": "8 on typesafe, 4 on classifier" },
+            { "name": "JEVIFY_DEADLINE", "default": 600 },
             { "name": "JEVIFY_CACHE_DIR", "default": "platform cache dir/jevify" },
             { "name": "JEVIFY_CONFIG_DIR", "default": "platform config dir/jevify", "meaning": "where the user's kinds.jsonl lives; read only for a kind that is neither coded nor shipped" },
             { "name": "JEVIFY_NO_CACHE", "meaning": "disable the answer cache (entries expire after 7 days anyway)" },
@@ -170,7 +171,7 @@ pub fn capabilities() -> Outcome {
             { "name": "typesafe", "key": "required", "model": "Jev", "window": Backend::Typesafe.window(), "choice_options": 255, "state_chars": "32k tokens", "requests_per_minute": 1200, "meta": "input_tokens is null unless every inference attempt reports usage; cost_usd estimates input-token cost at the configured price and is null when that basis is incomplete" },
             { "name": "classifier", "key": "none", "model": "service-controlled Jev; explicit model overrides unsupported", "decision_semantics": "two-label Choice substitutes for Noul; scores and thresholds are not assumed interchangeable with TypeSafe Noul", "window": Backend::Classifier.window(), "choice_options": crate::jev::classifier::MAX_LABELS, "state_chars": crate::jev::classifier::MAX_INPUT_CHARS, "questions_per_request": crate::jev::classifier::MAX_DIMENSIONS, "classifications_per_minute": 3000, "classifications_per_day": 20000, "classification": "one record under one question, per IP", "cost_per_call": keyless_cost, "calls_per_day": keyless_calls, "measured": "2026-09-22, JEVIFY_CONCURRENCY=4, benchmarks/results.md", "meta": "input_tokens is null when token usage is unavailable; cost_usd is 0 at the default zero service price, with an explicit telemetry.cost_estimate basis" }
         ],
-        "envelope": { "fields": ["ok", "command", "version", "exit_code", "data", "meta{backend,model,elapsed_ms,requests,cache_hits,input_tokens,cost_usd,threshold,request_id,telemetry}", "error{kind,message,hint,example}"] },
+        "envelope": { "fields": ["ok", "command", "version", "exit_code", "data", "meta{backend,model,elapsed_ms,requests,cache_hits,input_tokens,cost_usd,threshold,request_id,usage,telemetry}", "error{kind,message,hint,example}"] },
         "telemetry": {
             "attempt_groups": ["inference_posts", "health_gets", "prewarm_gets", "semantic_calls"],
             "conservation": "attempted = succeeded + failed + cancelled + in_flight",

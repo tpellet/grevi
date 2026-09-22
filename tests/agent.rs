@@ -238,6 +238,20 @@ fn capabilities_lists_verbs_exit_codes_env() {
             .iter()
             .any(|e| e["name"] == "TYPESAFE_API_KEY")
     );
+    let deadline = d["env"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|e| e["name"] == "JEVIFY_DEADLINE")
+        .unwrap();
+    assert_eq!(deadline["default"], 600);
+    assert!(
+        d["envelope"]["fields"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|f| f.as_str().unwrap().contains("request_id,usage,telemetry}"))
+    );
     assert_eq!(d["limits"]["choice_options"], 255);
     let fill = commands.iter().find(|c| c["name"] == "fill").unwrap();
     assert!(

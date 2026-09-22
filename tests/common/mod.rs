@@ -301,6 +301,7 @@ pub fn bin() -> assert_cmd::Command {
         "JEVIFY_THRESHOLD",
         "JEVIFY_MODEL",
         "JEVIFY_CONCURRENCY",
+        "JEVIFY_DEADLINE",
         "JEVIFY_CACHE_DIR",
         "JEVIFY_NO_CACHE",
         "JEVIFY_PRICE_PER_MTOK",

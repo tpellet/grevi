@@ -27,6 +27,8 @@ Fixed:
 
 Changed:
 
+- `jevify init agents` pairs every situation with a complete command and lists the kinds; the
+  skill and the agents guide do the same.
 - The keyless quota is measured per verb against the service's own accounting: one
   classification is one record under one question, 3,000 a minute and 20,000 a day per IP.
   `is` costs one per statement, `filter` and `label` one per distinct record, `pick` and `why`

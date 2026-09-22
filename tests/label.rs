@@ -564,12 +564,14 @@ fn process(server: &MockServer) -> Command {
     cmd
 }
 
+/// Two keyless batches of 60 records, the second delayed 3 s: the first line reaches stdout
+/// within 2 s while the child still runs, so answers flow before the last one arrives.
 #[tokio::test]
 async fn stdout_flows_before_last_answer_and_closed_pipe_cancels() {
     let (server, _) = batches(None, true).await;
     let mut child = process(&server).spawn().unwrap();
     let mut stdin = child.stdin.take().unwrap();
-    let writer = std::thread::spawn(move || stdin.write_all(input(2500).as_bytes()).unwrap());
+    let writer = std::thread::spawn(move || stdin.write_all(input(120).as_bytes()).unwrap());
     let stdout = child.stdout.take().unwrap();
     let (tx, rx) = std::sync::mpsc::channel();
     let reader = std::thread::spawn(move || {
@@ -587,7 +589,7 @@ async fn stdout_flows_before_last_answer_and_closed_pipe_cancels() {
     assert!(child.try_wait().unwrap().is_none());
     assert!(child.wait().unwrap().success());
     writer.join().unwrap();
-    assert_eq!(reader.join().unwrap(), labelled(2500));
+    assert_eq!(reader.join().unwrap(), labelled(120));
 
     let (server, responder) = batches(None, true).await;
     let mut child = process(&server).spawn().unwrap();
