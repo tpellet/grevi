@@ -2,16 +2,30 @@ use crate::exit::JevifyError;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashSet};
+use std::ffi::OsStr;
+use std::io::Read;
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
-use std::process::Command;
-use std::sync::LazyLock;
+use std::process::{Command, Stdio};
+use std::sync::{LazyLock, mpsc};
+use std::time::{Duration, Instant};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Tool {
     pub name: String,
     pub summary: String,
 }
+
+/// The tools on the PATH and how many undocumented names the cap dropped, so a caller can
+/// report the real count instead of presenting a capped list as complete.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Default)]
+pub struct Inventory {
+    pub tools: Vec<Tool>,
+    pub omitted: usize,
+}
+
+const INDEX_TIMEOUT: Duration = Duration::from_secs(20);
+const READER_GRACE: Duration = Duration::from_millis(200);
 
 static ENTRY: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"([^\s,()]+)\s*\(([0-9][A-Za-z0-9]*)\)").unwrap());
@@ -37,12 +51,6 @@ pub fn parse_whatis(text: &str, executables: &HashSet<String>) -> Vec<Tool> {
         .collect()
 }
 
-fn path_dirs() -> Vec<PathBuf> {
-    std::env::var_os("PATH")
-        .map(|p| std::env::split_paths(&p).collect())
-        .unwrap_or_default()
-}
-
 fn executables(dirs: &[PathBuf]) -> HashSet<String> {
     let mut set = HashSet::new();
     for d in dirs {
@@ -61,11 +69,45 @@ fn executables(dirs: &[PathBuf]) -> HashSet<String> {
     set
 }
 
-fn whatis_text() -> String {
-    let manpath = Command::new("manpath")
-        .output()
-        .ok()
-        .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string())
+/// The stdout of a command that exits before the deadline, whatever its status. A command
+/// still running at the deadline is killed and yields nothing, so a slow `man` never hangs the
+/// caller; a reader that has not reached EOF 200 ms after the exit yields nothing either.
+fn output_within(mut command: Command, deadline: Instant) -> Option<Vec<u8>> {
+    if Instant::now() >= deadline {
+        return None;
+    }
+    command
+        .stdin(Stdio::null())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null());
+    let mut child = command.spawn().ok()?;
+    let mut stdout = child.stdout.take()?;
+    let (tx, rx) = mpsc::channel();
+    std::thread::spawn(move || {
+        let mut bytes = Vec::new();
+        let _ = tx.send(stdout.read_to_end(&mut bytes).map(|_| bytes));
+    });
+    loop {
+        match child.try_wait() {
+            Ok(Some(_)) => break,
+            Ok(None) if Instant::now() < deadline => std::thread::sleep(
+                Duration::from_millis(20).min(deadline.saturating_duration_since(Instant::now())),
+            ),
+            _ => {
+                let _ = child.kill();
+                let _ = child.wait();
+                return None;
+            }
+        }
+    }
+    rx.recv_timeout(READER_GRACE).ok()?.ok()
+}
+
+fn whatis_text(path: &OsStr, deadline: Instant) -> String {
+    let mut manpath = Command::new("manpath");
+    manpath.env("PATH", path);
+    let manpath = output_within(manpath, deadline)
+        .map(|o| String::from_utf8_lossy(&o).trim().to_string())
         .unwrap_or_default();
     let mut text = String::new();
     for dir in manpath.split(':').filter(|d| !d.is_empty()) {
@@ -77,12 +119,12 @@ fn whatis_text() -> String {
     if text.trim().is_empty() {
         // No plain whatis files (man-db on Linux, and recent macOS): ask man for its index.
         // Cold, this can regenerate the database (~2 s); the inventory cache makes it a one-off.
-        if let Ok(o) = Command::new("man")
-            .args(["-k", "."])
-            .env("MANPAGER", "cat")
-            .output()
-        {
-            text = String::from_utf8_lossy(&o.stdout).into_owned();
+        let mut man = Command::new("man");
+        man.args(["-k", "."])
+            .env("PATH", path)
+            .env("MANPAGER", "cat");
+        if let Some(o) = output_within(man, deadline) {
+            text = String::from_utf8_lossy(&o).into_owned();
         }
     }
     text
@@ -99,18 +141,30 @@ fn fingerprint(dirs: &[PathBuf]) -> String {
     h.finalize().to_hex()[..16].to_string()
 }
 
+/// The tools on the process PATH, for `route`.
 pub fn load(cache_dir: Option<&Path>) -> Result<Vec<Tool>, JevifyError> {
-    let dirs = path_dirs();
+    let path = std::env::var_os("PATH").unwrap_or_default();
+    load_with(&path, cache_dir, Instant::now() + INDEX_TIMEOUT).map(|inventory| inventory.tools)
+}
+
+/// The tools on an injected PATH. The man index is read under `deadline`; past it the index is
+/// absent (names only, never cached). A cache directory of `None` never writes.
+pub fn load_with(
+    path: &OsStr,
+    cache_dir: Option<&Path>,
+    deadline: Instant,
+) -> Result<Inventory, JevifyError> {
+    let dirs: Vec<PathBuf> = std::env::split_paths(path).collect();
     let cache_file = cache_dir.map(|c| c.join(format!("inventory-{}.json", fingerprint(&dirs))));
-    if let Some(tools) = cache_file
+    if let Some(inventory) = cache_file
         .as_ref()
         .and_then(|f| std::fs::read(f).ok())
-        .and_then(|b| serde_json::from_slice::<Vec<Tool>>(&b).ok())
+        .and_then(|b| serde_json::from_slice::<Inventory>(&b).ok())
     {
-        return Ok(tools);
+        return Ok(inventory);
     }
     let exes = executables(&dirs);
-    let mut tools = parse_whatis(&whatis_text(), &exes);
+    let mut tools = parse_whatis(&whatis_text(path, deadline), &exes);
     // Tools people actually reach for (rg, fd, uv, ...) often ship no man page, and minimal
     // Linux images ship no whatis database at all: list those by name rather than hide them.
     let documented: HashSet<&str> = tools.iter().map(|t| t.name.as_str()).collect();
@@ -119,8 +173,9 @@ pub fn load(cache_dir: Option<&Path>) -> Result<Vec<Tool>, JevifyError> {
             .iter()
             .any(|s| d == Path::new(s))
     };
-    // No man index at all (containers, or `man -k` refused inside a sandbox): names only, and
-    // that degraded list is never cached, so the next run with a working `man` rebuilds it.
+    // No man index at all (containers, `man -k` refused inside a sandbox, or past the deadline):
+    // names only, and that degraded list is never cached, so the next run with a working `man`
+    // rebuilds it.
     let names_only = tools.is_empty();
     // 1,000 names cost ~5k tokens and a few windows; 400 dropped uv and yq on a Mac with ~600
     // undocumented tools on PATH.
@@ -140,10 +195,8 @@ pub fn load(cache_dir: Option<&Path>) -> Result<Vec<Tool>, JevifyError> {
             .collect();
         names.sort();
         extra.extend(names);
-        if extra.len() >= cap {
-            break;
-        }
     }
+    let omitted = extra.len().saturating_sub(cap);
     extra.truncate(cap);
     tools.extend(extra.into_iter().map(|name| Tool {
         name,
@@ -153,13 +206,14 @@ pub fn load(cache_dir: Option<&Path>) -> Result<Vec<Tool>, JevifyError> {
     if tools.is_empty() {
         return Err(JevifyError::Input("no executables found on PATH".into()));
     }
+    let inventory = Inventory { tools, omitted };
     if let Some(f) = cache_file.filter(|_| !names_only) {
         if let Some(p) = f.parent() {
             let _ = std::fs::create_dir_all(p);
         }
-        let _ = std::fs::write(&f, serde_json::to_vec(&tools).unwrap_or_default());
+        let _ = std::fs::write(&f, serde_json::to_vec(&inventory).unwrap_or_default());
     }
-    Ok(tools)
+    Ok(inventory)
 }
 
 #[cfg(test)]
@@ -186,5 +240,81 @@ mod tests {
         std::os::unix::fs::symlink(&real, d.path().join("link")).unwrap();
         let set = executables(&[d.path().to_path_buf()]);
         assert!(set.contains("real") && set.contains("link"));
+    }
+
+    /// A directory of `count` empty executables named `t0000`.. and a `cache` subdirectory.
+    fn bin_dir(count: usize) -> PathBuf {
+        let dir = tempfile::Builder::new()
+            .prefix("jevify-inventory-")
+            .tempdir()
+            .unwrap()
+            .keep();
+        for i in 0..count {
+            let file = dir.join(format!("t{i:04}"));
+            std::fs::write(&file, "").unwrap();
+            std::fs::set_permissions(&file, std::fs::Permissions::from_mode(0o755)).unwrap();
+        }
+        std::fs::create_dir(dir.join("cache")).unwrap();
+        dir
+    }
+
+    fn script(dir: &Path, name: &str, body: &str) {
+        let file = dir.join(name);
+        std::fs::write(&file, format!("#!/bin/sh\n{body}\n")).unwrap();
+        std::fs::set_permissions(&file, std::fs::Permissions::from_mode(0o700)).unwrap();
+    }
+
+    #[test]
+    fn undocumented_names_above_the_cap_are_counted_not_hidden() {
+        let dir = bin_dir(1_501);
+        let cache = dir.join("cache");
+        let deadline = Instant::now() + INDEX_TIMEOUT;
+        // No man index on this PATH: names only, cap 1,500, nothing cached.
+        let inventory = load_with(dir.as_os_str(), Some(&cache), deadline).unwrap();
+        assert_eq!((inventory.tools.len(), inventory.omitted), (1_500, 1));
+        assert_eq!(inventory.tools[0].name, "t0000");
+        assert!(inventory.tools.iter().all(|t| t.summary == "(no man page)"));
+        assert_eq!(std::fs::read_dir(&cache).unwrap().count(), 0);
+        // A man index that documents `man` itself: cap 1,000 for the rest, and the count of
+        // dropped names survives the cache round trip.
+        script(&dir, "man", "printf 'man(1) - format manual pages\\n'");
+        let inventory = load_with(dir.as_os_str(), Some(&cache), deadline).unwrap();
+        assert_eq!((inventory.tools.len(), inventory.omitted), (1_001, 501));
+        assert_eq!(
+            inventory.tools.iter().filter(|t| t.name == "man").count(),
+            1
+        );
+        assert_eq!(std::fs::read_dir(&cache).unwrap().count(), 1);
+        let cached = load_with(dir.as_os_str(), Some(&cache), Instant::now()).unwrap();
+        assert_eq!(cached, inventory);
+        assert_eq!(
+            load_with(OsStr::new("/nonexistent"), None, deadline)
+                .unwrap_err()
+                .exit()
+                .code(),
+            6
+        );
+    }
+
+    #[test]
+    fn a_slow_man_index_is_absent_within_the_deadline_and_never_cached() {
+        let dir = bin_dir(3);
+        let cache = dir.join("cache");
+        script(&dir, "man", "exec /bin/sleep 5");
+        let start = Instant::now();
+        let budget = Duration::from_millis(300);
+        let inventory = load_with(dir.as_os_str(), Some(&cache), start + budget).unwrap();
+        assert!(
+            start.elapsed() < budget + READER_GRACE,
+            "{:?}",
+            start.elapsed()
+        );
+        assert_eq!(inventory.omitted, 0);
+        let names: Vec<_> = inventory.tools.iter().map(|t| t.name.as_str()).collect();
+        assert_eq!(names, ["man", "t0000", "t0001", "t0002"]);
+        assert!(inventory.tools.iter().all(|t| t.summary == "(no man page)"));
+        assert_eq!(std::fs::read_dir(&cache).unwrap().count(), 0);
+        // An expired deadline runs no command at all.
+        assert!(output_within(Command::new("man"), Instant::now()).is_none());
     }
 }

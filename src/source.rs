@@ -8,7 +8,7 @@ use std::{
     ffi::{OsStr, OsString},
     io::Read,
     os::unix::ffi::{OsStrExt, OsStringExt},
-    path::PathBuf,
+    path::{Path, PathBuf},
     process::{Command, Stdio},
     sync::{
         Arc, LazyLock,
@@ -22,6 +22,10 @@ use std::{
 pub const KINDS: &[&str] = &[
     "-",
     "branch",
+    "commit",
+    "file",
+    "dir",
+    "tool",
     "pr",
     "issue",
     "ci-run",
@@ -45,6 +49,9 @@ const BRANCH_ARGV: [&str; 6] = [
     "refs/heads",
     "refs/remotes",
 ];
+/// `-n <limit>` is inserted after `log`; the total comes from `git rev-list --count HEAD`.
+const COMMIT_ARGV: [&str; 6] = ["git", "log", "-z", "--format=%H%x00%s", "HEAD", "--"];
+const FILE_ARGV: [&str; 5] = ["git", "ls-files", "-co", "--exclude-standard", "-z"];
 
 #[derive(Debug, Clone)]
 pub struct Kind {
@@ -79,6 +86,34 @@ pub const REGISTRY: &[Kind] = &[
         ordered: true,
         path_kind: false,
         has_tier_two: true,
+    },
+    Kind {
+        name: Cow::Borrowed("commit"),
+        coded: true,
+        ordered: true,
+        path_kind: false,
+        has_tier_two: true,
+    },
+    Kind {
+        name: Cow::Borrowed("file"),
+        coded: true,
+        ordered: false,
+        path_kind: true,
+        has_tier_two: true,
+    },
+    Kind {
+        name: Cow::Borrowed("dir"),
+        coded: true,
+        ordered: false,
+        path_kind: true,
+        has_tier_two: false,
+    },
+    Kind {
+        name: Cow::Borrowed("tool"),
+        coded: true,
+        ordered: false,
+        path_kind: false,
+        has_tier_two: false,
     },
     recipe_kind("pr", true),
     recipe_kind("issue", true),
@@ -224,7 +259,8 @@ pub struct CatalogEntry {
     pub name: String,
     /// `coded`, `shipped` or `user`.
     pub origin: &'static str,
-    /// Empty for `-`, which reads stdin or `--candidates`.
+    /// Empty for `-`, which reads stdin or `--candidates`, and for `tool`, which reads the PATH
+    /// and the man index in process.
     pub list: Vec<String>,
 }
 
@@ -237,17 +273,18 @@ pub struct Catalog {
 
 /// Every kind with its lister argv, the user's recipes included.
 pub fn catalog(env: &Env) -> Catalog {
+    let coded = |name: &str, argv: &[&str]| CatalogEntry {
+        name: name.into(),
+        origin: "coded",
+        list: argv.iter().map(|arg| (*arg).to_owned()).collect(),
+    };
     let mut kinds = vec![
-        CatalogEntry {
-            name: "-".into(),
-            origin: "coded",
-            list: Vec::new(),
-        },
-        CatalogEntry {
-            name: "branch".into(),
-            origin: "coded",
-            list: BRANCH_ARGV.iter().map(|arg| (*arg).to_owned()).collect(),
-        },
+        coded("-", &[]),
+        coded("branch", &BRANCH_ARGV),
+        coded("commit", &COMMIT_ARGV),
+        coded("file", &FILE_ARGV),
+        coded("dir", &FILE_ARGV),
+        coded("tool", &[]),
     ];
     let entry = |recipe: &Recipe, origin| CatalogEntry {
         name: recipe.kind.clone(),
@@ -287,6 +324,8 @@ pub struct Listing {
 pub struct Env {
     pub path: OsString,
     pub config_dir: Option<PathBuf>,
+    /// The value of `JEVIFY_CACHE_DIR`, for the inventory of `tool`; `None` in inline tests.
+    pub cache_dir: Option<PathBuf>,
     pub deadline: Instant,
     pub cwd: PathBuf,
 }
@@ -303,6 +342,10 @@ impl Env {
                 vars.get(std::ffi::OsStr::new("JEVIFY_CONFIG_DIR"))
                     .and_then(|value| value.to_str()),
             ),
+            cache_dir: vars
+                .get(std::ffi::OsStr::new("JEVIFY_CACHE_DIR"))
+                .filter(|value| !value.is_empty())
+                .map(PathBuf::from),
             deadline: Instant::now() + timeout,
             // An unavailable cwd must fail in Command, never silently list another directory.
             cwd: std::env::current_dir().unwrap_or_default(),
@@ -329,6 +372,10 @@ pub async fn enumerate(
             },
         ) => input_listing(&bytes, split, field, key.as_deref(), false, usize::MAX),
         ("branch", Scope::Prefix(None)) => branches(limit, &env),
+        ("commit", Scope::Prefix(None)) => commits(limit, &env),
+        ("file", Scope::Prefix(prefix)) => paths(prefix.as_deref(), false, limit, &env),
+        ("dir", Scope::Prefix(prefix)) => paths(prefix.as_deref(), true, limit, &env),
+        ("tool", Scope::Prefix(None)) => tools(&env),
         (name, Scope::Prefix(None)) => match recipe(name, &env)? {
             Some(recipe) => recipe_listing(&recipe, limit, &env),
             None => Err(JevifyError::Usage(format!("unknown kind {name}"))),
@@ -347,20 +394,55 @@ pub async fn enrich(kind: &str, handles: &[OsString]) -> Vec<String> {
 
 /// Missing enrichment is empty evidence; no partial lister output is returned.
 pub async fn enrich_with_env(kind: &str, handles: &[OsString], env: &Env) -> Vec<String> {
-    if kind != "branch" {
-        return vec![String::new(); handles.len()];
-    }
+    enrich_in(kind, Path::new(""), handles, env).await.0
+}
+
+/// Tier-two evidence for the given finalists only, and the number of finalists whose excerpt
+/// was withheld. `file` handles are relative to `prefix` (the literal of the marker, resolved
+/// as in enumeration) under `env.cwd`; the other kinds ignore `prefix` and withhold nothing.
+/// `dir` has no tier two. Missing enrichment is empty evidence.
+pub async fn enrich_in(
+    kind: &str,
+    prefix: &Path,
+    handles: &[OsString],
+    env: &Env,
+) -> (Vec<String>, usize) {
+    let empty = || (vec![String::new(); handles.len()], 0);
+    let evidence: fn(&OsStr, &Env) -> Result<String, JevifyError> = match kind {
+        "branch" => branch_evidence,
+        "commit" => commit_evidence,
+        "file" => {
+            let prefix = (!prefix.as_os_str().is_empty()).then_some(prefix);
+            let Ok(relative) = resolve_prefix(prefix, env) else {
+                return empty();
+            };
+            let mut records: Vec<Record> = handles
+                .iter()
+                .map(|handle| Record {
+                    handle: relative.join(handle).into_os_string(),
+                    evidence: String::new(),
+                    raw: 0..0,
+                })
+                .collect();
+            return match crate::records::excerpts(&mut records, &env.cwd).await {
+                Ok(withheld) => (records.into_iter().map(|r| r.evidence).collect(), withheld),
+                Err(_) => empty(),
+            };
+        }
+        _ => return empty(),
+    };
     let env = env.clone();
     let handles = handles.to_vec();
     let count = handles.len();
-    tokio::task::spawn_blocking(move || {
+    let values = tokio::task::spawn_blocking(move || {
         handles
             .iter()
-            .map(|handle| branch_evidence(handle, &env).unwrap_or_default())
+            .map(|handle| evidence(handle, &env).unwrap_or_default())
             .collect()
     })
     .await
-    .unwrap_or_else(|_| vec![String::new(); count])
+    .unwrap_or_else(|_| vec![String::new(); count]);
+    (values, 0)
 }
 
 fn input_listing(
@@ -679,6 +761,213 @@ fn branch_evidence(handle: &OsStr, env: &Env) -> Result<String, JevifyError> {
     ))
 }
 
+/// The newest `limit` commits of HEAD, full OIDs and subjects, and the exact total of the
+/// history. The listing and the count run at the same time; an empty history fails in git.
+fn commits(limit: usize, env: &Env) -> Result<Listing, JevifyError> {
+    let mut log: Vec<OsString> = COMMIT_ARGV.map(OsString::from).to_vec();
+    log.splice(2..2, ["-n".into(), limit.to_string().into()]);
+    let count_argv = ["git", "rev-list", "--count", "HEAD", "--"].map(OsString::from);
+    let (log, count) = std::thread::scope(|scope| {
+        let count = scope.spawn(|| run_lister_blocking(&count_argv, env, OUTPUT_CAP));
+        let log = run_lister_blocking(&log, env, OUTPUT_CAP);
+        let count = count
+            .join()
+            .unwrap_or_else(|_| Err(JevifyError::lister_failed("git: count failed".into())));
+        (log, count)
+    });
+    let bytes = log?;
+    let total: usize = String::from_utf8_lossy(&count?)
+        .trim()
+        .parse()
+        .map_err(|_| JevifyError::lister_failed("git: malformed commit count".into()))?;
+    let fields: Vec<_> = bytes.split(|b| *b == 0).collect();
+    let mut records = Vec::new();
+    for pair in fields.chunks(2) {
+        match pair {
+            [oid, subject] if !oid.is_empty() => records.push(Record {
+                handle: OsString::from_vec(oid.to_vec()),
+                evidence: String::from_utf8_lossy(subject).into_owned(),
+                raw: 0..0,
+            }),
+            [[]] => {}
+            _ => {
+                return Err(JevifyError::lister_failed(
+                    "malformed git log listing".into(),
+                ));
+            }
+        }
+    }
+    let mut listing = listing(records, 0, true, limit);
+    listing.total = total.max(listing.total);
+    Ok(listing)
+}
+
+fn commit_evidence(handle: &OsStr, env: &Env) -> Result<String, JevifyError> {
+    let bytes = run_lister_blocking(
+        &[
+            "git".into(),
+            "log".into(),
+            "-1".into(),
+            "--format=%b%x00".into(),
+            "--name-only".into(),
+            "-z".into(),
+            "--no-renames".into(),
+            "--no-ext-diff".into(),
+            "--end-of-options".into(),
+            handle.to_owned(),
+            "--".into(),
+        ],
+        env,
+        OUTPUT_CAP,
+    )?;
+    // The body ends at the format's NUL; -z adds one more, then the paths, NUL-terminated.
+    let (body, rest) = bytes
+        .iter()
+        .position(|b| *b == 0)
+        .map_or((bytes.as_slice(), [].as_slice()), |i| {
+            (&bytes[..i], &bytes[i + 1..])
+        });
+    let paths: Vec<_> = rest
+        .split(|b| *b == 0)
+        .map(|path| path.strip_prefix(b"\n").unwrap_or(path))
+        .filter(|path| !path.is_empty())
+        .map(|path| String::from_utf8_lossy(path).into_owned())
+        .collect();
+    Ok(format!(
+        "{}\n{}\nChanged paths: {}",
+        handle.to_string_lossy(),
+        String::from_utf8_lossy(body).trim_end(),
+        paths.join(", ")
+    ))
+}
+
+/// The directory a literal prefix names, relative to `env.cwd` (empty for none): the whole
+/// text when it ends with `/` and names a directory, else the part after the first `=`. A
+/// literal that does not end with `/` is not a prefix.
+fn resolve_prefix(prefix: Option<&Path>, env: &Env) -> Result<PathBuf, JevifyError> {
+    let Some(prefix) = prefix else {
+        return Ok(PathBuf::new());
+    };
+    let text = prefix.as_os_str().as_bytes();
+    if !text.ends_with(b"/") {
+        return Ok(PathBuf::new());
+    }
+    let after_equals = text.iter().position(|b| *b == b'=').map(|i| &text[i + 1..]);
+    for candidate in std::iter::once(text).chain(after_equals) {
+        if env.cwd.join(OsStr::from_bytes(candidate)).is_dir() {
+            return Ok(PathBuf::from(OsStr::from_bytes(candidate)));
+        }
+    }
+    Err(JevifyError::lister_failed(format!(
+        "prefix {} names no directory",
+        prefix.display()
+    )))
+}
+
+/// A lister failure that means "no repository here", where a walk lists instead.
+fn outside_work_tree(error: &JevifyError) -> bool {
+    let text = error.to_string();
+    text.contains("not a git repository") || text.contains("os error 2)")
+}
+
+/// Every file under `root`, relative, without following symlinks and without `.git`.
+fn walk(root: &Path) -> Result<Vec<Vec<u8>>, JevifyError> {
+    let mut stack = vec![(root.to_path_buf(), Vec::new())];
+    let mut found = Vec::new();
+    while let Some((dir, relative)) = stack.pop() {
+        let entries = std::fs::read_dir(&dir)
+            .map_err(|e| JevifyError::lister_failed(format!("{}: {e}", dir.display())))?;
+        for entry in entries {
+            let entry =
+                entry.map_err(|e| JevifyError::lister_failed(format!("{}: {e}", dir.display())))?;
+            let name = entry.file_name();
+            let mut path = relative.clone();
+            if !path.is_empty() {
+                path.push(b'/');
+            }
+            path.extend_from_slice(name.as_bytes());
+            let Ok(file_type) = entry.file_type() else {
+                continue;
+            };
+            if file_type.is_dir() {
+                if name != ".git" {
+                    stack.push((entry.path(), path));
+                }
+            } else {
+                found.push(path);
+            }
+        }
+    }
+    found.sort();
+    Ok(found)
+}
+
+/// `file` and `dir`: tracked and untracked files under the prefix, hidden ones included,
+/// ignored ones and `.git/` excluded; outside a work tree, a no-follow walk. Handles are paths
+/// relative to the prefix; `dir` lists the directories those paths lie in.
+fn paths(
+    prefix: Option<&Path>,
+    dirs: bool,
+    limit: usize,
+    env: &Env,
+) -> Result<Listing, JevifyError> {
+    let relative = resolve_prefix(prefix, env)?;
+    let scoped = Env {
+        cwd: env.cwd.join(&relative),
+        ..env.clone()
+    };
+    let files = match run_lister_blocking(&FILE_ARGV.map(OsString::from), &scoped, OUTPUT_CAP) {
+        Ok(bytes) => bytes
+            .split(|b| *b == 0)
+            .filter(|path| !path.is_empty())
+            .map(<[u8]>::to_vec)
+            .collect(),
+        Err(error) if outside_work_tree(&error) => walk(&scoped.cwd)?,
+        Err(error) => return Err(error),
+    };
+    let handles: Vec<Vec<u8>> = if dirs {
+        let mut set = BTreeSet::new();
+        for path in &files {
+            for (i, b) in path.iter().enumerate() {
+                if *b == b'/' && i > 0 {
+                    set.insert(path[..i].to_vec());
+                }
+            }
+        }
+        set.into_iter().collect()
+    } else {
+        files
+    };
+    let records = handles
+        .into_iter()
+        .map(|path| Record {
+            evidence: String::from_utf8_lossy(&path).into_owned(),
+            handle: OsString::from_vec(path),
+            raw: 0..0,
+        })
+        .collect();
+    Ok(listing(records, 0, false, limit))
+}
+
+/// `tool`: the inventory of the injected PATH. Names the cap dropped count in `omitted` and in
+/// `total`, so the listing never presents a capped list as complete.
+fn tools(env: &Env) -> Result<Listing, JevifyError> {
+    let inventory = crate::inventory::load_with(&env.path, env.cache_dir.as_deref(), env.deadline)?;
+    let records = inventory
+        .tools
+        .into_iter()
+        .map(|tool| Record {
+            evidence: format!("{}: {}", tool.name, tool.summary),
+            handle: tool.name.into(),
+            raw: 0..0,
+        })
+        .collect();
+    let mut listing = listing(records, 0, false, usize::MAX);
+    listing.total += inventory.omitted;
+    listing.omitted += inventory.omitted;
+    Ok(listing)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -699,6 +988,7 @@ mod tests {
             path: "/usr/bin:/bin".into(),
             cwd: cwd.into(),
             config_dir: None,
+            cache_dir: None,
             deadline: Instant::now() + LISTER_TIMEOUT,
         }
     }
@@ -1127,7 +1417,11 @@ done
             .filter(|k| k.coded)
             .map(|k| &k.name)
             .collect();
-        assert_eq!(coded, ["-", "branch"]);
+        assert_eq!(coded, ["-", "branch", "commit", "file", "dir", "tool"]);
+        assert!(kind("commit").unwrap().ordered && kind("commit").unwrap().has_tier_two);
+        assert!(kind("file").unwrap().path_kind && kind("file").unwrap().has_tier_two);
+        assert!(kind("dir").unwrap().path_kind && !kind("dir").unwrap().has_tier_two);
+        assert!(!kind("tool").unwrap().ordered && !kind("tool").unwrap().has_tier_two);
         let shipped_names: Vec<_> = recipes.iter().map(|r| r.kind.as_str()).collect();
         assert_eq!(&KINDS[coded.len()..], shipped_names.as_slice());
         assert_eq!(
@@ -1350,6 +1644,438 @@ esac"#,
             .unwrap_err();
         assert_eq!(error.kind(), "lister_failed");
         assert!(error.to_string().contains("gh"));
+    }
+
+    fn commit(dir: &Path, subject: &str, body: &str, timestamp: u64) -> String {
+        git(dir, &["add", "-A"], timestamp);
+        git(
+            dir,
+            &[
+                "-c",
+                "commit.gpgsign=false",
+                "commit",
+                "--allow-empty",
+                "-m",
+                subject,
+                "-m",
+                body,
+            ],
+            timestamp,
+        );
+        String::from_utf8(git(dir, &["rev-parse", "HEAD"], timestamp))
+            .unwrap()
+            .trim()
+            .to_owned()
+    }
+
+    #[tokio::test]
+    async fn commits_list_newest_first_with_exact_total_and_tier_two_bodies() {
+        let dir = scratch();
+        git(&dir, &["init", "--initial-branch=main"], 1700000000);
+        let env = environment(&dir);
+        let error = enumerate("commit", Scope::Prefix(None), 10, &env)
+            .await
+            .unwrap_err();
+        assert_eq!(error.kind(), "lister_failed");
+        assert!(error.to_string().contains("git"), "{error}");
+        let mut oids = Vec::new();
+        for i in 0..5 {
+            fs::create_dir_all(dir.join("src")).unwrap();
+            fs::write(dir.join("src").join(format!("f{i}.rs")), format!("{i}\n")).unwrap();
+            oids.push(commit(
+                &dir,
+                &format!("subject-{i}"),
+                &format!("body-{i} line one\n\nbody-{i} line three"),
+                1700000000 + i * 60,
+            ));
+            if i == 2 {
+                let listing = enumerate("commit", Scope::Prefix(None), 10, &env)
+                    .await
+                    .unwrap();
+                assert_eq!(
+                    (listing.total, listing.records.len(), listing.ordered),
+                    (3, 3, true)
+                );
+            }
+        }
+        let listing = enumerate("commit", Scope::Prefix(None), 3, &env)
+            .await
+            .unwrap();
+        assert_eq!((listing.total, listing.records.len()), (5, 3));
+        assert_eq!(
+            handles(&listing),
+            [oids[4].as_str(), oids[3].as_str(), oids[2].as_str()]
+        );
+        assert_eq!(oids[4].len(), 40);
+        assert_eq!(listing.records[0].evidence, "subject-4");
+        assert!(!listing.records[0].evidence.contains("body"));
+        let (evidence, withheld) = enrich_in(
+            "commit",
+            Path::new("ignored/"),
+            &[oids[1].clone().into(), oids[4].clone().into()],
+            &env,
+        )
+        .await;
+        assert_eq!(withheld, 0);
+        assert!(
+            evidence[0].contains("body-1 line one\n\nbody-1 line three"),
+            "{}",
+            evidence[0]
+        );
+        assert!(
+            evidence[0].contains("Changed paths: src/f1.rs"),
+            "{}",
+            evidence[0]
+        );
+        assert!(evidence[1].starts_with(&oids[4]));
+        assert!(evidence[1].contains("src/f4.rs"));
+        assert_eq!(
+            enumerate("commit", Scope::Prefix(Some("src/".into())), 3, &env)
+                .await
+                .unwrap_err()
+                .kind(),
+            "usage"
+        );
+        // `enrich` keeps its signature: process environment, no prefix.
+        assert_eq!(enrich("branch", &["HEAD".into()]).await.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn commit_tier_two_runs_for_finalists_only() {
+        let env = fake_git(
+            r#"
+printf '%s\n' "$*" >> calls
+case "$1 $2" in
+"log -n") i=0; while [ "$i" -lt 200 ]; do printf 'oid%s\000subject %s\000' "$i" "$i"; i=$((i + 1)); done;;
+"log -1") printf 'body of %s\000\000\nsrc/a.rs\000src/b.rs\000' "$9";;
+"rev-list --count") echo 200;;
+*) exit 9;;
+esac
+"#,
+        );
+        let listing = enumerate("commit", Scope::Prefix(None), 100, &env)
+            .await
+            .unwrap();
+        assert_eq!((listing.total, listing.records.len()), (200, 100));
+        assert_eq!(listing.records[0].handle, "oid0");
+        assert_eq!(listing.records[0].evidence, "subject 0");
+        let calls = fs::read_to_string(env.cwd.join("calls")).unwrap();
+        assert_eq!(calls.lines().count(), 2);
+        assert!(calls.contains("log -n 100 -z"));
+        let (evidence, withheld) = enrich_in(
+            "commit",
+            Path::new(""),
+            &["oid7".into(), "oid150".into(), "oid2".into()],
+            &env,
+        )
+        .await;
+        assert_eq!(withheld, 0);
+        for (value, name) in evidence.iter().zip(["oid7", "oid150", "oid2"]) {
+            assert_eq!(
+                value,
+                &format!("{name}\nbody of {name}\nChanged paths: src/a.rs, src/b.rs")
+            );
+        }
+        let calls = fs::read_to_string(env.cwd.join("calls")).unwrap();
+        assert_eq!(calls.lines().count(), 5);
+        for (call, name) in calls.lines().skip(2).zip(["oid7", "oid150", "oid2"]) {
+            assert!(
+                call.ends_with(&format!("--end-of-options {name} --")),
+                "{call}"
+            );
+        }
+    }
+
+    /// A repository with hidden, ignored, untracked, secret and non-UTF-8 paths.
+    fn tree() -> Env {
+        let dir = scratch();
+        git(&dir, &["init", "--initial-branch=main"], 1700000000);
+        for (path, content) in [
+            ("src/cmd/a.rs", "MARKER-A fn a() {}\n"),
+            ("src/cmd/.hidden/b.txt", "SECRET-HIDDEN\n"),
+            ("src/lib.rs", "MARKER-LIB pub mod cmd;\n"),
+            (".npmrc", "SECRET-NPMRC\n"),
+            (".env.local", "SECRET-ENV\n"),
+            ("id_rsa", "SECRET-RSA\n"),
+            ("x.pem", "SECRET-PEM\n"),
+            ("a/.hidden/b.txt", "SECRET-A\n"),
+            (".gitignore", "*.log\n"),
+        ] {
+            let file = dir.join(path);
+            fs::create_dir_all(file.parent().unwrap()).unwrap();
+            fs::write(&file, content).unwrap();
+        }
+        commit(&dir, "tree", "", 1700000000);
+        fs::write(dir.join("ignored.log"), "MARKER-IGNORED\n").unwrap();
+        fs::write(dir.join("src/cmd/new.rs"), "MARKER-NEW untracked\n").unwrap();
+        // APFS refuses a name that is not UTF-8; the case runs where the file system allows it.
+        let _ = fs::write(
+            dir.join("src/cmd").join(OsStr::from_bytes(b"\xff.rs")),
+            "MARKER-BYTES\n",
+        );
+        environment(&dir)
+    }
+
+    /// The expected handles, plus the non-UTF-8 one where the file system could create it.
+    fn with_bytes(env: &Env, prefix: &str, mut expected: Vec<Vec<u8>>) -> Vec<Vec<u8>> {
+        if env
+            .cwd
+            .join("src/cmd")
+            .join(OsStr::from_bytes(b"\xff.rs"))
+            .exists()
+        {
+            expected.push([prefix.as_bytes(), b"\xff.rs"].concat());
+        }
+        expected
+    }
+
+    fn sorted(listing: &Listing) -> Vec<Vec<u8>> {
+        let mut handles: Vec<_> = listing
+            .records
+            .iter()
+            .map(|r| r.handle.as_bytes().to_vec())
+            .collect();
+        handles.sort();
+        handles
+    }
+
+    #[tokio::test]
+    async fn files_and_dirs_honour_the_prefix_rule_and_list_hidden_but_not_ignored() {
+        let env = tree();
+        let scoped = enumerate("file", Scope::Prefix(Some("src/cmd/".into())), 1, &env)
+            .await
+            .unwrap();
+        let expected = with_bytes(
+            &env,
+            "",
+            vec![
+                b".hidden/b.txt".to_vec(),
+                b"a.rs".to_vec(),
+                b"new.rs".to_vec(),
+            ],
+        );
+        assert_eq!(sorted(&scoped), expected);
+        assert_eq!(
+            (scoped.total, scoped.omitted, scoped.ordered),
+            (expected.len(), 0, false)
+        );
+        for record in &scoped.records {
+            assert!(!record.evidence.contains("MARKER"), "{}", record.evidence);
+            assert_eq!(record.raw, 0..0);
+        }
+        let option = enumerate(
+            "file",
+            Scope::Prefix(Some("--config=src/".into())),
+            10,
+            &env,
+        )
+        .await
+        .unwrap();
+        let mut expected = with_bytes(
+            &env,
+            "cmd/",
+            vec![
+                b"cmd/.hidden/b.txt".to_vec(),
+                b"cmd/a.rs".to_vec(),
+                b"cmd/new.rs".to_vec(),
+            ],
+        );
+        expected.push(b"lib.rs".to_vec());
+        assert_eq!(sorted(&option), expected);
+        for prefix in ["nope/", "--config=nope/", "--config=src/lib.rs/"] {
+            let error = enumerate("file", Scope::Prefix(Some(prefix.into())), 10, &env)
+                .await
+                .unwrap_err();
+            assert_eq!(error.kind(), "lister_failed", "{prefix}");
+            assert!(error.to_string().contains("names no directory"), "{error}");
+        }
+        // A literal that does not end with `/` is no prefix.
+        let bare = enumerate("file", Scope::Prefix(Some("--config=".into())), 10, &env)
+            .await
+            .unwrap();
+        let whole = enumerate("file", Scope::Prefix(None), 10, &env)
+            .await
+            .unwrap();
+        assert_eq!(sorted(&bare), sorted(&whole));
+        let names = sorted(&whole);
+        for expected in [
+            ".npmrc",
+            ".env.local",
+            "id_rsa",
+            "x.pem",
+            "a/.hidden/b.txt",
+            ".gitignore",
+            "src/cmd/new.rs",
+        ] {
+            assert!(names.contains(&expected.as_bytes().to_vec()), "{expected}");
+        }
+        assert!(!names.contains(&b"ignored.log".to_vec()));
+        assert!(names.iter().all(|n| !n.starts_with(b".git/")));
+        let dirs = enumerate("dir", Scope::Prefix(None), 10, &env)
+            .await
+            .unwrap();
+        assert_eq!(
+            sorted(&dirs),
+            [
+                b"a".to_vec(),
+                b"a/.hidden".to_vec(),
+                b"src".to_vec(),
+                b"src/cmd".to_vec(),
+                b"src/cmd/.hidden".to_vec()
+            ]
+        );
+        let dirs = enumerate("dir", Scope::Prefix(Some("src/".into())), 10, &env)
+            .await
+            .unwrap();
+        assert_eq!(sorted(&dirs), [b"cmd".to_vec(), b"cmd/.hidden".to_vec()]);
+        assert_eq!(
+            enrich_in("dir", Path::new("src/"), &["cmd".into()], &env).await,
+            (vec![String::new()], 0)
+        );
+    }
+
+    #[tokio::test]
+    async fn file_tier_two_reads_finalists_only_and_withholds_secrets() {
+        let env = tree();
+        let (evidence, withheld) = enrich_in(
+            "file",
+            Path::new(""),
+            &[".npmrc".into(), "src/lib.rs".into(), "src/cmd/a.rs".into()],
+            &env,
+        )
+        .await;
+        assert_eq!(withheld, 1);
+        assert!(!evidence[0].contains("SECRET"), "{}", evidence[0]);
+        assert!(evidence[1].contains("MARKER-LIB"), "{}", evidence[1]);
+        assert!(evidence[2].contains("MARKER-A"), "{}", evidence[2]);
+        let (evidence, withheld) = enrich_in(
+            "file",
+            Path::new(""),
+            &[
+                ".npmrc".into(),
+                ".env.local".into(),
+                "id_rsa".into(),
+                "x.pem".into(),
+                "a/.hidden/b.txt".into(),
+            ],
+            &env,
+        )
+        .await;
+        assert_eq!(withheld, 5);
+        assert!(
+            evidence.iter().all(|e| !e.contains("SECRET")),
+            "{evidence:?}"
+        );
+        let (evidence, withheld) = enrich_in(
+            "file",
+            Path::new("--config=src/cmd/"),
+            &["a.rs".into(), "new.rs".into(), ".hidden/b.txt".into()],
+            &env,
+        )
+        .await;
+        assert_eq!(withheld, 1);
+        assert!(evidence[0].contains("MARKER-A"), "{}", evidence[0]);
+        assert!(evidence[1].contains("MARKER-NEW"), "{}", evidence[1]);
+        assert!(!evidence[2].contains("SECRET"), "{}", evidence[2]);
+        // A prefix that names no directory yields empty evidence rather than a read elsewhere.
+        assert_eq!(
+            enrich_in("file", Path::new("nope/"), &["a.rs".into()], &env).await,
+            (vec![String::new()], 0)
+        );
+    }
+
+    #[tokio::test]
+    async fn outside_a_work_tree_a_walk_lists_without_following_symlinks() {
+        let dir = scratch();
+        fs::create_dir_all(dir.join("sub")).unwrap();
+        fs::create_dir_all(dir.join(".git")).unwrap();
+        fs::write(dir.join(".git/config"), "never\n").unwrap();
+        fs::write(dir.join("a.txt"), "a\n").unwrap();
+        fs::write(dir.join("sub/b.txt"), "b\n").unwrap();
+        fs::write(dir.join(".hidden"), "h\n").unwrap();
+        std::os::unix::fs::symlink("..", dir.join("sub/loop")).unwrap();
+        let env = environment(&dir);
+        let listing = enumerate("file", Scope::Prefix(None), 10, &env)
+            .await
+            .unwrap();
+        assert_eq!(
+            sorted(&listing),
+            [
+                b".hidden".to_vec(),
+                b"a.txt".to_vec(),
+                b"sub/b.txt".to_vec(),
+                b"sub/loop".to_vec()
+            ]
+        );
+        let dirs = enumerate("dir", Scope::Prefix(Some("./".into())), 10, &env)
+            .await
+            .unwrap();
+        assert_eq!(sorted(&dirs), [b"sub".to_vec()]);
+        // No git on the PATH at all: the walk lists too.
+        let no_git = Env {
+            path: "/nonexistent".into(),
+            ..environment(&dir)
+        };
+        assert_eq!(
+            enumerate("file", Scope::Prefix(Some("sub/".into())), 10, &no_git)
+                .await
+                .unwrap()
+                .records
+                .len(),
+            2
+        );
+        let missing = environment(&dir.join("missing"));
+        assert_eq!(
+            enumerate("file", Scope::Prefix(None), 10, &missing)
+                .await
+                .unwrap_err()
+                .kind(),
+            "lister_failed"
+        );
+    }
+
+    #[tokio::test]
+    async fn tools_come_from_the_injected_path_and_count_the_capped_names() {
+        let dir = scratch();
+        for i in 0..1_501 {
+            let file = dir.join(format!("t{i:04}"));
+            fs::write(&file, "").unwrap();
+            fs::set_permissions(&file, fs::Permissions::from_mode(0o755)).unwrap();
+        }
+        let env = Env {
+            path: dir.as_os_str().to_owned(),
+            ..environment(&dir)
+        };
+        let listing = enumerate("tool", Scope::Prefix(None), 10, &env)
+            .await
+            .unwrap();
+        assert_eq!(
+            (
+                listing.records.len(),
+                listing.total,
+                listing.omitted,
+                listing.ordered
+            ),
+            (1_500, 1_501, 1, false)
+        );
+        assert_eq!(listing.records[0].handle, "t0000");
+        assert_eq!(listing.records[0].evidence, "t0000: (no man page)");
+        assert_eq!(
+            enumerate("tool", Scope::Prefix(Some("src/".into())), 10, &env)
+                .await
+                .unwrap_err()
+                .kind(),
+            "usage"
+        );
+        assert_eq!(
+            enrich_in("tool", Path::new(""), &["t0000".into()], &env).await,
+            (vec![String::new()], 0)
+        );
+        let catalog = catalog(&env);
+        let names: Vec<_> = catalog.kinds.iter().map(|k| k.name.as_str()).collect();
+        assert_eq!(&names[..6], &KINDS[..6]);
+        assert!(catalog.kinds[5].list.is_empty());
+        assert_eq!(catalog.kinds[2].list[1], "log");
     }
 
     #[test]

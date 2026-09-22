@@ -51,6 +51,7 @@ fn bin_never_reads_the_platform_configuration_directory() {
         config_dir: Some(planted.clone()),
         deadline: Instant::now() + Duration::from_secs(20),
         cwd: planted.clone(),
+        cache_dir: None,
     };
     let widget = jevify::source::lookup("widget", &env).unwrap().unwrap();
     assert_eq!(widget.name, "widget");
