@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.8.2
 
 Fixed:
 
@@ -10,6 +10,16 @@ Fixed:
   undecided. `capabilities.exit_codes` names exit 7 `reserved`, never returned, instead of
   `child_failed`. The `--dry-run` example prints `would run`, the `git switch` example names
   `ticket/TPE-791`, and the keyless batch figure is 60 records.
+- `fill`: a decisive names round on a `branch`, `commit`, `file` or `dir` marker goes on to the
+  finals when its winner does not beat the rest of the field by the winner ratio, so a phrase
+  that describes a file's content is decided by the excerpts; a one-sided names round keeps the
+  single request, and a finalist whose excerpt is withheld never competes on its name alone.
+
+Changed:
+
+- The README opens with what the reader cannot name and reaches a working command on the first
+  screen; `docs/demo/examples.sh` reproduces every example. `scripts/eval_why.py` scores the
+  corpus listed in `evals/why/corpus.jsonl`, with provenance and a content hash per case.
 
 ## 0.8.1
 
