@@ -5,7 +5,7 @@ use crate::jev::client::Client;
 use crate::records::{self, Split};
 use crate::source::{self, Scope};
 use crate::tournament::{Decision, decide};
-use crate::tournament::{Finalists, Prompts, Ranking, rank, shortlist, window};
+use crate::tournament::{Finalists, Prompts, Ranking, shortlist, window};
 use std::os::unix::ffi::OsStrExt;
 
 /// 100k lines would be 500 requests: a 429 storm and ~25 s. pick ranks a list, it does not scan.
@@ -102,7 +102,43 @@ pub async fn run(
             ranking
         }
     } else {
-        rank(&client, intent, &items, &prompts, None, Finalists::Auto).await?
+        // Round one ranks each window on its own; the gold wins its window. The finals put the
+        // gold next to its siblings (a documentation page, a test, a recording of the same
+        // thing), and a plain listing shows only names, so the finals say which sibling a
+        // description of behaviour means.
+        let finals = Prompts {
+            choose: "Which entry in `items` is the one described by `request`? Several entries may concern the same thing: the entry that is or does what `request` describes beats a page that documents it, a test of it or a recording of it, unless `request` asks for documentation, a test or a recording. Choose NONE if no entry matches.".into(),
+            none: prompts.none.clone(),
+            any: prompts.any.clone(),
+        };
+        let short = shortlist(&client, intent, &items, &prompts, Finalists::Auto).await?;
+        let windows = short.windows.len();
+        let single = if windows == 1 {
+            short.windows.into_iter().next()
+        } else {
+            None
+        };
+        if let Some(only) = single {
+            only
+        } else if short.finalists.is_empty() {
+            Ranking {
+                candidates: vec![],
+                any: 0.0,
+                none: 1.0,
+                windows,
+                n: short.n,
+            }
+        } else {
+            let pool: Vec<_> = short
+                .finalists
+                .iter()
+                .map(|c| (c.index, items[c.index].clone()))
+                .collect();
+            let mut ranking = window(&client, intent, &pool, &finals).await?;
+            ranking.windows = windows;
+            ranking.n = short.n;
+            ranking
+        }
     };
     if ranking.n != 3 {
         eprintln!("jevify pick: finalists per window: {}", ranking.n);

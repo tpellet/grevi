@@ -383,6 +383,55 @@ async fn stdin_pick_keeps_its_non_ratio_rule_and_top_three() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn stdin_finals_prefer_the_implementation_to_its_documentation_page() {
+    // Two windows: the docs page wins one, the implementation the other. Round one carries the
+    // plain instruction; the finals carry the sibling rule, and the fake answers the
+    // implementation only when that rule is in the instruction.
+    let server = common::mock(FakeJev {
+        choose: |instructions, s, o| {
+            let items = s["items"].as_array().unwrap();
+            let sibling_rule = instructions.contains("beats a page that documents it");
+            if items.len() == 200 {
+                assert!(!sibling_rule, "round one carries the plain instruction");
+                if s.to_string().contains("docs/examples/weather-agent.md") {
+                    return option_containing(s, o, "docs/examples/weather-agent.md");
+                }
+                return option_containing(s, o, "weather_agent.py");
+            }
+            assert!(sibling_rule, "the finals carry the sibling rule");
+            option_containing(s, o, "weather_agent.py")
+        },
+        noul: |_, _| 0.9,
+    })
+    .await;
+    let mut cmd = common::jevify(&server);
+    let mut input = String::new();
+    for i in 0..400 {
+        match i {
+            10 => input.push_str("docs/examples/weather-agent.md\n"),
+            310 => input.push_str("examples/pydantic_ai_examples/weather_agent.py\n"),
+            _ => input.push_str(&format!("src/file-{i}.py\n")),
+        }
+    }
+    let out = tokio::task::spawn_blocking(move || {
+        cmd.args(["--json", "pick", "the weather example agent"])
+            .write_stdin(input)
+            .output()
+            .unwrap()
+    })
+    .await
+    .unwrap();
+    assert_eq!(out.status.code(), Some(0), "{out:?}");
+    let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+    assert_eq!(
+        v["data"]["matches"][0]["text"],
+        "examples/pydantic_ai_examples/weather_agent.py"
+    );
+    assert_eq!(v["data"]["matches"][0]["line"], 311);
+    assert_eq!(v["meta"]["requests"], 3, "two windows and one finals: {v}");
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn files_keep_more_than_24_finalists_and_always_use_round_two() {
     let server = common::mock(FakeJev {
         choose: |_, s, o| option_containing(s, o, "file-1799"),
