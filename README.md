@@ -13,6 +13,7 @@ jevify fill -- git switch '@{branch:…}'       → a real argument, then the co
 command output ──┬── jevify why              → a cause with numbered context
                  ├── jevify pick '…'         → one record
                  ├── jevify filter '…'       → matching records
+                 ├── jevify label a,b,c      → each record with its tag
                  └── jevify is '…'           → an exit code
 ```
 
@@ -42,14 +43,17 @@ covers installation and backend settings.
 | the line that explains a failure | `why` | — | numbered lines with context |
 | one record out of many | `pick 'description'` | `fzf --filter` | an input record |
 | only the records that matter | `filter 'statement'` | `grep` | a subset of the input |
+| a tag on each record, to sort or count them | `label a,b,c` | an `awk` key | each record with its label |
 | a decision to branch on | `is 'statement'` | `test` | an exit code |
 
 Cheap tools narrow the input first. `pick` and `filter` preserve selected records byte for byte
-and in input order, so ordinary pipes keep working:
+and in input order, and `label` puts a tag and a tab in front of each, so ordinary pipes keep
+working:
 
 ```sh
 gh pr list --json number,title | jq -c '.[]' | jevify filter 'touches the installer' | jq -r .number
 gh issue list | jevify filter 'reports a crash' | cut -f1
+gh issue list | jevify label bug,feature,question | cut -f1 | sort | uniq -c
 grep -i 'error' build.log | jevify pick 'the network failure'
 fd -0 -e json | jevify filter -0 --files 'a test fixture'
 jevify filter 'reports a failure' < build.log | head -n 10
@@ -57,13 +61,19 @@ grep -n -C2 -F -f <(jevify filter 'reports a failure' < build.log) build.log
 ```
 
 A record is a line. `--para` selects paragraphs; `-0` selects NUL-separated records. These
-options belong to `pick` and `filter`. `why` takes none of them: pipe a log with `2>&1` and
-it prints a cause with its line number and context. `-C 5` widens that context.
+options belong to `pick`, `filter` and `label`. `why` takes none of them: pipe a log with `2>&1`
+and it prints a cause with its line number and context. `-C 5` widens that context.
 
 `filter -v` inverts the statement; `-c` prints the count. Unsure records stay unless
 `--strict` drops them. `--verbose` prints diagnostics and has no short flag.
 
-`--files` is a boolean on `pick` and `filter`: paths come from stdin. For example,
+`label a,b,c` prints `LABEL<TAB>RECORD` for every record, in input order; an unsure record
+gets `?`. Labels are comma-separated: at least two, distinct, none empty, none `?` or `NONE`,
+and at most 99 on classifier.dev or 200 on TypeSafe. The way back: for line records,
+`cut -f2-` gives the input back without its blank lines; with `-0` and `--para` the record
+follows the tab unchanged. `label` saves nothing.
+
+`--files` is a boolean on `pick`, `filter` and `label`: paths come from stdin. For example,
 `git ls-files | jevify pick --files 'where man pages are parsed'` ranks paths, then reads
 excerpts of the finalists. Hidden and secret-looking paths remain candidates but receive no
 excerpt; symlink files receive no excerpt either. The status reports `excerpts withheld: N`.
@@ -135,7 +145,7 @@ and a network failure all stop that chain. Use `case` when those outcomes need d
 | 0 | yes, found, or successful operation |
 | 1 | `is`: at least one no; `filter`: kept none |
 | 2 | usage error |
-| 3 | nothing fits, or unsure; `filter`: every record unsure |
+| 3 | nothing fits, or unsure; `filter` and `label`: every record unsure |
 | 4 | backend unavailable or quota exhausted |
 | 5 | TypeSafe key missing or rejected |
 | 6 | empty, oversized or unreadable input |
@@ -224,12 +234,12 @@ can disclose information. The answer cache uses redacted requests and expires af
 (`--no-cache`). Saved inputs are separate, raw and never pruned (`--no-save`).
 [PRIVACY.md](PRIVACY.md) lists the data sent per verb.
 
-`pick` accepts 9,801 candidates on classifier.dev and 20,000 on TypeSafe; `filter` accepts
-20,000 distinct records, within the 64 MiB input limit. `fill` accepts 3,267 candidates per
-marker on classifier.dev and 13,200 on TypeSafe. Ordered kinds retain the newest candidates
+`pick` accepts 9,801 candidates on classifier.dev and 20,000 on TypeSafe; `filter` and `label`
+accept 20,000 distinct records, within the 64 MiB input limit. `fill` accepts 3,267 candidates
+per marker on classifier.dev and 13,200 on TypeSafe. Ordered kinds retain the newest candidates
 and report coverage; unordered overflow is `too_many` (exit 6). Narrow with a prefix or pipe.
-`filter` batches up to 1,000 records per request on classifier.dev and 20 on TypeSafe. Only the
-classifier backend judges records independently; TypeSafe records share a request state.
+`filter` and `label` batch up to 1,000 records per request on classifier.dev and 20 on TypeSafe.
+Only the classifier backend judges records independently; TypeSafe records share a request state.
 A `rate_limit_day` HTTP 429 exits 4 with `daily quota of the free backend reached`, without retry.
 
 Selection uses at most two rounds. Long lists and clipped evidence can hide a relevant candidate;

@@ -14,7 +14,15 @@ Every command accepts these before or after the verb:
 | `--verbose` | probabilities, request count, cost and timing on stderr; no short flag |
 | `-V, --version` | version |
 
-`-v` belongs to `filter` and means inversion. Text beginning with `-` goes after `--`.
+`-v` belongs to `filter` and means inversion. The output side in one table:
+
+| You want | Verb | Classical twin | Returns |
+|:---|:---|:---|:---|
+| the line that explains a failure | `why` | — | numbered lines with context |
+| one record out of many | `pick 'description'` | `fzf --filter` | an input record |
+| only the records that matter | `filter 'statement'` | `grep` | a subset of the input |
+| a tag on each record, to sort or count them | `label a,b,c` | an `awk` key | each record with its label |
+| a decision to branch on | `is 'statement'` | `test` | an exit code | Text beginning with `-` goes after `--`.
 The threshold applies to yes/no fit scores, not relative selection ranks.
 
 ## fill
@@ -167,6 +175,37 @@ Stderr reports `jevify filter: kept N of M, U unsure, full output: PATH`, with w
 non-Jev model details when relevant. A skipped or failed save sets `complete=false`.
 Human output can be a prefix if a later batch fails; an error exits nonzero and reports progress.
 
+## label
+
+```sh
+gh issue list | jevify label bug,feature,question | cut -f1 | sort | uniq -c
+printf 'crash on empty input\nadd a dark theme\n' | jevify label bug,feature,question
+```
+
+`label a,b,c [-0 | --para] [--files]` gives each distinct record one of the labels and prints
+`LABEL<TAB>RECORD` for every record, in input order, the record unchanged after the tab. An
+unsure record gets `?`: none of the labels fits it, or two fit it about as well. Labels are
+comma-separated: at least two, distinct, none empty, none `?` or `NONE`. At most 99 labels on
+classifier.dev and 200 on TypeSafe; more is exit 2 with the count.
+
+| Flag | Meaning |
+|:---|:---|
+| `-0` | NUL-separated records |
+| `--para` | paragraphs; conflicts with `-0` |
+| `--files` | stdin paths with eligible file excerpts as evidence |
+
+Exit 0 labelled, 3 every record unsure. The threshold plays no part: a label wins when it
+beats the other labels and "none of them" clearly. The way back: for line records `cut -f2-`
+gives the input back without its blank lines; with `-0` and `--para` the record follows the
+tab unchanged. Nothing is saved. The record limits of `filter` apply: 1,000 records per
+request on classifier.dev, 20 on TypeSafe, 20,000 distinct records (`too_many`, exit 6).
+
+Data: `records[{label,text,ordinal,p,lossy?}]`, `labelled`, `total`, `unsure`, `complete`,
+`excerpts_withheld`. `p` is the winning label's probability, or the best label's under `?`.
+Stderr reports `jevify label: N records, D distinct, R requests` before the first request and
+`jevify label: labelled N of M, U unsure` at the end, with withholding and non-Jev model
+details when relevant. Human output can be a prefix if a later batch fails.
+
 ## is
 
 ```sh
@@ -244,7 +283,8 @@ No profile is edited. `health` checks reachability without an inference call.
 
 ## Common exit codes
 
-0 success, 1 no, 2 usage, 3 abstain, 4 unavailable or quota exhausted, 5 TypeSafe auth, 6 input,
+0 success, 1 no, 2 usage, 3 abstain (`filter` and `label`: every record unsure), 4 unavailable
+or quota exhausted, 5 TypeSafe auth, 6 input,
 7 reserved, 130 declined at `add` confirmation. Common errors supplement the per-verb codes.
 A `rate_limit_day` HTTP 429 exits 4 with `daily quota of the free backend reached`, without retry.
 All machine formats carry the same envelope; see [Agents](agents.md).

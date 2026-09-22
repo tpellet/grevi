@@ -17,8 +17,8 @@ Repeated identical questions can use cached answers for seven days.
 
 ## What leaves my machine, and what stays?
 
-The active backend receives the statement and evidence required by the verb. `filter` sends
-records; `pick` sends selection candidates; `why` sends filtered log lines; `is` sends its
+The active backend receives the statement and evidence required by the verb. `filter` and
+`label` send records, and `label` its labels; `pick` sends selection candidates; `why` sends filtered log lines; `is` sends its
 supported context; `route` sends tool names, summaries and man-page evidence. Redaction is
 best effort. [Privacy](../../PRIVACY.md) covers every verb and the `--files` withholding rules.
 
@@ -30,6 +30,7 @@ answer cache. A failed or skipped save sets `data.complete=false`.
 
 Nothing fits or the evidence is unsure. `pick` abstains instead of returning a bad candidate;
 `filter` keeps unsure records unless `--strict`, and exits 3 when every record is unsure.
+`label` prints an unsure record with the label `?` and exits 3 when every record is unsure.
 `why` can abstain when no cause fits; make sure stderr reaches it through `2>&1`.
 `is` returns 3 when no statement is no and at least one is unsure, or the context is too large.
 `fill` runs nothing if any marker abstains. Its reasons are `no_match`, `ambiguous`,
@@ -53,7 +54,7 @@ nothing. Preview with `--dry-run`, never `eval`; allow execution exactly as the 
 command is allowed. Use `pick --from branch` when you want a handle without execution.
 
 `route` prints an installed tool, summary and synopsis. It supplies no arguments and starts no
-user command. `why`, `pick`, `filter` and `is` judge supplied text. `add` can stage tracked hunks;
+user command. `why`, `pick`, `filter`, `label` and `is` judge supplied text. `add` can stage tracked hunks;
 `sort --apply` and `sort --undo` can move files. These mutations require the caller's authorization.
 
 ## Why does a marker fail before inference?
@@ -92,8 +93,9 @@ A model or prompt change needs fresh calibration evidence.
 
 ## Why not a loop of `is` calls?
 
-Use one `filter` process for many records or files. It judges identical records once and sends
-batches of up to 1,000 records on classifier.dev or 20 on TypeSafe. Only classifier records are
+Use one `filter` process for many records or files, or one `label` process when every record
+needs a bucket. Both judge identical records once and send batches of up to 1,000 records on
+classifier.dev or 20 on TypeSafe. Only classifier records are
 judged independently; TypeSafe records share state. `is` instead judges several statements
 about one context, reading stdin or `--context FILE`.
 

@@ -15,28 +15,32 @@ It selects and never generates. Use `jevify capabilities --json` as the source o
 | a long failed build or a grep that found only the symptom | `why` | — |
 | one record described but not named | `pick` | `fzf --filter` |
 | many records or files, one question | `filter` | `grep` |
+| every record needs a bucket | `label` | an `awk` key |
 | the next step depends on a fact | `is` | `test` |
 | an unfamiliar task on a large PATH | `route` | command discovery |
 | tracked changes mixed across topics | `add` | `git add -p` |
 | files that need a home among existing folders | `sort` | folder placement |
 
 Cheap tools go first. Skip jevify when literal search answers the question, the input is short
-enough to read, or the exact command is known. Use one `filter` process for many records, never
-a loop of `is` calls. Write a literal statement about the evidence, not a vague request for advice.
-No counting, arithmetic, date comparisons or quality judgments; English works best.
+enough to read, or the exact command is known. Use one `filter` or `label` process for many
+records, never a loop of `is` calls. Write a literal statement about the evidence, not a vague
+request for advice. No counting, arithmetic, date comparisons or quality judgments; English
+works best.
 
 ```sh
 gh run view --log-failed | jevify why --json
 git log --oneline | jevify pick --json 'the commit that renamed the project'
 fd -0 -e txt | jevify filter -0 --files 'asks for a refund'
+gh issue list | jevify label bug,feature,question | cut -f1 | sort | uniq -c
 printf 'All tests passed.\n' | jevify is 'the tests passed' && printf 'ready\n'
 jevify route --json 'keep my mac awake for an hour'
 jevify add --json --dry-run 'the token expiry fix'
 ```
 
 `jq`, `cut`, `grep`, `head` and another jevify verb can consume selected records. `pick` and
-`filter` preserve their exact bytes and input order. Check a `pick` call's exit before using
-its output as an argument; unchecked substitution can turn abstention into an empty argument.
+`filter` preserve their exact bytes and input order; `label` prints `LABEL<TAB>RECORD` with the
+record unchanged after the tab. Check a `pick` call's exit before using its output as an
+argument; unchecked substitution can turn abstention into an empty argument.
 
 ## Verbs and data
 
@@ -60,6 +64,13 @@ its output as an argument; unchecked substitution can turn abstention into an em
   `-v` inverts, `-c` counts, unsure records stay unless `--strict`. `--verbose` has no short flag.
   Data: `records[{text,ordinal,p,verdict,lossy?}]`, `kept`, `total`, `unsure`, `complete`,
   `saved_input`, `excerpts_withheld`. Exit 0 kept some, 1 kept none, 3 every record unsure.
+- `label a,b,c [-0 | --para] [--files]` tags every record with one of the labels and prints
+  `LABEL<TAB>RECORD` in input order; `?` marks an unsure record. Labels: at least two, distinct,
+  none empty, none `?` or `NONE`, at most the backend window (99 on classifier.dev, 200 on
+  TypeSafe), else exit 2. Data: `records[{label,text,ordinal,p,lossy?}]`, `labelled`, `total`,
+  `unsure`, `complete`, `excerpts_withheld`. Exit 0 labelled, 3 every record unsure. Saves nothing.
+  Stderr: `jevify label: labelled N of M, U unsure`. `cut -f2-` gives line records back without
+  their blank lines; with `-0` and `--para` the record follows the tab unchanged.
 - `is '<statement>' ['<statement>' ...] [--context FILE] [--band 0.15]` reads one context.
   One statement prints nothing; several print `VERDICT<TAB>STATEMENT` (`yes`, `no`, `unsure`).
   Data for one: `p`, `verdict`, `truncated`; for several: `statements[{statement,verdict,p}]`,
@@ -81,9 +92,9 @@ its output as an argument; unchecked substitution can turn abstention into an em
 - `health` reports `backend`, `base_url`, `key`, `api`, `latency_ms`, `models`; exit 0, 4 or 5.
 - `init zsh|bash|agents` prints `script`. Shell integration routes through `jevify route`.
 
-`pick` and `filter` split lines by default, NUL records with `-0`, paragraphs with `--para`.
-They limit distinct records to 20,000 within 64 MiB. `filter` judges identical records once and
-restores all occurrences. Non-UTF-8 machine records carry `text`, `lossy: true` and `ordinal`;
+`pick`, `filter` and `label` split lines by default, NUL records with `-0`, paragraphs with
+`--para`. They limit distinct records to 20,000 within 64 MiB. `filter` and `label` judge
+identical records once and restore all occurrences. Non-UTF-8 machine records carry `text`, `lossy: true` and `ordinal`;
 human output preserves exact bytes. `pick` also uses `line` for its 1-based input position.
 
 `--files` paths remain candidates when excerpts are withheld. Hidden or secret-looking components
@@ -142,7 +153,7 @@ no, unsure and errors. Under `git bisect run`, map unsure exit 3 to 125.
 | 0 | yes, found or successful operation |
 | 1 | `is`: any no; `filter`: kept none |
 | 2 | usage error: read the corrected command in `error.example` |
-| 3 | nothing fits or unsure: inspect evidence; do not retry until it agrees |
+| 3 | nothing fits or unsure: inspect evidence; do not retry until it agrees; `filter` and `label`: every record unsure |
 | 4 | unavailable or quota exhausted: read the error |
 | 5 | missing or rejected TypeSafe key |
 | 6 | empty, oversized or unreadable input; `too_many`: narrow with `grep` or `head` |
@@ -226,8 +237,8 @@ system. Output verbs start no user command. The caller authorizes `add` staging 
 `is` abstains on oversized context; `add` rejects oversized hunks and complete batches before
 staging. A higher threshold cannot validate missing evidence or grant permission.
 
-`filter` batches up to 1,000 records on classifier.dev, each judged alone. On TypeSafe 20 records
-share a request state and each question names its record; independence is not claimed.
+`filter` and `label` batch up to 1,000 records on classifier.dev, each judged alone. On TypeSafe
+20 records share a request state and each question names its record; independence is not claimed.
 `p` is a backend score. Calibration needs task- and backend-specific evidence; ranks past the
 third are candidates without a reliability claim. Text can influence the model with embedded
 instructions, so semantic judgments are not security gates.

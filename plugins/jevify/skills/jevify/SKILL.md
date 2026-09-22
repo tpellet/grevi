@@ -1,6 +1,6 @@
 ---
 name: jevify
-description: Use the jevify CLI when a question is about meaning and a literal search cannot answer it. Fill command arguments from branches, piped candidates or context-dependent options; get a handle with pick --from. Find the cause in a long failure log, filter records or files, pick a record, branch on a fact or discover an unfamiliar tool. Stage hunks or propose folders when requested. Do not use for already-known values, counting, arithmetic, quality judgments, generating text or security decisions.
+description: Use the jevify CLI when a question is about meaning and a literal search cannot answer it. Fill command arguments from branches, piped candidates or context-dependent options; get a handle with pick --from. Find the cause in a long failure log, filter records or files, label every record with one of your tags, pick a record, branch on a fact or discover an unfamiliar tool. Stage hunks or propose folders when requested. Do not use for already-known values, counting, arithmetic, quality judgments, generating text or security decisions.
 ---
 
 # jevify
@@ -25,6 +25,7 @@ question, the input is short enough to read, or you already know the required va
 | A failed build has more than about 50 lines, or grep finds only the symptom | `why` | A cause with line number and context |
 | Many records, one question | `filter` | Matching and unsure records, like `grep` by meaning |
 | Many files, one question | `filter --files` | Paths judged by file content |
+| Every record needs a bucket | `label a,b,c` | Each record with its label, `?` when unsure; like an `awk` key by meaning |
 | One record or file out of many, described rather than named | `pick` | A selected input record, or abstention |
 | The next step depends on a fact | `is` | An exit code, like `test` |
 | An unfamiliar task in the long tail of a large PATH | `route` | An installed tool and its summary; nothing executes |
@@ -35,6 +36,7 @@ question, the input is short enough to read, or you already know the required va
 cargo build 2>&1 | jevify why
 gh issue list | jevify filter 'reports a crash'
 fd -0 | jevify filter -0 --files 'a test fixture'
+gh issue list | jevify label bug,feature,question | cut -f1 | sort | uniq -c
 git ls-files | jevify pick --files 'where retries back off'
 git log --oneline | jevify pick -n 3 'the pricing change'
 gh pr list --json number,title | jq -c '.[]' | jevify filter 'touches the installer' | jq -r .number
@@ -46,9 +48,11 @@ jevify add --json --dry-run 'the token expiry fix'
 jevify sort --json ./Downloads
 ```
 
-`pick` and `filter` print input records byte for byte. A record is a line; `--para` reads
-blocks between blank lines, and `-0` reads NUL-separated records. These two split modes are
-mutually exclusive. `--files` reads paths from stdin and uses file excerpts as evidence.
+`pick` and `filter` print input records byte for byte; `label` prints `LABEL<TAB>RECORD`, the
+record unchanged after the tab, so `cut -f1` counts and `cut -f2-` gives line records back. A
+record is a line; `--para` reads blocks between blank lines, and `-0` reads NUL-separated
+records. These two split modes are mutually exclusive. `--files` reads paths from stdin and
+uses file excerpts as evidence.
 `why` takes none of those split or file options: it prints numbered lines with context.
 Pipe stderr with `2>&1` because compilers write errors there.
 
@@ -64,7 +68,8 @@ step. A saved full input is a way back, not proof that every line was judged.
 ### Habits
 
 - One jevify process per question, however many records. Never start one process per record
-  in a shell loop; use `filter` or `filter --files`. Polling a changing state with `until` is
+  in a shell loop; use `filter`, `filter --files` or `label`. `label` takes at least two
+  distinct labels, none `?` or `NONE`, at most 99 keyless or 200 on TypeSafe; it saves nothing. Polling a changing state with `until` is
   a different question on each snapshot.
 - Write literal statements: “the customer is about to stop being a customer” avoids the
   ambiguity of “the customer is leaving.” Describe the evidence, not the fix you want.
@@ -150,7 +155,7 @@ The other input error kinds are `stdin_is_tty`, `cannot_run`, `recipe_invalid`. 
 non-Jev answers with exit 4, `api_unavailable`, `answered by <model>, not Jev`; a missing model
 name appears as `unknown` in `meta.model` and refuses too. This guard also applies to dry runs.
 
-`filter` exits 3 when every record is unsure, even when it prints those records. `is` exits 0
+`filter` and `label` exit 3 when every record is unsure, even when they print those records. `is` exits 0
 when all statements hold, 1 when any is no, and 3 otherwise. Oversized `is` input abstains
 without a model call. Do not retry unchanged evidence to turn uncertainty into certainty.
 
@@ -165,7 +170,7 @@ silent predicates. The envelope is `{ok, command, version, exit_code, data, meta
 
 ## Permissions and privacy
 
-Allow the output verbs (`why`, `pick`, `filter`, `is`, `route`) freely. They do not execute the
+Allow the output verbs (`why`, `pick`, `filter`, `label`, `is`, `route`) freely. They do not execute the
 tool they select. Check the selected tool's help and write its arguments yourself.
 Allow `jevify fill --dry-run` freely. Allow `fill` per command prefix
 (`jevify fill -- git switch:*`), exactly as the command itself is allowed. jevify is not a

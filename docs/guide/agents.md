@@ -2,7 +2,7 @@
 
 Use jevify when a literal search cannot ask the question or the output is too long to read.
 Cheap tools narrow the input first. `why` points to a cause, `pick` selects a record, `filter`
-keeps a subset, and `is` decides whether the next step should act.
+keeps a subset, `label` tags every record, and `is` decides whether the next step should act.
 On the input side, `fill` resolves real arguments and runs the command you wrote;
 `pick --from branch` returns the handle alone.
 
@@ -59,7 +59,7 @@ without a reported request ID, including all-cache answers. `health` does not re
 | 0 | yes, found, successful operation |
 | 1 | `is`: one no; `filter`: kept none |
 | 2 | bad flag, argument or configuration |
-| 3 | nothing fits or unsure; `filter`: every record unsure |
+| 3 | nothing fits or unsure; `filter` and `label`: every record unsure |
 | 4 | backend unavailable or quota exhausted |
 | 5 | missing or rejected TypeSafe key |
 | 6 | empty, too large or unreadable input |
@@ -81,6 +81,7 @@ map an unsure exit 3 to 125. Do not silently retry abstention until it agrees.
 | `pick` | `matches[{line,text,ordinal,p,lossy?}]`, `any`, `source` |
 | `why` | `causes[{line,text,p,context[]}]`, `any`, `considered`, `total`, `hint`, `saved_input`, `complete` |
 | `filter` | `records[{text,ordinal,p,verdict,lossy?}]`, `kept`, `total`, `unsure`, `saved_input`, `complete`, `excerpts_withheld` |
+| `label` | `records[{label,text,ordinal,p,lossy?}]`, `labelled`, `total`, `unsure`, `complete`, `excerpts_withheld` |
 | `is`, one statement | `p`, `verdict`, `truncated`, `reason` when oversized |
 | `is`, several statements | `statements[{statement,verdict,p}]`, aggregate `verdict`, `truncated`, `reason` when oversized |
 | `route` | `tool`, `summary`, `synopsis`, `fit`, `alternatives[]` |
@@ -92,20 +93,23 @@ map an unsure exit 3 to 125. Do not silently retry abstention until it agrees.
 | `init` | `script` |
 
 Ordinals are 1-based. Non-UTF-8 records carry replacement text with `lossy: true` and `ordinal`;
-use human output when exact original bytes matter. `pick` and `filter` preserve those bytes.
+use human output when exact original bytes matter. `pick` and `filter` preserve those bytes;
+`label` prints `LABEL<TAB>RECORD` with the record unchanged after the tab, `?` when unsure.
 
 ## One process for many records
 
 ```sh
 fd -0 -e txt | jevify filter -0 --files 'asks for a refund'
+gh issue list | jevify label bug,feature,question | cut -f1 | sort | uniq -c
 gh run view --log-failed | jevify why --json
 git log --oneline | jevify pick --json 'the commit that renamed the project'
 jevify route --json 'keep my mac awake for an hour'
 ```
 
-`filter` sends up to 1,000 records per request on classifier.dev, each judged alone. On TypeSafe,
-20 records share a request and each question names its record; independence is not claimed.
-Both `pick` and `filter` cap distinct records at 20,000. `--files` reads paths from stdin and
+`filter` and `label` send up to 1,000 records per request on classifier.dev, each judged alone.
+On TypeSafe, 20 records share a request and each question names its record; independence is
+not claimed. `pick`, `filter` and `label` cap distinct records at 20,000. `label` takes at most
+99 labels on classifier.dev and 200 on TypeSafe. `--files` reads paths from stdin and
 withholds hidden and secret-looking excerpts; it does not promise whole-file review.
 
 Only `why` and `filter` save raw input, including secrets. The saved path appears on stderr and

@@ -25,6 +25,7 @@ by `", "`. A free-backend response is service-controlled and can name a differen
 | `pick` | description and distinct stdin records, clipped to 200–2,000 characters per selection item | unselected evidence beyond the clipping budget |
 | `pick --files` | description, stdin paths, masked excerpts of at most 24 finalists | withheld file contents; other files not listed on stdin |
 | `filter` | statement and distinct record evidence; with `--files`, stdin paths and eligible file excerpts | file content beyond excerpts, or content withheld by the path rules |
+| `label` | the labels and distinct record evidence, redacted on a best-effort basis; with `--files`, stdin paths and eligible file excerpts | file content beyond excerpts, or content withheld by the path rules; nothing is saved |
 | `why` | filtered stdin log, at most 4,000 selected lines, each clipped | lines filtered out locally |
 | `is` | statements and complete supported context from stdin or `--context FILE` | oversized context: it abstains before inference |
 | `route` | intent, installed tool names and summaries, man-page excerpts of at most 12 finalists | directory file contents, shell history, environment values |
@@ -41,7 +42,7 @@ it; both forms send evidence. `branch` runs local Git listers; `-` reads supplie
 `one` and `flag` read context. `fill` and `pick --from` do not save raw inputs. Execution requires
 every answering model to be Jev; a missing model name is `unknown` and refuses execution.
 
-`--files` is a boolean on `pick` and `filter`, with paths supplied by the caller on stdin.
+`--files` is a boolean on `pick`, `filter` and `label`, with paths supplied by the caller on stdin.
 Before reading an excerpt, jevify withholds any path whose written components:
 
 - start with `.` (except navigation `.` and `..`), or with `id_`;
@@ -67,7 +68,7 @@ The base directory is `JEVIFY_CACHE_DIR`, or the platform cache directory's `jev
 | Answer cache | answers and probabilities, keyed by a hash of the redacted request | answers expire after seven days; expiry does not reclaim files | `--no-cache` or `JEVIFY_NO_CACHE=1` |
 | Saved inputs, `outputs/<blake3-16>.log` | full raw input bytes, secrets included | never pruned by jevify | `--no-save` on `why` and `filter` |
 
-Only `why` and `filter` save inputs. They save before the first inference request, with directory
+Only `why` and `filter` save inputs; `label` saves nothing. They save before the first inference request, with directory
 mode 0700 and file mode 0600. Identical input has the same content-addressed path. `--no-cache`
 does not disable saving. Stderr and `data.saved_input` name the file; a failed or skipped save
 reports `full output: not saved (REASON)` and sets `data.complete=false`.
@@ -79,7 +80,7 @@ needed for recovery. Concurrent replacement of source files while sorting is uns
 
 ## Backend limits and handling
 
-`filter` batches up to 1,000 records per request on classifier.dev, each judged alone. With
+`filter` and `label` batch up to 1,000 records per request on classifier.dev, each judged alone. With
 TypeSafe, 20 records share one request state; each question names its record, but independence
 is not claimed. A `rate_limit_day` HTTP 429 returns exit 4, `daily quota of the free backend
 reached`, with no retry. Human output already emitted before a later failure can be a prefix.

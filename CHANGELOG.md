@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.7.0
+
+Added:
+
+- `label a,b,c` tags each stdin record with one of the caller's labels and prints
+  `LABEL<TAB>RECORD` in input order, `?` for an unsure record. Labels are comma-separated, at
+  least two, distinct, at most 99 keyless or 200 on TypeSafe. It shares the record limits and
+  batching of `filter`, takes `-0`, `--para` and `--files`, and saves nothing. Capabilities,
+  the agent block, the skill and the privacy table name it.
+
 ## 0.6.0
 
 Added:

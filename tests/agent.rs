@@ -42,7 +42,12 @@ async fn documented_input_side_shell_examples_run_against_the_binary() {
             if line.ends_with('\\') {
                 continue;
             }
-            if command.contains("jevify fill") || command.contains("jevify pick --from") {
+            // `label` examples that start from `printf` need no tool of the machine, so they
+            // run too: the fake answers the first label, and every record comes out.
+            if command.contains("jevify fill")
+                || command.contains("jevify pick --from")
+                || (command.starts_with("printf") && command.contains("jevify label"))
+            {
                 // Documentation previews must never execute the command being illustrated.
                 assert!(!command.contains("jevify fill") || command.contains("--dry-run"));
                 let out = std::process::Command::new("sh")
@@ -127,8 +132,23 @@ fn capabilities_lists_verbs_exit_codes_env() {
         assert!(codes.iter().all(|code| code.is_u64()));
     }
     let label = commands.iter().find(|c| c["name"] == "label").unwrap();
-    assert_eq!(label["exit"], serde_json::json!([0, 3]));
-    assert!(label["usage"].as_str().unwrap().contains("[-0|--para]"));
+    assert_eq!(label["exit"], serde_json::json!([0, 2, 3, 4, 6]));
+    assert_eq!(
+        label["usage"],
+        "CMD | jevify label a,b,c [-0|--para] [--files]"
+    );
+    assert!(
+        label["data"]
+            .as_str()
+            .unwrap()
+            .starts_with("records[{label,text,ordinal,p,lossy?}], labelled, total, unsure")
+    );
+    let note = label["note"].as_str().unwrap();
+    assert!(note.contains("? marks an unsure record"), "{note}");
+    assert!(
+        note.contains("99 on classifier.dev, 200 on TypeSafe"),
+        "{note}"
+    );
     assert!(
         label["example"]
             .as_str()
@@ -289,6 +309,7 @@ fn agent_block_is_bounded_and_public_help_has_no_removed_forms() {
     assert!(block.contains("yes means act"));
     assert!(block.contains("'@{branch:the auth refactor}'"));
     assert!(block.contains("Quote the whole marker argument"));
+    assert!(block.contains("label prints LABEL<TAB>RECORD"));
     for verb in &verbs {
         assert!(block.contains(&format!("- {verb}:")), "{verb}");
     }
