@@ -23,6 +23,17 @@ Added:
   the recipe fields and rules, the withheld path patterns and `JEVIFY_CONFIG_DIR`. The guide
   gains `docs/guide/kinds.md`.
 
+Changed:
+
+- File excerpts drop imports, blank lines and license headers, and keep doc comments. For a
+  kind with tier-two evidence, a no-match over names alone gets a second round with excerpts.
+
+Known limits:
+
+- `file` resolves phrases that match a path, and abstains on phrases that describe only a
+  file's content (measured 2026-09-22 on jev-1.13.0: "stages hunks" does not reach
+  `src/cmd/add.rs`).
+
 ## 0.6.0
 
 Added:
