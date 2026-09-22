@@ -254,11 +254,11 @@ fn capabilities_lists_verbs_exit_codes_env() {
     let decision = d["envelope"]["decision"]["fields"].as_str().unwrap();
     assert_eq!(
         decision,
-        "decision{verb,backend,model{requested,answering},threshold,gates[{best,next,none,any}]}"
+        "decision{verb,backend,model{requested,answering},threshold,gates[{best,next,none,any}],round_one[{windows[{ranks[{index,p}],none,any}],finalists[],n}]}"
     );
     let robot_docs = include_str!("../docs/ROBOT_MODE.md");
     assert!(robot_docs.contains(
-        "decision{verb, backend, model{requested, answering}, threshold, gates[{best, next, none, any}]}"
+        "decision{verb, backend, model{requested, answering}, threshold, gates[{best, next, none, any}],\n         round_one[{windows[{ranks[{index, p}], none, any}], finalists[], n}]}"
     ));
     for field in [
         "verb",
@@ -266,9 +266,12 @@ fn capabilities_lists_verbs_exit_codes_env() {
         "model{requested,answering}",
         "threshold",
         "gates",
+        "round_one",
     ] {
         assert!(decision.contains(field), "{field}");
     }
+    assert!(robot_docs.contains("`round_one` holds one entry per tournament"));
+    assert!(d["envelope"]["decision"]["round_one"].is_string());
     assert!(robot_docs.contains("`model.answering`") && robot_docs.contains("`unknown`"));
     assert_eq!(d["limits"]["choice_options"], 255);
     let fill = commands.iter().find(|c| c["name"] == "fill").unwrap();

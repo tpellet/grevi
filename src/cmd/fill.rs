@@ -253,6 +253,10 @@ pub async fn run(
             }
         })
         .collect();
+    // In marker order: the listing rounds ran concurrently, and the envelope keeps decision order.
+    for short in shortlists.iter().flatten() {
+        short.record(&ctx.stats, |i| i + 1);
+    }
     let mut merged: Option<jev::Response> = None;
     for (batch, result) in batches.iter().zip(answers) {
         match result {

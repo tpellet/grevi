@@ -222,7 +222,8 @@ TypeSafe defaults to `jev-1.13.0`; classifier chooses its model and rejects expl
 `meta.decision` is what every decision of the verb was made with, in one structure:
 
 ```text
-decision{verb, backend, model{requested, answering}, threshold, gates[{best, next, none, any}]}
+decision{verb, backend, model{requested, answering}, threshold, gates[{best, next, none, any}],
+         round_one[{windows[{ranks[{index, p}], none, any}], finalists[], n}]}
 ```
 
 `model.requested` is the model the request names; it is null on classifier, which chooses its
@@ -235,6 +236,15 @@ one. `best` and `next` are the two top Choice probabilities, `none` is P(NONE) o
 (`is`, `filter`, `add`, a `flag` marker). A score the verb does not use is null. The scores are
 the backend's own and are not a calibration; a threshold set for one backend and task says
 nothing about another.
+
+`round_one` holds one entry per tournament, in decision order: `fill` one per listing marker,
+`pick` and `why` one; a verb that runs no tournament leaves it empty. Each entry is what the
+shortlist round computed, with no extra request: `windows` in input order, each with every
+candidate of that window by rank (`ranks[{index, p}]`), its P(NONE) and its Noul; `finalists`,
+the indices the shortlist kept for the finals (`n` per window, by rank then by window); and `n`.
+`index` is the verb's own number, 1-based: the line for `why`, the record for `pick`, the
+listing position for `pick --from` and `fill`. A candidate below NONE is still listed, so the
+rank of any item, and whether it reached the finals, reads from one run.
 
 `meta.requests` counts attempted inference POSTs, including retries and failures, excluding
 health and prewarm GETs. `meta.telemetry` separates `inference_posts`, `health_gets`,

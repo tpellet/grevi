@@ -10,6 +10,8 @@ pub struct Stats {
     telemetry: Mutex<crate::output::Telemetry>,
     /// The scores of every decision the verb made, in decision order (surfaced in `meta`).
     gates: Mutex<Vec<crate::output::Gate>>,
+    /// Round one of every tournament the verb ran, in decision order (surfaced in `meta`).
+    round_one: Mutex<Vec<crate::output::RoundOne>>,
 }
 
 #[derive(Clone, Copy)]
@@ -43,6 +45,15 @@ impl Stats {
 
     pub fn gates(&self) -> Vec<crate::output::Gate> {
         self.gates.lock().unwrap().clone()
+    }
+
+    /// Records round one of a tournament: what the shortlist already computed, no request.
+    pub fn round_one(&self, round: crate::output::RoundOne) {
+        self.round_one.lock().unwrap().push(round);
+    }
+
+    pub fn rounds_one(&self) -> Vec<crate::output::RoundOne> {
+        self.round_one.lock().unwrap().clone()
     }
 
     pub(crate) fn start(self: &Arc<Self>, kind: AttemptKind) -> AttemptGuard {
@@ -195,6 +206,10 @@ impl Client {
             deadline: Instant::now() + budget,
             budget,
         })
+    }
+
+    pub fn stats(&self) -> &Stats {
+        &self.stats
     }
 
     /// The overall budget, injected, counted from now: tests never touch the process

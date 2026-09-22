@@ -72,6 +72,7 @@ pub async fn run(
     };
     let ranking = if files {
         let short = shortlist(&client, intent, &items, &prompts, Finalists::Auto).await?;
+        short.record(&ctx.stats, |i| kept[i] + 1);
         let windows = short.windows.len();
         let pool = short.finalists;
         if pool.iter().all(|candidate| candidate.p == 0.0) {
@@ -112,6 +113,7 @@ pub async fn run(
             any: prompts.any.clone(),
         };
         let short = shortlist(&client, intent, &items, &prompts, Finalists::Auto).await?;
+        short.record(&ctx.stats, |i| kept[i] + 1);
         let windows = short.windows.len();
         let single = if windows == 1 {
             short.windows.into_iter().next()
@@ -283,6 +285,7 @@ async fn from_kind(
         let client = Client::new(ctx)?;
         let items: Vec<_> = listing.records.iter().map(|r| r.evidence.clone()).collect();
         let short = shortlist(&client, intent, &items, &prompts, Finalists::Auto).await?;
+        short.record(&ctx.stats, |i| i + 1);
         if windows == 1 {
             ranking = short.windows[0].clone();
         }

@@ -276,6 +276,7 @@ impl Config {
                 },
                 threshold: self.threshold,
                 gates: s.gates(),
+                round_one: s.rounds_one(),
             },
             elapsed_ms: 0,
             requests: telemetry.inference_posts.attempted,

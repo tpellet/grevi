@@ -160,8 +160,36 @@ impl Default for DecisionModel {
     }
 }
 
+/// One candidate as round one ranked it: `index` is the verb's own number for the item (`why`
+/// the 1-based line, `pick` the 1-based record, `pick --from` and `fill` the 1-based position
+/// in the listing), `p` its Choice probability in its window.
+#[derive(Serialize, Debug, Clone, PartialEq)]
+pub struct RoundOneCandidate {
+    pub index: usize,
+    pub p: f64,
+}
+
+/// One window of round one: every candidate by rank, NONE included as `none`, and the window's
+/// Noul.
+#[derive(Serialize, Debug, Clone, PartialEq)]
+pub struct RoundOneWindow {
+    pub ranks: Vec<RoundOneCandidate>,
+    pub none: f64,
+    pub any: f64,
+}
+
+/// Round one of a tournament, as the shortlist computed it: the windows in input order and the
+/// finalists it kept (`n` per window, by rank then window) before the finals re-ranked them.
+#[derive(Serialize, Debug, Clone, PartialEq)]
+pub struct RoundOne {
+    pub windows: Vec<RoundOneWindow>,
+    pub finalists: Vec<usize>,
+    pub n: usize,
+}
+
 /// What every decision of the verb was made with: one structure per envelope, one gate per
-/// decision (a marker, a statement, a record, a hunk, a file, or the one pick).
+/// decision (a marker, a statement, a record, a hunk, a file, or the one pick), and one
+/// `round_one` per tournament the verb ran.
 #[derive(Serialize, Default, Debug, Clone)]
 pub struct Decision {
     pub verb: String,
@@ -169,6 +197,7 @@ pub struct Decision {
     pub model: DecisionModel,
     pub threshold: f64,
     pub gates: Vec<Gate>,
+    pub round_one: Vec<RoundOne>,
 }
 
 /// `Default` is the meta of a command that never reached a backend (a usage error before

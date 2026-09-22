@@ -238,6 +238,7 @@ pub async fn run(
     // largest answer over both rounds, never only the finals' reading of three lines.
     let request = "find the root cause of the failure";
     let first = shortlist(&client, request, &items, &prompts, Finalists::Auto).await?;
+    first.record(&ctx.stats, |i| kept[i] + 1);
     let windows = first.windows.len();
     let round_one_any = first.windows.iter().map(|w| w.any).fold(0.0, f64::max);
     let mut ranking = if first.finalists.is_empty() {

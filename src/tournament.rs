@@ -91,6 +91,30 @@ pub struct Shortlist {
     pub n: usize,
 }
 
+impl Shortlist {
+    /// Surfaces round one in `meta.decision.round_one`; `index` turns an item position into the
+    /// verb's own number for it (a line, a record, a listing position).
+    pub fn record(&self, stats: &crate::jev::client::Stats, index: impl Fn(usize) -> usize) {
+        let candidate = |c: &Candidate| crate::output::RoundOneCandidate {
+            index: index(c.index),
+            p: c.p,
+        };
+        stats.round_one(crate::output::RoundOne {
+            windows: self
+                .windows
+                .iter()
+                .map(|w| crate::output::RoundOneWindow {
+                    ranks: w.candidates.iter().map(candidate).collect(),
+                    none: w.none,
+                    any: w.any,
+                })
+                .collect(),
+            finalists: self.finalists.iter().map(|c| index(c.index)).collect(),
+            n: self.n,
+        });
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub enum Decision {
     Found(Candidate),
@@ -174,6 +198,7 @@ pub async fn rank(
     mode: Finalists,
 ) -> Result<Ranking, JevifyError> {
     let first = shortlist(client, request, items, prompts, mode).await?;
+    first.record(client.stats(), |i| i + 1);
     let windows = first.windows.len();
     if windows == 1 && finalist_text.is_none() {
         return Ok(first.windows.into_iter().next().unwrap());
