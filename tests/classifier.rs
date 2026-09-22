@@ -72,8 +72,10 @@ async fn missing_dimension_model_reaches_the_output_envelope() {
 #[tokio::test]
 async fn each_batches_by_decision_count_and_returns_every_record_in_order() {
     use futures::TryStreamExt;
-    for (count, dimensions, sizes) in [(2500, 1, vec![1000, 1000, 500]), (1000, 2, vec![500, 500])]
-    {
+    for (count, dimensions, sizes) in [
+        (2500, 1, [vec![60; 41], vec![40]].concat()),
+        (100, 2, vec![30, 30, 30, 10]),
+    ] {
         let server = common::mock_classifier(FakeJev {
             choose: |_, _, _| "NONE".into(),
             noul: |_, state| state.as_str().unwrap().parse::<f64>().unwrap() / 2500.0,
@@ -219,7 +221,8 @@ async fn batches_and_question_chunks_are_concurrent_and_obey_the_semaphore() {
         let qs: Questions = (0..if each { 1 } else { 45 })
             .map(|i| (format!("q{i}"), Question::noul("Is it?")))
             .collect();
-        let records = vec!["record".into(); 2500];
+        // Three requests either way: 45 questions over 20 dimensions, or 180 records in 60s.
+        let records = vec!["record".into(); if each { 180 } else { 2500 }];
         let operation = async {
             if each {
                 let _: Vec<_> = client.ask_each(&records, &qs).try_collect().await.unwrap();

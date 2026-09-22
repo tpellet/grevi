@@ -43,7 +43,7 @@ fn kinds() -> (Vec<serde_json::Value>, Option<String>) {
                     "ordered": false,
                 }),
                 "dir" => serde_json::json!({
-                    "evidence": "directory path; a literal prefix ending in / narrows the walk",
+                    "evidence": "directory path; finalists add the names of their first children, withheld for the patterns of withheld; a literal prefix ending in / narrows the walk",
                     "ordered": false,
                 }),
                 "tool" => serde_json::json!({
@@ -85,8 +85,8 @@ pub fn capabilities() -> Outcome {
     // classification is one record under one question, 20,000 a day per IP.
     let keyless_cost = serde_json::json!({
         "is": "1 per statement",
-        "filter": "1 per distinct record; a call of 60 records is accepted, 75 is refused with HTTP 402 request_spending_limit",
-        "label": "1 per distinct record; a call of 60 records is accepted, 75 is refused with HTTP 402 request_spending_limit",
+        "filter": "1 per distinct record; jevify sends at most 60 records per request, the largest keyless request the service accepts (75 is refused with HTTP 402 request_spending_limit)",
+        "label": "1 per distinct record; jevify sends at most 60 records per request, the largest keyless request the service accepts (75 is refused with HTTP 402 request_spending_limit)",
         "pick": "2 per window of 99 lines, plus 2 for the final round",
         "why": "2 per window of 99 lines, plus 2 for the final round",
         "route": "2 per window of 99 commands, plus 1 per finalist, at most 12"
@@ -164,7 +164,7 @@ pub fn capabilities() -> Outcome {
             { "name": "JEVIFY_INVENTORY_FILE", "meaning": "JSON array of {name, summary} replacing the PATH inventory (tests, evals)" },
             { "name": "JEVIFY_CNF", "meaning": "enable the command-not-found hook from `jevify init`" }
         ],
-        "limits": { "choice_options": 255, "window": crate::tournament::WINDOW, "state_tokens": 32000, "request_tokens": 64000, "requests_per_minute": 1200, "tokens_per_second": 250000, "stdin_bytes": crate::input::MAX_BYTES, "pick_lines": crate::cmd::pick::MAX_LINES, "distinct_records": 20000, "records_per_request": { "classifier": 1000, "typesafe": 20 }, "too_many": "exit 6, error.kind too_many: narrow distinct records with grep or head" },
+        "limits": { "choice_options": 255, "window": crate::tournament::WINDOW, "state_tokens": 32000, "request_tokens": 64000, "requests_per_minute": 1200, "tokens_per_second": 250000, "stdin_bytes": crate::input::MAX_BYTES, "pick_lines": crate::cmd::pick::MAX_LINES, "distinct_records": 20000, "records_per_request": { "classifier": crate::jev::classifier::KEYLESS_DECISIONS, "typesafe": 20 }, "too_many": "exit 6, error.kind too_many: narrow distinct records with grep or head" },
         "saved_inputs": { "verbs": ["why", "filter"], "directory": "JEVIFY_CACHE_DIR/outputs, or the platform cache directory/jevify/outputs", "filename": "<blake3-16>.log", "contents": "raw input bytes, secrets included", "retention": "never pruned", "disable": "--no-save (independent of --no-cache)", "permissions": "directory 0700, file 0600", "incomplete": "failed or skipped save: saved_input null, complete false" },
         "backends": [
             { "name": "typesafe", "key": "required", "model": "Jev", "window": Backend::Typesafe.window(), "choice_options": 255, "state_chars": "32k tokens", "requests_per_minute": 1200, "meta": "input_tokens is null unless every inference attempt reports usage; cost_usd estimates input-token cost at the configured price and is null when that basis is incomplete" },

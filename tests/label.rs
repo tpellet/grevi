@@ -335,7 +335,7 @@ fn input(count: usize) -> String {
 
 #[tokio::test]
 async fn batch_boundaries_ceiling_and_duplicates_judged_once() {
-    for (count, expected) in [(2500, 3), (20_001, 0)] {
+    for (count, expected) in [(2500, 42), (20_001, 0)] {
         let server = common::mock_classifier(fake()).await;
         let out = common::jevify_classifier(&server)
             .args(["label", "bug,feature", "--json"])
@@ -474,7 +474,7 @@ impl Respond for Batches {
         self.requests.fetch_add(1, Ordering::SeqCst);
         let body: Value = serde_json::from_slice(&request.body).unwrap();
         let first = body["items"][0].as_str().unwrap();
-        if first == "record 1000" {
+        if first == "record 1020" {
             if let Some(code) = self.quota {
                 return FakeJev::quota(code, 1);
             }
@@ -523,19 +523,20 @@ async fn daily_quota_keeps_the_answered_prefix() {
             let value = envelope(&out, 4);
             assert_eq!(value["error"]["kind"], "api_unavailable");
             let message = value["error"]["message"].as_str().unwrap();
-            assert!(message.contains("answered 1000 of 2500"), "{message}");
+            assert!(message.contains("answered 1020 of 2500"), "{message}");
             assert!(message.contains("daily quota of the free backend reached"));
         } else {
             assert_eq!(out.status.code(), Some(4), "{stderr}");
-            assert_eq!(out.stdout, labelled(1000).as_bytes());
-            let status = stderr.find("jevify label: answered 1000 of 2500").unwrap();
+            assert_eq!(out.stdout, labelled(1020).as_bytes());
+            let status = stderr.find("jevify label: answered 1020 of 2500").unwrap();
             let error = stderr
                 .find("daily quota of the free backend reached")
                 .unwrap();
             assert!(status < error);
         }
         let requests = responder.requests.load(Ordering::SeqCst);
-        assert!((2..=3).contains(&requests), "{requests}");
+        // The 18th request (records 1020..1079) meets the quota; a 19th may be in flight.
+        assert!((18..=19).contains(&requests), "{requests}");
     }
 }
 

@@ -48,7 +48,7 @@ The free service has tighter limits and maps TypeSafe Nouls to binary Choice que
 | tournament window | 200 | 99 + NONE |
 | input per request | 32,000 tokens | 32,000 UTF-16 code units |
 | questions per request | bounded by request evidence | 20 dimensions (jevify splits bigger asks) |
-| records per `filter` request | 20 sharing one state | up to 1,000, each judged alone |
+| records per `filter` request | 20 sharing one state | up to 60, each judged alone (the keyless spending limit refuses 75 with HTTP 402) |
 | rate limit | 1,200 requests/min | 3,000 classifications/min, 20,000/day, per IP; one classification is one record under one question |
 | `meta.input_tokens`, `meta.cost_usd` | complete reported input tokens or null, estimated input cost or null | tokens may be null; cost is 0 at the default zero service price |
 
@@ -62,8 +62,9 @@ Filter batches honour numeric `Retry-After` through 60 seconds and refuse longer
 Free calls a day on one IP, from the cost of each verb (measured 2026-09-22 with
 `JEVIFY_CONCURRENCY=4`, [benchmarks/results.md](../../benchmarks/results.md)): `is` costs one
 classification per statement, so 6,600 calls of three statements to 20,000 of one; `filter` and
-`label` cost one per distinct record, so 20,000 records in total, and the service accepts a call
-of 60 records and refuses one of 75 (HTTP 402 `request_spending_limit`); `pick` and `why` cost two
+`label` cost one per distinct record, so 20,000 records in total, and jevify sends at most 60 records
+per request, the largest keyless request the service accepts (75 is refused with HTTP 402
+`request_spending_limit`, reported as exit 4 `api_unavailable`); `pick` and `why` cost two
 per window of 99 lines plus two for the final round, so 830 calls of 1,000 lines to 10,000 of at
 most 99; `route` costs two per window of 99 commands plus one per finalist, at most 12, so about
 380 calls over a PATH of 1,900 commands. `capabilities.backends` carries the same figures.

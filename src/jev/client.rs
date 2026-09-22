@@ -277,10 +277,7 @@ impl Client {
         records: &'a [String],
         questions: &'a Questions,
     ) -> impl futures::Stream<Item = Result<(usize, Vec<Response>), JevifyError>> + 'a {
-        let size = match self.backend {
-            Backend::Classifier => (1_000 / questions.len().max(1)).max(1),
-            Backend::Typesafe => 20,
-        };
+        let size = batch_size(self.backend, questions.len());
         records
             .chunks(size)
             .enumerate()
@@ -524,6 +521,18 @@ impl Client {
                     return Ok(body);
                 }
                 401 | 403 => return Err(JevifyError::BadKey(status)),
+                // classifier.dev's spending limit: the free request is too big for the service
+                // to judge at all. Not retried; the batch size keeps jevify under it.
+                402 => {
+                    let text = String::from_utf8_lossy(&body);
+                    if rid.is_some() {
+                        *self.stats.request_id.lock().unwrap() = rid;
+                    }
+                    return Err(JevifyError::Unavailable(format!(
+                        "HTTP 402: the service refused the request's size without a key ({})",
+                        rejection_message(&text)
+                    )));
+                }
                 _ if body_rejected => {
                     let text = String::from_utf8_lossy(&body);
                     if rid.is_some() {
@@ -561,6 +570,16 @@ impl Client {
             }
         }
         Err(JevifyError::Unavailable(last))
+    }
+}
+
+/// Records per `ask_each` request. classifier.dev takes no key, so every request stays under
+/// its keyless spending limit ([`classifier::KEYLESS_DECISIONS`] decisions); TypeSafe shares
+/// one state between 20 records.
+pub fn batch_size(backend: Backend, questions: usize) -> usize {
+    match backend {
+        Backend::Classifier => (classifier::KEYLESS_DECISIONS / questions.max(1)).max(1),
+        Backend::Typesafe => 20,
     }
 }
 

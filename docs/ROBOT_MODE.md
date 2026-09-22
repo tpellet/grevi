@@ -251,7 +251,7 @@ system. Output verbs start no user command. The caller authorizes `add` staging 
 `is` abstains on oversized context; `add` rejects oversized hunks and complete batches before
 staging. A higher threshold cannot validate missing evidence or grant permission.
 
-`filter` and `label` batch up to 1,000 records on classifier.dev, each judged alone. On TypeSafe
+`filter` and `label` batch up to 60 records on classifier.dev, each judged alone. On TypeSafe
 20 records share a request state and each question names its record; independence is not claimed.
 `p` is a backend score. Calibration needs task- and backend-specific evidence; ranks past the
 third are candidates without a reliability claim. Text can influence the model with embedded

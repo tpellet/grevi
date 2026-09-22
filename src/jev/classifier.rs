@@ -28,6 +28,12 @@ pub const MAX_DIMENSIONS: usize = 20;
 pub const MAX_LABELS: usize = 100;
 /// UTF-16 code units per input (the service applies JavaScript `string.length`).
 pub const MAX_INPUT_CHARS: usize = 32_000;
+/// Decisions (`items × dimensions`) the service accepts in one request.
+pub const MAX_DECISIONS: usize = 1_000;
+/// Decisions jevify sends in one keyless request. The service's spending limit refuses a
+/// bigger free request with HTTP 402 `request_spending_limit` before judging anything: measured
+/// 2026-09-22, a request of 60 records under one question is accepted and one of 75 refused.
+pub const KEYLESS_DECISIONS: usize = 60;
 /// UTF-16 code units per dimension's `instructions`.
 const MAX_INSTRUCTIONS_CHARS: usize = 4_000;
 /// The two labels a Noul becomes when its criteria cannot be labels themselves.
@@ -139,7 +145,7 @@ pub fn request_body(
             "classifier requires 1..=20 dimensions".into(),
         ));
     }
-    if items.len() > 1_000 / questions.len() {
+    if items.len() > MAX_DECISIONS / questions.len() {
         return Err(JevifyError::InputTooLarge(
             "classifier requires at most 1000 decisions".into(),
         ));

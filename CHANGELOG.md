@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+Fixed:
+
+- `filter` and `label` send at most 60 records per classifier.dev request, the largest keyless
+  request the service accepts: it refuses 75 with HTTP 402 `request_spending_limit` before
+  judging anything, so a keyless run over about 70 records ended exit 4 `api_protocol` with the
+  raw body. A 402 is reported as exit 4 `api_unavailable` naming the service code, without
+  retry. `capabilities.limits.records_per_request.classifier` is 60.
+
 Changed:
 
 - The keyless quota is measured per verb against the service's own accounting: one

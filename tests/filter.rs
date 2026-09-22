@@ -186,9 +186,9 @@ async fn bytes_splits_order_and_judge_once() {
 #[tokio::test]
 async fn batch_boundaries_and_ceiling() {
     for (classifier, count, expected) in [
-        (true, 2500, 3),
+        (true, 2500, 42),
         (false, 41, 3),
-        (true, 20_000, 20),
+        (true, 20_000, 334),
         (true, 20_001, 0),
     ] {
         let server = if classifier {
@@ -377,7 +377,7 @@ impl Respond for Batches {
         self.requests.fetch_add(1, Ordering::SeqCst);
         let body: Value = serde_json::from_slice(&request.body).unwrap();
         let first = body["items"][0].as_str().unwrap();
-        if first == "record 1000" {
+        if first == "record 1020" {
             if let Some((code, wait)) = self.quota {
                 let attempt = self.quota_requests.fetch_add(1, Ordering::SeqCst);
                 if code != "rate_limit_minute" || attempt == 0 {
@@ -454,6 +454,30 @@ fn input(count: usize) -> String {
 }
 
 #[tokio::test]
+async fn spending_limit_is_named_and_not_retried() {
+    let server = MockServer::start().await;
+    Mock::given(method("POST"))
+        .and(path("/v1/classify"))
+        .respond_with(ResponseTemplate::new(402).set_body_json(serde_json::json!({
+            "error": "request exceeds the free spending limit", "code": "request_spending_limit"
+        })))
+        .mount(&server)
+        .await;
+    let out = common::jevify_classifier(&server)
+        .args(["filter", "x", "--json"])
+        .write_stdin(input(70))
+        .output()
+        .unwrap();
+    let value = envelope(&out, 4);
+    assert_eq!(value["error"]["kind"], "api_unavailable");
+    let message = value["error"]["message"].as_str().unwrap();
+    assert!(message.contains("HTTP 402"), "{message}");
+    assert!(message.contains("request_spending_limit"), "{message}");
+    assert!(message.contains("answered 0 of 70"), "{message}");
+    assert_eq!(server.received_requests().await.unwrap().len(), 2);
+}
+
+#[tokio::test]
 async fn quota_keeps_a_prefix_and_minute_limit_retries() {
     for (code, wait, expected) in [
         ("rate_limit_day", 1, 4),
@@ -479,7 +503,7 @@ async fn quota_keeps_a_prefix_and_minute_limit_retries() {
                 if expected == 4 {
                     assert_eq!(value["error"]["kind"], "api_unavailable");
                     let message = value["error"]["message"].as_str().unwrap();
-                    assert!(message.contains("answered 1000 of 2500"));
+                    assert!(message.contains("answered 1020 of 2500"));
                     assert!(message.contains(if code == "rate_limit_day" {
                         "daily quota of the free backend reached"
                     } else {
@@ -491,14 +515,14 @@ async fn quota_keeps_a_prefix_and_minute_limit_retries() {
             } else {
                 assert_eq!(
                     out.stdout,
-                    input(if expected == 4 { 1000 } else { 2500 }).as_bytes()
+                    input(if expected == 4 { 1020 } else { 2500 }).as_bytes()
                 );
             }
             let stderr = String::from_utf8_lossy(&out.stderr);
             if expected == 4 {
                 assert_eq!(responder.quota_requests.load(Ordering::SeqCst), 1);
                 if !machine {
-                    let status = stderr.find("jevify filter: answered 1000 of 2500").unwrap();
+                    let status = stderr.find("jevify filter: answered 1020 of 2500").unwrap();
                     let error = stderr
                         .find(if code == "rate_limit_day" {
                             "daily quota of the free backend reached"

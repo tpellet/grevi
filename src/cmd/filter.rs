@@ -1,6 +1,6 @@
 use crate::{
     cmd::Outcome,
-    config::{Backend, Config},
+    config::Config,
     exit::{Exit, JevifyError},
     jev::{Question, Questions, Response, client::Client},
     records::{self, Split},
@@ -183,12 +183,7 @@ fn selected(verdict: &str, invert: bool, strict: bool) -> bool {
     }
 }
 
-pub(crate) fn batch_size(backend: Backend, questions: usize) -> usize {
-    match backend {
-        Backend::Classifier => (1_000 / questions.max(1)).max(1),
-        Backend::Typesafe => 20,
-    }
-}
+pub(crate) use crate::jev::client::batch_size;
 
 /// Delivers batches in record order. Returning false cancels pending requests.
 pub(crate) async fn score(
@@ -228,6 +223,7 @@ pub(crate) fn write_record(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::config::Backend;
 
     #[test]
     fn selection_keeps_doubt_in_both_directions_unless_strict() {
@@ -238,8 +234,9 @@ mod tests {
                 assert_eq!(selected("unsure", invert, strict), !strict);
             }
         }
-        assert_eq!(batch_size(Backend::Classifier, 1), 1000);
-        assert_eq!(batch_size(Backend::Classifier, 20), 50);
+        assert_eq!(batch_size(Backend::Classifier, 1), 60);
+        assert_eq!(batch_size(Backend::Classifier, 20), 3);
+        assert_eq!(batch_size(Backend::Classifier, 61), 1);
         assert_eq!(batch_size(Backend::Typesafe, 1), 20);
     }
 }

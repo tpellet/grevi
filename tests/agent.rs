@@ -218,7 +218,7 @@ fn capabilities_lists_verbs_exit_codes_env() {
             .unwrap()
             .contains("benchmarks/results.md")
     );
-    assert_eq!(d["limits"]["records_per_request"]["classifier"], 1_000);
+    assert_eq!(d["limits"]["records_per_request"]["classifier"], 60);
     assert_eq!(d["limits"]["records_per_request"]["typesafe"], 20);
     assert_eq!(
         d["saved_inputs"]["verbs"],
