@@ -23,6 +23,69 @@ static FAILURE: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"(--- FAIL\b|\bFAILED\b|\bFAILURES?\b|^FAIL\b|npm ERR!|Traceback|panicked at|race detected|error: (test failed|could not compile|process didn't exit|failed to)|exit (code|status) [1-9]|Process completed with exit code [1-9])").unwrap()
 });
 
+/// A Rust panic header: it names the thread and the source position, and the message follows on
+/// the next lines. The header states that a test failed; the message says why.
+static PANIC_HEADER: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"panicked at \S+:\d+:\d+:\s*$").unwrap());
+/// Where a panic's message ends: the backtrace, the `RUST_BACKTRACE` note, or the next block.
+static PANIC_END: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"(stack backtrace:|note: run with `RUST_BACKTRACE|^\s*(----|failures:)|\bpanicked at\b|test result:)")
+        .unwrap()
+});
+/// The most lines a panic message contributes to the finals.
+pub const PANIC_MESSAGE: usize = 6;
+
+/// The text of a log line without a `gh run view --log` prefix (`job\tstep\ttimestamp `): a
+/// prefix alone is a blank line, not a message.
+fn payload(line: &str) -> &str {
+    let tail = line.rsplit('\t').next().unwrap_or(line);
+    match tail.split_once(' ') {
+        Some((stamp, rest))
+            if stamp.ends_with('Z') && stamp.starts_with(|c: char| c.is_ascii_digit()) =>
+        {
+            rest
+        }
+        _ => tail,
+    }
+}
+
+/// The lines that carry the message of the panic whose header is line `header`: the non-blank
+/// lines that follow, up to `PANIC_MESSAGE` of them, until the backtrace or the next block.
+/// Empty when the line is not a panic header.
+pub fn panic_message(lines: &[String], header: usize) -> Vec<usize> {
+    if !PANIC_HEADER.is_match(&lines[header]) {
+        return vec![];
+    }
+    lines
+        .iter()
+        .enumerate()
+        .skip(header + 1)
+        .take_while(|(_, l)| !PANIC_END.is_match(l))
+        .filter(|(_, l)| !payload(l).trim().is_empty())
+        .map(|(i, _)| i)
+        .take(PANIC_MESSAGE)
+        .collect()
+}
+
+/// The panic block that line `i` belongs to, header first, without `i` itself: empty when the
+/// line is neither a panic header nor one of the lines of a panic message.
+pub fn panic_block(lines: &[String], i: usize) -> Vec<usize> {
+    let message = panic_message(lines, i);
+    if !message.is_empty() {
+        return message;
+    }
+    // A message line: its header is a few lines up, and its own message names this line.
+    (i.saturating_sub(2 * PANIC_MESSAGE)..i)
+        .rev()
+        .find(|&h| panic_message(lines, h).contains(&i))
+        .map(|h| {
+            std::iter::once(h)
+                .chain(panic_message(lines, h).into_iter().filter(|&m| m != i))
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
 pub fn failure_lines(lines: &[String]) -> Vec<usize> {
     (0..lines.len())
         .filter(|&i| FAILURE.is_match(&lines[i]))
@@ -146,6 +209,16 @@ pub async fn run(
         none: "the output shows no failure".into(),
         any: "Does `items` contain a line that states why the command, build or test failed?".into(),
     };
+    // The finals see a panic header next to its message: the header names the test and the
+    // source position, the message says why, and the answer is the message.
+    let finals_prompts = Prompts {
+        choose: prompts.choose.replace(
+            " Choose NONE if the output shows no failure.",
+            " When a test panicked or threw, the line that carries the message, not the header that names the test and the source position. Choose NONE if the output shows no failure.",
+        ),
+        none: prompts.none.clone(),
+        any: prompts.any.clone(),
+    };
     // Neighbours are labelled as context so a literal reader does not pick them as the answer;
     // the nearest failure statement tells a loud line of a passing step from the failure itself.
     let failures = failure_lines(&lines);
@@ -176,12 +249,27 @@ pub async fn run(
             n: first.n,
         }
     } else {
-        let finals: Vec<(usize, String)> = first
-            .finalists
-            .iter()
-            .map(|c| (c.index, with_context(c.index)))
-            .collect();
-        window(&client, request, &finals, &prompts).await?
+        // A panic header outranks its own message in round one, where the header names the test
+        // and the message stands alone. The finals judge them side by side: a finalist's whole
+        // panic block, header and message lines, joins the finals right after it.
+        let mut chosen: Vec<usize> = Vec::new();
+        for c in &first.finalists {
+            if !chosen.contains(&c.index) {
+                chosen.push(c.index);
+            }
+            for i in panic_block(&lines, kept[c.index]) {
+                if chosen.len() >= ctx.backend.window() {
+                    break;
+                }
+                if let Ok(k) = kept.binary_search(&i) {
+                    if !chosen.contains(&k) {
+                        chosen.push(k);
+                    }
+                }
+            }
+        }
+        let finals: Vec<(usize, String)> = chosen.iter().map(|&k| (k, with_context(k))).collect();
+        window(&client, request, &finals, &finals_prompts).await?
     };
     ranking.windows = windows;
     ranking.n = first.n;
@@ -299,6 +387,68 @@ mod tests {
             s.chars().count(),
             format!("{head}1 lines after: line 2: ").len() + 200 + 1
         );
+    }
+    #[test]
+    fn panic_message_follows_its_header_until_the_backtrace_or_the_next_block() {
+        let lines: Vec<String> = [
+            "test documented_examples ... FAILED",
+            "thread 'documented_examples' (3856) panicked at tests/agent.rs:64:17:",
+            "jevify fill --dry-run -- git switch '@{branch:the auth refactor}'",
+            "",
+            "jevify fill: not run: arg 3 branch: no_match; ; candidates 0 of 0, omitted 0",
+            "",
+            "note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace",
+            "thread 'other' panicked at src/lib.rs:1:1:",
+            "Some files were not up-to-date",
+            "stack backtrace:",
+            "   0: __rustc::rust_begin_unwind",
+            "thread 'last' panicked at src/a.rs:2:2:",
+            "one",
+            "two",
+            "three",
+            "four",
+            "five",
+            "six",
+            "seven",
+            "not a header: panicked at src/a.rs:2:2: with the message on the same line",
+        ]
+        .iter()
+        .map(|s| s.to_string())
+        .collect();
+        // Blank lines are skipped; the message stops at the `RUST_BACKTRACE` note.
+        assert_eq!(panic_message(&lines, 1), vec![2, 4]);
+        // ...and at the backtrace.
+        assert_eq!(panic_message(&lines, 7), vec![8]);
+        // At most PANIC_MESSAGE lines; the next panic header ends the message too.
+        assert_eq!(panic_message(&lines, 11), vec![12, 13, 14, 15, 16, 17]);
+        // Not a header: a FAILED verdict, a message line, a panic with its message on one line.
+        for i in [0, 2, 4, 8, 19] {
+            assert_eq!(panic_message(&lines, i), Vec::<usize>::new(), "line {i}");
+        }
+        // A `gh run view --log` prefix alone is a blank line.
+        let prefixed: Vec<String> = [
+            "job\tstep\t2026-09-22T13:51:47.2052615Z thread 'x' (1) panicked at tests/agent.rs:64:17:",
+            "job\tstep\t2026-09-22T13:51:47.2053262Z jevify fill --dry-run -- git switch",
+            "job\tstep\t2026-09-22T13:51:47.2053542Z ",
+            "job\tstep\t2026-09-22T13:51:47.2053813Z jevify fill: not run: arg 3 branch: no_match",
+            "job\tstep\t2026-09-22T13:51:47.2054196Z ",
+            "job\tstep\t2026-09-22T13:51:47.2054409Z note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace",
+        ]
+        .iter()
+        .map(|s| s.to_string())
+        .collect();
+        assert_eq!(panic_message(&prefixed, 0), vec![1, 3]);
+        // A message line brings its header and the message's other lines; a header its message.
+        assert_eq!(panic_block(&lines, 4), vec![1, 2]);
+        assert_eq!(panic_block(&lines, 2), vec![1, 4]);
+        assert_eq!(panic_block(&lines, 1), vec![2, 4]);
+        assert_eq!(panic_block(&prefixed, 3), vec![0, 1]);
+        for i in [0, 6, 10, 19] {
+            assert_eq!(panic_block(&lines, i), Vec::<usize>::new(), "line {i}");
+        }
+        assert_eq!(payload("2026-09-22T13:51:47Z "), "");
+        assert_eq!(payload("Z is not a stamp"), "Z is not a stamp");
+        assert_eq!(payload("plain line"), "plain line");
     }
     #[test]
     fn large_logs_keep_tail_and_signal_neighbourhoods() {

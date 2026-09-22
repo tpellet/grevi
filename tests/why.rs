@@ -53,6 +53,66 @@ async fn classifier_max_keep_and_single_window_preserve_context_finals() {
     }
 }
 
+// A panic header that reaches the finals brings the lines of its message with it, so the finals
+// judge the header against the line that says why; the backtrace note stays out.
+#[tokio::test(flavor = "multi_thread")]
+async fn a_finalist_panic_header_brings_its_message_lines_to_the_finals() {
+    let server = common::mock(FakeJev {
+        choose: |_, s, o| option_containing(s, o, "panicked at"),
+        noul: |_, _| 0.95,
+    })
+    .await;
+    let mut lines: Vec<String> = (0..20).map(|i| format!("test step {i} ... ok")).collect();
+    lines.extend(
+        [
+            "test documented_examples ... FAILED",
+            "thread 'documented_examples' (3856) panicked at tests/agent.rs:64:17:",
+            "jevify fill --dry-run -- git switch '@{branch:the auth refactor}'",
+            "",
+            "jevify fill: not run: arg 3 branch: no_match; ; candidates 0 of 0, omitted 0",
+            "",
+            "note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace",
+        ]
+        .map(String::from),
+    );
+    let input = format!("{}\n", lines.join("\n"));
+    let mut cmd = common::jevify(&server);
+    let out = tokio::task::spawn_blocking(move || {
+        cmd.args(["--json", "why", "--no-save"])
+            .write_stdin(input)
+            .output()
+            .unwrap()
+    })
+    .await
+    .unwrap();
+    assert_eq!(out.status.code(), Some(0));
+    let requests = server.received_requests().await.unwrap();
+    assert_eq!(requests.len(), 2);
+    let body: serde_json::Value = serde_json::from_slice(&requests[1].body).unwrap();
+    let finals: Vec<&str> = body["state"]["items"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|s| s.as_str().unwrap())
+        .collect();
+    let has = |needle: &str| {
+        finals
+            .iter()
+            .any(|s| s.lines().next().unwrap_or("").contains(needle))
+    };
+    assert!(has("line 22: thread 'documented_examples'"), "{finals:?}");
+    assert!(has("line 23: jevify fill --dry-run"), "{finals:?}");
+    assert!(has("line 25: jevify fill: not run"), "{finals:?}");
+    assert!(!has("RUST_BACKTRACE"), "{finals:?}");
+    assert!(
+        body["questions"]["pick"]["instructions"]
+            .as_str()
+            .unwrap_or_default()
+            .contains("not the header that names the test"),
+        "{body}"
+    );
+}
+
 #[tokio::test(flavor = "multi_thread")]
 async fn saves_exact_bytes_once_and_reports_path_even_with_verbose() {
     let server = common::mock(FakeJev {
