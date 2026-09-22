@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.9.0
+
+Changed:
+
+- `filter` judges each record three ways: the record says the statement holds, says it does not
+  hold, or does not say. A record that says nothing either way is unsure and kept, not silently
+  dropped. On the adjudicated cases this takes false actions to zero and keeps every record the
+  gold keeps; three to six records per hundred move from dropped to unsure. The threshold and
+  the band do not change, and `meta.decision` carries the probability that the record does not
+  say under `none`.
+- `why` points at the line that carries a panic's message, not at the `panicked at` header: the
+  finals judge a panic header next to its message. The adjudicated `why` cases go from 0.80 to
+  0.89 accuracy with one false answer fewer.
+- `pick` over a plain listing prefers the entry that is or does what the description names over
+  a page that documents it, a test of it or a recording of it, unless the description asks for
+  one of those. On a 36-case set the two-round run goes from 30 to 34 right.
+
 ## 0.8.3
 
 Added:
