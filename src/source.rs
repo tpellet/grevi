@@ -84,7 +84,9 @@ pub const REGISTRY: &[Kind] = &[
         name: Cow::Borrowed("branch"),
         coded: true,
         ordered: true,
-        path_kind: false,
+        // The literal before the marker scopes the listing (`origin/@{branch:x}` lists that
+        // remote's refs), as for `file` and `dir`; no ref name starts with a dash.
+        path_kind: true,
         has_tier_two: true,
     },
     Kind {
@@ -371,7 +373,7 @@ pub async fn enumerate(
                 key,
             },
         ) => input_listing(&bytes, split, field, key.as_deref(), false, usize::MAX),
-        ("branch", Scope::Prefix(None)) => branches(limit, &env),
+        ("branch", Scope::Prefix(prefix)) => branches(prefix.as_deref(), limit, &env),
         ("commit", Scope::Prefix(None)) => commits(limit, &env),
         ("file", Scope::Prefix(prefix)) => paths(prefix.as_deref(), false, limit, &env),
         ("dir", Scope::Prefix(prefix)) => paths(prefix.as_deref(), true, limit, &env),
@@ -449,14 +451,30 @@ pub async fn enrich_in(
                 })
                 .collect();
             return match crate::records::excerpts(&mut records, &env.cwd).await {
-                Ok(withheld) => (records.into_iter().map(|r| r.evidence).collect(), withheld),
+                Ok(unread) => (
+                    records.into_iter().map(|r| r.evidence).collect(),
+                    unread.count,
+                ),
                 Err(_) => empty(),
             };
         }
         _ => return empty(),
     };
     let env = env.clone();
-    let handles = handles.to_vec();
+    // A branch under a literal prefix is listed by the rest of its ref name: the ref is both.
+    let scoped = matches!(kind, "branch") && !prefix.as_os_str().is_empty();
+    let handles: Vec<OsString> = if scoped {
+        handles
+            .iter()
+            .map(|handle| {
+                let mut rev = prefix.as_os_str().to_owned();
+                rev.push(handle);
+                rev
+            })
+            .collect()
+    } else {
+        handles.to_vec()
+    };
     let count = handles.len();
     let values = tokio::task::spawn_blocking(move || {
         handles
@@ -663,7 +681,13 @@ fn run_lister_blocking(argv: &[OsString], env: &Env, cap: usize) -> Result<Vec<u
         .map_err(fail)
 }
 
-fn branches(limit: usize, env: &Env) -> Result<Listing, JevifyError> {
+/// Without a prefix, a branch is its name: `git switch` and `git checkout` resolve the short
+/// name of a remote-only branch by their DWIM rule, but no other git command does, and no one
+/// spelling satisfies both (`git switch origin/x` refuses a remote ref). jevify does not parse
+/// the command, so the caller says which by the literal it writes: `origin/@{branch:x}` lists
+/// the refs of that remote by the rest of their name, and the argument becomes the ref
+/// (`origin/ticket/TPE-791`), which every command that takes a revision resolves.
+fn branches(prefix: Option<&Path>, limit: usize, env: &Env) -> Result<Listing, JevifyError> {
     let bytes = run_lister_blocking(&BRANCH_ARGV.map(OsString::from), env, OUTPUT_CAP)?;
     let mut refs = Vec::new();
     for line in bytes.split(|b| *b == b'\n').filter(|line| !line.is_empty()) {
@@ -681,6 +705,33 @@ fn branches(limit: usize, env: &Env) -> Result<Listing, JevifyError> {
             .and_then(|s| s.parse::<u64>().ok())
             .ok_or_else(|| JevifyError::lister_failed("invalid git committer date".into()))?;
         refs.push((parts[0], parts[3], timestamp));
+    }
+    let now = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs();
+    let record = |handle: &[u8], shown: &[u8], subject: &[u8], timestamp: u64| Record {
+        handle: OsString::from_vec(handle.to_vec()),
+        evidence: format!(
+            "{} — {} — {}",
+            String::from_utf8_lossy(shown),
+            String::from_utf8_lossy(subject),
+            age(now, timestamp)
+        ),
+        raw: 0..0,
+    };
+    if let Some(prefix) = prefix.map(|p| p.as_os_str().as_bytes()) {
+        let records = refs
+            .iter()
+            .filter_map(|(name, subject, timestamp)| {
+                let shown = name
+                    .strip_prefix(b"refs/heads/")
+                    .or_else(|| name.strip_prefix(b"refs/remotes/"))?;
+                let handle = shown.strip_prefix(prefix)?;
+                (!handle.is_empty()).then(|| record(handle, shown, subject, *timestamp))
+            })
+            .collect();
+        return Ok(listing(records, 0, true, limit));
     }
     let locals: HashSet<_> = refs
         .iter()
@@ -700,10 +751,6 @@ fn branches(limit: usize, env: &Env) -> Result<Listing, JevifyError> {
             *tracked.entry(remote_short(remote)).or_default() += 1;
         }
     }
-    let now = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_secs();
     let mut records = Vec::new();
     for (name, subject, timestamp) in &refs {
         let (handle, shown) = if let Some(local) = name.strip_prefix(b"refs/heads/") {
@@ -726,16 +773,7 @@ fn branches(limit: usize, env: &Env) -> Result<Listing, JevifyError> {
                 "unexpected git ref namespace".into(),
             ));
         };
-        records.push(Record {
-            handle: OsString::from_vec(handle.to_vec()),
-            evidence: format!(
-                "{} — {} — {}",
-                String::from_utf8_lossy(shown),
-                String::from_utf8_lossy(subject),
-                age(now, *timestamp)
-            ),
-            raw: 0..0,
-        });
+        records.push(record(handle, shown, subject, *timestamp));
     }
     Ok(listing(records, 0, true, limit))
 }
@@ -1204,7 +1242,7 @@ mod tests {
             "input"
         );
         assert_eq!(
-            enumerate("branch", Scope::Prefix(Some("src".into())), 10, &env)
+            enumerate("commit", Scope::Prefix(Some("src".into())), 10, &env)
                 .await
                 .unwrap_err()
                 .kind(),
@@ -1368,6 +1406,43 @@ mod tests {
             "{handles:?}"
         );
         assert!(!handles.contains(OsStr::new("ancient")), "{handles:?}");
+        // A literal prefix names a remote: its refs, by the rest of their name, unfolded, so
+        // the argument `origin/<handle>` is a rev that `git log` resolves.
+        let origin = enumerate("branch", Scope::Prefix(Some("origin/".into())), 10, &env)
+            .await
+            .unwrap();
+        assert_eq!(
+            origin
+                .records
+                .iter()
+                .map(|r| r.handle.as_os_str())
+                .collect::<Vec<_>>(),
+            [
+                OsStr::new("main"),
+                OsStr::new("remote-only"),
+                OsStr::new("ancient")
+            ]
+        );
+        assert!(
+            origin.records[2]
+                .evidence
+                .starts_with("origin/ancient — subject-0"),
+            "{}",
+            origin.records[2].evidence
+        );
+        let none = enumerate("branch", Scope::Prefix(Some("nothing/".into())), 10, &env)
+            .await
+            .unwrap();
+        assert!(none.records.is_empty());
+        let (prefixed, withheld) = enrich_in(
+            "branch",
+            Path::new("origin/"),
+            &["remote-only".into()],
+            &env,
+        )
+        .await;
+        assert_eq!(withheld, 0);
+        assert!(prefixed[0].contains("subject-4"), "{}", prefixed[0]);
         let remote = enrich_with_env("branch", &["remote-only".into()], &env).await;
         assert!(remote[0].starts_with("remote-only\n"), "{}", remote[0]);
         assert!(remote[0].contains("subject-4"), "{}", remote[0]);
@@ -1552,6 +1627,7 @@ done
             .collect();
         assert_eq!(coded, ["-", "branch", "commit", "file", "dir", "tool"]);
         assert!(kind("commit").unwrap().ordered && kind("commit").unwrap().has_tier_two);
+        assert!(kind("branch").unwrap().path_kind);
         assert!(kind("file").unwrap().path_kind && kind("file").unwrap().has_tier_two);
         assert!(kind("dir").unwrap().path_kind && kind("dir").unwrap().has_tier_two);
         assert!(!kind("tool").unwrap().ordered && !kind("tool").unwrap().has_tier_two);

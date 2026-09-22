@@ -767,6 +767,39 @@ async fn remote_only_branch_substitutes_the_short_name_that_git_switch_accepts()
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn remote_prefix_substitutes_the_ref_that_git_log_resolves() {
+    let server = common::mock(fake()).await;
+    // The local-only branch is not on the remote: the prefix scopes the listing to one ref.
+    let dir = refs_fixture(
+        b"refs/heads/local-only\0\x001700000001\0wip\0\nrefs/remotes/origin/ticket/TPE-791\0\x001700000000\0feat(TPE-791): add Allergy model\0\n",
+    );
+    let out = run(
+        fixture_command(&server, &dir),
+        &[
+            "fill",
+            "--dry-run",
+            "--json",
+            "--",
+            "git",
+            "log",
+            "origin/@{branch:x}",
+        ],
+        "",
+    );
+    let value = envelope(&out, 0);
+    assert_eq!(
+        value["data"]["argv"],
+        serde_json::json!(["git", "log", "origin/ticket/TPE-791"])
+    );
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert!(
+        stderr.contains("'git' 'log' 'origin/ticket/TPE-791'"),
+        "{stderr}"
+    );
+    assert!(stderr.contains("candidates 1"), "{stderr}");
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn branch_twins_share_a_candidate_and_decisive_window_skips_enrichment() {
     let server = common::mock(fake()).await;
     let dir = branch_fixture(1, true);
