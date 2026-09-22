@@ -1,0 +1,9 @@
+{
+ "repo": "sveltejs/svelte",
+ "run": 32532886120,
+ "workflow": "CI",
+ "title": "fix: warn when reassigning derived state on server and document client/server divergence",
+ "created": "2026-08-21T22:25:19Z",
+ "url": "https://github.com/sveltejs/svelte/actions/runs/32532886120",
+ "collected": "gh run view --log, middle window of 150 non-empty lines"
+}

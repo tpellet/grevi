@@ -1,0 +1,150 @@
+https://svelte.dev/e/derived_reassignment
+stderr | packages/svelte/tests/runtime-runes/test.ts > writable-derived-3 (ssr)
+[svelte] derived_reassignment
+Assignment to derived state on the server is permanent and will not be recalculated when its dependencies change, unlike on the client where it is temporary
+https://svelte.dev/e/derived_reassignment
+[svelte] derived_reassignment
+Assignment to derived state on the server is permanent and will not be recalculated when its dependencies change, unlike on the client where it is temporary
+https://svelte.dev/e/derived_reassignment
+[svelte] derived_reassignment
+Assignment to derived state on the server is permanent and will not be recalculated when its dependencies change, unlike on the client where it is temporary
+https://svelte.dev/e/derived_reassignment
+[svelte] derived_reassignment
+Assignment to derived state on the server is permanent and will not be recalculated when its dependencies change, unlike on the client where it is temporary
+https://svelte.dev/e/derived_reassignment
+·······················································································································································································································································----·······································································································································································--················································································································----····································································--········································································································
+ Test Files  1 passed (1)
+      Tests  1796 passed | 1037 skipped (2833)
+   Start at  22:25:47
+   Duration  63.79s (transform 5.89s, setup 0ms, import 3.75s, tests 59.53s, environment 358ms)
+Post job cleanup.
+Cache hit occurred on the primary key node-cache-Linux-x64-pnpm-59c8a449cb795c5524136e99a04b3ec6da8668580a1152bdb4fec486e4bdaa3a, not saving cache.
+Post job cleanup.
+Pruning is unnecessary.
+Post job cleanup.
+git version 2.55.0
+Temporarily overriding HOME='/home/runner/work/_temp/7f82c505-a0e7-4edd-87d7-e37ed62b59e7' before making global git config changes
+Adding repository directory to the temporary git global config as a safe directory
+Removing SSH command configuration
+Removing HTTP extra header
+Removing includeIf entries pointing to credentials config files
+includeif.gitdir:/home/runner/work/svelte/svelte/.git.path
+includeif.gitdir:/home/runner/work/svelte/svelte/.git/worktrees/*.path
+includeif.gitdir:/github/workspace/.git.path
+includeif.gitdir:/github/workspace/.git/worktrees/*.path
+/home/runner/work/_temp/git-credentials-e0e6bd49-d6b7-4a6a-a62a-ed5441e26ac6.config
+/home/runner/work/_temp/git-credentials-e0e6bd49-d6b7-4a6a-a62a-ed5441e26ac6.config
+/github/runner_temp/git-credentials-e0e6bd49-d6b7-4a6a-a62a-ed5441e26ac6.config
+/github/runner_temp/git-credentials-e0e6bd49-d6b7-4a6a-a62a-ed5441e26ac6.config
+Removing credentials config '/home/runner/work/_temp/git-credentials-e0e6bd49-d6b7-4a6a-a62a-ed5441e26ac6.config'
+Cleaning up orphan processes
+Tests (20, windows-latest)	UNKNOWN STEP	﻿2026-08-21T22:25:25.9834153Z Current runner version: '2.336.0'
+Hosted Compute Agent
+Version: 20260729.566
+Commit: cf7153fe6e25b664e8693c24944bf2b00355d109
+Build Date: 2026-07-29T19:17:02Z
+Worker ID: {1fce6816-2c02-49b2-8bf0-eccb4f1f05cd}
+Azure Region: westus2
+Microsoft Windows Server 2025
+10.0.26100
+Datacenter
+Image: windows-2025-vs2026
+Version: 20260818.207.1
+Included Software: https://github.com/actions/runner-images/blob/win25-vs2026/20260818.207/images/windows/Windows2025-VS2026-Readme.md
+Image Release: https://github.com/actions/runner-images/releases/tag/win25-vs2026%2F20260818.207
+Metadata: read
+Secret source: None
+Prepare workflow directory
+Prepare all required actions
+Getting action download info
+Download action repository 'actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd' (SHA:de0fac2e4500dabe0009e67214ff5f5447ce83dd)
+Download action repository 'pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093' (SHA:0e279bb959325dab635dd2c09392533439d90093)
+Download action repository 'actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e' (SHA:48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e)
+Complete job name: Tests (20, windows-latest)
+with:
+  repository: sveltejs/svelte
+  token: ***
+  ssh-strict: true
+  ssh-user: git
+  persist-credentials: true
+  clean: true
+  sparse-checkout-cone-mode: true
+  fetch-depth: 1
+  fetch-tags: false
+  show-progress: true
+  lfs: false
+  submodules: false
+  set-safe-directory: true
+env:
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+Syncing repository: sveltejs/svelte
+Working directory is 'D:\a\svelte\svelte'
+git version 2.55.0.windows.4
+Temporarily overriding HOME='D:\a\_temp\68f62471-875d-4966-918f-18e947e79af3' before making global git config changes
+Adding repository directory to the temporary git global config as a safe directory
+Deleting the contents of 'D:\a\svelte\svelte'
+Initialized empty Git repository in D:/a/svelte/svelte/.git/
+Removing SSH command configuration
+Removing HTTP extra header
+Removing includeIf entries pointing to credentials config files
+From https://github.com/sveltejs/svelte
+ * [new ref]         20567f188f3d871a9390bb836e2f4236ddc4c020 -> pull/18686/merge
+Updating files:  38% (3489/9081)
+Updating files:  39% (3542/9081)
+Updating files:  40% (3633/9081)
+Updating files:  41% (3724/9081)
+Updating files:  42% (3815/9081)
+Updating files:  43% (3905/9081)
+Updating files:  44% (3996/9081)
+Updating files:  45% (4087/9081)
+Updating files:  46% (4178/9081)
+Updating files:  47% (4269/9081)
+Updating files:  48% (4359/9081)
+Updating files:  49% (4450/9081)
+Updating files:  50% (4541/9081)
+Updating files:  51% (4632/9081)
+Updating files:  52% (4723/9081)
+Updating files:  53% (4813/9081)
+Updating files:  54% (4904/9081)
+Updating files:  55% (4995/9081)
+Updating files:  56% (5086/9081)
+Updating files:  57% (5177/9081)
+Updating files:  58% (5267/9081)
+Updating files:  59% (5358/9081)
+Updating files:  60% (5449/9081)
+Updating files:  61% (5540/9081)
+Updating files:  62% (5631/9081)
+Updating files:  63% (5722/9081)
+Updating files:  64% (5812/9081)
+Updating files:  65% (5903/9081)
+Updating files:  66% (5994/9081)
+Updating files:  67% (6085/9081)
+Updating files:  68% (6176/9081)
+Updating files:  69% (6266/9081)
+Updating files:  70% (6357/9081)
+Updating files:  71% (6448/9081)
+Updating files:  72% (6539/9081)
+Updating files:  73% (6630/9081)
+Updating files:  74% (6720/9081)
+Updating files:  75% (6811/9081)
+Updating files:  76% (6902/9081)
+Updating files:  77% (6993/9081)
+Updating files:  78% (7084/9081)
+Updating files:  79% (7174/9081)
+Updating files:  79% (7238/9081)
+Updating files:  80% (7265/9081)
+Updating files:  81% (7356/9081)
+Updating files:  82% (7447/9081)
+Updating files:  83% (7538/9081)
+Updating files:  84% (7629/9081)
+Updating files:  85% (7719/9081)
+Updating files:  86% (7810/9081)
+Updating files:  87% (7901/9081)
+Updating files:  88% (7992/9081)
+Updating files:  89% (8083/9081)
+Updating files:  90% (8173/9081)
+Updating files:  91% (8264/9081)
+Updating files:  92% (8355/9081)
+Updating files:  93% (8446/9081)
+Updating files:  94% (8537/9081)
+Updating files:  95% (8627/9081)

@@ -1,0 +1,8 @@
+fc1f73a Prioritize HackerOne for vulnerability reports
+d663d01 chore(deps): bump nodeselector/setup-apple-codesign from 0.0.2 to 0.0.3
+189706b Revert "Use internal Apple codesign action (#14437)"
+adeb51e Test explicit default repository resolution (#14460)
+be35276 Add repo default network acceptance test
+28a47f4 chore(deps): bump golang.org/x/text from 0.41.0 to 0.42.0
+38316c1 Use internal Apple codesign action (#14437)
+1765996 chore(deps): bump golang.org/x/term from 0.45.0 to 0.46.0

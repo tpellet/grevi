@@ -1,0 +1,300 @@
+info: latest update on 2026-09-03 for version 1.98.1 (48a229cea 2026-09-01)
+info: removing previous version of component clippy
+info: removing previous version of component rustfmt
+info: removing previous version of component cargo
+info: removing previous version of component rust-std
+info: removing previous version of component rustc
+info: downloading 5 components
+
+  stable-x86_64-unknown-linux-gnu updated - rustc 1.98.1 (48a229cea 2026-09-01) (from rustc 1.98.0 (88d9e12ae 2026-08-18))
+
+info: override toolchain for /home/runner/work/bevy/bevy set to stable-x86_64-unknown-linux-gnu
+cargo 1.98.1 (797e8a9bc 2026-08-05)
+Prepare all required actions
+with:
+  wayland: true
+  xkb: true
+  x264: true
+  fontconfig: true
+  alsa: true
+  udev: true
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  CARGO_PROFILE_TEST_DEBUG: 0
+  CARGO_PROFILE_DEV_DEBUG: 0
+  NIGHTLY_TOOLCHAIN: nightly
+  RUSTFLAGS: -C debuginfo=0 -D warnings
+sudo apt-get update
+sudo apt-get install --no-install-recommends libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev libx264-164 libx264-dev libfontconfig1-dev
+shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  CARGO_PROFILE_TEST_DEBUG: 0
+  CARGO_PROFILE_DEV_DEBUG: 0
+  NIGHTLY_TOOLCHAIN: nightly
+  RUSTFLAGS: -C debuginfo=0 -D warnings
+Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+Get:6 https://packages.microsoft.com/ubuntu/24.04/prod noble InRelease [3600 B]
+Get:7 https://dl.google.com/linux/chrome-stable/deb stable InRelease [2548 B]
+Get:8 https://packages.microsoft.com/ubuntu/24.04/prod noble/main arm64 Packages [394 kB]
+Get:9 https://packages.microsoft.com/ubuntu/24.04/prod noble/main amd64 Packages [441 kB]
+Get:10 https://dl.google.com/linux/chrome-stable/deb stable/main amd64 Packages [1401 B]
+Hit:2 http://azure.archive.ubuntu.com/ubuntu noble InRelease
+Get:3 http://azure.archive.ubuntu.com/ubuntu noble-updates InRelease [126 kB]
+Get:4 http://azure.archive.ubuntu.com/ubuntu noble-backports InRelease [126 kB]
+Get:5 http://azure.archive.ubuntu.com/ubuntu noble-security InRelease [126 kB]
+Get:11 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 Packages [1260 kB]
+Get:12 http://azure.archive.ubuntu.com/ubuntu noble-updates/main Translation-en [292 kB]
+Get:13 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 Components [181 kB]
+Get:14 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe amd64 Packages [1690 kB]
+Get:15 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe Translation-en [339 kB]
+Get:16 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe amd64 Components [388 kB]
+Get:17 http://azure.archive.ubuntu.com/ubuntu noble-updates/restricted amd64 Packages [1536 kB]
+Get:18 http://azure.archive.ubuntu.com/ubuntu noble-updates/restricted Translation-en [352 kB]
+Get:19 http://azure.archive.ubuntu.com/ubuntu noble-updates/multiverse amd64 Components [940 B]
+Get:20 http://azure.archive.ubuntu.com/ubuntu noble-backports/main amd64 Components [5744 B]
+Get:21 http://azure.archive.ubuntu.com/ubuntu noble-backports/universe amd64 Components [12.7 kB]
+Get:22 http://azure.archive.ubuntu.com/ubuntu noble-security/main amd64 Packages [1002 kB]
+Get:23 http://azure.archive.ubuntu.com/ubuntu noble-security/main Translation-en [212 kB]
+Get:24 http://azure.archive.ubuntu.com/ubuntu noble-security/main amd64 Components [46.3 kB]
+Get:25 http://azure.archive.ubuntu.com/ubuntu noble-security/universe amd64 Packages [1206 kB]
+Get:26 http://azure.archive.ubuntu.com/ubuntu noble-security/universe Translation-en [241 kB]
+Get:27 http://azure.archive.ubuntu.com/ubuntu noble-security/universe amd64 Components [76.4 kB]
+Get:28 http://azure.archive.ubuntu.com/ubuntu noble-security/restricted amd64 Packages [1437 kB]
+Get:29 http://azure.archive.ubuntu.com/ubuntu noble-security/restricted Translation-en [334 kB]
+Fetched 11.8 MB in 2s (7453 kB/s)
+Reading package lists...
+Reading package lists...
+Building dependency tree...
+Reading state information...
+The following additional packages will be installed:
+  libbrotli-dev libbz2-dev libfontconfig-dev libfreetype-dev libpng-dev
+  libwayland-bin libwayland-server0 uuid-dev
+Suggested packages:
+  libasound2-doc freetype2-doc libwayland-doc
+Recommended packages:
+  bzip2-doc libpng-tools
+The following NEW packages will be installed:
+  libasound2-dev libbrotli-dev libbz2-dev libfontconfig-dev libfontconfig1-dev
+  libfreetype-dev libpng-dev libudev-dev libwayland-bin libwayland-dev
+  libwayland-server0 libx264-164 libx264-dev libxkbcommon-dev uuid-dev
+0 upgraded, 15 newly installed, 0 to remove and 38 not upgraded.
+Need to get 3013 kB of archives.
+After this operation, 11.6 MB of additional disk space will be used.
+Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+Get:2 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libasound2-dev amd64 1.2.11-1ubuntu0.3 [115 kB]
+Get:3 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 libbrotli-dev amd64 1.1.0-2build2 [353 kB]
+Get:4 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libbz2-dev amd64 1.0.8-5.1ubuntu0.1 [33.6 kB]
+Get:5 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libpng-dev amd64 1.6.43-5ubuntu0.6 [265 kB]
+Get:6 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libfreetype-dev amd64 2.13.2+dfsg-1ubuntu0.1 [575 kB]
+Get:7 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 uuid-dev amd64 2.39.3-9ubuntu6.6 [33.5 kB]
+Get:8 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 libfontconfig-dev amd64 2.15.0-1.1ubuntu2 [161 kB]
+Get:9 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 libfontconfig1-dev amd64 2.15.0-1.1ubuntu2 [1840 B]
+Get:10 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libudev-dev amd64 255.4-1ubuntu8.17 [22.0 kB]
+Get:11 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 libwayland-server0 amd64 1.22.0-2.1build1 [33.9 kB]
+Get:12 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 libx264-164 amd64 2:0.164.3108+git31e19f9-1 [604 kB]
+Get:13 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 libx264-dev amd64 2:0.164.3108+git31e19f9-1 [667 kB]
+Get:14 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 libxkbcommon-dev amd64 1.6.0-1build1 [56.3 kB]
+Get:15 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 libwayland-bin amd64 1.22.0-2.1build1 [20.6 kB]
+Get:16 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 libwayland-dev amd64 1.22.0-2.1build1 [71.3 kB]
+Fetched 3013 kB in 1s (2914 kB/s)
+Selecting previously unselected package libasound2-dev:amd64.
+(Reading database ...
+(Reading database ... 5%
+(Reading database ... 10%
+(Reading database ... 15%
+(Reading database ... 20%
+(Reading database ... 25%
+(Reading database ... 30%
+(Reading database ... 35%
+(Reading database ... 40%
+(Reading database ... 45%
+(Reading database ... 50%
+(Reading database ... 55%
+(Reading database ... 60%
+(Reading database ... 65%
+(Reading database ... 70%
+(Reading database ... 75%
+(Reading database ... 80%
+(Reading database ... 85%
+(Reading database ... 90%
+(Reading database ... 95%
+(Reading database ... 100%
+(Reading database ... 201676 files and directories currently installed.)
+Preparing to unpack .../00-libasound2-dev_1.2.11-1ubuntu0.3_amd64.deb ...
+Unpacking libasound2-dev:amd64 (1.2.11-1ubuntu0.3) ...
+Selecting previously unselected package libbrotli-dev:amd64.
+Preparing to unpack .../01-libbrotli-dev_1.1.0-2build2_amd64.deb ...
+Unpacking libbrotli-dev:amd64 (1.1.0-2build2) ...
+Selecting previously unselected package libbz2-dev:amd64.
+Preparing to unpack .../02-libbz2-dev_1.0.8-5.1ubuntu0.1_amd64.deb ...
+Unpacking libbz2-dev:amd64 (1.0.8-5.1ubuntu0.1) ...
+Selecting previously unselected package libpng-dev:amd64.
+Preparing to unpack .../03-libpng-dev_1.6.43-5ubuntu0.6_amd64.deb ...
+Unpacking libpng-dev:amd64 (1.6.43-5ubuntu0.6) ...
+Selecting previously unselected package libfreetype-dev:amd64.
+Preparing to unpack .../04-libfreetype-dev_2.13.2+dfsg-1ubuntu0.1_amd64.deb ...
+Unpacking libfreetype-dev:amd64 (2.13.2+dfsg-1ubuntu0.1) ...
+Selecting previously unselected package uuid-dev:amd64.
+Preparing to unpack .../05-uuid-dev_2.39.3-9ubuntu6.6_amd64.deb ...
+Unpacking uuid-dev:amd64 (2.39.3-9ubuntu6.6) ...
+Selecting previously unselected package libfontconfig-dev:amd64.
+Preparing to unpack .../06-libfontconfig-dev_2.15.0-1.1ubuntu2_amd64.deb ...
+Unpacking libfontconfig-dev:amd64 (2.15.0-1.1ubuntu2) ...
+Selecting previously unselected package libfontconfig1-dev:amd64.
+Preparing to unpack .../07-libfontconfig1-dev_2.15.0-1.1ubuntu2_amd64.deb ...
+Unpacking libfontconfig1-dev:amd64 (2.15.0-1.1ubuntu2) ...
+Selecting previously unselected package libudev-dev:amd64.
+Preparing to unpack .../08-libudev-dev_255.4-1ubuntu8.17_amd64.deb ...
+Unpacking libudev-dev:amd64 (255.4-1ubuntu8.17) ...
+Selecting previously unselected package libwayland-server0:amd64.
+Preparing to unpack .../09-libwayland-server0_1.22.0-2.1build1_amd64.deb ...
+Unpacking libwayland-server0:amd64 (1.22.0-2.1build1) ...
+Selecting previously unselected package libx264-164:amd64.
+Preparing to unpack .../10-libx264-164_2%3a0.164.3108+git31e19f9-1_amd64.deb ...
+Unpacking libx264-164:amd64 (2:0.164.3108+git31e19f9-1) ...
+Selecting previously unselected package libx264-dev:amd64.
+Preparing to unpack .../11-libx264-dev_2%3a0.164.3108+git31e19f9-1_amd64.deb ...
+Unpacking libx264-dev:amd64 (2:0.164.3108+git31e19f9-1) ...
+Selecting previously unselected package libxkbcommon-dev:amd64.
+Preparing to unpack .../12-libxkbcommon-dev_1.6.0-1build1_amd64.deb ...
+Unpacking libxkbcommon-dev:amd64 (1.6.0-1build1) ...
+Selecting previously unselected package libwayland-bin.
+Preparing to unpack .../13-libwayland-bin_1.22.0-2.1build1_amd64.deb ...
+Unpacking libwayland-bin (1.22.0-2.1build1) ...
+Selecting previously unselected package libwayland-dev:amd64.
+Preparing to unpack .../14-libwayland-dev_1.22.0-2.1build1_amd64.deb ...
+Unpacking libwayland-dev:amd64 (1.22.0-2.1build1) ...
+Setting up libwayland-server0:amd64 (1.22.0-2.1build1) ...
+Setting up libx264-164:amd64 (2:0.164.3108+git31e19f9-1) ...
+Setting up libxkbcommon-dev:amd64 (1.6.0-1build1) ...
+Setting up libpng-dev:amd64 (1.6.43-5ubuntu0.6) ...
+Setting up libx264-dev:amd64 (2:0.164.3108+git31e19f9-1) ...
+Setting up libwayland-bin (1.22.0-2.1build1) ...
+Setting up uuid-dev:amd64 (2.39.3-9ubuntu6.6) ...
+Setting up libudev-dev:amd64 (255.4-1ubuntu8.17) ...
+Setting up libasound2-dev:amd64 (1.2.11-1ubuntu0.3) ...
+Setting up libbrotli-dev:amd64 (1.1.0-2build2) ...
+Setting up libbz2-dev:amd64 (1.0.8-5.1ubuntu0.1) ...
+Setting up libwayland-dev:amd64 (1.22.0-2.1build1) ...
+Setting up libfreetype-dev:amd64 (2.13.2+dfsg-1ubuntu0.1) ...
+Setting up libfontconfig-dev:amd64 (2.15.0-1.1ubuntu2) ...
+Setting up libfontconfig1-dev:amd64 (2.15.0-1.1ubuntu2) ...
+Processing triggers for man-db (2.12.0-4build2) ...
+Not building database; man-db/auto-update is not 'true'.
+Processing triggers for libc-bin (2.39-0ubuntu8.8) ...
+
+Running kernel seems to be up-to-date.
+
+No services need to be restarted.
+
+No containers need to be restarted.
+
+No user sessions are running outdated binaries.
+
+No VM guests are running outdated hypervisor (qemu) binaries on this host.
+cargo run -p ci -- lints
+shell: /usr/bin/bash -e {0}
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  CARGO_PROFILE_TEST_DEBUG: 0
+  CARGO_PROFILE_DEV_DEBUG: 0
+  NIGHTLY_TOOLCHAIN: nightly
+  RUSTFLAGS: -C debuginfo=0 -D warnings
+    Updating crates.io index
+     Locking 916 packages to latest Rust 1.85.0 compatible versions
+      Adding accesskit v0.24.1 (available: v0.25.0)
+      Adding accesskit_winit v0.33.2 (available: v0.34.0)
+      Adding cookie_store v0.22.0 (available: v0.22.1, requires Rust 1.88.0)
+      Adding ctt v0.5.0 (requires Rust 1.90)
+      Adding ctt-astcenc v0.5.0 (requires Rust 1.90)
+      Adding ctt-bc7enc-rdo v0.5.0 (requires Rust 1.90)
+      Adding ctt-bc7enc-rdo-prebuilt v0.5.0 (requires Rust 1.90)
+      Adding ctt-compressonator v0.5.0 (requires Rust 1.90)
+      Adding ctt-etcpak v0.5.0 (requires Rust 1.90)
+      Adding ctt-intel-texture-compressor v0.5.0 (requires Rust 1.90)
+      Adding ctt-intel-texture-compressor-prebuilt v0.5.0 (requires Rust 1.90)
+      Adding fast_image_resize v6.1.0 (requires Rust 1.87.0)
+      Adding generic-array v0.14.7 (available: v0.14.9)
+      Adding globset v0.4.19 (available: v0.4.20)
+      Adding hashbrown v0.16.1 (available: v0.17.1)
+      Adding heapless v0.9.1 (available: v0.9.3, requires Rust 1.87)
+      Adding icu_collections v2.1.1 (available: v2.3.0, requires Rust 1.88)
+      Adding icu_locale v2.1.1 (available: v2.3.1)
+      Adding icu_locale_core v2.1.1 (available: v2.3.0, requires Rust 1.88)
+      Adding icu_locale_data v2.1.2 (available: v2.3.0)
+      Adding icu_normalizer v2.1.1 (available: v2.3.0, requires Rust 1.88)
+      Adding icu_normalizer_data v2.1.1 (available: v2.3.0, requires Rust 1.88)
+      Adding icu_properties v2.1.2 (available: v2.3.0, requires Rust 1.88)
+      Adding icu_properties_data v2.1.2 (available: v2.3.0, requires Rust 1.88)
+      Adding icu_provider v2.1.1 (available: v2.3.1, requires Rust 1.88)
+      Adding icu_segmenter v2.1.2 (available: v2.3.0)
+      Adding icu_segmenter_data v2.1.1 (available: v2.3.0)
+      Adding idna_adapter v1.2.1 (available: v1.2.2, requires Rust 1.86)
+      Adding ignore v0.4.30 (available: v0.4.33)
+      Adding image v0.25.9 (available: v0.25.10, requires Rust 1.88.0)
+      Adding instability v0.3.10 (available: v0.3.13)
+      Adding ispc-build-utils v0.5.0 (requires Rust 1.90)
+      Adding itertools v0.14.0 (available: v0.15.0)
+      Adding lalrpop v0.23.1 (requires Rust 1.86)
+      Adding lalrpop-util v0.23.1 (requires Rust 1.86)
+      Adding lz4_flex v0.13.1 (available: v0.14.0)
+      Adding naga v30.0.1 (requires Rust 1.87)
+      Adding ordered-float v5.4.0 (available: v5.5.0, requires Rust 1.90)
+      Adding ruzstd v0.8.2 (available: v0.8.3, requires Rust 1.87)
+      Adding serde_yml v0.0.12 (available: v0.0.13)
+      Adding smol_str v0.2.2 (available: v0.3.2)
+      Adding syn v2.0.119 (available: v3.0.5)
+      Adding sysinfo v0.39.6 (requires Rust 1.95)
+      Adding tera v1.20.1 (available: v2.3.0)
+      Adding time v0.3.55 (requires Rust 1.88.0)
+      Adding time-core v0.1.9 (requires Rust 1.88.0)
+      Adding time-macros v0.2.32 (requires Rust 1.88.0)
+      Adding tracing-tracy v0.11.4 (available: v0.12.0)
+      Adding tracy-client v0.18.5 (available: v0.19.0)
+      Adding ui_test v0.30.4 (available: v0.30.7)
+      Adding wasip2 v1.0.1+wasi-0.2.4 (available: v1.0.4+wasi-0.2.12, requires Rust 1.87.0)
+      Adding wayland-protocols v0.32.12 (available: v0.32.13)
+      Adding wesl v0.4.2 (requires Rust 1.96.0)
+      Adding wesl-macros v0.4.2 (requires Rust 1.96.0)
+      Adding wgpu v30.0.1 (requires Rust 1.87.0)
+      Adding wgpu-core v30.0.1 (requires Rust 1.87)
+      Adding wgpu-hal v30.0.1 (requires Rust 1.87)
+      Adding wgpu-naga-bridge v30.0.1 (requires Rust 1.87)
+      Adding wgpu-types v30.0.1 (requires Rust 1.87)
+      Adding wgsl-parse v0.4.2 (requires Rust 1.96.0)
+      Adding wgsl-types v0.4.2 (requires Rust 1.96.0)
+      Adding zbus v5.13.2 (available: v5.19.0)
+      Adding zbus_macros v5.13.2 (available: v5.19.0)
+      Adding zbus_names v4.3.1 (available: v4.3.4)
+      Adding zbus_xml v5.1.0 (available: v5.2.1)
+      Adding zstd v0.13.3 (available: v0.14.0)
+      Adding zvariant v5.9.2 (available: v5.15.0)
+      Adding zvariant_derive v5.9.2 (available: v5.15.0)
+      Adding zvariant_utils v3.3.0 (available: v3.5.0)
+   Compiling proc-macro2 v1.0.107
+   Compiling serde_core v1.0.229
+   Compiling serde v1.0.229
+   Compiling argh_shared v0.1.19
+   Compiling xshell-macros v0.2.7
+   Compiling xshell v0.2.7
+   Compiling quote v1.0.47
+   Compiling syn v3.0.5
+   Compiling syn v2.0.119
+   Compiling argh_derive v0.1.19
+   Compiling serde_derive v1.0.229
+   Compiling argh v0.1.19
+   Compiling ci v0.0.0 (/home/runner/work/bevy/bevy/tools/ci)
+    Finished `dev` profile [unoptimized] target(s) in 7.07s
+     Running `target/debug/ci lints`
+$ cargo fmt --all -- --check
+Error writing files: failed to resolve mod `pan_orbit_camera_custom_input_plugin`: /home/runner/work/bevy/bevy/examples/camera/pan_orbit_camera_custom_input_plugin.rs does not exist
+Error writing files: failed to resolve mod `pan_orbit_camera_custom_input_plugin`: /home/runner/work/bevy/bevy/examples/camera/pan_orbit_camera_custom_input_plugin.rs does not exist
+
+thread 'main' (2853) panicked at tools/ci/src/ci.rs:62:13:
+One or more CI commands failed:
+format: Please run 'cargo fmt --all' to format your code.
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace

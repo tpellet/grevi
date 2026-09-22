@@ -1,0 +1,300 @@
+Download action repository 'actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd' (SHA:de0fac2e4500dabe0009e67214ff5f5447ce83dd)
+Download action repository 'pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093' (SHA:0e279bb959325dab635dd2c09392533439d90093)
+Download action repository 'actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e' (SHA:48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e)
+Complete job name: Tests (20, windows-latest)
+with:
+  repository: sveltejs/svelte
+  token: ***
+  ssh-strict: true
+  ssh-user: git
+  persist-credentials: true
+  clean: true
+  sparse-checkout-cone-mode: true
+  fetch-depth: 1
+  fetch-tags: false
+  show-progress: true
+  lfs: false
+  submodules: false
+  set-safe-directory: true
+env:
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+Syncing repository: sveltejs/svelte
+Working directory is 'D:\a\svelte\svelte'
+git version 2.55.0.windows.5
+Temporarily overriding HOME='D:\a\_temp\7bde467e-b815-4d44-9354-f3b54f0b2dc8' before making global git config changes
+Adding repository directory to the temporary git global config as a safe directory
+Deleting the contents of 'D:\a\svelte\svelte'
+Initialized empty Git repository in D:/a/svelte/svelte/.git/
+Removing SSH command configuration
+Removing HTTP extra header
+Removing includeIf entries pointing to credentials config files
+From https://github.com/sveltejs/svelte
+ * [new ref]         c144c47a432cd1f75893b04ce1f0a4041f3d05b2 -> pull/18857/merge
+Updating files:  44% (4056/9137)
+Updating files:  45% (4112/9137)
+Updating files:  46% (4204/9137)
+Updating files:  47% (4295/9137)
+Updating files:  48% (4386/9137)
+Updating files:  49% (4478/9137)
+Updating files:  50% (4569/9137)
+Updating files:  51% (4660/9137)
+Updating files:  52% (4752/9137)
+Updating files:  53% (4843/9137)
+Updating files:  54% (4934/9137)
+Updating files:  55% (5026/9137)
+Updating files:  56% (5117/9137)
+Updating files:  57% (5209/9137)
+Updating files:  58% (5300/9137)
+Updating files:  59% (5391/9137)
+Updating files:  60% (5483/9137)
+Updating files:  61% (5574/9137)
+Updating files:  62% (5665/9137)
+Updating files:  63% (5757/9137)
+Updating files:  64% (5848/9137)
+Updating files:  65% (5940/9137)
+Updating files:  66% (6031/9137)
+Updating files:  67% (6122/9137)
+Updating files:  68% (6214/9137)
+Updating files:  69% (6305/9137)
+Updating files:  70% (6396/9137)
+Updating files:  71% (6488/9137)
+Updating files:  72% (6579/9137)
+Updating files:  73% (6671/9137)
+Updating files:  74% (6762/9137)
+Updating files:  75% (6853/9137)
+Updating files:  76% (6945/9137)
+Updating files:  77% (7036/9137)
+Updating files:  78% (7127/9137)
+Updating files:  79% (7219/9137)
+Updating files:  80% (7310/9137)
+Updating files:  81% (7401/9137)
+Updating files:  82% (7493/9137)
+Updating files:  83% (7584/9137)
+Updating files:  84% (7676/9137)
+Updating files:  85% (7767/9137)
+Updating files:  86% (7858/9137)
+Updating files:  87% (7950/9137)
+Updating files:  88% (8041/9137)
+Updating files:  89% (8132/9137)
+Updating files:  90% (8224/9137)
+Updating files:  90% (8285/9137)
+Updating files:  91% (8315/9137)
+Updating files:  92% (8407/9137)
+Updating files:  93% (8498/9137)
+Updating files:  94% (8589/9137)
+Updating files:  95% (8681/9137)
+Updating files:  96% (8772/9137)
+Updating files:  97% (8863/9137)
+Updating files:  98% (8955/9137)
+Updating files:  99% (9046/9137)
+Updating files: 100% (9137/9137)
+Updating files: 100% (9137/9137), done.
+Note: switching to 'refs/remotes/pull/18857/merge'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by switching back to a branch.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -c with the switch command. Example:
+
+  git switch -c <new-branch-name>
+
+Or undo this operation with:
+
+  git switch -
+
+Turn off this advice by setting config variable advice.detachedHead to false
+
+HEAD is now at c144c47 Merge 7a16bee91a711da00f6c3c7e7a154cc83397eb63 into 636eaaaa6f064b55072e7d192bb76dc9d8c4516e
+c144c47a432cd1f75893b04ce1f0a4041f3d05b2
+with:
+  dest: ~/setup-pnpm
+  run_install: null
+  cache: false
+  cache_dependency_path: pnpm-lock.yaml
+  package_json_file: package.json
+  standalone: false
+env:
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+(node:1324) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+added 1 package, and audited 2 packages in 7s
+
+1 package is looking for funding
+  run `npm fund` for details
+
+1 high severity vulnerability
+
+To address all issues, run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+Checking for updates...
+Switching pnpm from v11.1.1 to v10.33.4...
+.../.bin/global/v11/1854-1a0c8eabb25     | Progress: resolved 1, reused 0, downloaded 0, added 0
+.../.bin/global/v11/1854-1a0c8eabb25     |   +1 +
+.../.bin/global/v11/1854-1a0c8eabb25     | Progress: resolved 1, reused 0, downloaded 1, added 0
+.../.bin/global/v11/1854-1a0c8eabb25     | Progress: resolved 1, reused 0, downloaded 1, added 1
+.../.bin/global/v11/1854-1a0c8eabb25     | Progress: resolved 1, reused 0, downloaded 1, added 1, done
+[WARN] Detected a pnpm v10 installation layout at PNPM_HOME. The pnpm shims at PNPM_HOME have been refreshed so the new version is active, but pnpm v11 expects bins in PNPM_HOME/bin. Run "pnpm setup" to migrate your PATH to the v11 layout.
+Successfully updated pnpm to v10.33.4
+Installation Completed!
+with:
+  node-version: 20
+  cache: pnpm
+  check-latest: false
+  token: ***
+  package-manager-cache: true
+env:
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+  PNPM_HOME: C:\Users\runneradmin\setup-pnpm\node_modules\.bin
+Attempting to download 20...
+Acquiring 20.20.2 - x64 from https://github.com/actions/node-versions/releases/download/20.20.2-23521894959/node-20.20.2-win32-x64.7z
+Extracting ...
+Adding to the cache ...
+node: v20.20.2
+npm: 10.8.2
+yarn: 1.22.22
+D:\.pnpm-store\v10
+pnpm cache is not found
+pnpm install --frozen-lockfile
+shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+env:
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+  PNPM_HOME: C:\Users\runneradmin\setup-pnpm\node_modules\.bin
+Scope: all 3 workspace projects
+Lockfile is up to date, resolution step is skipped
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Packages: +411
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 411, reused 0, downloaded 54, added 12
+Progress: resolved 411, reused 0, downloaded 190, added 63
+Progress: resolved 411, reused 0, downloaded 340, added 131
+Progress: resolved 411, reused 0, downloaded 410, added 318
+Progress: resolved 411, reused 0, downloaded 410, added 411, done
+
+devDependencies:
++ @changesets/changelog-github 1.0.0-next.6
++ @changesets/cli 2.29.8
++ @eslint/js 10.0.1
++ @sveltejs/eslint-config 9.0.0
++ @types/node 20.19.17
++ @types/picomatch 4.0.2
++ @vitest/coverage-v8 4.1.7
++ eslint 10.0.0
++ eslint-plugin-lube 0.5.1
++ eslint-plugin-svelte 3.15.0
++ jsdom 25.0.1
++ playwright 1.62.1
++ prettier 3.2.4
++ prettier-plugin-svelte 3.4.0
++ svelte 5.57.1 <- packages\svelte
++ typescript 5.5.4
++ typescript-eslint 8.56.0
++ v8-natives 1.2.5
++ vitest 4.1.7
+
+playgrounds/sandbox prepare$ node scripts/create-app-svelte.js
+playgrounds/sandbox prepare: Done
+╭ Warning ─────────────────────────────────────────────────────────────────────╮
+│                                                                              │
+│   Ignored build scripts: esbuild@0.27.7, esbuild@0.28.1.                     │
+│   Run "pnpm approve-builds" to pick which dependencies should be allowed     │
+│   to run scripts.                                                            │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+Done in 5.9s using pnpm v10.33.4
+pnpm playwright install chromium
+shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+env:
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+  PNPM_HOME: C:\Users\runneradmin\setup-pnpm\node_modules\.bin
+Downloading Chrome for Testing 151.0.7922.34 (playwright chromium v1234) from https://cdn.playwright.dev/builds/cft/151.0.7922.34/win64/chrome-win64.zip
+|                                                                                |   0% of 191.8 MiB
+|■■■■■■■■                                                                        |  10% of 191.8 MiB
+|■■■■■■■■■■■■■■■■                                                                |  20% of 191.8 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 191.8 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 191.8 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 191.8 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 191.8 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 191.8 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 191.8 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 191.8 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 191.8 MiB
+Chrome for Testing 151.0.7922.34 (playwright chromium v1234) downloaded to C:\Users\runneradmin\AppData\Local\ms-playwright\chromium-1234
+Downloading FFmpeg (playwright ffmpeg v1011) from https://cdn.playwright.dev/dbazure/download/playwright/builds/ffmpeg/1011/ffmpeg-win64.zip
+|                                                                                |   1% of 1.3 MiB
+|■■■■■■■■                                                                        |  10% of 1.3 MiB
+|■■■■■■■■■■■■■■■■                                                                |  20% of 1.3 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 1.3 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 1.3 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  51% of 1.3 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 1.3 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 1.3 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 1.3 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 1.3 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 1.3 MiB
+FFmpeg (playwright ffmpeg v1011) downloaded to C:\Users\runneradmin\AppData\Local\ms-playwright\ffmpeg-1011
+Downloading Chrome Headless Shell 151.0.7922.34 (playwright chromium-headless-shell v1234) from https://cdn.playwright.dev/builds/cft/151.0.7922.34/win64/chrome-headless-shell-win64.zip
+|                                                                                |   0% of 114.5 MiB
+|■■■■■■■■                                                                        |  10% of 114.5 MiB
+|■■■■■■■■■■■■■■■■                                                                |  20% of 114.5 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 114.5 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 114.5 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 114.5 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 114.5 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 114.5 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 114.5 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 114.5 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 114.5 MiB
+Chrome Headless Shell 151.0.7922.34 (playwright chromium-headless-shell v1234) downloaded to C:\Users\runneradmin\AppData\Local\ms-playwright\chromium_headless_shell-1234
+Downloading Winldd (playwright winldd v1007) from https://cdn.playwright.dev/dbazure/download/playwright/builds/winldd/1007/winldd-win64.zip
+|■■■■■■■■                                                                        |  12% of 0.1 MiB
+|■■■■■■■■■■■■■■■■                                                                |  25% of 0.1 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  38% of 0.1 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  51% of 0.1 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 0.1 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  89% of 0.1 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 0.1 MiB
+Winldd (playwright winldd v1007) downloaded to C:\Users\runneradmin\AppData\Local\ms-playwright\winldd-1007
+pnpm test
+shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+env:
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+  PNPM_HOME: C:\Users\runneradmin\setup-pnpm\node_modules\.bin
+  CI: true
+
+> svelte-monorepo@0.0.1 test D:\a\svelte\svelte
+> vitest run
+
+ RUN  v4.1.7 D:/a/svelte/svelte
+
+ ❯ packages/svelte/tests/signals/test.ts (105 tests | 1 failed | 2 skipped) 55002ms
+     × schedules rerun when writing to signal before reading it (runes mode) 30058ms
+init
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  packages/svelte/tests/signals/test.ts > signals > schedules rerun when writing to signal before reading it (runes mode)
+Error: Test timed out in 30000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ test packages/svelte/tests/signals/test.ts:44:2
+     42| function test(text: string, fn: (runes: boolean) => any) {
+
+     43|  it(`${text} (legacy mode)`, run_test(false, fn));
+ Test Files  1 failed | 33 passed (34)
+     44|  it(`${text} (runes mode)`, run_test(true, fn));
+       |  ^
+     45| }
+     46|
+ ❯ packages/svelte/tests/signals/test.ts:511:2
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+      Tests  1 failed | 7785 passed | 55 skipped (7841)
+   Start at  11:41:01
+   Duration  174.47s (transform 46.02s, setup 0ms, import 45.77s, tests 253.98s, environment 8.77s)
+
+ ELIFECYCLE  Test failed. See above for more details.

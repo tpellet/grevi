@@ -1,0 +1,102 @@
+/home/runner/go/pkg/mod
+/home/runner/.cache/go-build
+Cache is not found
+go version go1.27.1 linux/amd64
+AR='ar'
+CC='gcc'
+CGO_CFLAGS='-O2 -g'
+CGO_CPPFLAGS=''
+CGO_CXXFLAGS='-O2 -g'
+CGO_ENABLED='1'
+CGO_FFLAGS='-O2 -g'
+CGO_LDFLAGS='-O2 -g'
+CXX='g++'
+GCCGO='gccgo'
+GO111MODULE=''
+GOAMD64='v1'
+GOARCH='amd64'
+GOAUTH='netrc'
+GOBIN='/home/runner/go/bin'
+GOCACHE='/home/runner/.cache/go-build'
+GOCACHEPROG=''
+GODEBUG=''
+GOENV='/home/runner/.config/go/env'
+GOEXE=''
+GOEXPERIMENT=''
+GOFIPS140='off'
+GOFLAGS=''
+GOGCCFLAGS='-fPIC -m64 -pthread -Wl,--no-gc-sections -fmessage-length=0 -ffile-prefix-map=/tmp/go-build3517876542=/tmp/go-build -gno-record-gcc-switches'
+GOHOSTARCH='amd64'
+GOHOSTOS='linux'
+GOINSECURE=''
+GOMOD='/home/runner/work/prometheus/prometheus/go.mod'
+GOMODCACHE='/home/runner/go/pkg/mod'
+GONOPROXY=''
+GONOSUMDB=''
+GOOS='linux'
+GOPACKAGESDRIVER=''
+GOPATH='/home/runner/go'
+GOPRIVATE=''
+GOPROXY='https://proxy.golang.org,direct'
+GOROOT='/opt/hostedtoolcache/go/1.27.1/x64'
+GOSUMDB='sum.golang.org'
+GOTELEMETRY='local'
+GOTELEMETRYDIR='/home/runner/.config/go/telemetry'
+GOTMPDIR=''
+GOTOOLCHAIN='local'
+GOTOOLDIR='/opt/hostedtoolcache/go/1.27.1/x64/pkg/tool/linux_amd64'
+GOVCS=''
+GOVERSION='go1.27.1'
+GOWORK='/home/runner/work/prometheus/prometheus/go.work'
+PKG_CONFIG='pkg-config'
+go install golang.org/x/vuln/cmd/govulncheck@latest
+shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+env:
+  GOTOOLCHAIN: local
+  GOOS:
+  GOARCH:
+go: downloading golang.org/x/vuln v1.7.0
+go: downloading golang.org/x/telemetry v0.0.0-20260811182544-a038080d80e5
+go: downloading golang.org/x/mod v0.39.0
+go: downloading golang.org/x/tools v0.49.0
+go: downloading golang.org/x/sync v0.22.0
+govulncheck -C "$WORK_DIR" -format "$OUTPUT_FORMAT" "$GO_PACKAGE"
+shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+env:
+  GOTOOLCHAIN: local
+  GOOS:
+  WORK_DIR: .
+  OUTPUT_FORMAT: text
+  GO_PACKAGE: ./...
+=== Symbol Results ===
+No vulnerabilities found.
+Your code is affected by 0 vulnerabilities.
+This scan also found 0 vulnerabilities in packages you import and 5
+vulnerabilities in modules you require, but your code doesn't appear to call
+these vulnerabilities.
+Use '-show verbose' for more details.
+Post job cleanup.
+Post job cleanup.
+/home/runner/go/pkg/mod
+/home/runner/.cache/go-build
+Sent 20795309 of 490557357 (4.2%), 19.8 MBs/sec
+Sent 423448493 of 490557357 (86.3%), 201.8 MBs/sec
+Sent 490557357 of 490557357 (100.0%), 220.8 MBs/sec
+Cache saved with the key: setup-go-Linux-x64-ubuntu24-go-1.27.1-14c3544fca7fe0d16ea4de90190c3e3a2e20b4c3bea03892645d0a8af315f895
+Post job cleanup.
+git version 2.55.0
+Temporarily overriding HOME='/home/runner/work/_temp/bf75b097-6ed4-4f75-ad1d-e29c923bcce1' before making global git config changes
+Adding repository directory to the temporary git global config as a safe directory
+Removing SSH command configuration
+Removing HTTP extra header
+Removing includeIf entries pointing to credentials config files
+includeif.gitdir:/home/runner/work/prometheus/prometheus/.git.path
+includeif.gitdir:/home/runner/work/prometheus/prometheus/.git/worktrees/*.path
+includeif.gitdir:/github/workspace/.git.path
+includeif.gitdir:/github/workspace/.git/worktrees/*.path
+/home/runner/work/_temp/git-credentials-f8ee6bd6-7e74-4bf1-92cb-d70fda4d7006.config
+/home/runner/work/_temp/git-credentials-f8ee6bd6-7e74-4bf1-92cb-d70fda4d7006.config
+/github/runner_temp/git-credentials-f8ee6bd6-7e74-4bf1-92cb-d70fda4d7006.config
+/github/runner_temp/git-credentials-f8ee6bd6-7e74-4bf1-92cb-d70fda4d7006.config
+Removing credentials config '/home/runner/work/_temp/git-credentials-f8ee6bd6-7e74-4bf1-92cb-d70fda4d7006.config'
+Cleaning up orphan processes

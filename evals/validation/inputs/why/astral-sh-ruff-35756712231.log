@@ -1,0 +1,300 @@
+test crates/ruff_text_size/src/range.rs - range::TextRange::with_end (line 381) ... ok
+test crates/ruff_text_size/src/range.rs - range::TextRange::ordering (line 313) ... ok
+test crates/ruff_text_size/src/range.rs - range::TextRange::with_start (line 358) ... ok
+test crates/ruff_text_size/src/size.rs - size::TextSize::new (line 43) ... ok
+test crates/ruff_text_size/src/range.rs - range::TextRange::up_to (line 98) ... ok
+test crates/ruff_text_size/src/size.rs - size::TextSize::to_u32 (line 74) ... ok
+test crates/ruff_text_size/src/size.rs - size::TextSize::to_usize (line 86) ... ok
+test crates/ruff_text_size/src/size.rs - size::TextSize::of (line 57) ... ok
+
+test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+all doctests ran in 0.13s; merged doctests compilation took 0.12s
+   Doc-tests unicode_names2
+
+running 4 tests
+test crates/ruff_unicode_names2/src/lib.rs - (line 11) ... ok
+test crates/ruff_unicode_names2/src/lib.rs - character (line 364) ... ok
+test crates/ruff_unicode_names2/src/lib.rs - alias (line 317) ... ok
+test crates/ruff_unicode_names2/src/lib.rs - name (line 248) ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+running 1 test
+test crates/ruff_unicode_names2/src/lib.rs - (line 32) ... ignored
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+all doctests ran in 0.11s; merged doctests compilation took 0.11s
+   Doc-tests unicode_names2_generator
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests ruff_wasm
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests ruff_workspace
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests ty
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests ty_combine
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests ty_ide
+
+running 3 tests
+test crates/ty_ide/src/symbols.rs - symbols::Imports (line 493) ... ignored
+test crates/ty_ide/src/symbols.rs - symbols::Imports (line 503) ... ignored
+test crates/ty_ide/src/symbols.rs - symbols::Imports (line 520) ... ignored
+
+test result: ok. 0 passed; 0 failed; 3 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests ty_module_resolver
+
+running 16 tests
+test crates/ty_module_resolver/src/strategy.rs - strategy::MisconfigurationStrategy (line 12) ... ignored
+test crates/ty_module_resolver/src/strategy.rs - strategy::MisconfigurationStrategy (line 23) ... ignored
+test crates/ty_module_resolver/src/module_name.rs - module_name::ModuleName::components (line 77) ... ok
+test crates/ty_module_resolver/src/module_name.rs - module_name::ModuleName::from_components (line 239) ... ok
+test crates/ty_module_resolver/src/module_name.rs - module_name::ModuleName::is_private (line 429) ... ok
+test crates/ty_module_resolver/src/module_name.rs - module_name::ModuleName::first_component (line 91) ... ok
+test crates/ty_module_resolver/src/module_name.rs - module_name::ModuleName::is_test_module (line 378) ... ok
+test crates/ty_module_resolver/src/module_name.rs - module_name::ModuleName::ancestors (line 290) ... ok
+test crates/ty_module_resolver/src/module_name.rs - module_name::ModuleName::extend (line 272) ... ok
+test crates/ty_module_resolver/src/module_name.rs - module_name::ModuleName::last_component (line 109) ... ok
+test crates/ty_module_resolver/src/module_name.rs - module_name::ModuleName::relative_to (line 196) ... ok
+test crates/ty_module_resolver/src/module_name.rs - module_name::ModuleName::new_static (line 51) ... ok
+test crates/ty_module_resolver/src/module_name.rs - module_name::ModuleName::parent (line 127) ... ok
+test crates/ty_module_resolver/src/module_name.rs - module_name::ModuleName::starts_with (line 146) ... ok
+test crates/ty_module_resolver/src/module_name.rs - module_name::ModuleName::relative_to (line 182) ... ok
+test crates/ty_module_resolver/src/module_glob.rs - module_glob (line 9) ... ok
+
+test result: ok. 14 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+all doctests ran in 0.28s; merged doctests compilation took 0.27s
+   Doc-tests ty_project
+
+running 1 test
+test crates/ty_project/src/metadata.rs - metadata::ProjectMetadata::options_in_precedence_order (line 525) ... ignored
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+all doctests ran in 0.07s; merged doctests compilation took 0.07s
+   Doc-tests ty_python_core
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests ty_python_semantic
+
+running 2 tests
+test crates/ty_python_semantic/src/diagnostic/mod.rs - diagnostic::DiagnosticGuard::sink (line 194) ... ignored
+test crates/ty_python_semantic/src/lint.rs - lint::declare_lint (line 233) ... ok
+
+test result: ok. 1 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+running 2 tests
+test crates/ty_python_semantic/src/types/class/static_literal.rs - types::class::static_literal::StaticClassLiteral<'db>::header_range (line 3255) ... ignored
+test crates/ty_python_semantic/src/types/cyclic.rs - types::cyclic::FlowEdge (line 163) ... ignored
+
+test result: ok. 0 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+all doctests ran in 0.52s; merged doctests compilation took 0.50s
+   Doc-tests ty_server
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests ty_site_packages
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests ty_static
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests ty_test
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests ty_vendored
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests ty_wasm
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+uv run --quiet --project=./python/py-fuzzer cargo run --quiet -p ty check --project=./python/py-fuzzer --color=always
+shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+env:
+  UV_LOCKED: 1
+  CARGO_INCREMENTAL: 0
+  CARGO_NET_RETRY: 10
+  CARGO_PROFILE_DEV_LTO: false
+  CARGO_PROFILE_DEV_OPT_LEVEL: 0
+  CARGO_TERM_COLOR: always
+  HAWK_VERSION: 0.1.13
+  RUSTUP_MAX_RETRIES: 10
+  PACKAGE_NAME: ruff
+  PYTHON_VERSION: 3.14
+  NEXTEST_PROFILE: ci
+  MDTEST_EXTERNAL: 1
+  CARGO_PROFILE_DEV_DEBUG: line-tables-only
+  CACHE_ON_FAILURE: false
+  UV_PYTHON_INSTALL_DIR: /home/runner/.local/share/uv/python
+  UV_CACHE_DIR: /home/runner/.cache/uv
+All checks passed!
+uv run --quiet --project=./scripts/ty_benchmark cargo run --quiet -p ty check --project=./scripts/ty_benchmark --color=always
+shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+env:
+  UV_LOCKED: 1
+  CARGO_INCREMENTAL: 0
+  CARGO_NET_RETRY: 10
+  CARGO_PROFILE_DEV_LTO: false
+  CARGO_PROFILE_DEV_OPT_LEVEL: 0
+  CARGO_TERM_COLOR: always
+  HAWK_VERSION: 0.1.13
+  RUSTUP_MAX_RETRIES: 10
+  PACKAGE_NAME: ruff
+  PYTHON_VERSION: 3.14
+  NEXTEST_PROFILE: ci
+  MDTEST_EXTERNAL: 1
+  CARGO_PROFILE_DEV_DEBUG: line-tables-only
+  CACHE_ON_FAILURE: false
+  UV_PYTHON_INSTALL_DIR: /home/runner/.local/share/uv/python
+  UV_CACHE_DIR: /home/runner/.cache/uv
+All checks passed!
+cargo run --quiet -p ty check scripts/*.py --color=always
+shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+env:
+  UV_LOCKED: true
+  CARGO_INCREMENTAL: 0
+  CARGO_NET_RETRY: 10
+  CARGO_PROFILE_DEV_LTO: false
+  CARGO_PROFILE_DEV_OPT_LEVEL: 0
+  CARGO_TERM_COLOR: always
+  HAWK_VERSION: 0.1.13
+  RUSTUP_MAX_RETRIES: 10
+  PACKAGE_NAME: ruff
+  PYTHON_VERSION: 3.14
+  NEXTEST_PROFILE: ci
+  MDTEST_EXTERNAL: 1
+  CARGO_PROFILE_DEV_DEBUG: line-tables-only
+  CACHE_ON_FAILURE: false
+  UV_PYTHON_INSTALL_DIR: /home/runner/.local/share/uv/python
+  UV_CACHE_DIR: /home/runner/.cache/uv
+  TY_UV: scripts
+All checks passed!
+cargo doc --all --no-deps
+shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+env:
+  UV_LOCKED: 1
+  CARGO_INCREMENTAL: 0
+  CARGO_NET_RETRY: 10
+  CARGO_PROFILE_DEV_LTO: false
+  CARGO_PROFILE_DEV_OPT_LEVEL: 0
+  CARGO_TERM_COLOR: always
+  HAWK_VERSION: 0.1.13
+  RUSTUP_MAX_RETRIES: 10
+  PACKAGE_NAME: ruff
+  PYTHON_VERSION: 3.14
+  NEXTEST_PROFILE: ci
+  MDTEST_EXTERNAL: 1
+  CARGO_PROFILE_DEV_DEBUG: line-tables-only
+  CACHE_ON_FAILURE: false
+  UV_PYTHON_INSTALL_DIR: /home/runner/.local/share/uv/python
+  UV_CACHE_DIR: /home/runner/.cache/uv
+  RUSTDOCFLAGS: -D warnings
+   Compiling ruff_source_file v0.0.14 (/home/runner/work/ruff/ruff/crates/ruff_source_file)
+   Compiling zerocopy v0.8.27
+   Compiling unicode-normalization v0.1.25
+    Checking phf_shared v0.11.3
+    Checking ruff_text_size v0.0.14 (/home/runner/work/ruff/ruff/crates/ruff_text_size)
+    Checking ruff_cache v0.0.14 (/home/runner/work/ruff/ruff/crates/ruff_cache)
+    Checking ruff_annotate_snippets v0.0.14 (/home/runner/work/ruff/ruff/crates/ruff_annotate_snippets)
+    Checking ruff_memory_usage v0.0.14 (/home/runner/work/ruff/ruff/crates/ruff_memory_usage)
+    Checking ruff_python_stdlib v0.0.14 (/home/runner/work/ruff/ruff/crates/ruff_python_stdlib)
+    Checking ruff_options_metadata v0.0.14 (/home/runner/work/ruff/ruff/crates/ruff_options_metadata)
+   Compiling ty_vendored v0.0.14 (/home/runner/work/ruff/ruff/crates/ty_vendored)
+    Checking getrandom v0.2.16
+ Documenting ruff_cache v0.0.14 (/home/runner/work/ruff/ruff/crates/ruff_cache)
+ Documenting ruff_annotate_snippets v0.0.14 (/home/runner/work/ruff/ruff/crates/ruff_annotate_snippets)
+ Documenting ruff_text_size v0.0.14 (/home/runner/work/ruff/ruff/crates/ruff_text_size)
+    Checking phf v0.11.3
+    Checking ruff_diagnostics v0.0.14 (/home/runner/work/ruff/ruff/crates/ruff_diagnostics)
+    Checking rand_core v0.6.4
+ Documenting ruff_source_file v0.0.14 (/home/runner/work/ruff/ruff/crates/ruff_source_file)
+ Documenting ruff_diagnostics v0.0.14 (/home/runner/work/ruff/ruff/crates/ruff_diagnostics)
+ Documenting ruff_memory_usage v0.0.14 (/home/runner/work/ruff/ruff/crates/ruff_memory_usage)
+ Documenting ruff_options_metadata v0.0.14 (/home/runner/work/ruff/ruff/crates/ruff_options_metadata)
+ Documenting ruff_python_stdlib v0.0.14 (/home/runner/work/ruff/ruff/crates/ruff_python_stdlib)
+ Documenting ruff_python_ast_integration_tests v0.0.0 (/home/runner/work/ruff/ruff/crates/ruff_python_ast_integration_tests)
+    Checking ruff_python_trivia v0.0.14 (/home/runner/work/ruff/ruff/crates/ruff_python_trivia)
+    Checking ruff_notebook v0.0.14 (/home/runner/work/ruff/ruff/crates/ruff_notebook)
+ Documenting ruff_macros v0.0.14 (/home/runner/work/ruff/ruff/crates/ruff_macros)
+ Documenting ruff_python_trivia v0.0.14 (/home/runner/work/ruff/ruff/crates/ruff_python_trivia)
+ Documenting ruff_notebook v0.0.14 (/home/runner/work/ruff/ruff/crates/ruff_notebook)
+ Documenting ruff_python_trivia_integration_tests v0.0.0 (/home/runner/work/ruff/ruff/crates/ruff_python_trivia_integration_tests)
+   Compiling ruff_macros v0.0.14 (/home/runner/work/ruff/ruff/crates/ruff_macros)
+    Checking ppv-lite86 v0.2.21
+    Checking rand_chacha v0.3.1
+    Checking rand v0.8.5
+    Checking ruff_python_ast v0.0.14 (/home/runner/work/ruff/ruff/crates/ruff_python_ast)
+    Checking ty_static v0.0.14 (/home/runner/work/ruff/ruff/crates/ty_static)
+    Checking ruff_index v0.0.14 (/home/runner/work/ruff/ruff/crates/ruff_index)
+    Checking ruff_formatter v0.0.14 (/home/runner/work/ruff/ruff/crates/ruff_formatter)
+ Documenting ruff_index v0.0.14 (/home/runner/work/ruff/ruff/crates/ruff_index)
+ Documenting ruff_formatter v0.0.14 (/home/runner/work/ruff/ruff/crates/ruff_formatter)
+ Documenting ruff_python_ast v0.0.14 (/home/runner/work/ruff/ruff/crates/ruff_python_ast)
+ Documenting ty_static v0.0.14 (/home/runner/work/ruff/ruff/crates/ty_static)
+    Checking phf_generator v0.11.3
+    Checking phf_codegen v0.11.3
+ Documenting ruff_unicode_names2_generator v0.0.14 (/home/runner/work/ruff/ruff/crates/ruff_unicode_names2_generator)
+   Compiling ruff_unicode_names2_generator v0.0.14 (/home/runner/work/ruff/ruff/crates/ruff_unicode_names2_generator)
+   Compiling terminfo v0.9.0
+error: this URL is not a hyperlink
+ --> crates/ruff_unicode_names2_generator/src/phf.rs:4:26
+  |
+4 | //! Strongly inspired by https://github.com/sfackler/rust-phf
+  |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: bare URLs are not automatically turned into clickable links
+  = note: `-D rustdoc::bare-urls` implied by `-D warnings`
+  = help: to override `-D warnings` add `#[allow(rustdoc::bare_urls)]`
+help: use an automatic link instead
+  |
+4 | //! Strongly inspired by <https://github.com/sfackler/rust-phf>
+  |                          +                                    +
+
+   Compiling ruff_unicode_names2 v0.0.14 (/home/runner/work/ruff/ruff/crates/ruff_unicode_names2)
+error: could not document `ruff_unicode_names2_generator`
+warning: build failed, waiting for other jobs to finish...

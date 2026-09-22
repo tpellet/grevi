@@ -1,0 +1,8 @@
+16e4a39 chore(release): v4.7.10 — drop-frame sync events are reported at the timecode they happen
+2e9b8e1 fix(sync): report drop-frame sync events at the timecode they happen
+1bae1c5 fix(gallery): refuse a negative still, album or item index
+ebe0821 chore(release): v4.7.7 — the offline test bootstrap holds under unittest discover too
+bddd943 fix(tests): install the offline bootstrap under `unittest discover` too
+75d4984 chore(release): v4.7.5 — the control panel serves on the ::1 loopback it accepts
+3a9c725 fix(control-panel): let the panel serve on the ::1 loopback it accepts
+1089182 fix(guards): read a false spelling as false on six permission flags

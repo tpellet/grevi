@@ -1,0 +1,300 @@
+        PASS [   0.013s] rust-analyzer lsp::to_proto::tests::snippet_rendering_multiple_placeholders_in_text_edit
+        PASS [   0.015s] rust-analyzer lsp::to_proto::tests::snippet_rendering_multiple_tabstops_in_text_edit
+        PASS [   0.013s] rust-analyzer lsp::to_proto::tests::snippet_rendering_only_tabstops
+        PASS [   0.013s] rust-analyzer lsp::to_proto::tests::snippet_rendering_only_text_edits
+        PASS [   0.013s] rust-analyzer lsp::to_proto::tests::snippet_rendering_placeholder_adjust_offset_added
+        PASS [   0.013s] rust-analyzer lsp::to_proto::tests::snippet_rendering_placeholder_adjust_offset_deleted
+        PASS [   0.014s] rust-analyzer lsp::to_proto::tests::snippet_rendering_tabstop_adjust_offset_added
+        PASS [   0.013s] rust-analyzer lsp::to_proto::tests::snippet_rendering_tabstop_adjust_offset_after_text_edits
+        PASS [   0.012s] rust-analyzer lsp::to_proto::tests::snippet_rendering_tabstop_adjust_offset_between_text_edits
+        PASS [   0.012s] rust-analyzer lsp::to_proto::tests::snippet_rendering_tabstop_adjust_offset_deleted
+        PASS [   0.014s] rust-analyzer lsp::to_proto::tests::snippet_rendering_tabstop_after_text_edit
+        PASS [   0.012s] rust-analyzer lsp::to_proto::tests::snippet_rendering_tabstops_before_text_edit
+        PASS [   0.013s] rust-analyzer lsp::to_proto::tests::snippet_rendering_tabstops_between_text_edits
+        PASS [   0.012s] rust-analyzer lsp::to_proto::tests::test_lowercase_drive_letter
+        PASS [   0.012s] rust-analyzer lsp::utils::tests::completion_with_disjoint_edits_disjoint_tests
+        PASS [   0.012s] rust-analyzer lsp::utils::tests::completion_with_joint_edits_disjoint_tests
+        PASS [   0.012s] rust-analyzer lsp::utils::tests::empty_completion_disjoint_tests
+        PASS [   0.012s] rust-analyzer lsp::utils::tests::test_apply_document_changes
+        PASS [   0.017s] rust-analyzer priming_scope::tests::active_seed_pulls_transitive_deps
+        PASS [   0.015s] rust-analyzer priming_scope::tests::closes_seeds_under_deps
+        PASS [   0.015s] rust-analyzer priming_scope::tests::does_not_pull_reverse_deps
+        PASS [   0.015s] rust-analyzer session::patch_path_prefix_works
+        PASS [   0.016s] rust-analyzer priming_scope::tests::pulls_library_dep_via_seeded_crate
+        PASS [   0.018s] rust-analyzer target_spec::tests::test_cfg_expr_minimal_features_needed
+        PASS [   0.017s] rust-analyzer::slow-tests completes_items_from_standard_library_in_cargo_script
+        PASS [   0.018s] rust-analyzer::slow-tests diagnostics_dont_block_typing
+        PASS [   0.746s] rust-analyzer::slow-tests cli::lsif_contains_generated_constant
+        PASS [   1.783s] rust-analyzer::slow-tests flycheck::test_flycheck_diagnostic_cleared_after_fix
+        PASS [   1.267s] rust-analyzer::slow-tests flycheck::test_flycheck_diagnostic_with_override_command
+        PASS [   1.321s] rust-analyzer::slow-tests flycheck::test_flycheck_diagnostics_for_unused_variable
+        PASS [   3.114s] rust-analyzer::slow-tests flycheck::test_flycheck_diagnostics_with_override_command_cleared_after_fix
+        PASS [   2.636s] rust-analyzer::slow-tests out_dirs_check
+        PASS [   1.227s] rust-analyzer::slow-tests preserves_dos_line_endings
+        PASS [   1.187s] rust-analyzer::slow-tests ratoml::ratoml_add_immediate_child_to_ws_root
+        PASS [   1.021s] rust-analyzer::slow-tests ratoml::ratoml_client_config_basic
+        PASS [   1.103s] rust-analyzer::slow-tests ratoml::ratoml_crates_both_roots
+        PASS [   1.359s] rust-analyzer::slow-tests ratoml::ratoml_create_user_config
+        PASS [   1.349s] rust-analyzer::slow-tests ratoml::ratoml_delete_ratoml_at_ws_root
+        PASS [   1.336s] rust-analyzer::slow-tests ratoml::ratoml_delete_user_config
+        PASS [   1.370s] rust-analyzer::slow-tests ratoml::ratoml_in_root_is_workspace
+        PASS [   1.410s] rust-analyzer::slow-tests ratoml::ratoml_modify_ratoml_at_ws_root
+        PASS [   1.315s] rust-analyzer::slow-tests ratoml::ratoml_modify_user_config
+        PASS [   1.287s] rust-analyzer::slow-tests ratoml::ratoml_multiple_ratoml_in_single_source_root
+        PASS [   1.366s] rust-analyzer::slow-tests ratoml::ratoml_root_is_deletable
+        PASS [   1.222s] rust-analyzer::slow-tests ratoml::ratoml_root_is_updateable
+        PASS [   1.052s] rust-analyzer::slow-tests ratoml::ratoml_user_config_detected
+        PASS [   1.098s] rust-analyzer::slow-tests ratoml::ratoml_virtual_workspace
+        PASS [   1.134s] rust-analyzer::slow-tests resolves_inlay_hints
+        PASS [   0.018s] rust-analyzer::slow-tests support::lines_match_works
+        SLOW [>120.000s] hir-ide tests::consteval::exec_limits
+        PASS [   1.236s] rust-analyzer::slow-tests test_evaluate_predicate
+        PASS [   2.653s] rust-analyzer::slow-tests test_exclude_config_works
+        PASS [   2.254s] rust-analyzer::slow-tests test_format_document
+        PASS [   1.038s] rust-analyzer::slow-tests test_format_document_2018
+        PASS [   1.170s] rust-analyzer::slow-tests test_format_document_range
+        PASS [   1.200s] rust-analyzer::slow-tests test_format_document_unchanged
+        PASS [   1.011s] rust-analyzer::slow-tests test_get_failed_obligations
+        PASS [   1.011s] rust-analyzer::slow-tests test_missing_module_code_action
+        PASS [   0.595s] rust-analyzer::slow-tests test_missing_module_code_action_in_json_project
+        PASS [   3.746s] rust-analyzer::slow-tests test_path_dependency_runnables
+        PASS [   1.009s] rust-analyzer::slow-tests test_runnables_cwd
+        PASS [   3.635s] rust-analyzer::slow-tests test_runnables_project
+        PASS [   1.743s] rust-analyzer::slow-tests test_will_rename_files_same_level
+        PASS [   0.012s] smol_str from_buf_and_chars_size_hinted_heap
+        PASS [   0.011s] smol_str::test assert_traits
+        PASS [   0.010s] smol_str::test const_fn_ctor
+        PASS [   0.010s] smol_str::test conversions
+        PASS [   0.931s] smol_str::test from_str_iter
+        PASS [   0.727s] smol_str::test from_string_iter
+        PASS [   0.112s] smol_str::test roundtrip
+        PASS [   0.072s] smol_str::test roundtrip_newlines
+        PASS [  40.546s] rust-analyzer::slow-tests completes_items_from_standard_library
+        PASS [   0.120s] smol_str::test roundtrip_spaces
+        PASS [   0.045s] smol_str::test smol_str_is_smol
+        PASS [   0.069s] smol_str::test roundtrip_ws
+        PASS [   0.032s] smol_str::test test_bad_size_hint_char_iter
+        PASS [   0.021s] smol_str::test test_builder_push
+        PASS [   0.020s] smol_str::test test_builder_push_str
+        PASS [   0.021s] smol_str::test test_from_char
+        PASS [   0.020s] smol_str::test test_from_char_iterator
+        PASS [   0.021s] smol_str::test test_search_in_hashmap
+        PASS [   0.017s] smol_str::test test_str_ext::large
+        PASS [   0.015s] smol_str::test test_str_ext::replace
+        PASS [   0.015s] smol_str::test test_str_ext::replacen
+        PASS [   0.014s] smol_str::test test_str_ext::replacen_1_ascii
+        PASS [   0.010s] smol_str::test test_str_ext::to_ascii_lowercase
+        PASS [   0.010s] smol_str::test test_str_ext::to_lowercase
+        PASS [   0.012s] smol_str::test test_str_ext::to_ascii_uppercase
+        PASS [   0.011s] smol_str::test test_str_ext::to_uppercase
+        PASS [   0.012s] smol_str::test test_to_smolstr
+        PASS [   0.012s] span ast_id::tests::blocks_with_no_items_have_no_id
+        PASS [   0.013s] span ast_id::tests::check_all_nodes
+        PASS [   0.013s] span ast_id::tests::different_names_get_different_hashes
+        PASS [   0.011s] span ast_id::tests::different_parents_get_different_hashes
+        PASS [   0.013s] span hygiene::tests::test_interned_context_round_trips_through_u32
+        PASS [   0.018s] span hygiene::tests::test_non_root_value_is_not_root
+        PASS [   0.037s] span hygiene::tests::test_root_edition_editions
+        PASS [   0.010s] span hygiene::tests::test_root_edition_is_root
+        PASS [   0.009s] span hygiene::tests::test_roots_do_not_overlap_with_salsa_ids
+        PASS [   0.010s] stdx anymap::tests::test_varieties
+        PASS [   0.010s] stdx anymap::tests::type_id_hasher
+        PASS [   0.010s] stdx tests::test_dedent
+        PASS [   0.015s] stdx tests::test_indent_of
+        PASS [   0.010s] stdx tests::test_replace
+        PASS [   0.015s] stdx tests::test_trim_indent
+        PASS [   0.013s] syntax api_walkthrough
+        PASS [   0.013s] syntax ast::assert_ast_is_dyn_compatible
+        PASS [   0.015s] syntax ast::edit::split_prefix_inserts_self
+        PASS [   0.015s] syntax ast::edit::split_prefix_preserves_rename
+        PASS [   0.012s] syntax ast::edit::split_prefix_wraps_glob
+        PASS [   0.012s] syntax ast::edit::test_increase_indent
+        PASS [   0.011s] syntax ast::expr_ext::if_block_condition
+        PASS [   0.012s] syntax ast::expr_ext::if_condition_with_if_inside
+        PASS [   0.012s] syntax ast::expr_ext::test_literal_with_attr
+        PASS [   0.013s] syntax ast::make::tests::expr_if_without_else_has_no_trailing_whitespace
+        PASS [   0.014s] syntax ast::make::tests::test_unnamed_param
+        PASS [   0.013s] syntax ast::make::tests::test_untyped_param
+        PASS [   0.012s] syntax ast::test_comments_preserve_trailing_whitespace
+        PASS [   0.012s] syntax ast::test_doc_comment_multi_line_block_strips_suffix
+        PASS [   0.012s] syntax ast::test_doc_comment_none
+        PASS [   0.013s] syntax ast::test_doc_comment_of_statics
+        PASS [   0.011s] syntax ast::test_doc_comment_preserves_indents
+        PASS [   0.011s] syntax ast::test_doc_comment_preserves_newlines
+        PASS [   0.011s] syntax ast::test_doc_comment_single_line_block_strips_suffix
+        PASS [   0.013s] syntax ast::test_doc_comment_single_line_block_strips_suffix_whitespace
+        PASS [   0.023s] syntax ast::test_four_slash_line_comment
+        PASS [   0.011s] syntax ast::test_inner_doc_comment_of_items
+        PASS [   0.010s] syntax ast::test_outer_doc_comment_of_items
+        PASS [   0.009s] syntax ast::test_where_predicates
+        PASS [   0.010s] syntax ast::token_ext::tests::test_byte_string_escape
+        PASS [   0.012s] syntax ast::token_ext::tests::test_float_number_suffix
+        PASS [   0.012s] syntax ast::token_ext::tests::test_int_number_suffix
+        PASS [   0.012s] syntax ast::token_ext::tests::test_string_escape
+        PASS [   0.013s] syntax ast::token_ext::tests::test_value_underscores
+        PASS [   0.017s] syntax parsing::reparsing::tests::reparse_block_tests
+        PASS [   0.015s] syntax parsing::reparsing::tests::reparse_block_with_error_in_middle_fixed
+        PASS [   0.013s] syntax parsing::reparsing::tests::reparse_block_with_error_in_middle_unchanged
+        PASS [   0.050s] syntax parsing::reparsing::tests::reparse_str_token_with_error_fixed
+        PASS [   0.010s] syntax parsing::reparsing::tests::reparse_str_token_with_error_unchanged
+        PASS [   0.012s] syntax parsing::reparsing::tests::reparse_token_tests
+        PASS [   0.010s] syntax ptr::test_local_syntax_ptr
+        PASS [   0.010s] syntax syntax_editor::edits::tests::add_variant_to_empty_enum
+        PASS [   0.011s] syntax syntax_editor::edits::tests::add_variant_to_non_empty_enum
+        PASS [   0.012s] syntax syntax_editor::edits::tests::add_variant_with_record_field_list
+        PASS [   0.013s] syntax syntax_editor::edits::tests::add_variant_with_tuple_field_list
+        PASS [   0.011s] syntax syntax_editor::tests::basic_usage
+        PASS [   0.014s] syntax syntax_editor::tests::test_dependent_change_prefers_nearest_changed_ancestor
+        PASS [   0.014s] syntax syntax_editor::tests::test_insert_dependent
+        PASS [   0.014s] syntax syntax_editor::tests::test_insert_independent
+        PASS [   0.015s] syntax syntax_editor::tests::test_more_times_insert_node_to_same_node
+        PASS [   0.012s] syntax syntax_editor::tests::test_more_times_replace_node_to_same_node
+        PASS [   0.013s] syntax syntax_editor::tests::test_more_times_replace_node_to_same_token
+        PASS [   0.014s] syntax syntax_editor::tests::test_replace_root_with_dependent
+        PASS [   0.013s] syntax syntax_editor::tests::test_replace_token_in_parent
+        PASS [   0.016s] syntax tests::benchmark_parser
+        PASS [   0.013s] syntax tests::parse_smoke_test
+        PASS [   0.021s] syntax tests::parser_fuzz_tests
+        PASS [   0.012s] syntax tests::reparse_fuzz_tests
+        PASS [   4.314s] syntax tests::self_hosting_parsing
+        PASS [   0.021s] syntax tests::validation_tests
+        PASS [   0.014s] syntax-bridge prettify_macro_expansion::tests::test_attrs
+        PASS [   0.047s] syntax-bridge prettify_macro_expansion::tests::test_curly_indent
+        PASS [   0.103s] syntax-bridge prettify_macro_expansion::tests::test_exprs
+        PASS [   0.032s] syntax-bridge prettify_macro_expansion::tests::test_in_macro
+        PASS [   0.022s] syntax-bridge prettify_macro_expansion::tests::test_items
+        PASS [   0.023s] syntax-bridge prettify_macro_expansion::tests::test_match_arm
+        PASS [   0.016s] syntax-bridge prettify_macro_expansion::tests::test_pats
+        PASS [   0.019s] syntax-bridge tests::punct_spacing
+        PASS [   0.016s] syntax-bridge tests::scientific_notation_field_access_recovers
+        PASS [   0.100s] test-utils fixture::minicore_source_code_normalizes_line_endings
+        PASS [   0.129s] test-utils fixture::parse_fixture_checks_further_indented_metadata
+        PASS [   0.011s] test-utils fixture::parse_fixture_gets_full_meta
+        PASS [   0.012s] test-utils test_extract_annotations_1
+        PASS [   0.063s] test-utils test_extract_annotations_2
+        PASS [   0.109s] test-utils test_extract_tags
+        PASS [   0.033s] text-size::constructors main
+        PASS [   0.012s] text-size::indexing main
+        PASS [   0.011s] text-size::main checked_math
+        PASS [   0.010s] text-size::main contains
+        PASS [   0.010s] text-size::main contains_point
+        PASS [   0.010s] text-size::main cover
+        PASS [   0.010s] text-size::main cover_offset
+        PASS [   0.010s] text-size::main intersect
+        PASS [   0.010s] text-size::main math
+        PASS [   0.011s] text-size::main sum
+        PASS [   0.012s] ungrammar smoke
+        PASS [   0.054s] vfs file_set::tests::classify_path
+        PASS [   0.016s] vfs file_set::tests::classify_path_default_config
+        PASS [   0.014s] vfs file_set::tests::name_prefix
+        PASS [   0.017s] vfs file_set::tests::name_prefix_partially_matches
+        PASS [   0.016s] vfs file_set::tests::path_prefix
+        PASS [   0.011s] vfs loader::handle_is_dyn_compatible
+        PASS [   0.011s] vfs vfs_path::tests::virtual_path_extensions
+        PASS [   0.011s] vfs vfs_path::tests::virtual_path_starts_with_is_component_based
+        PASS [   0.012s] vfs vfs_path::windows_paths::paths_encoding
+        PASS [   0.011s] vfs vfs_path::windows_paths::test_sep_root_dir_encoding
+        PASS [   1.287s] xtask::bin/xtask codegen::assists_doc_tests::test
+        PASS [   1.953s] xtask::bin/xtask codegen::grammar::test
+        PASS [   0.497s] xtask::bin/xtask codegen::parser_inline_tests::test
+        PASS [   0.113s] xtask::bin/xtask publish::notes::tests::inline_macro_processing_for_empty_line
+        PASS [   0.089s] xtask::bin/xtask publish::notes::tests::inline_macro_processing_for_line_with_no_macro
+        PASS [   0.111s] xtask::bin/xtask publish::notes::tests::inline_macro_processing_for_macro_in_line_end
+        PASS [   0.141s] xtask::bin/xtask publish::notes::tests::inline_macro_processing_for_macro_in_line_start
+        PASS [   0.195s] xtask::bin/xtask publish::notes::tests::inline_macro_processing_for_macro_in_the_middle_of_line
+        PASS [   0.125s] xtask::bin/xtask publish::notes::tests::inline_macro_processing_for_several_macros
+        PASS [   0.071s] xtask::bin/xtask publish::notes::tests::inline_macro_processing_for_several_macros_without_text_in_between
+        PASS [   0.096s] xtask::bin/xtask publish::notes::tests::test_asciidoc_to_markdown_conversion
+        PASS [   0.135s] xtask::bin/xtask publish::tests::original_changelog_url_creation
+        PASS [  13.226s] smol_str::tidy check_code_formatting
+        PASS [  43.947s] rust-analyzer::slow-tests resolve_proc_macro
+        SLOW [>180.000s] hir-ide tests::consteval::exec_limits
+        PASS [  28.822s] xtask::bin/xtask tidy::test
+        PASS [ 201.830s] hir-ide tests::consteval::exec_limits
+────────────
+     Summary [ 206.621s] 8138 tests run: 8138 passed (1 slow), 10 skipped
+with:
+  tool: cargo-machete
+  checksum: true
+  fallback: cargo-binstall
+env:
+  CARGO_INCREMENTAL: 0
+  CARGO_NET_RETRY: 10
+  CI: 1
+  RUST_BACKTRACE: short
+  RUSTUP_MAX_RETRIES: 10
+  RUSTFLAGS: -D warnings -W unreachable-pub --cfg no_salsa_async_drops
+  CC: deny_c
+Set-StrictMode -Version Latest
+$remove_env = @('ENV','BASH_ENV','CDPATH','SHELLOPTS','BASHOPTS','BASH_FUNC_*')
+foreach ($name in $remove_env) {
+  if (Test-Path "Env:$name") { Remove-Item "Env:\$name" }
+}
+for ($i=1; $i -le 10; $i++) {
+  $prev_err_action = $ErrorActionPreference
+  $ErrorActionPreference = "Continue"
+  & bash --noprofile --norc "$env:GITHUB_ACTION_PATH\main.sh"
+  $code = $LASTEXITCODE
+  $ErrorActionPreference = "$prev_err_action"
+  if (Test-Path "$env:USERPROFILE\.install-action\init") {
+    # If bash started successfully, main.sh creates init file.
+    Remove-Item "$env:USERPROFILE\.install-action\init" -Force
+    exit $code
+  }
+  if ($i -lt 10) {
+    Write-Output "::warning::install-action: installation failed due to bash startup failure (<https://github.com/actions/partner-runner-images/issues/169>); retrying..."
+  }
+}
+Write-Output "::error::install-action: installation failed due to bash startup failure (<https://github.com/actions/partner-runner-images/issues/169>); this maybe resolved by re-running job"
+exit 1
+shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+env:
+  CARGO_INCREMENTAL: 0
+  CARGO_NET_RETRY: 10
+  CI: 1
+  RUST_BACKTRACE: short
+  RUSTUP_MAX_RETRIES: 10
+  RUSTFLAGS: -D warnings -W unreachable-pub --cfg no_salsa_async_drops
+  CC: deny_c
+  INPUT_TOOL: cargo-machete
+  INPUT_CHECKSUM: true
+  INPUT_FALLBACK: cargo-binstall
+  DEFAULT_GITHUB_TOKEN: ***
+  ACTION_USER_AGENT: taiki-e/install-action (cargo-machete)
+  RUNNER_OS: Windows
+  RUNNER_ARCH: X64
+info: host platform: x86_64_windows
+info: cargo is located at /c/Users/runneradmin/.cargo/bin/cargo
+info: installing cargo-machete@latest
+info: downloading https://github.com/bnjbvr/cargo-machete/releases/download/v0.9.2/cargo-machete-v0.9.2-x86_64-pc-windows-msvc.tar.gz
+info: verifying sha256 checksum for cargo-machete-v0.9.2-x86_64-pc-windows-msvc.tar.gz
+info: cargo-machete installed at /c/Users/runneradmin/.cargo/bin/cargo-machete.exe
++ cargo-machete --version
+0.9.2
+
+cargo machete
+shell: C:\Program Files\Git\bin\bash.EXE --noprofile --norc -e -o pipefail {0}
+env:
+  CARGO_INCREMENTAL: 0
+  CARGO_NET_RETRY: 10
+  CI: 1
+  RUST_BACKTRACE: short
+  RUSTUP_MAX_RETRIES: 10
+  RUSTFLAGS: -D warnings -W unreachable-pub --cfg no_salsa_async_drops
+  CC: deny_c
+Analyzing dependencies of crates in this directory...
+cargo-machete found the following unused dependencies in this directory:
+hir-ty -- .\crates\hir-ty\Cargo.toml:
+	serde
+
+If you believe cargo-machete has detected an unused dependency incorrectly,
+you can add the dependency to the list of dependencies to ignore in the
+Done!
+`[package.metadata.cargo-machete]` section of the appropriate Cargo.toml.
+For example:
+
+[package.metadata.cargo-machete]
+ignored = ["prost"]
+
+You can also try running it with the `--with-metadata` flag for better accuracy,
+though this may modify your Cargo.lock files.

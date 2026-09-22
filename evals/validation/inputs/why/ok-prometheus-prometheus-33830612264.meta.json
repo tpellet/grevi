@@ -1,0 +1,9 @@
+{
+ "repo": "prometheus/prometheus",
+ "run": 33830612264,
+ "workflow": "govulncheck",
+ "title": "govulncheck",
+ "created": "2026-09-04T02:44:02Z",
+ "url": "https://github.com/prometheus/prometheus/actions/runs/33830612264",
+ "collected": "gh run view --log, middle window of 150 non-empty lines"
+}

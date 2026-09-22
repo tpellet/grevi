@@ -1,0 +1,153 @@
+{"id": "fill-cal-01", "gold": "docs/api/concurrency.md", "annotator_a": {"label": "docs/api/concurrency.md", "confidence": "high"}, "annotator_b": {"label": "docs/api/concurrency.md", "confidence": "high"}, "agreed": true}
+{"id": "fill-cal-02", "gold": "docs/api/models", "annotator_a": {"label": "docs/api/models", "confidence": "high"}, "annotator_b": {"label": "docs/api/models", "confidence": "high"}, "agreed": true}
+{"id": "fill-cal-03", "gold": "189706b", "annotator_a": {"label": "189706b", "confidence": "high"}, "annotator_b": {"label": "189706b", "confidence": "high"}, "agreed": true}
+{"id": "fill-cal-04", "gold": "none", "annotator_a": {"label": "none", "confidence": "high"}, "annotator_b": {"label": "none", "confidence": "high"}, "agreed": true}
+{"id": "fill-cal-05", "gold": "ambiguous", "annotator_a": {"label": "ambiguous", "confidence": "high"}, "annotator_b": {"label": "ambiguous", "confidence": "high"}, "agreed": true}
+{"id": "fill-val-01", "gold": "4a643b6", "annotator_a": {"label": "4a643b6", "confidence": "high"}, "annotator_b": {"label": "4a643b6", "confidence": "high"}, "agreed": true}
+{"id": "fill-val-02", "gold": "2e9b8e1", "annotator_a": {"label": "2e9b8e1", "confidence": "high"}, "annotator_b": {"label": "2e9b8e1", "confidence": "high"}, "agreed": true}
+{"id": "fill-val-03", "gold": "notifier/sendloop.go", "annotator_a": {"label": "notifier/sendloop.go", "confidence": "medium"}, "annotator_b": {"label": "notifier/sendloop.go", "confidence": "high"}, "agreed": true}
+{"id": "fill-val-04", "gold": "discovery", "annotator_a": {"label": "discovery", "confidence": "high"}, "annotator_b": {"label": "discovery", "confidence": "high"}, "agreed": true}
+{"id": "fill-val-05", "gold": "SECURITY.md", "annotator_a": {"label": "SECURITY.md", "confidence": "high"}, "annotator_b": {"label": "SECURITY.md", "confidence": "high"}, "agreed": true}
+{"id": "pick-cal-01", "gold": "3", "annotator_a": {"label": "3", "confidence": "high"}, "annotator_b": {"label": "3", "confidence": "high"}, "agreed": true}
+{"id": "pick-cal-02", "gold": "10", "annotator_a": {"label": "10", "confidence": "medium"}, "annotator_b": {"label": "10", "confidence": "high"}, "agreed": true}
+{"id": "pick-cal-03", "gold": "none", "annotator_a": {"label": "none", "confidence": "high"}, "annotator_b": {"label": "none", "confidence": "high"}, "agreed": true}
+{"id": "pick-cal-04", "gold": "ambiguous", "annotator_a": {"label": "ambiguous", "confidence": "high"}, "annotator_b": {"label": "ambiguous", "confidence": "high"}, "agreed": true}
+{"id": "pick-cal-05", "gold": "22", "annotator_a": {"label": "22", "confidence": "high"}, "annotator_b": {"label": "22", "confidence": "high"}, "agreed": true}
+{"id": "pick-cal-06", "gold": "2", "annotator_a": {"label": "2", "confidence": "high"}, "annotator_b": {"label": "2", "confidence": "high"}, "agreed": true}
+{"id": "pick-val-01", "gold": "6", "annotator_a": {"label": "6", "confidence": "high"}, "annotator_b": {"label": "6", "confidence": "high"}, "agreed": true}
+{"id": "pick-val-02", "gold": "10", "annotator_a": {"label": "10", "confidence": "high"}, "annotator_b": {"label": "10", "confidence": "high"}, "agreed": true}
+{"id": "pick-val-03", "gold": "2", "annotator_a": {"label": "2", "confidence": "high"}, "annotator_b": {"label": "2", "confidence": "high"}, "agreed": true}
+{"id": "pick-val-04", "gold": "none", "annotator_a": {"label": "none", "confidence": "high"}, "annotator_b": {"label": "none", "confidence": "high"}, "agreed": true}
+{"id": "pick-val-05", "gold": "7", "annotator_a": {"label": "7", "confidence": "high"}, "annotator_b": {"label": "7", "confidence": "high"}, "agreed": true}
+{"id": "pick-val-06", "gold": "30", "annotator_a": {"label": "30", "confidence": "high"}, "annotator_b": {"label": "30", "confidence": "high"}, "agreed": true}
+{"id": "pickfrom-cal-01", "gold": "docs/command-line-syntax.md", "annotator_a": {"label": "docs/command-line-syntax.md", "confidence": "high"}, "annotator_b": {"label": "docs/command-line-syntax.md", "confidence": "high"}, "agreed": true}
+{"id": "pickfrom-cal-02", "gold": "docs/primer", "annotator_a": {"label": "docs/primer", "confidence": "high"}, "annotator_b": {"label": "docs/primer", "confidence": "high"}, "agreed": true}
+{"id": "pickfrom-cal-03", "gold": "docs/agent-spec.md", "annotator_a": {"label": "docs/agent-spec.md", "confidence": "high"}, "annotator_b": {"label": "docs/agent-spec.md", "confidence": "high"}, "agreed": true}
+{"id": "pickfrom-cal-04", "gold": "none", "annotator_a": {"label": "none", "confidence": "high"}, "annotator_b": {"label": "none", "confidence": "high"}, "agreed": true}
+{"id": "pickfrom-val-01", "gold": "bc07e58", "annotator_a": {"label": "bc07e58", "confidence": "high"}, "annotator_b": {"label": "bc07e58", "confidence": "high"}, "agreed": true}
+{"id": "pickfrom-val-02", "gold": "SECURITY.md", "annotator_a": {"label": "SECURITY.md", "confidence": "high"}, "annotator_b": {"label": "SECURITY.md", "confidence": "high"}, "agreed": true}
+{"id": "pickfrom-val-03", "gold": "notifier/sendloop.go", "annotator_a": {"label": "notifier/sendloop.go", "confidence": "medium"}, "annotator_b": {"label": "notifier/sendloop.go", "confidence": "high"}, "agreed": true}
+{"id": "pickfrom-val-04", "gold": "docs", "annotator_a": {"label": "docs", "confidence": "high"}, "annotator_b": {"label": "docs", "confidence": "high"}, "agreed": true}
+{"id": "why-cal-cargo-01", "gold": [288, 295], "annotator_a": {"label": "288", "confidence": "high"}, "annotator_b": {"label": "288", "confidence": "high"}, "agreed": true}
+{"id": "why-cal-cargo-03", "gold": [230, 241], "annotator_a": {"label": "230", "confidence": "high"}, "annotator_b": {"label": "230", "confidence": "high"}, "agreed": true}
+{"id": "why-cal-npm-01", "gold": [166, 175], "annotator_a": {"label": "166", "confidence": "high"}, "annotator_b": {"label": "166", "confidence": "high"}, "agreed": true}
+{"id": "why-cal-npm-04", "gold": [258, 269], "annotator_a": {"label": "257", "confidence": "high"}, "annotator_b": {"label": "260", "confidence": "high"}, "agreed": false, "adjudication": "the block that names the failure runs from the `FAIL specs/runner.test.ts > timeout hooks` header through the expected/received diff. Annotator A pointed at line 257, the blank line above the header, which is outside the block; annotator B's 260 is inside it."}
+{"id": "why-cal-pytest-02", "gold": [257, 265], "annotator_a": {"label": "257", "confidence": "high"}, "annotator_b": {"label": "258", "confidence": "medium"}, "agreed": false, "adjudication": "the pytest failure block is the `>` statement line, its `E` lines and the closing `test_collection.py:1884: AssertionError`. Both annotators pointed inside it (257 and 258); the gold is the block."}
+{"id": "why-cal-pytest-04", "gold": [194, 199], "annotator_a": {"label": "194", "confidence": "high"}, "annotator_b": {"label": "194", "confidence": "high"}, "agreed": true}
+{"id": "why-cal-go-01", "gold": [162, 168], "annotator_a": {"label": "166", "confidence": "high"}, "annotator_b": {"label": "166", "confidence": "high"}, "agreed": true}
+{"id": "why-cal-docker-03", "gold": [204, 210], "annotator_a": {"label": "204", "confidence": "high"}, "annotator_b": {"label": "204", "confidence": "high"}, "agreed": true}
+{"id": "why-val-astral-sh-ruff-35756712231", "gold": [284, 296], "annotator_a": {"label": "284", "confidence": "high"}, "annotator_b": {"label": "284", "confidence": "high"}, "agreed": true}
+{"id": "why-val-astral-sh-ruff-35762516230", "gold": [291, 295], "annotator_a": {"label": "291", "confidence": "high"}, "annotator_b": {"label": "291", "confidence": "high"}, "agreed": true}
+{"id": "why-val-bevyengine-bevy-34039655631", "gold": [294, 295], "annotator_a": {"label": "294", "confidence": "high"}, "annotator_b": {"label": "294", "confidence": "high"}, "agreed": true}
+{"id": "why-val-bevyengine-bevy-34095699482", "gold": [164, 177], "annotator_a": {"label": "164", "confidence": "high"}, "annotator_b": {"label": "164", "confidence": "high"}, "agreed": true}
+{"id": "why-val-denoland-deno-35714383921", "gold": "ambiguous", "annotator_a": {"label": "ambiguous", "confidence": "medium"}, "annotator_b": {"label": "ambiguous", "confidence": "high"}, "agreed": true}
+{"id": "why-val-prometheus-prometheus-33817696493", "gold": [297, 298], "annotator_a": {"label": "298", "confidence": "high"}, "annotator_b": {"label": "298", "confidence": "high"}, "agreed": true}
+{"id": "why-val-prometheus-prometheus-33824930195", "gold": [292, 297], "annotator_a": {"label": "292", "confidence": "high"}, "annotator_b": {"label": "293", "confidence": "high"}, "agreed": false, "adjudication": "the block runs from `\u2717 Lockfile failed supply-chain policy check` through the four offending entries. Both annotators pointed inside it (292 and 293); the gold is the block, and `make: *** Error 1` stays out of it as a summary."}
+{"id": "why-val-rust-lang-rust-analyzer-30087733489", "gold": [90, 95], "annotator_a": {"label": "90", "confidence": "high"}, "annotator_b": {"label": "90", "confidence": "high"}, "agreed": true}
+{"id": "why-val-rust-lang-rust-analyzer-32135833797", "gold": [286, 288], "annotator_a": {"label": "286", "confidence": "high"}, "annotator_b": {"label": "286", "confidence": "high"}, "agreed": true}
+{"id": "why-val-sveltejs-svelte-35722706116", "gold": [280, 283], "annotator_a": {"label": "280", "confidence": "high"}, "annotator_b": {"label": "281", "confidence": "high"}, "agreed": false, "adjudication": "the block is the `FAIL packages/svelte/tests/signals/test.ts` header, the `Error: Test timed out in 30000ms.` line and its hint and location. Both annotators pointed inside it (280 and 281)."}
+{"id": "why-val-ok-prometheus-prometheus-33830612264", "gold": "none", "annotator_a": {"label": "none", "confidence": "high"}, "annotator_b": {"label": "none", "confidence": "high"}, "agreed": true}
+{"id": "why-val-ok-sveltejs-svelte-32532886120", "gold": "none", "annotator_a": {"label": "none", "confidence": "high"}, "annotator_b": {"label": "none", "confidence": "high"}, "agreed": true}
+{"id": "filter-cal-pai-01", "gold": "keep", "annotator_a": {"label": "keep", "confidence": "high"}, "annotator_b": {"label": "keep", "confidence": "high"}, "agreed": true}
+{"id": "filter-cal-pai-02", "gold": "drop", "annotator_a": {"label": "drop", "confidence": "high"}, "annotator_b": {"label": "drop", "confidence": "high"}, "agreed": true}
+{"id": "filter-cal-pai-03", "gold": "drop", "annotator_a": {"label": "drop", "confidence": "high"}, "annotator_b": {"label": "drop", "confidence": "high"}, "agreed": true}
+{"id": "filter-cal-pai-04", "gold": "drop", "annotator_a": {"label": "drop", "confidence": "high"}, "annotator_b": {"label": "drop", "confidence": "high"}, "agreed": true}
+{"id": "filter-cal-pai-05", "gold": "keep", "annotator_a": {"label": "keep", "confidence": "high"}, "annotator_b": {"label": "keep", "confidence": "high"}, "agreed": true}
+{"id": "filter-cal-pai-06", "gold": "keep", "annotator_a": {"label": "keep", "confidence": "high"}, "annotator_b": {"label": "keep", "confidence": "high"}, "agreed": true}
+{"id": "filter-cal-pai-07", "gold": "drop", "annotator_a": {"label": "drop", "confidence": "high"}, "annotator_b": {"label": "drop", "confidence": "high"}, "agreed": true}
+{"id": "filter-cal-pai-08", "gold": "keep", "annotator_a": {"label": "keep", "confidence": "medium"}, "annotator_b": {"label": "keep", "confidence": "high"}, "agreed": true}
+{"id": "filter-cal-cli-01", "gold": "drop", "annotator_a": {"label": "drop", "confidence": "high"}, "annotator_b": {"label": "drop", "confidence": "high"}, "agreed": true}
+{"id": "filter-cal-cli-02", "gold": "keep", "annotator_a": {"label": "keep", "confidence": "high"}, "annotator_b": {"label": "keep", "confidence": "high"}, "agreed": true}
+{"id": "filter-cal-cli-03", "gold": "drop", "annotator_a": {"label": "drop", "confidence": "high"}, "annotator_b": {"label": "drop", "confidence": "high"}, "agreed": true}
+{"id": "filter-cal-cli-04", "gold": "drop", "annotator_a": {"label": "drop", "confidence": "high"}, "annotator_b": {"label": "drop", "confidence": "high"}, "agreed": true}
+{"id": "filter-cal-cli-05", "gold": "drop", "annotator_a": {"label": "drop", "confidence": "high"}, "annotator_b": {"label": "drop", "confidence": "high"}, "agreed": true}
+{"id": "filter-cal-cli-06", "gold": "keep", "annotator_a": {"label": "keep", "confidence": "high"}, "annotator_b": {"label": "keep", "confidence": "high"}, "agreed": true}
+{"id": "filter-cal-cli-07", "gold": "drop", "annotator_a": {"label": "drop", "confidence": "high"}, "annotator_b": {"label": "drop", "confidence": "high"}, "agreed": true}
+{"id": "filter-cal-cli-08", "gold": "keep", "annotator_a": {"label": "keep", "confidence": "high"}, "annotator_b": {"label": "keep", "confidence": "high"}, "agreed": true}
+{"id": "filter-val-dav-01", "gold": "keep", "annotator_a": {"label": "keep", "confidence": "high"}, "annotator_b": {"label": "keep", "confidence": "high"}, "agreed": true}
+{"id": "filter-val-dav-02", "gold": "drop", "annotator_a": {"label": "drop", "confidence": "high"}, "annotator_b": {"label": "drop", "confidence": "high"}, "agreed": true}
+{"id": "filter-val-dav-03", "gold": "drop", "annotator_a": {"label": "drop", "confidence": "high"}, "annotator_b": {"label": "drop", "confidence": "high"}, "agreed": true}
+{"id": "filter-val-dav-04", "gold": "keep", "annotator_a": {"label": "keep", "confidence": "high"}, "annotator_b": {"label": "keep", "confidence": "high"}, "agreed": true}
+{"id": "filter-val-dav-05", "gold": "drop", "annotator_a": {"label": "drop", "confidence": "high"}, "annotator_b": {"label": "drop", "confidence": "high"}, "agreed": true}
+{"id": "filter-val-dav-06", "gold": "keep", "annotator_a": {"label": "keep", "confidence": "high"}, "annotator_b": {"label": "keep", "confidence": "high"}, "agreed": true}
+{"id": "filter-val-dav-07", "gold": "drop", "annotator_a": {"label": "drop", "confidence": "high"}, "annotator_b": {"label": "drop", "confidence": "high"}, "agreed": true}
+{"id": "filter-val-dav-08", "gold": "drop", "annotator_a": {"label": "drop", "confidence": "high"}, "annotator_b": {"label": "drop", "confidence": "high"}, "agreed": true}
+{"id": "filter-val-ruff-01", "gold": "keep", "annotator_a": {"label": "keep", "confidence": "high"}, "annotator_b": {"label": "keep", "confidence": "high"}, "agreed": true}
+{"id": "filter-val-ruff-02", "gold": "keep", "annotator_a": {"label": "keep", "confidence": "high"}, "annotator_b": {"label": "keep", "confidence": "high"}, "agreed": true}
+{"id": "filter-val-ruff-03", "gold": "keep", "annotator_a": {"label": "keep", "confidence": "high"}, "annotator_b": {"label": "keep", "confidence": "high"}, "agreed": true}
+{"id": "filter-val-ruff-04", "gold": "drop", "annotator_a": {"label": "drop", "confidence": "medium"}, "annotator_b": {"label": "unsure", "confidence": "high"}, "agreed": false, "adjudication": "every ty change in this record set carries the `[ty]` prefix and this one does not, so the record itself settles it: the rules table it updates is the linter's. A careful reader can decide, so `unsure` is not the right answer."}
+{"id": "filter-val-ruff-05", "gold": "keep", "annotator_a": {"label": "keep", "confidence": "high"}, "annotator_b": {"label": "keep", "confidence": "high"}, "agreed": true}
+{"id": "filter-val-ruff-06", "gold": "keep", "annotator_a": {"label": "keep", "confidence": "high"}, "annotator_b": {"label": "keep", "confidence": "high"}, "agreed": true}
+{"id": "filter-val-ruff-07", "gold": "keep", "annotator_a": {"label": "keep", "confidence": "high"}, "annotator_b": {"label": "keep", "confidence": "high"}, "agreed": true}
+{"id": "filter-val-ruff-08", "gold": "keep", "annotator_a": {"label": "keep", "confidence": "high"}, "annotator_b": {"label": "keep", "confidence": "high"}, "agreed": true}
+{"id": "label-cal-pai-01", "gold": "docs", "annotator_a": {"label": "docs", "confidence": "high"}, "annotator_b": {"label": "docs", "confidence": "high"}, "agreed": true}
+{"id": "label-cal-pai-02", "gold": "fix", "annotator_a": {"label": "fix", "confidence": "medium"}, "annotator_b": {"label": "fix", "confidence": "medium"}, "agreed": true}
+{"id": "label-cal-pai-03", "gold": "fix", "annotator_a": {"label": "fix", "confidence": "medium"}, "annotator_b": {"label": "fix", "confidence": "medium"}, "agreed": true}
+{"id": "label-cal-pai-04", "gold": "feature", "annotator_a": {"label": "feature", "confidence": "high"}, "annotator_b": {"label": "feature", "confidence": "medium"}, "agreed": true}
+{"id": "label-cal-pai-05", "gold": "docs", "annotator_a": {"label": "docs", "confidence": "high"}, "annotator_b": {"label": "docs", "confidence": "high"}, "agreed": true}
+{"id": "label-cal-pai-06", "gold": "docs", "annotator_a": {"label": "docs", "confidence": "high"}, "annotator_b": {"label": "docs", "confidence": "high"}, "agreed": true}
+{"id": "label-cal-pai-07", "gold": "?", "annotator_a": {"label": "feature", "confidence": "medium"}, "annotator_b": {"label": "?", "confidence": "medium"}, "agreed": false, "adjudication": "the record changes when a CI check runs. That is neither a product feature, nor a fix, nor documentation, and the label set offers no third option, so `?` is the honest answer."}
+{"id": "label-cal-pai-08", "gold": "docs", "annotator_a": {"label": "docs", "confidence": "medium"}, "annotator_b": {"label": "docs", "confidence": "high"}, "agreed": true}
+{"id": "label-cal-cli-01", "gold": "?", "annotator_a": {"label": "?", "confidence": "high"}, "annotator_b": {"label": "?", "confidence": "high"}, "agreed": true}
+{"id": "label-cal-cli-02", "gold": "dependency-bump", "annotator_a": {"label": "dependency-bump", "confidence": "high"}, "annotator_b": {"label": "dependency-bump", "confidence": "high"}, "agreed": true}
+{"id": "label-cal-cli-03", "gold": "revert", "annotator_a": {"label": "revert", "confidence": "high"}, "annotator_b": {"label": "revert", "confidence": "high"}, "agreed": true}
+{"id": "label-cal-cli-04", "gold": "?", "annotator_a": {"label": "?", "confidence": "high"}, "annotator_b": {"label": "?", "confidence": "high"}, "agreed": true}
+{"id": "label-cal-cli-05", "gold": "?", "annotator_a": {"label": "?", "confidence": "high"}, "annotator_b": {"label": "?", "confidence": "high"}, "agreed": true}
+{"id": "label-cal-cli-06", "gold": "dependency-bump", "annotator_a": {"label": "dependency-bump", "confidence": "high"}, "annotator_b": {"label": "dependency-bump", "confidence": "high"}, "agreed": true}
+{"id": "label-cal-cli-07", "gold": "?", "annotator_a": {"label": "?", "confidence": "medium"}, "annotator_b": {"label": "?", "confidence": "high"}, "agreed": true}
+{"id": "label-cal-cli-08", "gold": "dependency-bump", "annotator_a": {"label": "dependency-bump", "confidence": "high"}, "annotator_b": {"label": "dependency-bump", "confidence": "high"}, "agreed": true}
+{"id": "label-val-dav-01", "gold": "release", "annotator_a": {"label": "release", "confidence": "high"}, "annotator_b": {"label": "release", "confidence": "high"}, "agreed": true}
+{"id": "label-val-dav-02", "gold": "fix", "annotator_a": {"label": "fix", "confidence": "high"}, "annotator_b": {"label": "fix", "confidence": "high"}, "agreed": true}
+{"id": "label-val-dav-03", "gold": "fix", "annotator_a": {"label": "fix", "confidence": "high"}, "annotator_b": {"label": "fix", "confidence": "high"}, "agreed": true}
+{"id": "label-val-dav-04", "gold": "release", "annotator_a": {"label": "release", "confidence": "high"}, "annotator_b": {"label": "release", "confidence": "high"}, "agreed": true}
+{"id": "label-val-dav-05", "gold": "fix", "annotator_a": {"label": "fix", "confidence": "high"}, "annotator_b": {"label": "fix", "confidence": "high"}, "agreed": true}
+{"id": "label-val-dav-06", "gold": "release", "annotator_a": {"label": "release", "confidence": "high"}, "annotator_b": {"label": "release", "confidence": "high"}, "agreed": true}
+{"id": "label-val-dav-07", "gold": "fix", "annotator_a": {"label": "fix", "confidence": "high"}, "annotator_b": {"label": "fix", "confidence": "high"}, "agreed": true}
+{"id": "label-val-dav-08", "gold": "fix", "annotator_a": {"label": "fix", "confidence": "high"}, "annotator_b": {"label": "fix", "confidence": "high"}, "agreed": true}
+{"id": "label-val-ruff-01", "gold": "?", "annotator_a": {"label": "bugfix", "confidence": "medium"}, "annotator_b": {"label": "performance", "confidence": "medium"}, "agreed": false, "adjudication": "skipping notebooks while discovering scripts reads as a correctness fix and as a saved read at once; the subject line does not separate bugfix from performance, so two labels fit equally."}
+{"id": "label-val-ruff-02", "gold": "?", "annotator_a": {"label": "performance", "confidence": "medium"}, "annotator_b": {"label": "?", "confidence": "medium"}, "agreed": false, "adjudication": "filtering before computing result IDs can be a correctness ordering fix or an efficiency change; nothing in the record decides, so no single label fits."}
+{"id": "label-val-ruff-03", "gold": "?", "annotator_a": {"label": "?", "confidence": "medium"}, "annotator_b": {"label": "?", "confidence": "high"}, "agreed": true}
+{"id": "label-val-ruff-04", "gold": "documentation", "annotator_a": {"label": "documentation", "confidence": "high"}, "annotator_b": {"label": "documentation", "confidence": "medium"}, "agreed": true}
+{"id": "label-val-ruff-05", "gold": "documentation", "annotator_a": {"label": "documentation", "confidence": "high"}, "annotator_b": {"label": "documentation", "confidence": "high"}, "agreed": true}
+{"id": "label-val-ruff-06", "gold": "documentation", "annotator_a": {"label": "documentation", "confidence": "high"}, "annotator_b": {"label": "documentation", "confidence": "high"}, "agreed": true}
+{"id": "label-val-ruff-07", "gold": "bugfix", "annotator_a": {"label": "bugfix", "confidence": "high"}, "annotator_b": {"label": "bugfix", "confidence": "high"}, "agreed": true}
+{"id": "label-val-ruff-08", "gold": "?", "annotator_a": {"label": "?", "confidence": "medium"}, "annotator_b": {"label": "?", "confidence": "high"}, "agreed": true}
+{"id": "is-cal-cli-01", "gold": "yes", "annotator_a": {"label": "yes", "confidence": "high"}, "annotator_b": {"label": "yes", "confidence": "high"}, "agreed": true}
+{"id": "is-cal-cli-02", "gold": "no", "annotator_a": {"label": "no", "confidence": "high"}, "annotator_b": {"label": "no", "confidence": "high"}, "agreed": true}
+{"id": "is-cal-cli-03", "gold": "yes", "annotator_a": {"label": "yes", "confidence": "high"}, "annotator_b": {"label": "yes", "confidence": "high"}, "agreed": true}
+{"id": "is-cal-pai-01", "gold": "yes", "annotator_a": {"label": "yes", "confidence": "high"}, "annotator_b": {"label": "yes", "confidence": "high"}, "agreed": true}
+{"id": "is-cal-pai-02", "gold": "no", "annotator_a": {"label": "no", "confidence": "high"}, "annotator_b": {"label": "no", "confidence": "high"}, "agreed": true}
+{"id": "is-cal-pai-03", "gold": "yes", "annotator_a": {"label": "yes", "confidence": "high"}, "annotator_b": {"label": "yes", "confidence": "high"}, "agreed": true}
+{"id": "is-val-dav-01", "gold": "yes", "annotator_a": {"label": "yes", "confidence": "high"}, "annotator_b": {"label": "yes", "confidence": "high"}, "agreed": true}
+{"id": "is-val-dav-02", "gold": "no", "annotator_a": {"label": "no", "confidence": "high"}, "annotator_b": {"label": "no", "confidence": "high"}, "agreed": true}
+{"id": "is-val-dav-03", "gold": "no", "annotator_a": {"label": "no", "confidence": "high"}, "annotator_b": {"label": "no", "confidence": "high"}, "agreed": true}
+{"id": "is-val-ruff-01", "gold": "no", "annotator_a": {"label": "no", "confidence": "high"}, "annotator_b": {"label": "no", "confidence": "high"}, "agreed": true}
+{"id": "is-val-ruff-02", "gold": "yes", "annotator_a": {"label": "yes", "confidence": "high"}, "annotator_b": {"label": "yes", "confidence": "high"}, "agreed": true}
+{"id": "is-val-ruff-03", "gold": "no", "annotator_a": {"label": "no", "confidence": "high"}, "annotator_b": {"label": "no", "confidence": "high"}, "agreed": true}
+{"id": "route-cal-text-01", "gold": "wc", "annotator_a": {"label": "wc", "confidence": "high"}, "annotator_b": {"label": "wc", "confidence": "high"}, "agreed": true}
+{"id": "route-cal-text-02", "gold": "head", "annotator_a": {"label": "head", "confidence": "high"}, "annotator_b": {"label": "head", "confidence": "high"}, "agreed": true}
+{"id": "route-cal-text-03", "gold": "tr", "annotator_a": {"label": "tr", "confidence": "high"}, "annotator_b": {"label": "tr", "confidence": "high"}, "agreed": true}
+{"id": "route-cal-arch-01", "gold": "tar", "annotator_a": {"label": "tar", "confidence": "high"}, "annotator_b": {"label": "tar", "confidence": "high"}, "agreed": true}
+{"id": "route-cal-arch-02", "gold": {"any_of": ["unzip", "zipinfo"]}, "annotator_a": {"label": "unzip", "confidence": "high"}, "annotator_b": {"label": "ambiguous", "confidence": "medium"}, "agreed": false, "adjudication": "`unzip -l` and `zipinfo` both list a zip's contents without extracting, and either serves the task, so the gold accepts both. `ambiguous` is reserved for a task no single answer serves."}
+{"id": "route-cal-arch-03", "gold": "none", "annotator_a": {"label": "none", "confidence": "high"}, "annotator_b": {"label": "none", "confidence": "high"}, "agreed": true}
+{"id": "route-val-net-01", "gold": "curl", "annotator_a": {"label": "curl", "confidence": "high"}, "annotator_b": {"label": "curl", "confidence": "high"}, "agreed": true}
+{"id": "route-val-net-02", "gold": {"any_of": ["dig", "host", "nslookup"]}, "annotator_a": {"label": "dig", "confidence": "high"}, "annotator_b": {"label": "ambiguous", "confidence": "high"}, "agreed": false, "adjudication": "all three resolve a hostname to an address and any of them answers the task; the gold accepts all three rather than demanding an abstention."}
+{"id": "route-val-net-03", "gold": "rsync", "annotator_a": {"label": "rsync", "confidence": "high"}, "annotator_b": {"label": "rsync", "confidence": "high"}, "agreed": true}
+{"id": "route-val-dev-01", "gold": "jq", "annotator_a": {"label": "jq", "confidence": "high"}, "annotator_b": {"label": "jq", "confidence": "high"}, "agreed": true}
+{"id": "route-val-dev-02", "gold": "gh", "annotator_a": {"label": "gh", "confidence": "high"}, "annotator_b": {"label": "gh", "confidence": "high"}, "agreed": true}
+{"id": "route-val-dev-03", "gold": "none", "annotator_a": {"label": "none", "confidence": "high"}, "annotator_b": {"label": "none", "confidence": "high"}, "agreed": true}
+{"id": "fill-val-06", "gold": "none", "annotator_a": {"label": "none", "confidence": "high"}, "annotator_b": {"label": "none", "confidence": "high"}, "agreed": true}
+{"id": "fill-val-07", "gold": "ambiguous", "annotator_a": {"label": "ambiguous", "confidence": "medium"}, "annotator_b": {"label": "ambiguous", "confidence": "high"}, "agreed": true}
+{"id": "pickfrom-val-05", "gold": "none", "annotator_a": {"label": "none", "confidence": "high"}, "annotator_b": {"label": "none", "confidence": "high"}, "agreed": true}
+{"id": "is-cal-cli-04", "gold": "unsure", "annotator_a": {"label": "unsure", "confidence": "medium"}, "annotator_b": {"label": "unsure", "confidence": "high"}, "agreed": true}
+{"id": "why-cal-ok-tokio-rs-tokio-32519536561", "gold": "none", "annotator_a": {"label": "none", "confidence": "high"}, "annotator_b": {"label": "none", "confidence": "high"}, "agreed": true}
+{"id": "is-val-ruff-04", "gold": "unsure", "annotator_a": {"label": "unsure", "confidence": "high"}, "annotator_b": {"label": "unsure", "confidence": "high"}, "agreed": true}
+{"id": "is-val-dav-04", "gold": "no", "annotator_a": {"label": "no", "confidence": "high"}, "annotator_b": {"label": "no", "confidence": "high"}, "agreed": true}
+{"id": "filter-cal-cli-x-01", "gold": "drop", "annotator_a": {"label": "drop", "confidence": "medium"}, "annotator_b": {"label": "drop", "confidence": "medium"}, "agreed": true}
+{"id": "filter-cal-cli-x-02", "gold": "drop", "annotator_a": {"label": "drop", "confidence": "high"}, "annotator_b": {"label": "unsure", "confidence": "medium"}, "agreed": false, "adjudication": "the record names what the change is: a merge of a branch that bumps the go-gh dependency. A version bump described as a bump is not a bug fix, which is what the two agreed dropped records in the same run turn on, so the record decides and `unsure` is not needed."}
+{"id": "filter-cal-cli-x-03", "gold": "drop", "annotator_a": {"label": "drop", "confidence": "high"}, "annotator_b": {"label": "drop", "confidence": "high"}, "agreed": true}
+{"id": "filter-cal-cli-x-04", "gold": "drop", "annotator_a": {"label": "drop", "confidence": "high"}, "annotator_b": {"label": "unsure", "confidence": "medium"}, "agreed": false, "adjudication": "same ground as filter-cal-cli-x-02: the record describes a Go toolchain bump, which is not a bug fix."}
+{"id": "filter-val-dav-x-01", "gold": "unsure", "annotator_a": {"label": "unsure", "confidence": "medium"}, "annotator_b": {"label": "unsure", "confidence": "high"}, "agreed": true}
+{"id": "filter-val-dav-x-02", "gold": "unsure", "annotator_a": {"label": "unsure", "confidence": "medium"}, "annotator_b": {"label": "unsure", "confidence": "high"}, "agreed": true}
+{"id": "filter-val-dav-x-03", "gold": "unsure", "annotator_a": {"label": "unsure", "confidence": "medium"}, "annotator_b": {"label": "unsure", "confidence": "high"}, "agreed": true}
+{"id": "filter-val-dav-x-04", "gold": "unsure", "annotator_a": {"label": "unsure", "confidence": "medium"}, "annotator_b": {"label": "unsure", "confidence": "high"}, "agreed": true}

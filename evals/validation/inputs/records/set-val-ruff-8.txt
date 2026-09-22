@@ -1,0 +1,8 @@
+97acb93 [ty] Skip reading notebooks when discovering scripts (#28781)
+4d322b8 [ty] Filter diagnostics before computing result IDs (#28759)
+660350b [ty] Infer constant membership in inline list and set literals (#28676)
+67b3bd4 Update rules table with category information (#28651)
+5bd42a7 [ty] Clarify mdtest prose guidance (#28707)
+882c26e [ty] Fix typo "Non-existant" to "Non-existent" in mdtest comment (#28728)
+5bb508f [ty] Reject unsafe TypedDict updates from hidden fields (#28711)
+b7577bb [ty] Update typing conformance suite (#28718)

@@ -1,0 +1,8 @@
+9f60696 Document where Jev fits in an agent loop: model routing and judging tool calls (#8488)
+9971eb6 Lay the first-run banner out for the terminal's actual width (#8517)
+e895b39 Refresh the apt index before installing `bubblewrap` in `bots.yml` (#8518)
+6df40ca Allow adaptive thinking with tool output and forced tool choice on Bedrock (#7967)
+fe506ea Correct realtime docs: event inventories, muting, ending a call, relay barge-in, Gemini and Azure specifics (#8137)
+f7892d9 Drop `Planning` from the `Coder` composition in the README (#8507)
+28961b0 Run the harness navigation check when a pull request leaves draft (#8503)
+bd192e8 docs(evals): shrink the evaluator-concurrency example from 100 to 40 cases (#8502)

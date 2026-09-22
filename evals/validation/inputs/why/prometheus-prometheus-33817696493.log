@@ -1,0 +1,300 @@
+go: downloading github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
+go: downloading github.com/fatih/color v1.19.0
+go: downloading github.com/mattn/go-colorable v0.1.15
+go: downloading github.com/mattn/go-isatty v0.0.23
+go: downloading github.com/hashicorp/errwrap v1.1.0
+go: downloading github.com/mitchellh/go-homedir v1.1.0
+go: downloading github.com/hashicorp/go-metrics v0.6.0
+go: downloading github.com/hashicorp/go-version v1.9.0
+go: downloading github.com/pkg/errors v0.9.1
+go: downloading github.com/hashicorp/go-msgpack/v2 v2.1.5
+go: downloading github.com/hashicorp/memberlist v0.6.0
+go: downloading github.com/hashicorp/go-msgpack v0.5.5
+go: downloading github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.8.1
+go: downloading github.com/AzureAD/microsoft-authentication-extensions-for-go/cache v0.1.1
+go: downloading gopkg.in/inf.v0 v0.9.1
+go: downloading sigs.k8s.io/json v0.0.0-20250730193827-2d320260d730
+go: downloading pgregory.net/rapid v1.2.0
+go: downloading github.com/google/s2a-go v0.1.9
+go: downloading github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2
+go: downloading gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
+go: downloading github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
+go: downloading github.com/go-openapi/swag/cmdutils v0.26.0
+go: downloading github.com/go-openapi/swag/conv v0.26.0
+go: downloading github.com/go-openapi/swag/fileutils v0.26.0
+go: downloading github.com/go-openapi/swag/jsonname v0.26.1
+go: downloading github.com/go-openapi/swag/jsonutils v0.26.0
+go: downloading github.com/go-openapi/swag/loading v0.26.0
+go: downloading github.com/go-openapi/swag/mangling v0.26.0
+go: downloading github.com/go-openapi/swag/netutils v0.26.0
+go: downloading github.com/go-openapi/swag/stringutils v0.26.0
+go: downloading github.com/go-openapi/swag/typeutils v0.26.0
+go: downloading github.com/go-openapi/swag/yamlutils v0.26.0
+go: downloading go.opentelemetry.io/auto/sdk v1.2.1
+go: downloading github.com/googleapis/enterprise-certificate-proxy v0.3.18
+go: downloading github.com/go-openapi/analysis v0.25.0
+go: downloading github.com/go-openapi/jsonpointer v0.23.2
+go: downloading github.com/go-openapi/loads v0.23.3
+go: downloading github.com/go-openapi/spec v0.22.4
+go: downloading github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatautil v0.157.0
+go: downloading go.opentelemetry.io/collector/component/componentstatus v0.157.0
+go: downloading go.opentelemetry.io/collector/consumer/xconsumer v0.157.0
+go: downloading go.opentelemetry.io/collector/pdata/testdata v0.157.0
+go: downloading go.opentelemetry.io/collector/processor/xprocessor v0.157.0
+go: downloading go.opentelemetry.io/collector/pdata/pprofile v0.157.0
+go: downloading go.opentelemetry.io/collector/featuregate v1.63.0
+go: downloading go.opentelemetry.io/proto/slim/otlp/collector/profiles/v1development v0.3.0
+go: downloading go.opentelemetry.io/proto/slim/otlp/profiles/v1development v0.3.0
+go: downloading github.com/grpc-ecosystem/grpc-gateway/v2 v2.29.0
+go: downloading github.com/basgys/goxml2json v1.1.1-0.20231018121955-e66ee54ceaad
+go: downloading github.com/pb33f/jsonpath v0.8.2
+go: downloading github.com/buger/jsonparser v1.1.2
+go: downloading github.com/bahlo/generic-list-go v0.2.0
+go: downloading github.com/x448/float16 v0.8.4
+go: downloading github.com/armon/go-metrics v0.4.1
+go: downloading github.com/google/btree v1.1.3
+go: downloading github.com/hashicorp/go-sockaddr v1.0.7
+go: downloading github.com/sean-/seed v0.0.0-20170313163322-e2103e2c3529
+go: downloading github.com/keybase/go-keychain v0.0.1
+go: downloading google.golang.org/genproto v0.0.0-20260319201613-d00831a3d3e7
+go: downloading github.com/kr/pretty v0.3.1
+go: downloading github.com/go-openapi/jsonreference v0.21.5
+go: downloading github.com/golang/protobuf v1.5.4
+go: downloading github.com/go-openapi/swag/jsonutils/fixtures_test v0.26.0
+go: downloading github.com/go-openapi/testify/enable/yaml/v2 v2.4.2
+go: downloading github.com/gobwas/glob v0.2.3
+go: downloading github.com/knadh/koanf/maps v0.1.2
+go: downloading github.com/knadh/koanf/providers/confmap v1.0.0
+go: downloading github.com/knadh/koanf/v2 v2.3.5
+go: downloading github.com/bitly/go-simplejson v0.5.1
+go: downloading github.com/emicklei/go-restful/v3 v3.13.0
+go: downloading github.com/hashicorp/go-immutable-radix v1.3.1
+go: downloading github.com/pascaldekloe/goe v0.1.0
+go: downloading github.com/kr/text v0.2.0
+go: downloading github.com/rogpeppe/go-internal v1.14.1
+go: downloading github.com/mitchellh/copystructure v1.2.0
+go: downloading github.com/hashicorp/golang-lru v1.0.2
+go: downloading gonum.org/v1/gonum v0.17.0
+go: downloading github.com/mitchellh/reflectwalk v1.0.2
+go: downloading github.com/jmespath/go-jmespath v0.4.0
+go: downloading github.com/jmespath/go-jmespath/internal/testify v1.5.1
+cd web/ui && pnpm install
+Scope: all 4 workspace projects
+? Verifying lockfile against supply-chain policies (746 entries)...
+✓ Lockfile passes supply-chain policies (746 entries in 2.9s)
+Lockfile is up to date, resolution step is skipped
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Packages: +670
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 670, reused 0, downloaded 259, added 259
+Progress: resolved 670, reused 0, downloaded 413, added 397
+Progress: resolved 670, reused 0, downloaded 474, added 418
+Progress: resolved 670, reused 0, downloaded 646, added 494
+Progress: resolved 670, reused 0, downloaded 670, added 670, done
+.../node_modules/unrs-resolver postinstall$ node postinstall.js
+.../esbuild@0.25.12/node_modules/esbuild postinstall$ node install.js
+.../node_modules/unrs-resolver postinstall: Done
+.../esbuild@0.25.12/node_modules/esbuild postinstall: Done
+
+devDependencies:
++ @types/jest 29.5.14
++ @typescript-eslint/eslint-plugin 8.68.0
++ @typescript-eslint/parser 8.68.0
++ eslint-config-prettier 10.1.8
++ prettier 3.9.6
++ ts-jest 29.4.12
++ typescript 5.9.3
++ vite 6.4.3
+
+Done in 8.1s using pnpm v11.3.0
+# The old React app has been separated from the npm workspaces setup to avoid
+# issues with conflicting dependencies. This is a temporary solution until the
+# new Mantine-based UI is fully integrated and the old app can be removed.
+cd web/ui/react-app && pnpm install
+? Verifying lockfile against supply-chain policies (1366 entries)...
+✓ Lockfile passes supply-chain policies (1366 entries in 3s)
+Lockfile is up to date, resolution step is skipped
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Packages: +1353
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 1353, reused 352, downloaded 164, added 165
+Progress: resolved 1353, reused 352, downloaded 469, added 635
+Progress: resolved 1353, reused 352, downloaded 867, added 1219
+Progress: resolved 1353, reused 352, downloaded 1001, added 1353, done
+.../node_modules/core-js-pure postinstall$ node -e "try{require('./postinstall')}catch(e){}"
+.../core-js@3.49.0/node_modules/core-js postinstall$ node -e "try{require('./postinstall')}catch(e){}"
+.../node_modules/@parcel/watcher install$ node scripts/build-from-source.js
+.../node_modules/core-js-pure postinstall: Done
+.../core-js@3.49.0/node_modules/core-js postinstall: Done
+.../node_modules/@parcel/watcher install: Done
+
+dependencies:
++ @codemirror/autocomplete 6.20.3
++ @codemirror/commands 6.10.4
++ @codemirror/language 6.12.4
++ @codemirror/lint 6.9.7
++ @codemirror/search 6.7.1
++ @codemirror/state 6.7.1
++ @codemirror/view 6.43.8
++ @forevolve/bootstrap-dark 4.0.2
++ @fortawesome/fontawesome-common-types 6.7.2
++ @fortawesome/fontawesome-svg-core 6.7.2
++ @fortawesome/free-solid-svg-icons 6.7.2
++ @fortawesome/react-fontawesome 0.2.6
++ @lezer/common 1.5.2
++ @lezer/highlight 1.2.3
++ @lezer/lr 1.4.10
++ @nexucis/fuzzy 0.5.1
++ @nexucis/kvsearch 0.9.1
++ @prometheus-io/codemirror-promql 0.314.0 <- ../module/codemirror-promql
++ bootstrap 4.6.2
++ css.escape 1.5.1
++ downshift 9.4.0
++ http-proxy-middleware 3.0.7
++ jquery 3.7.1
++ jquery.flot.tooltip 0.9.0
++ moment 2.30.1
++ moment-timezone 0.6.3
++ popper.js 1.16.1
++ react 18.3.1
++ react-copy-to-clipboard 5.1.1
++ react-dom 18.3.1
++ react-infinite-scroll-component 6.1.1
++ react-resize-detector 7.1.2
++ react-router-dom 7.18.2
++ reactstrap 8.10.1
++ sanitize-html 2.17.6
++ sass 1.102.0
++ tempusdominus-bootstrap-4 5.39.2
++ tempusdominus-core 5.19.3
+
+devDependencies:
++ @babel/plugin-proposal-private-property-in-object 7.21.11
++ @testing-library/dom 10.4.1
++ @testing-library/react 16.3.2
++ @types/flot 0.0.36
++ @types/jest 29.5.14
++ @types/jquery 3.5.34
++ @types/node 22.20.1
++ @types/react 18.3.31
++ @types/react-copy-to-clipboard 5.0.7
++ @types/react-dom 18.3.7
++ @types/sanitize-html 2.16.1
++ eslint 8.57.1
++ eslint-config-prettier 10.1.8
++ eslint-config-react-app 7.0.1
++ eslint-plugin-prettier 5.5.6
++ identity-obj-proxy 3.0.0
++ jest-canvas-mock 2.5.8
++ jest-fetch-mock 3.2.0
++ mutationobserver-shim 0.3.7
++ prettier 3.9.6
++ react-app-rewired 2.2.1
++ react-router 7.18.2
++ react-scripts 5.0.1
+
+Done in 8.2s using pnpm v11.3.0
+cd web/ui && CI="" pnpm run build
+$ bash build_ui.sh --all
+build lezer-promql
+$ bash ./build.sh
++ pnpm exec lezer-generator src/promql.grammar -o src/parser
+Unused rule 'TsOfMaxFirstTime' (src/promql.grammar 486:2)
+Wrote src/parser.js and src/parser.terms.js
++ cat src/parser.terms.js
++ bash ./generate-types.sh
++ mkdir -p ./dist
++ indexFile=./dist/index.d.ts
++ [[ -f ./dist/index.d.ts ]]
++ cat
+++ sed -E 's/ = [0-9]+/: number/' src/parser.terms.js
++ pnpm exec rollup -c
+
+./src/parser.js → ./dist/index.cjs, ./dist/index.es.js...
+created ./dist/index.cjs, ./dist/index.es.js in 64ms
+build codemirror-promql
+$ pnpm run build:lib
+$ bash ./build.sh
++ tsc --module esnext --target es2018 --outDir dist/esm
++ tsc --module commonjs --target es5 --outDir dist/cjs --downlevelIteration
+build react-app
+$ react-app-rewired build
+Creating an optimized production build...
+Compiled with warnings.
+
+[eslint]
+src/pages/graph/SeriesName.tsx
+  Line 1:21:  'useContext' is defined but never used  @typescript-eslint/no-unused-vars
+
+src/pages/status/Status.tsx
+  Line 130:37:  Expected '!==' and instead saw '!='                                                                                                                                                                                                          eqeqeq
+  Line 133:6:   React Hook useEffect has a missing dependency: 'setAnimateLogo'. Either include it or remove the dependency array. If 'setAnimateLogo' changes too often, find the parent component that defines it and wrap that definition in useCallback  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+File sizes after gzip:
+
+  493.98 kB  build/static/js/main.cd1b59d3.js
+  53.76 kB   build/static/css/main.3a01f811.css
+
+The project was built assuming it is hosted at ./.
+You can control this with the homepage field in your package.json.
+
+The build folder is ready to be deployed.
+
+Find out more about deployment here:
+
+  https://cra.link/deployment
+
+build mantine-ui
+$ tsc && vite build
+vite v6.4.3 building for production...
+transforming...
+✓ 7520 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                       1.83 kB │ gzip:   0.82 kB
+dist/assets/codicon-B_nZgZYP.ttf     61.02 kB
+dist/assets/index-BgFdCsc-.css      287.67 kB │ gzip:  42.19 kB
+dist/assets/index-DvB4MZOY.js     1,970.06 kB │ gzip: 584.92 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 9.23s
+>> compressing assets
+scripts/compress_assets.sh
+>> building binaries
+/go/bin/promu build --prefix /__w/prometheus/prometheus
+ >   prometheus
+go: downloading github.com/cespare/xxhash v1.1.0
+go: downloading github.com/oklog/ulid v1.3.1
+go: downloading github.com/go-openapi/swag v0.28.0
+go: downloading github.com/go-openapi/validate v0.26.1
+go: downloading github.com/envoyproxy/go-control-plane v0.14.0
+go: downloading cloud.google.com/go/compute v1.54.0
+go: downloading cloud.google.com/go v0.123.0
+go: downloading github.com/go-openapi/jsonpointer v1.0.0
+go: downloading github.com/go-openapi/swag/cmdutils v0.28.0
+go: downloading github.com/go-openapi/swag/conv v0.28.0
+go: downloading github.com/go-openapi/swag/fileutils v0.28.0
+go: downloading github.com/go-openapi/swag/jsonutils v0.28.0
+go: downloading github.com/go-openapi/swag/loading v0.28.0
+go: downloading github.com/go-openapi/swag/mangling v0.28.0
+go: downloading github.com/go-openapi/swag/netutils v0.28.0
+go: downloading github.com/go-openapi/swag/stringutils v0.28.0
+go: downloading github.com/go-openapi/swag/typeutils v0.28.0
+go: downloading github.com/go-openapi/swag/yamlutils v0.28.0
+go: downloading github.com/grpc-ecosystem/grpc-gateway/v2 v2.30.0
+go: downloading github.com/go-openapi/analysis v0.25.5
+go: downloading github.com/go-openapi/loads v0.25.0
+go: downloading github.com/go-openapi/spec v0.22.9
+go: downloading github.com/go-openapi/jsonreference v1.0.0
+go: downloading github.com/go-openapi/swag/pools v0.28.0
+ >   promtool
+# github.com/prometheus/prometheus/cmd/promtool
+cmd/promtool/main.go:359:33: undefined: promconfig.NewDebugRoundTripper
+!! command failed: build -o /__w/prometheus/prometheus/promtool -ldflags -X github.com/prometheus/common/version.Version=3.14.0 -X github.com/prometheus/common/version.Revision=b46fa0d7c3b88473b9863bda43f745bfababeadd -X github.com/prometheus/common/version.Branch=HEAD -X github.com/prometheus/common/version.BuildUser=root@f6c3a2f9a9e3 -X github.com/prometheus/common/version.BuildDate=20260903-23:29:53  -extldflags '-static' -tags netgo,builtinassets github.com/prometheus/prometheus/cmd/promtool: exit status 1
+make: *** [Makefile.common:237: common-build] Error 1

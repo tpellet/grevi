@@ -1,0 +1,24 @@
+a3d31e2 Merge pull request #14497 from cli/bagtoad/cli-security-reporting-guidance
+fc1f73a Prioritize HackerOne for vulnerability reports
+5e5cd85 Merge pull request #14487 from cli/dependabot/github_actions/nodeselector/setup-apple-codesign-0.0.3
+724ae6d Merge pull request #14486 from cli/dependabot/github_actions/codeql-actions-97c20ee9f3
+d663d01 chore(deps): bump nodeselector/setup-apple-codesign from 0.0.2 to 0.0.3
+d578037 chore(deps): bump the codeql-actions group with 3 updates
+0cf1092 Merge pull request #14462 from cli/revert-14437-williammartin-apple-codesign-action
+189706b Revert "Use internal Apple codesign action (#14437)"
+9eb4db2 Merge pull request #14461 from cli/bump-go-gh
+adeb51e Test explicit default repository resolution (#14460)
+e09f1b1 Bump github.com/cli/go-gh/v2 to v2.16.1
+be35276 Add repo default network acceptance test
+cac0dd7 Merge pull request #14443 from cli/dependabot/go_modules/golang.org/x/crypto-0.57.0
+0baa362 Merge pull request #14444 from cli/dependabot/go_modules/golang.org/x/text-0.42.0
+28a47f4 chore(deps): bump golang.org/x/text from 0.41.0 to 0.42.0
+e4dc241 chore(deps): bump golang.org/x/crypto from 0.56.0 to 0.57.0
+04d01cc Merge pull request #14445 from cli/dependabot/go_modules/golang.org/x/term-0.46.0
+339257b Merge pull request #14446 from cli/dependabot/github_actions/codeql-actions-8213001b74
+35b55f8 Merge pull request #14447 from cli/dependabot/github_actions/azure/login-3.1.0
+38316c1 Use internal Apple codesign action (#14437)
+617bbcf chore(deps): bump azure/login from 3.0.2 to 3.1.0
+be5f9ac chore(deps): bump the codeql-actions group with 3 updates
+1765996 chore(deps): bump golang.org/x/term from 0.45.0 to 0.46.0
+9909db8 Merge pull request #14442 from cli/bump-go-1.27.1

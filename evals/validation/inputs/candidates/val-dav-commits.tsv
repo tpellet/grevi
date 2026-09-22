@@ -1,0 +1,24 @@
+16e4a39	chore(release): v4.7.10 — drop-frame sync events are reported at the timecode they happen
+05b159f	Merge branch 'pr-248'
+2e9b8e1	fix(sync): report drop-frame sync events at the timecode they happen
+4a643b6	chore(release): v4.7.9 — a negative still, album or item index is refused
+ad6f343	Merge branch 'pr-247'
+1bae1c5	fix(gallery): refuse a negative still, album or item index
+6532370	chore(release): v4.7.8 — allow_non_mcp_name="false" no longer lifts the _mcp_ name guard
+6f3857d	Merge branch 'pr-246'
+ebe0821	chore(release): v4.7.7 — the offline test bootstrap holds under unittest discover too
+db24fd2	Merge branch 'pr-245'
+eaa6e94	fix(guards): read allow_non_mcp_name="false" as false in both name guards
+bddd943	fix(tests): install the offline bootstrap under `unittest discover` too
+570b9eb	chore(release): v4.7.6 — serverInfo.version reports this project's version
+b95a9c0	Merge branch 'pr-244'
+75d4984	chore(release): v4.7.5 — the control panel serves on the ::1 loopback it accepts
+7747299	Merge branch 'pr-242'
+a90cb6a	fix: set serverInfo.version to project VERSION (#243)
+3a9c725	fix(control-panel): let the panel serve on the ::1 loopback it accepts
+a92d523	fix(transport): a non-loopback bind is reachable at its own address (#241)
+d7abf27	chore(release): v4.7.3 — a false spelling no longer grants permission on six opt-in flags
+51664ec	Merge branch 'pr-240'
+1089182	fix(guards): read a false spelling as false on six permission flags
+0e0328a	chore(release): v4.7.2 — overwrite="false" no longer unlocks an install guard
+441e153	Merge branch 'pr-239'
