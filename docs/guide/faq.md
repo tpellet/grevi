@@ -112,6 +112,10 @@ about one context, reading stdin or `--context FILE`.
 
 A `rate_limit_day` HTTP 429 returns exit 4 with `daily quota of the free backend reached`.
 jevify does not retry it. Wait for the service quota to renew or use your TypeSafe quota.
+The free quota is 20,000 classifications a day per IP, one per record under one question:
+20,000 `is` statements, 20,000 `filter` or `label` records (at most 60 per call), 10,000 `pick`
+or `why` calls under 100 lines, or about 380 `route` calls over a PATH of 1,900 commands
+(measured 2026-09-22, [benchmarks/results.md](../../benchmarks/results.md)).
 If a streaming filter fails after printing records, those records are only an answered prefix.
 
 ## Does it work offline or in other languages?

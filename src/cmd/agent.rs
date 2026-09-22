@@ -81,6 +81,24 @@ pub fn capabilities() -> Outcome {
             serde_json::json!({ "code": e.code(), "name": e, "meaning": meaning })
         })
         .collect();
+    // The keyless quota per verb, from the measurement in benchmarks/results.md: one
+    // classification is one record under one question, 20,000 a day per IP.
+    let keyless_cost = serde_json::json!({
+        "is": "1 per statement",
+        "filter": "1 per distinct record; a call of 60 records is accepted, 75 is refused with HTTP 402 request_spending_limit",
+        "label": "1 per distinct record; a call of 60 records is accepted, 75 is refused with HTTP 402 request_spending_limit",
+        "pick": "2 per window of 99 lines, plus 2 for the final round",
+        "why": "2 per window of 99 lines, plus 2 for the final round",
+        "route": "2 per window of 99 commands, plus 1 per finalist, at most 12"
+    });
+    let keyless_calls = serde_json::json!({
+        "is": "6,600 (3 statements) to 20,000 (1)",
+        "filter": "20,000 records in total: 333 calls of 60 records",
+        "label": "20,000 records in total: 333 calls of 60 records",
+        "pick": "830 (1,000 lines) to 10,000 (at most 99)",
+        "why": "830 (1,000 lines) to 10,000 (at most 99)",
+        "route": "about 380 over a PATH of 1,900 commands"
+    });
     let data = serde_json::json!({
         "name": "jevify",
         "version": env!("CARGO_PKG_VERSION"),
@@ -150,7 +168,7 @@ pub fn capabilities() -> Outcome {
         "saved_inputs": { "verbs": ["why", "filter"], "directory": "JEVIFY_CACHE_DIR/outputs, or the platform cache directory/jevify/outputs", "filename": "<blake3-16>.log", "contents": "raw input bytes, secrets included", "retention": "never pruned", "disable": "--no-save (independent of --no-cache)", "permissions": "directory 0700, file 0600", "incomplete": "failed or skipped save: saved_input null, complete false" },
         "backends": [
             { "name": "typesafe", "key": "required", "model": "Jev", "window": Backend::Typesafe.window(), "choice_options": 255, "state_chars": "32k tokens", "requests_per_minute": 1200, "meta": "input_tokens is null unless every inference attempt reports usage; cost_usd estimates input-token cost at the configured price and is null when that basis is incomplete" },
-            { "name": "classifier", "key": "none", "model": "service-controlled Jev; explicit model overrides unsupported", "decision_semantics": "two-label Choice substitutes for Noul; scores and thresholds are not assumed interchangeable with TypeSafe Noul", "window": Backend::Classifier.window(), "choice_options": crate::jev::classifier::MAX_LABELS, "state_chars": crate::jev::classifier::MAX_INPUT_CHARS, "questions_per_request": crate::jev::classifier::MAX_DIMENSIONS, "classifications_per_minute": 3000, "meta": "input_tokens is null when token usage is unavailable; cost_usd is 0 at the default zero service price, with an explicit telemetry.cost_estimate basis" }
+            { "name": "classifier", "key": "none", "model": "service-controlled Jev; explicit model overrides unsupported", "decision_semantics": "two-label Choice substitutes for Noul; scores and thresholds are not assumed interchangeable with TypeSafe Noul", "window": Backend::Classifier.window(), "choice_options": crate::jev::classifier::MAX_LABELS, "state_chars": crate::jev::classifier::MAX_INPUT_CHARS, "questions_per_request": crate::jev::classifier::MAX_DIMENSIONS, "classifications_per_minute": 3000, "classifications_per_day": 20000, "classification": "one record under one question, per IP", "cost_per_call": keyless_cost, "calls_per_day": keyless_calls, "measured": "2026-09-22, JEVIFY_CONCURRENCY=4, benchmarks/results.md", "meta": "input_tokens is null when token usage is unavailable; cost_usd is 0 at the default zero service price, with an explicit telemetry.cost_estimate basis" }
         ],
         "envelope": { "fields": ["ok", "command", "version", "exit_code", "data", "meta{backend,model,elapsed_ms,requests,cache_hits,input_tokens,cost_usd,threshold,request_id,telemetry}", "error{kind,message,hint,example}"] },
         "telemetry": {

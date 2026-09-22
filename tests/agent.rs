@@ -156,6 +156,31 @@ fn capabilities_lists_verbs_exit_codes_env() {
             .contains("jevify label bug,feature,question")
     );
     assert_eq!(d["limits"]["distinct_records"], 20_000);
+    // The keyless quota, per verb, from the measurement in benchmarks/results.md.
+    let classifier = d["backends"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|b| b["name"] == "classifier")
+        .unwrap();
+    assert_eq!(classifier["classifications_per_minute"], 3_000);
+    assert_eq!(classifier["classifications_per_day"], 20_000);
+    assert!(
+        classifier["classification"]
+            .as_str()
+            .unwrap()
+            .contains("per IP")
+    );
+    for verb in ["is", "filter", "label", "pick", "why", "route"] {
+        assert!(classifier["cost_per_call"][verb].is_string(), "{verb}");
+        assert!(classifier["calls_per_day"][verb].is_string(), "{verb}");
+    }
+    assert!(
+        classifier["measured"]
+            .as_str()
+            .unwrap()
+            .contains("benchmarks/results.md")
+    );
     assert_eq!(d["limits"]["records_per_request"]["classifier"], 1_000);
     assert_eq!(d["limits"]["records_per_request"]["typesafe"], 20);
     assert_eq!(

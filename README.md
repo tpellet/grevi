@@ -31,7 +31,9 @@ printf 'All tests passed.\n' | jevify is 'the tests passed' && printf 'ready\n'
 jevify fill --dry-run -- git switch '@{branch:the auth refactor}'
 ```
 
-No key or account is needed: [classifier.dev](https://classifier.dev) serves the free backend.
+No key or account is needed: [classifier.dev](https://classifier.dev) serves the free backend,
+20,000 classifications a day per IP: about 380 `route` calls, 10,000 `pick` calls under 100
+lines, or 20,000 records through `filter` (see [Limits](#privacy-and-limits)).
 A TypeSafe key selects your own TypeSafe quota: `export TYPESAFE_API_KEY_FILE=/path/to/key`.
 `jevify health` names the backend and checks the connection. [Getting started](docs/guide/getting-started.md)
 covers installation and backend settings.
@@ -264,6 +266,16 @@ and report coverage; unordered overflow is `too_many` (exit 6). Narrow with a pr
 `filter` and `label` batch up to 1,000 records per request on classifier.dev and 20 on TypeSafe.
 Only the classifier backend judges records independently; TypeSafe records share a request state.
 A `rate_limit_day` HTTP 429 exits 4 with `daily quota of the free backend reached`, without retry.
+
+Without a key the quota is 3,000 classifications a minute and 20,000 a day per IP; one
+classification is one record under one question. `is` costs one per statement; `filter` and
+`label` cost one per distinct record, and the service accepts a call of 60 records and refuses
+one of 75 (HTTP 402); `pick` and `why` cost two per window of 99 lines plus two for the final
+round; `route` costs two per window of 99 commands plus one per finalist, at most 12. On one IP
+a day holds 6,600 to 20,000 `is` calls (three statements down to one), 20,000 records through
+`filter` or `label`, 830 to 10,000 `pick` or `why` calls (1,000 lines down to 99), and about 380
+`route` calls over a PATH of 1,900 commands (measured 2026-09-22 with `JEVIFY_CONCURRENCY=4`,
+[benchmarks/results.md](benchmarks/results.md)).
 
 Selection uses at most two rounds. Long lists and clipped evidence can hide a relevant candidate;
 `why` reports `considered` and `total`, and `filter` retains unsure records. `p` is a backend score,

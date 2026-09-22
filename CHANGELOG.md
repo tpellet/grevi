@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+Changed:
+
+- The keyless quota is measured per verb against the service's own accounting: one
+  classification is one record under one question, 3,000 a minute and 20,000 a day per IP.
+  `is` costs one per statement, `filter` and `label` one per distinct record, `pick` and `why`
+  two per window of 99 lines plus two for the final round, `route` two per window of 99 commands
+  plus one per finalist. README, the configuration guide, the FAQ and
+  `capabilities.backends` state the free calls a day per verb; `benchmarks/results.md` holds the
+  dated measurement. Routing over a PATH of 1,883 commands costs about 52 classifications, not
+  one per command.
+
 ## 0.7.0
 
 Added:
