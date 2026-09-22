@@ -1,23 +1,27 @@
 ---
 name: jevify
-description: Use the jevify CLI when a question is about meaning and a literal search cannot answer it. Find the cause in a long failure log, filter many records or files with one question, pick one record by description, branch on a fact, or discover an unfamiliar installed tool. Stage hunks by topic or propose folders for files when requested. Do not use for short input, known commands, counting, arithmetic, quality judgments, generating text, or security decisions on untrusted input.
+description: Use the jevify CLI when a question is about meaning and a literal search cannot answer it. Fill command arguments from branches, piped candidates or context-dependent options; get a handle with pick --from. Find the cause in a long failure log, filter records or files, pick a record, branch on a fact or discover an unfamiliar tool. Stage hunks or propose folders when requested. Do not use for already-known values, counting, arithmetic, quality judgments, generating text or security decisions.
 ---
 
 # jevify
 
 ## The two sides of a command
 
-A command takes arguments and produces output. On the output side, jevify turns a long stream
-into a pointer, a subset, or a decision. It selects existing text and never generates an
-argument or a command. Write the command yourself; let jevify judge the evidence it produces.
+A command takes arguments and produces output. On the input side, `fill` selects real handles
+for arguments and runs the command you write. On the output side, jevify turns a long stream
+into a pointer, a subset, or a decision. It selects existing text and never invents values.
 
 Use cheap tools first: `grep`, `jq`, `head`. Skip jevify when a literal search answers the
-question, the input is short enough to read, or you already know the exact tool.
+question, the input is short enough to read, or you already know the required value.
 
 ## The verbs
 
 | Situation | Verb | Result |
 |:---|:---|:---|
+| About to list branches only to choose one | `fill` | A real branch argument, then the command |
+| A tool can list the needed value | pipe into `fill` with `'@{-:description}'` | A handle from a supplied record |
+| Want the value without the run | `pick --from branch` | A handle, or abstention |
+| An option depends on text you have not read | `fill` with `'@{one:a|b:question}'` or `'@{flag:--draft:question}'` | A caller-written option or conditional flag |
 | A failed build has more than about 50 lines, or grep finds only the symptom | `why` | A cause with line number and context |
 | Many records, one question | `filter` | Matching and unsure records, like `grep` by meaning |
 | Many files, one question | `filter --files` | Paths judged by file content |
@@ -76,6 +80,40 @@ step. A saved full input is a way back, not proof that every line was judged.
 - Scores depend on backend and task. A higher threshold does not repair incomplete evidence,
   and text under judgment can argue with the judge. Do not use jevify as a security gate.
 
+## The marker
+
+```sh
+jevify fill --dry-run -- git switch '@{branch:the auth refactor}'
+printf 'retry_backoff\nparse_header\n' | jevify fill --dry-run -- cargo test '@{-:the retry test}'
+printf 'A crash with no reproduction steps.\n' | jevify fill --dry-run -- printf '%s\n' \
+  '@{one:bug|feature|docs:what kind of report is this}' '@{flag:--draft:the report lacks steps to reproduce}'
+jevify pick --from branch 'the auth refactor'
+```
+
+The three families are things that exist (`branch`: local and remote refs with subject and age),
+caller-written options (`one`, `flag`), and supplied records (`-`). `branch` runs `git for-each-ref`
+and enriches finalists with `git log`; `capabilities` lists their exact argv. `-` uses stdin or
+`--candidates FILE`, with `--field N` or `--key KEY` to name a handle inside the evidence.
+`one` and `flag` judge stdin or `--context FILE`. stdin has one role; supply the other with a file.
+File inputs leave stdin for the command; consumed stdin becomes empty for it.
+
+- Put the whole marker argument in single quotes, including prefixes and suffixes. An apostrophe
+  is `'\''`. Never use double quotes around a marker whose contents the shell could expand.
+- Marker escapes are `\}`, `\:` and `\|`. `one` separates options with `|` before the question's
+  `:`. A `flag` is a whole argument: yes keeps it, no removes it, unsure abstains.
+- A literal `@{word:` is spelled `@@{word:`. The Python format string `'{user}@{host:>8}'` is an
+  unknown kind, exit 2; `'{user}@@{host:>8}'` preserves it literally.
+- Use `--dry-run` to look, never `eval`. Omit it only when the underlying command is authorized.
+  A marker does not survive a second shell (`ssh`, `make`, `xargs`).
+- Never use `"$(jevify pick …)"` as an argument; abstention becomes an empty argument.
+- Several markers resolve together against one snapshot. Any abstention means nothing runs.
+  Free text stays literal: write titles, messages and new names yourself.
+
+`fill` accepts 3,267 candidates per marker keyless, 13,200 on TypeSafe; `pick` and `pick --from`
+accept 9,801 and 20,000. Ordered kinds keep the newest candidates and report coverage; unordered
+overflow is `too_many`. `one` accepts 99 options keyless, 200 on TypeSafe. No call needs more
+than two rounds of model requests.
+
 ## Exit codes and recovery
 
 | Code | Meaning and next step |
@@ -89,6 +127,28 @@ step. A saved full input is a way back, not proof that every line was judged.
 | 6 | Input error: check the input; for `too_many`, narrow with `grep` or `head` |
 | 7 | Reserved |
 | 130 | Declined |
+
+For `fill`, exits 2–6 mean nothing ran; after execution the command owns its exit code, including
+2–6. Stderr reports `exec` or `not run:` with the `jevify fill:` prefix; `-q` keeps only
+`not run:` lines. A successful dry run exits 0. Machine output requires `--dry-run` and includes
+`data.argv` on success and `data.markers[]` for individual results.
+
+An exit-3 abstention has `error: null`: read `data.reason`, the first failed marker in argv
+order, and `data.markers[].reason`, every marker's own reason. These are abstention reasons,
+not error kinds:
+
+| Reason or error | Recovery |
+|:---|:---|
+| `too_many` (exit 6) | use a prefix, `grep`, `head` or a narrower pipe |
+| `ambiguous` | read the two handles, write one |
+| `no_match` | read candidates N of M and narrow or correct the description |
+| `unsure_flag` | write the flag or drop the marker |
+| `insufficient_evidence` | supply a complete context that fits |
+| `lister_failed` (exit 6) | run the named lister yourself |
+
+The other input error kinds are `stdin_is_tty`, `cannot_run`, `recipe_invalid`. `fill` refuses
+non-Jev answers with exit 4, `api_unavailable`, `answered by <model>, not Jev`; a missing model
+name appears as `unknown` in `meta.model` and refuses too. This guard also applies to dry runs.
 
 `filter` exits 3 when every record is unsure, even when it prints those records. `is` exits 0
 when all statements hold, 1 when any is no, and 3 otherwise. Oversized `is` input abstains
@@ -107,6 +167,10 @@ silent predicates. The envelope is `{ok, command, version, exit_code, data, meta
 
 Allow the output verbs (`why`, `pick`, `filter`, `is`, `route`) freely. They do not execute the
 tool they select. Check the selected tool's help and write its arguments yourself.
+Allow `jevify fill --dry-run` freely. Allow `fill` per command prefix
+(`jevify fill -- git switch:*`), exactly as the command itself is allowed. jevify is not a
+permission system. The description, option context and candidates' evidence leave the machine
+with best-effort redaction; `fill` starts the command the caller wrote.
 
 `add` changes the index, never commits. Inspect `--dry-run` first; use `--yes` only when
 staging is authorized. It rejects oversized hunks instead of clipping evidence. `sort` proposes

@@ -32,6 +32,9 @@ Nothing fits or the evidence is unsure. `pick` abstains instead of returning a b
 `filter` keeps unsure records unless `--strict`, and exits 3 when every record is unsure.
 `why` can abstain when no cause fits; make sure stderr reaches it through `2>&1`.
 `is` returns 3 when no statement is no and at least one is unsure, or the context is too large.
+`fill` runs nothing if any marker abstains. Its reasons are `no_match`, `ambiguous`,
+`unsure_flag` and `insufficient_evidence`. With `--dry-run --json`, `error` is null;
+`data.reason` is the first failed marker in argv order and `data.markers[]` has every result.
 
 Write the condition so that yes means act. `&&` acts only on exit 0. An explicit `case` can
 distinguish a no (1), an abstention (3), and backend or input errors.
@@ -44,9 +47,34 @@ The status reports `excerpts withheld: N`; this is not a guarantee that every se
 
 ## Does it run a command or invent flags?
 
+`fill` starts the command you wrote, substituting existing handles or options you supplied.
+`branch` lists refs, `-` selects supplied records, and `one`/`flag` judge context. It invents
+nothing. Preview with `--dry-run`, never `eval`; allow execution exactly as the underlying
+command is allowed. Use `pick --from branch` when you want a handle without execution.
+
 `route` prints an installed tool, summary and synopsis. It supplies no arguments and starts no
 user command. `why`, `pick`, `filter` and `is` judge supplied text. `add` can stage tracked hunks;
 `sort --apply` and `sort --undo` can move files. These mutations require the caller's authorization.
+
+## Why does a marker fail before inference?
+
+Quote the whole argument: `'@{branch:the auth refactor}'`. Unknown kinds, a missing closing
+brace, and no marker are exit 2. A literal `@{word:` is `@@{word:`; a Python format string
+`'{user}@{host:>8}'` is an unknown kind, so use `'{user}@@{host:>8}'`. Do not pass markers through
+a second shell. stdin cannot serve both candidates and context; supply `--candidates FILE`
+or `--context FILE` for the other role. A required terminal stdin is exit 6 `stdin_is_tty`.
+
+`too_many` means narrow with a prefix, `grep`, `head` or a smaller pipe. `lister_failed` means
+run the named lister yourself. `ambiguous` means inspect the two handles and write one;
+`unsure_flag` means write the flag or drop its marker. For `no_match`, inspect candidates N of M.
+
+## Whose exit code does fill return?
+
+Before execution, 2–6 means nothing ran. After execution, the command owns its exit code,
+including 2–6. Stderr reports `exec` or `not run:` with the `jevify fill:` prefix. `-q` keeps
+only `not run:` lines; a successful dry run exits 0. Machine output requires `--dry-run`.
+Only Jev may authorize a resolution: a different model gives exit 4 `api_unavailable`,
+`answered by <model>, not Jev`. Missing model names appear as `unknown` and refuse too.
 
 ## Can I trust `p`?
 

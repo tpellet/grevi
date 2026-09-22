@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.6.0
+
+Added:
+
+- `fill` resolves quoted argument markers and becomes the caller-written command. `branch`
+  lists refs, `-` selects from supplied records, and `one` and `flag` judge caller-written
+  options against context. `--dry-run` previews argv; machine output requires it.
+- All-or-nothing resolution, separate exit-3 marker reasons, and a Jev-only execution guard.
+  Missing answering-model names are `unknown` and refuse execution. The command owns its
+  output, signals and exit code; consumed stdin becomes empty for it.
+- `pick --from branch` returns handles without running a user command; plain `pick` reads stdin.
+- Capabilities list marker kinds, exact lister argv, backend capacities, input error kinds
+  and abstention reasons. Agent instructions teach quoting, recovery and command permissions.
+
+Changed:
+
+- Selection finalists follow rank within each window: three, two or one as capacity permits.
+  `fill` keeps three, accepting 3,267 candidates keyless and 13,200 on TypeSafe; `pick` accepts
+  9,801 keyless and 20,000 on TypeSafe. Ordered kinds report retained coverage.
+
 ## 0.5.0
 
 Added:

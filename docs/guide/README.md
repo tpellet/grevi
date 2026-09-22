@@ -1,13 +1,14 @@
 # jevify guide
 
-jevify gives command output an understanding of meaning. Describe a record, a file, a tool or a
-change, and it selects existing text even when your words do not appear in it. It abstains when
+jevify gives command-line tools an understanding of meaning. On the input side, `fill` resolves
+real arguments and runs the command; on the output side, verbs select records or judge facts.
+It selects existing text even when your words do not appear in it. It abstains when
 nothing fits. Scores are specific to the backend and task, not universally calibrated probabilities.
 
 | Page | Contents |
 |:---|:---|
 | [Getting started](getting-started.md) | Install, keyless access, first commands, shell integration |
-| [Verbs](verbs.md) | `why`, `pick`, `filter`, `is`, `route`, `add`, `sort` and utility commands |
+| [Verbs](verbs.md) | `fill`, its markers, `pick --from`, output verbs and utility commands |
 | [Agents](agents.md) | One machine envelope, exit codes, capabilities and permissions |
 | [How it works](how-it-works.md) | Selection, NONE, thresholds, batching, cache and measurements |
 | [Configuration](configuration.md) | Environment variables, global flags and storage |

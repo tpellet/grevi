@@ -1,6 +1,6 @@
 {
   "name": "jevify",
-  "description": "Agent skill for the jevify CLI: find causes, filter records, pick files, branch on facts and discover tools, with explicit abstention.",
+  "description": "Agent skill for the jevify CLI: fill real command arguments, select handles with pick --from, find causes, filter records and branch on facts, with explicit abstention.",
   "author": {
     "name": "tpellet",
     "url": "https://github.com/tpellet"

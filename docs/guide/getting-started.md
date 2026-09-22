@@ -41,6 +41,8 @@ jevify health
 ```sh
 printf 'build started\nerror: connection timed out\nbuild stopped\n' | jevify filter 'reports a network failure'
 printf 'All tests passed.\n' | jevify is 'the tests passed' && printf 'ready\n'
+jevify fill --dry-run -- git switch '@{branch:the auth refactor}'
+jevify pick --from branch 'the auth refactor'
 cargo build 2>&1 | jevify why
 git branch | jevify pick 'the payment timeout fix'
 git ls-files | jevify pick --files 'where man pages are parsed'
@@ -54,6 +56,26 @@ to drop unsure ones. `filter -v` inverts; `--verbose` prints diagnostics and has
 Only `why` and `filter` save full raw input, secrets included, under the cache directory's
 `outputs/` subdirectory. Stderr names the saved path. `--no-save` skips the save independently
 of the answer cache; a skipped or failed save sets `data.complete=false`.
+
+## Fill an argument
+
+`fill` selects existing handles and becomes the command you wrote. `--dry-run` prints its argv
+without executing; inspect the preview, never `eval` it. Omit `--dry-run` only when the command
+is authorized. Several markers are all-or-nothing: if any abstains, nothing runs.
+
+```sh
+printf 'retry_backoff\nparse_header\n' | jevify fill --dry-run -- cargo test '@{-:the retry test}'
+```
+
+Single-quote the whole marker argument. Three families supply values: existing branches with
+`branch`, supplied records with `-`, or caller-written options with `one` and `flag`.
+`'@{one:bug|feature|docs:what kind of report is this}'` chooses an option from context;
+`'@{flag:--draft:the report lacks steps to reproduce}'` keeps or removes a whole flag argument,
+abstaining on doubt. Context comes from stdin or `--context FILE`; candidates come from stdin
+or `--candidates FILE`. stdin cannot serve both roles. File inputs leave stdin for the command.
+
+Use `pick --from branch` for the handle without execution. Use cheap literal tools when you
+already know its name. [Verbs](verbs.md#fill) covers marker escaping and the exact input rules.
 
 ## The comma alias
 
@@ -86,3 +108,5 @@ its output as an argument; an unchecked substitution can pass an empty argument 
 The common codes are 0 ok, 1 no, 2 usage, 3 abstain, 4 unavailable, 5 auth, 6 input, 7 reserved
 and 130 declined at `add` confirmation. [Verbs](verbs.md) lists the per-command data and flags.
 For machine output, use `--json`; [Agents](agents.md) describes the envelope.
+`fill --json` requires `--dry-run`. Before execution, exits 2–6 mean nothing ran; after execution,
+the command owns its exit code. A dry run exits 0 when all markers resolve.

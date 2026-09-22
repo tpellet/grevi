@@ -7,6 +7,8 @@ jevify gives command-line tools an understanding of meaning, using [Jev](https:/
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 ```text
+                         input side
+jevify fill -- git switch '@{branch:…}'       → a real argument, then the command
                          output side
 command output ──┬── jevify why              → a cause with numbered context
                  ├── jevify pick '…'         → one record
@@ -25,6 +27,7 @@ Install with Rust 1.87 or newer, on macOS or Linux:
 cargo install jevify --locked
 printf 'build started\nerror: connection timed out\nbuild stopped\n' | jevify filter 'reports a network failure'
 printf 'All tests passed.\n' | jevify is 'the tests passed' && printf 'ready\n'
+jevify fill --dry-run -- git switch '@{branch:the auth refactor}'
 ```
 
 No key or account is needed: [classifier.dev](https://classifier.dev) serves the free backend.
@@ -82,6 +85,46 @@ jevify is 'asks for a refund' --context mail.txt
 The verdicts are `yes`, `no` or `unsure`. `is` exits 0 when all are yes, 1 when any is no,
 and 3 otherwise. It abstains before a request if the whole context exceeds its evidence budget.
 
+## The input side
+
+`fill` resolves descriptions to existing handles, then becomes the command you wrote, without
+a shell. Several markers resolve together; if any abstains, nothing runs. Free text such as
+titles and messages stays yours to write.
+
+```sh
+jevify fill --dry-run -- git switch '@{branch:the auth refactor}'
+printf 'retry_backoff\nparse_header\n' | jevify fill --dry-run -- cargo test '@{-:the retry test}'
+printf 'A crash with no reproduction steps.\n' | jevify fill --dry-run -- printf '%s\n' \
+  '@{one:bug|feature|docs:what kind of report is this}' '@{flag:--draft:the report lacks steps to reproduce}'
+jevify pick --from branch 'the auth refactor'
+```
+
+`--dry-run` prints shell-quoted argv; inspect it, never `eval` it. Omit `--dry-run` to execute.
+Use `pick --from branch` when you want the handle alone. Plain `pick` selects from stdin.
+
+### Kinds and the marker
+
+| Family | Kind | Candidates or context |
+|:---|:---|:---|
+| things that exist | `branch` | local and remote refs, with subject and age; local/remote twins collapse |
+| caller-written options | `one`, `flag` | options inside the marker, judged against stdin or `--context FILE` |
+| values in supplied records | `-` | stdin or `--candidates FILE`; `--field N` or `--key KEY` selects the handle |
+
+`branch` runs `git for-each-ref`, newest first, and uses `git log` for richer finalist evidence.
+`jevify capabilities --json` lists the exact argv. The other kinds start no lister.
+
+Put the whole marker argument in single quotes: `'--value=@{-:the retry test}'`.
+An apostrophe uses the shell spelling `'\''`. A marker ends at the first unescaped `}`;
+`\}`, `\:` and `\|` escape marker delimiters. `one` separates options with `|` before the
+question's `:`. A `flag` occupies a whole argument: yes keeps it, no removes it, unsure abstains.
+A literal `@{word:` is spelled `@@{word:`. The format string `'{user}@{host:>8}'` has an
+unknown kind and exits 2; use `'{user}@@{host:>8}'` for the literal. A marker does not survive
+a second shell (`ssh`, `make`, `xargs`); call the intended command directly.
+
+stdin has one role: candidates for `-`, or context for `one` and `flag`. Supply one side with
+`--candidates FILE` or `--context FILE` when both are needed. Consumed stdin becomes empty for
+the command; file inputs leave stdin available. Candidates come from the current directory.
+
 ## Exit codes
 
 Write the condition so that yes means act. `&&` acts only on exit 0; a no, an unsure answer,
@@ -102,6 +145,14 @@ and a network failure all stop that chain. Use `case` when those outcomes need d
 Do not pass an unchecked `pick` substitution straight into another command: abstention prints
 nothing, and the shell can turn it into an empty argument. Check the selection's exit code first.
 
+For `fill`, exits 2–6 mean nothing ran; after execution the command owns its exit code, including
+2–6. Stderr lines start with `jevify fill:` and report `exec` or `not run:`; `-q` keeps only
+`not run:`. A successful dry run exits 0. `--json` requires `--dry-run` and returns `data.argv`.
+An abstention has `error: null`: `data.reason` names the first failed marker in argv order;
+`data.markers[]` reports every marker. Reasons are `no_match`, `ambiguous`, `unsure_flag` and
+`insufficient_evidence`. A non-Jev answer refuses execution with exit 4, `api_unavailable`,
+and `answered by <model>, not Jev`; a missing model name is `unknown` in `meta.model`.
+
 ## For agents
 
 ```sh
@@ -112,7 +163,7 @@ jevify robot-docs
 
 `capabilities` is the source of truth for commands, flags, data fields and limits. `init agents`
 prints a block of at most 25 lines for an agent instruction file. Every command accepts `--json`
-(alias `--robot`) for one envelope, including usage errors:
+(alias `--robot`) for one envelope, including usage errors (`fill` requires `--dry-run`):
 
 ```text
 {ok, command, version, exit_code, data, meta, error{kind, message, hint, example} | null}
@@ -125,6 +176,9 @@ The [agent skill](plugins/jevify/skills/jevify/SKILL.md) teaches when to use eac
 Code, install the `tpellet/jevify` marketplace and `jevify@jevify` plugin. For Codex, place the
 skill directory in `~/.agents/skills/`. Output verbs start no user command; the caller's
 permissions govern staging with `add` and moving files with `sort`.
+Allow `jevify fill --dry-run` freely; allow execution per command prefix, for example
+`jevify fill -- git switch:*`, exactly as the command itself is allowed. jevify is not a
+permission system.
 
 ## What it is not
 
@@ -170,7 +224,10 @@ can disclose information. The answer cache uses redacted requests and expires af
 (`--no-cache`). Saved inputs are separate, raw and never pruned (`--no-save`).
 [PRIVACY.md](PRIVACY.md) lists the data sent per verb.
 
-`pick` and `filter` accept at most 20,000 distinct records, within the 64 MiB input limit.
+`pick` accepts 9,801 candidates on classifier.dev and 20,000 on TypeSafe; `filter` accepts
+20,000 distinct records, within the 64 MiB input limit. `fill` accepts 3,267 candidates per
+marker on classifier.dev and 13,200 on TypeSafe. Ordered kinds retain the newest candidates
+and report coverage; unordered overflow is `too_many` (exit 6). Narrow with a prefix or pipe.
 `filter` batches up to 1,000 records per request on classifier.dev and 20 on TypeSafe. Only the
 classifier backend judges records independently; TypeSafe records share a request state.
 A `rate_limit_day` HTTP 429 exits 4 with `daily quota of the free backend reached`, without retry.

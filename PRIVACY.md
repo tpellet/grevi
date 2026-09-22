@@ -20,6 +20,8 @@ by `", "`. A free-backend response is service-controlled and can name a differen
 
 | Verb | Sent | Not sent |
 |:---|:---|:---|
+| `fill` | descriptions, context of `one` and `flag`, and candidates' evidence, with best-effort redaction | literal command arguments outside markers are not semantic evidence; the caller-written command executes locally |
+| `pick --from` | description and listed candidates' evidence; branch subjects, ages and finalist commit subjects and changed paths | no user command executes |
 | `pick` | description and distinct stdin records, clipped to 200–2,000 characters per selection item | unselected evidence beyond the clipping budget |
 | `pick --files` | description, stdin paths, masked excerpts of at most 24 finalists | withheld file contents; other files not listed on stdin |
 | `filter` | statement and distinct record evidence; with `--files`, stdin paths and eligible file excerpts | file content beyond excerpts, or content withheld by the path rules |
@@ -33,6 +35,11 @@ by `", "`. A free-backend response is service-controlled and can name a differen
 
 PDF excerpts use text from the first two pages when `pdftotext` is installed, clipped to 2,000
 characters. File excerpts do not establish a whole-document verdict.
+
+`fill` starts the command the caller wrote. `--dry-run` resolves and prints argv without starting
+it; both forms send evidence. `branch` runs local Git listers; `-` reads supplied candidates;
+`one` and `flag` read context. `fill` and `pick --from` do not save raw inputs. Execution requires
+every answering model to be Jev; a missing model name is `unknown` and refuses execution.
 
 `--files` is a boolean on `pick` and `filter`, with paths supplied by the caller on stdin.
 Before reading an excerpt, jevify withholds any path whose written components:

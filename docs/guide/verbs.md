@@ -17,6 +17,67 @@ Every command accepts these before or after the verb:
 `-v` belongs to `filter` and means inversion. Text beginning with `-` goes after `--`.
 The threshold applies to yes/no fit scores, not relative selection ranks.
 
+## fill
+
+```sh
+jevify fill --dry-run -- git switch '@{branch:the auth refactor}'
+printf 'retry_backoff\nparse_header\n' | jevify fill --dry-run -- cargo test '@{-:the retry test}'
+printf 'A crash with no reproduction steps.\n' | jevify fill --dry-run -- printf '%s\n' \
+  '@{one:bug|feature|docs:what kind of report is this}' '@{flag:--draft:the report lacks steps to reproduce}'
+```
+
+`fill [--dry-run] [-q] [--candidates FILE] [--context FILE] [--field N | --key KEY]
+[-0 | --para] -- COMMAND ARGS...` fills markers then becomes the caller-written command,
+without a shell. All markers resolve together; if any abstains, nothing runs. `--dry-run`
+prints shell-quoted argv and exits 0 on success. Inspect it, never `eval` it. Machine output
+requires `--dry-run` and returns `argv`, `reason`, and
+`markers[{arg,kind,reason,handle,p,candidates,total,omitted}]`.
+
+| Family | Marker argument | Source |
+|:---|:---|:---|
+| existing things | `'@{branch:the auth refactor}'` | local and remote refs, subject and age; twins collapse |
+| supplied records | `'@{-:the retry test}'` | stdin or `--candidates FILE` |
+| caller options | `'@{one:bug\|feature\|docs:what kind of report is this}'` | options in the marker, judged against context |
+| caller options | `'@{flag:--draft:the report lacks steps to reproduce}'` | yes keeps, no removes, unsure abstains |
+
+`branch` runs `git for-each-ref`, newest first, then `git log` for richer finalist evidence.
+`capabilities.kinds` lists the exact argv; the other kinds run no lister. `--field N` extracts
+a 1-based whitespace field, `--key KEY` a JSON handle, while the complete record is evidence.
+The default split is lines; `-0` reads NUL records and `--para` paragraphs.
+
+The whole marker argument is single-quoted, including any prefix or suffix, for example
+`'--value=@{-:the retry test}'`. An apostrophe is `'\''`; marker escapes are `\}`, `\:` and
+`\|`. Options of `one` are separated by `|` before the question's `:`. `flag` is a whole
+argument. Unknown kinds, unclosed markers and no marker are usage errors, exit 2.
+`@@{word:` spells literal `@{word:`. `'{user}@{host:>8}'` is an unknown kind;
+`'{user}@@{host:>8}'` is literal. A marker does not survive a second shell (`ssh`, `make`, `xargs`).
+
+stdin supplies either candidates for `-` or context for `one`/`flag`; never both. Supply the
+other role with a file. If consumed, the command receives empty stdin; otherwise it inherits
+stdin and the terminal. Environment and working directory pass through unchanged.
+
+Each marker accepts 3,267 candidates keyless or 13,200 on TypeSafe, keeping three finalists
+per window. Ordered kinds retain newest candidates and report coverage; unordered overflow
+is exit 6 `too_many`. `one` accepts 99 options keyless or 200 on TypeSafe; overflow is exit 2.
+
+Before execution, exits 2–6 mean nothing ran; after execution the command owns output, signals
+and exit code, including 2–6. Status lines use the `jevify fill:` prefix; `-q` keeps only
+`not run:`. Empty candidates produce this status without a model request:
+
+```text
+jevify fill: not run: arg 3 -: no_match; ; candidates 0 of 0, omitted 0; model not requested
+```
+
+Exit 3 has `error: null`: `data.reason` is the first failed marker in argv order; every marker
+has its own reason in `data.markers[]`. Reasons: `no_match`, `ambiguous`, `unsure_flag`,
+`insufficient_evidence`. Read candidate coverage, inspect close handles, or write/drop an unsure
+flag explicitly. Input error kinds (exit 6): `stdin_is_tty`, `lister_failed`, `too_many`,
+`cannot_run`, `recipe_invalid`. Run a failed lister yourself; narrow oversized input.
+
+Every answering model must be Jev, even under `--dry-run`. Otherwise exit 4 `api_unavailable`,
+`answered by <model>, not Jev`; a missing name becomes `unknown` in `meta.model` and refuses too.
+Allow dry runs freely; authorize execution per command prefix as the command itself is allowed.
+
 ## why
 
 ```sh
@@ -56,6 +117,24 @@ records have `lossy: true`; human output retains their exact bytes. Identical re
 ranked once and the first occurrence supplies the match. The limit is 20,000 distinct records,
 with `too_many` (exit 6) above it. Selected evidence can be clipped; see [How it works](how-it-works.md).
 Check the selection's exit code before passing its output as a command argument.
+
+### pick --from
+
+```sh
+jevify pick --from branch 'the auth refactor'
+printf 'retry_backoff\nparse_header\n' | jevify pick 'the retry test'
+```
+
+`pick --from KIND '<intent>' [-n N]` prints handles from `branch`, without running a
+user command. stdin is plain `pick`; `--from -` is exit 2. `--from` conflicts with `--files`,
+`--index`, `-0` and `--para`. Selection uses the
+same ratio and fit gates as `fill`, with exit 3 for `no_match` or `ambiguous`.
+Data: `matches[{text,ordinal,p,lossy}]`, `reason`, `any`, `source`, `candidates`, `total`,
+`omitted`, `windows`, `finalists_per_window`.
+
+Both forms of `pick` accept 9,801 candidates keyless or 20,000 on TypeSafe, with three,
+two or one finalists per window as needed to fit the final comparison. Ordered kinds retain
+the newest candidates and report coverage; unordered overflow is exit 6 `too_many`.
 
 ## filter
 

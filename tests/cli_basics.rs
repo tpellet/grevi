@@ -43,14 +43,16 @@ fn fill_parser_preserves_command_bytes_and_rejects_conflicts() {
         .unwrap();
     assert_eq!(out.status.code(), Some(2));
     assert!(String::from_utf8_lossy(&out.stderr).contains("jevify fill -- git switch"));
+    // The kind is listed and a request goes out (no stub): with the network refused, the
+    // backend is unavailable (4). An empty listing abstains first (3).
     let out = common::bin()
         .args(["pick", "--from", "branch", "x", "--json"])
+        .env("JEVIFY_BASE_URL", "http://127.0.0.1:9")
+        .env("JEVIFY_NO_CACHE", "1")
         .output()
         .unwrap();
-    // A real kind is listed and judged; an empty repository or no match abstains (3), a
-    // usage or input error is 2 or 6. Never a "not implemented" stub.
     let value: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
-    assert!(matches!(out.status.code(), Some(2 | 3 | 6)));
+    assert!(matches!(out.status.code(), Some(3 | 4)));
     assert_eq!(value["command"], "pick");
     assert!(
         !value["error"]["message"]

@@ -1,6 +1,7 @@
 # jevify — robot mode
 
-jevify judges the output side of a command: existing records in, pointers or decisions out.
+jevify works on two sides of a command: `fill` turns descriptions into real input arguments
+and runs the command; output verbs turn existing records into pointers or decisions.
 It selects and never generates. Use `jevify capabilities --json` as the source of truth;
 `jevify init agents` prints an instruction block derived from its command and exit tables.
 
@@ -8,6 +9,9 @@ It selects and never generates. Use `jevify capabilities --json` as the source o
 
 | Trigger | Verb | Classical twin |
 |:---|:---|:---|
+| about to list branches only to choose one, or a tool can list the needed value | `fill` | argument lookup |
+| want the handle without executing | `pick --from branch` | selection |
+| an option depends on unread context | `fill` with `one` or `flag` | conditional arguments |
 | a long failed build or a grep that found only the symptom | `why` | — |
 | one record described but not named | `pick` | `fzf --filter` |
 | many records or files, one question | `filter` | `grep` |
@@ -36,10 +40,19 @@ its output as an argument; unchecked substitution can turn abstention into an em
 
 ## Verbs and data
 
+- `fill [--dry-run] [-q] [--candidates FILE] [--context FILE] [--field N | --key KEY]
+  [-0 | --para] -- COMMAND ARGS...` resolves every marker or runs nothing. Data:
+  `argv` on successful dry run, `markers[{arg,kind,reason,handle,p,candidates,total,omitted}]`,
+  `reason`. Machine formats require `--dry-run`. The command inherits the environment and
+  directory, and owns output, signals and exit code. Consumed stdin becomes empty for it.
 - `pick '<intent>' [-n N] [--index | --files] [-0 | --para]` reads stdin records.
   Data: `matches[{line,text,ordinal,p,lossy?}]`, `any`, `source`. Exit 0 found, 3 nothing fits.
   `--files` is boolean: `git ls-files | jevify pick --files 'where man pages are parsed'`.
   Paths are ranked first, then eligible excerpts of at most 24 finalists. Input is not saved.
+  `pick --from branch '<intent>' [-n N]` lists branches; plain `pick` uses stdin. It prints handles,
+  starts no user command, and conflicts with `--files`, `--index`, `-0`, `--para`.
+  Data adds `reason`, `candidates`, `total`, `omitted`, `windows`, `finalists_per_window`;
+  its matches have `text`, `ordinal`, `p`, `lossy`, without `line`.
 - `why [-C N] [-n N] [--no-save]` reads stdin logs and prints numbered causes with context;
   it takes no split option. Data: `causes[{line,text,p,context[]}]`, `any`, `considered`, `total`,
   `hint`, `saved_input`, `complete`. Exit 0 found, 3 abstain. Pipe stderr with `2>&1`.
@@ -84,6 +97,41 @@ Only `why` and `filter` save raw inputs, secrets included, never pruned. The dir
 A failed or skipped save reports `full output: not saved (REASON)`, with `saved_input=null`
 and `complete=false`. Compare `why.considered` with `why.total` separately for selection coverage.
 
+## The marker and kinds
+
+```sh
+jevify fill --dry-run -- git switch '@{branch:the auth refactor}'
+printf 'retry_backoff\nparse_header\n' | jevify fill --dry-run -- cargo test '@{-:the retry test}'
+printf 'A crash with no reproduction steps.\n' | jevify fill --dry-run -- printf '%s\n' \
+  '@{one:bug|feature|docs:what kind of report is this}' '@{flag:--draft:the report lacks steps to reproduce}'
+jevify pick --from branch 'the auth refactor'
+```
+
+Three families: existing things (`branch`), caller-written options (`one`, `flag`), supplied
+records (`-`). `branch` lists local and remote refs using `git for-each-ref`, newest first,
+folds twins, and enriches finalists with `git log`. `capabilities.kinds` gives exact lister argv;
+`-`, `one`, `flag` have empty lister arrays. `--field N` is a 1-based whitespace field;
+`--key KEY` extracts a JSON handle while retaining the record as evidence.
+
+Quote the whole marker argument with single quotes, including any prefix or suffix. Spell an
+apostrophe `'\''`. Marker escapes are `\}`, `\:` and `\|`; `one` separates options with `|`.
+`flag` must occupy a whole argument: yes keeps it, no removes it, unsure abstains.
+`@@{word:` spells a literal `@{word:`. `'{user}@{host:>8}'` is an unknown kind, exit 2;
+`'{user}@@{host:>8}'` is literal. Missing closing braces, unknown kinds and no marker are exit 2.
+Do not send markers through another shell (`ssh`, `make`, `xargs`). Preview with `--dry-run`,
+never `eval`. Never use `"$(jevify pick …)"` as a command argument.
+
+stdin supplies candidates for `-` or context for `one`/`flag`, never both. Use `--candidates FILE`
+or `--context FILE` for the other role; file inputs preserve the command's stdin. All markers
+resolve against one snapshot; any abstention prevents the entire execution.
+
+Let W be the backend window: 99 on classifier.dev, 200 on TypeSafe. `fill` keeps three finalists
+per window and accepts F = W × floor(W / 3): 3,267 or 13,200 candidates. `pick` and `pick --from`
+accept min(W × W, 20,000): 9,801 or 20,000. They keep three finalists per window when those fit
+W, else two when those fit, else one, always by rank within each window. `one` accepts at most
+W options; more is exit 2. Ordered kinds retain the newest candidates and report coverage;
+unordered overflow is `too_many`. No probabilities from separate requests are compared.
+
 ## Exit codes and recovery
 
 Write the condition so that yes means act. `&&` acts only on exit 0; use `case` to distinguish
@@ -102,6 +150,22 @@ no, unsure and errors. Under `git bisect run`, map unsure exit 3 to 125.
 | 130 | declined at `add` confirmation |
 
 `rate_limit_day` HTTP 429 is exit 4, `daily quota of the free backend reached`, without retry.
+For `fill`, exits 2–6 mean nothing ran; after `exec`, the command owns its exit code, including
+2–6. A successful dry run exits 0. Stderr lines start with `jevify fill:`; `-q` keeps only
+`not run:` lines. Read the execution status as well as the exit code.
+
+Input errors use `error.kind`, exit 6: `stdin_is_tty`, `lister_failed`, `too_many`, `cannot_run`,
+`recipe_invalid`. Run the named lister yourself for `lister_failed`; narrow with a prefix,
+`grep`, `head` or a narrower pipe for `too_many`.
+
+Abstention is separate: exit 3, `error: null`, `data.reason` for the first failed marker in
+argv order, and `data.markers[].reason` for every marker. `no_match`: read candidates N of M;
+`ambiguous`: read the two handles and write one; `unsure_flag`: write the flag or drop the
+marker; `insufficient_evidence`: supply a complete context that fits. These are not error kinds.
+`fill` requires every answer to come from Jev, even for a dry run. Otherwise exit 4,
+`api_unavailable`, `answered by <model>, not Jev`. A missing model name is `unknown` in
+`meta.model` and refuses too. Read the quota or model line before retrying exit 4.
+
 Filter batch requests honour numeric `Retry-After` through 60 seconds, refusing longer waits.
 A failed later batch can leave a human-output prefix; do not treat it as complete input coverage.
 
@@ -156,7 +220,9 @@ other pricing uses `configured_input_token_price`. No output-token price is inve
 
 ## Permissions and judgment limits
 
-Output verbs start no user command. The caller authorizes `add` staging and `sort` moves.
+Allow output verbs and `jevify fill --dry-run` freely. Allow `fill` per command prefix, such as
+`jevify fill -- git switch:*`, exactly as the underlying command. jevify is not a permission
+system. Output verbs start no user command. The caller authorizes `add` staging and `sort` moves.
 `is` abstains on oversized context; `add` rejects oversized hunks and complete batches before
 staging. A higher threshold cannot validate missing evidence or grant permission.
 

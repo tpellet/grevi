@@ -3,6 +3,8 @@
 Use jevify when a literal search cannot ask the question or the output is too long to read.
 Cheap tools narrow the input first. `why` points to a cause, `pick` selects a record, `filter`
 keeps a subset, and `is` decides whether the next step should act.
+On the input side, `fill` resolves real arguments and runs the command you wrote;
+`pick --from branch` returns the handle alone.
 
 ```sh
 jevify capabilities --json
@@ -18,6 +20,7 @@ jevify robot-docs
 
 `--json` (alias `--robot`) prints one envelope on stdout, usage errors included. `--format jsonl`
 prints it on one line; `--format toon` encodes the same envelope as TOON.
+`fill` requires `--dry-run` with every machine format; successful resolution supplies `data.argv`.
 
 ```text
 {ok, command, version, exit_code, data,
@@ -29,6 +32,16 @@ prints it on one line; `--format toon` encodes the same envelope as TOON.
 Branch on `exit_code`, which equals the process status, then read `data`. Error kinds are stable
 identifiers. `too_many` is exit 6: narrow records with `grep` or `head`. `error.example` gives
 a corrected command. Human output is not a machine protocol.
+
+`fill` abstention is exit 3 with `error: null`. `data.reason` is the first failed marker in argv
+order; `data.markers[].reason` reports every marker. Reasons are `no_match`, `ambiguous`,
+`unsure_flag`, `insufficient_evidence`. They are separate from the exit-6 error kinds
+`stdin_is_tty`, `lister_failed`, `too_many`, `cannot_run`, `recipe_invalid`.
+Read candidates N of M for no match; read the two handles for ambiguity; write or drop an unsure
+flag. Narrow oversized lists with a prefix, `grep`, `head` or a pipe; run failed listers yourself.
+
+Every answering model must be Jev for `fill`, including a dry run: otherwise exit 4,
+`api_unavailable`, `answered by <model>, not Jev`. Missing names are `unknown` in `meta.model`.
 
 `meta.model` is a string; several models are joined with `", "`. `meta.backend` names the API.
 `meta.requests` counts inference POST attempts, including failures and retries, excluding health
@@ -56,11 +69,15 @@ without a reported request ID, including all-cache answers. `health` does not re
 Write the condition so that yes means act. `&&` stops on every nonzero code; use explicit
 branches when no, abstention and errors require different handling. Under `git bisect run`,
 map an unsure exit 3 to 125. Do not silently retry abstention until it agrees.
+`fill` exits 2–6 before execution; after execution the command owns its exit code, including
+2–6. Read the `jevify fill:` execution status too. Successful dry runs exit 0.
 
 ## Data per verb
 
 | Verb | Fields |
 |:---|:---|
+| `fill --dry-run` | `argv` on success, `reason`, `markers[{arg,kind,reason,handle,p,candidates,total,omitted}]` |
+| `pick --from` | `matches[{text,ordinal,p,lossy}]`, `reason`, `any`, `source`, `candidates`, `total`, `omitted`, `windows`, `finalists_per_window` |
 | `pick` | `matches[{line,text,ordinal,p,lossy?}]`, `any`, `source` |
 | `why` | `causes[{line,text,p,context[]}]`, `any`, `considered`, `total`, `hint`, `saved_input`, `complete` |
 | `filter` | `records[{text,ordinal,p,verdict,lossy?}]`, `kept`, `total`, `unsure`, `saved_input`, `complete`, `excerpts_withheld` |
@@ -96,6 +113,12 @@ in `data.saved_input`; a failed or skipped save sets `complete=false`. The saved
 independent of `--no-cache` and never pruned. [Privacy](../../PRIVACY.md) names its location.
 
 ## Permissions and evidence
+
+Allow `jevify fill --dry-run` freely; authorize `fill` per command prefix, for example
+`jevify fill -- git switch:*`, exactly as the command itself is allowed. jevify is not a
+permission system. Quote whole marker arguments, as in
+`jevify fill --dry-run -- git switch '@{branch:the auth refactor}'`; inspect previews, never
+`eval`. Do not pass markers through a second shell or use unchecked `pick` substitutions.
 
 Output verbs start no user command. `route` prints a tool and synopsis; the caller writes and
 authorizes its own command. `add` stages only with `--yes` in machine mode; otherwise it exits

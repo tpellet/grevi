@@ -3,7 +3,8 @@
 ## Selection and NONE
 
 jevify selects existing records, installed tools, tracked hunks and destination folders. The
-model writes no answer text. `why` adds line numbers and context; `pick` and `filter` preserve
+model writes no answer text. `fill` substitutes listed handles or caller-written options, then
+becomes the caller's command. `why` adds line numbers and context; `pick` and `filter` preserve
 selected input records byte for byte, in input order.
 
 A choice question includes NONE so that no candidate needs to win by default. Choice scores
@@ -41,9 +42,22 @@ normally. A later backend error can leave a human-output prefix and exits with t
 
 Selection uses at most two rounds of parallel Jev calls. TypeSafe windows contain 200 candidates
 plus NONE; classifier windows contain 99 plus NONE. A selection window shares a character budget,
-clipping each candidate to 200–2,000 characters. Up to three candidates per window enter a pool
-capped at 24 finalists, followed by a final comparison. Candidates outside that pool cannot win;
-a long-list selection is not evidence that every plausible rival reached the final comparison.
+clipping each candidate to 200–2,000 characters. Finalists are selected by rank within each
+window, never by comparing probabilities from separate requests. With W as the backend window,
+`pick`, `pick --from` and `why` keep three per window when 3 × windows fits W, otherwise two
+when 2 × windows fits W, otherwise one. All finalists enter the final comparison. The first
+24 finalists can receive richer evidence; 24 is not a cap on the comparison pool.
+
+`fill` keeps three finalists per window and accepts F = W × floor(W / 3): 3,267 candidates
+keyless and 13,200 on TypeSafe. `pick` and `pick --from` accept min(W × W, 20,000): 9,801 and
+20,000. Ordered kinds retain the newest candidates and report coverage; unordered overflow is
+exit 6 `too_many`. `one` accepts at most W options and returns exit 2 above that count.
+
+`fill` and `pick --from` require fit at the threshold and a winning score at least twice the
+larger of the runner-up and NONE. `one` uses the same ratio; `flag` uses a fixed 0.15 unsure
+band. An unsure flag abstains, since dropping it could remove a safety option. Every marker
+resolves against one snapshot, with no execution if any fails. `branch` folds local/remote
+twins and uses recent commit subjects and changed paths as richer evidence.
 
 `pick --files` reads paths from stdin, selects finalists by name, then reads eligible excerpts
 for the second round. Hidden and secret-looking path components and symlink files receive no
@@ -83,6 +97,9 @@ this store. [Privacy](../../PRIVACY.md) gives the permissions and outbound withh
 TypeSafe defaults to `jev-1.13.0`; `--model jev-latest` opts into a moving alias. Classifier
 controls its model and rejects explicit overrides. `meta.model` is one string, with multiple
 answering models joined by `", "`. Calibration requires evidence for that model, backend and task.
+`fill` refuses any non-Jev answering model with exit 4, `api_unavailable`, and
+`answered by <model>, not Jev`. A missing model name becomes `unknown` and refuses too.
+The guard also applies under `--dry-run`.
 
 Transient 408, 429, 5xx and timeout failures can be retried up to three times. A `rate_limit_day`
 429 is never retried: exit 4, `daily quota of the free backend reached`. Filter batch requests

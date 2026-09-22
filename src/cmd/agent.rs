@@ -26,8 +26,8 @@ pub fn capabilities() -> Outcome {
         "global_flags": ["--json (alias --robot)", "--format human|json|jsonl|toon", "-t/--threshold <0..1>", "--model <id>", "--no-cache", "--verbose"],
         "output": "human stdout is plain text made for pipes: pick and filter preserve input records; why prints numbered context; is prints nothing for one statement and VERDICT<TAB>STATEMENT lines for several. Pass --json for the envelope; non-UTF-8 records have text, lossy: true, ordinal",
         "commands": [
-            { "name": "fill", "usage": "jevify fill [--dry-run] [-q] -- COMMAND ARGS...", "stdin": true, "exit": [0, 2, 3, 4, 5, 6], "data": "argv, markers, reason", "when": "resolve a description to a real argument before running a command", "example": "jevify fill -- git switch '@{branch:the auth refactor}'" },
-            { "name": "pick", "usage": "<stdin> | jevify pick '<intent>' [-n N] [--index | --files] [-0 | --para]", "stdin": true, "exit": [0, 3], "data": "matches[{line,text,ordinal,p,lossy?}], any, source", "when": "choose one record by description; --files reads paths from stdin, ranks names first, then excerpts of at most 24 finalists", "example": "git ls-files | jevify pick --files 'where man pages are parsed'", "note": "hidden or secret-looking paths and symlink files receive no excerpt; stderr reports excerpts withheld: N; selected records retain their bytes and input order; input is not saved" },
+            { "name": "fill", "usage": "jevify fill [--dry-run] [-q] [--candidates FILE] [--context FILE] [--field N | --key KEY] [-0 | --para] -- COMMAND ARGS...", "stdin": true, "exit": [0, 2, 3, 4, 5, 6], "exit_meaning": "2–6 nothing ran; otherwise the command's own exit code; --dry-run exits 0 on resolution. After exec the command can also exit 2–6.", "data": "argv under --dry-run on success, markers[{arg,kind,reason,handle,p,candidates,total,omitted}], reason", "when": "resolve a description to a real argument before running a command", "example": "jevify fill -- git switch '@{branch:the auth refactor}'", "note": "all-or-nothing; machine output requires --dry-run; quote the whole marker argument with single quotes; preview, never eval; stdin has one role and is empty for the command when consumed" },
+            { "name": "pick", "usage": "<stdin> | jevify pick '<intent>' [-n N] [--index | --files] [-0 | --para]; jevify pick --from KIND '<intent>' [-n N]", "stdin": true, "exit": [0, 3], "data": "matches[{line?,text,ordinal,p,lossy?}], any, source; --from adds reason, candidates, total, omitted, windows, finalists_per_window", "when": "choose one record by description, or use pick --from branch for a handle without running a command; --files ranks stdin paths then excerpts", "example": "git ls-files | jevify pick --files 'where man pages are parsed'", "note": "--from accepts branch; stdin is the default source and --from - is exit 2; --from conflicts with --files, --index, -0 and --para; hidden or secret-looking paths and symlink files receive no excerpt; selected stdin records retain their bytes and input order; input is not saved" },
             { "name": "why", "usage": "<cmd> 2>&1 | jevify why [-C N] [-n N] [--no-save]", "stdin": true, "exit": [0, 3], "data": "causes[{line,text,p,context[]}], any, considered, total, hint, saved_input, complete", "when": "find the cause in a long build, test or CI log, especially when grep found only the symptom", "example": "gh run view --log-failed | jevify why --json", "note": "prints numbered lines with context; no split options; past 1,500 distinct lines keeps error neighbourhoods within 4,000 lines: compare considered with total" },
             { "name": "route", "usage": "jevify route <intent...>", "stdin": false, "exit": [0, 3], "data": "tool, summary, synopsis, fit, alternatives[]", "when": "find the installed tool for a task", "example": "jevify route 'keep my mac awake for an hour'", "note": "prints a tool, summary and synopsis; starts no command" },
             { "name": "filter", "usage": "<stdin> | jevify filter [-v] [-c] [--strict] [-0|--para] [--files] [--no-save] '<statement>'", "stdin": true, "exit": [0, 1, 3], "data": "records[{text,ordinal,p,verdict,lossy?}], kept, total, unsure, complete, saved_input, excerpts_withheld", "when": "many records or files, one question: keep matching records in one process", "example": "cargo test 2>&1 | jevify filter 'reports a failed assertion'", "note": "-v inverts; -c counts; unsure records stay unless --strict; 0 kept some, 1 kept none, 3 every record unsure; --files reads stdin paths and withholds hidden or secret-looking excerpts" },
@@ -41,6 +41,22 @@ pub fn capabilities() -> Outcome {
         ],
         "common_exit": { "codes": [2, 4, 5, 6], "meaning": "any command: usage, API unavailable, auth, input" },
         "exit_codes": exit_codes,
+        "kinds": [
+            { "name": "-", "family": "input records", "list": [], "input": "stdin or --candidates FILE; --field is 1-based whitespace, --key selects a JSON handle" },
+            { "name": "branch", "family": "existing things", "list": ["git", "for-each-ref", "--sort=-committerdate", "--format=%(refname)%00%(symref)%00%(committerdate:unix)%00%(subject)%00", "refs/heads", "refs/remotes"], "enrich": ["git", "log", "-5", "--format=%x00%s%x00", "--name-only", "-z", "--no-renames", "--no-ext-diff", "--end-of-options", "<handle>", "--"], "evidence": "name, subject, age; local and remote twins collapse; newest first" },
+            { "name": "one", "family": "caller options", "list": [], "input": "options in '@{one:a|b|c:question}'; context on stdin or --context FILE" },
+            { "name": "flag", "family": "caller options", "list": [], "input": "whole argument '@{flag:--name:question}'; yes keeps, no removes, unsure abstains" }
+        ],
+        "input_errors": { "exit": 6, "field": "error.kind", "kinds": ["stdin_is_tty", "lister_failed", "too_many", "cannot_run", "recipe_invalid"] },
+        "fill_abstention": { "exit": 3, "error": null, "field": "data.reason", "marker_field": "data.markers[].reason", "order": "first failed marker in argv order", "reasons": ["no_match", "ambiguous", "unsure_flag", "insufficient_evidence"] },
+        "fill_model_guard": { "exit": 4, "kind": "api_unavailable", "message": "answered by <model>, not Jev", "missing_model": "unknown", "rule": "every answering model must be Jev, including under --dry-run" },
+        "selection_limits": {
+            "formula": "W = backend window; fill F = W * (W / 3), integer division; pick and pick --from min(W * W, 20000)",
+            "typesafe": { "window": 200, "fill": 13200, "pick": 20000, "one_options": 200 },
+            "classifier": { "window": 99, "fill": 3267, "pick": 9801, "one_options": 99 },
+            "finalists_per_window": "fill: 3; pick and pick --from: 3 if 3 * windows <= W, else 2 if 2 * windows <= W, else 1; by rank, never cross-request probability",
+            "overflow": "ordered kinds retain newest candidates and report coverage; unordered lists return too_many; one above W options is exit 2"
+        },
         "env": [
             { "name": "TYPESAFE_API_KEY", "meaning": "API key (never printed); its presence selects the typesafe backend" },
             { "name": "TYPESAFE_API_KEY_FILE", "meaning": "path to a file holding the key (read only when a key is needed)" },
@@ -79,6 +95,8 @@ pub fn capabilities() -> Outcome {
             "English works best; jevify does not count, do arithmetic, compare dates or judge quality"
         ],
         "workflows": [
+            { "goal": "preview a command with a described branch", "command": "jevify fill --dry-run -- git switch '@{branch:the auth refactor}'" },
+            { "goal": "get a branch handle without running a command", "command": "jevify pick --from branch 'the auth refactor'" },
             { "goal": "find the tool for a task", "command": "jevify route --json '<task>'" },
             { "goal": "explain a failure", "command": "<cmd> 2>&1 | jevify why --json" },
             { "goal": "explain a failed CI run, however long the log", "command": "gh run view --log-failed | jevify why --json" },
@@ -88,6 +106,7 @@ pub fn capabilities() -> Outcome {
             { "goal": "stage one topic out of a mixed working tree", "command": "jevify add --json --dry-run \"<topic>\"   # then --yes, when the user asked you to stage" }
         ],
         "safety": [
+            "allow fill --dry-run freely; authorize fill per command prefix, exactly as the underlying command; jevify is not a permission system",
             "meta.requests counts attempted inference POSTs, including retries and failures, excluding prewarm and health GETs",
             "route, why, pick, filter and is start no user command; route prints a tool and the caller writes its arguments",
             "is abstains without an API request when input exceeds its evidence budget: exit 3, p null, verdict unsure, truncated true, and a reason; stderr warns that the whole input was not judged",
@@ -226,7 +245,7 @@ pub fn init(shell: Shell) -> Outcome {
             .collect::<Vec<_>>()
             .join("; ");
         let block = format!(
-            "# jevify\nUse meaning when literal search cannot answer; cheap tools go first.\nOn command output, select existing records; never generate text.\n{verbs}\nUse one filter call for many records, not a loop of is calls.\nWrite the condition so that yes means act; check pick's exit before using its output.\nOnly why and filter save raw input, secrets included; --no-save disables saving.\nOutput verbs start no user command; authorize add and sort mutations separately.\nExit codes: {exits}.\nUse jevify capabilities --json as the source of truth for commands and flags.\n"
+            "# jevify\nUse meaning when literal search cannot answer; cheap tools go first.\nInput: fill real arguments; output: select existing records; never generate text.\n{verbs}\nUse one filter call for many records, not a loop of is calls.\nWrite the condition so that yes means act; check pick's exit before using its output.\nQuote the whole marker argument: jevify fill --dry-run -- git switch '@{{branch:the auth refactor}}'; never eval the preview.\nOnly why and filter save raw input, secrets included; --no-save disables saving.\nAllow fill --dry-run freely; authorize fill per command prefix, add staging and sort moves.\nExit codes: {exits}. fill: 2–6 nothing ran; after exec the command owns its exit code.\nUse jevify capabilities --json as the source of truth for commands and flags.\n"
         );
         return Outcome {
             exit: Exit::Ok,
