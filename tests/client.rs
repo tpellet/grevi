@@ -1102,3 +1102,183 @@ async fn http_422_is_an_input_error_not_an_outage() {
     // The failing response's request id reaches `meta` (and so the error envelope).
     assert_eq!(c.meta().request_id.as_deref(), Some("req_test_422"));
 }
+
+/// Answers 429 `Retry-After: 1` for the first `limited` requests, then a valid decision, and
+/// records when each request arrived.
+struct TimedLimiter {
+    arrivals: std::sync::Arc<std::sync::Mutex<Vec<std::time::Instant>>>,
+    limited: usize,
+}
+
+impl wiremock::Respond for TimedLimiter {
+    fn respond(&self, _: &wiremock::Request) -> ResponseTemplate {
+        let mut arrivals = self.arrivals.lock().unwrap();
+        arrivals.push(std::time::Instant::now());
+        if arrivals.len() <= self.limited {
+            ResponseTemplate::new(429).insert_header("Retry-After", "1")
+        } else {
+            ResponseTemplate::new(200).set_body_json(
+                serde_json::json!({"model":"m","answers":{"q":{"noul":0.7}},"usage":{"input_tokens":5,"output_tokens":1}}),
+            )
+        }
+    }
+}
+
+#[tokio::test]
+async fn no_request_is_sent_before_retry_after_ends() {
+    let arrivals = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
+    let server = MockServer::start().await;
+    Mock::given(method("POST"))
+        .respond_with(TimedLimiter {
+            arrivals: arrivals.clone(),
+            limited: 2,
+        })
+        .mount(&server)
+        .await;
+    let cfg = common::config(&server);
+    let client = Client::new(&cfg).unwrap();
+    let response = client
+        .ask(&serde_json::json!("x"), &one_noul())
+        .await
+        .unwrap();
+    assert_eq!(response.noul("q").unwrap(), 0.7);
+    let arrivals = arrivals.lock().unwrap();
+    assert_eq!(arrivals.len(), 3);
+    // Two named waits of one second each: the third request comes no earlier than 2 s after
+    // the first, and each retry waits its own second.
+    assert!(
+        arrivals[2].duration_since(arrivals[0]) >= std::time::Duration::from_secs(2),
+        "{:?}",
+        arrivals[2].duration_since(arrivals[0])
+    );
+    assert!(arrivals[1].duration_since(arrivals[0]) >= std::time::Duration::from_secs(1));
+    let meta = serde_json::to_value(cfg.meta()).unwrap();
+    assert_eq!(
+        meta["usage"],
+        serde_json::json!({
+            "attempted": 3, "succeeded": 1,
+            "waited": {"count": 2, "total_ms": meta["telemetry"]["retry_sleep_ms"]},
+            "cache_hits": 0,
+            // The two refused attempts reported no usage: unknown, not zero.
+            "tokens": {"input": null, "output": null}
+        })
+    );
+    assert!(meta["usage"]["waited"]["total_ms"].as_u64().unwrap() >= 2000);
+}
+
+#[tokio::test]
+async fn a_deadline_shorter_than_the_wait_ends_without_another_request() {
+    let arrivals = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
+    let server = MockServer::start().await;
+    Mock::given(method("POST"))
+        .respond_with(TimedLimiter {
+            arrivals: arrivals.clone(),
+            limited: usize::MAX,
+        })
+        .mount(&server)
+        .await;
+    let cfg = common::config(&server);
+    let client = Client::new(&cfg)
+        .unwrap()
+        .with_budget(std::time::Duration::from_millis(900));
+    let start = std::time::Instant::now();
+    let error = client
+        .ask(&serde_json::json!("x"), &one_noul())
+        .await
+        .unwrap_err();
+    assert_eq!(error.exit().code(), 4);
+    assert!(error.to_string().contains("deadline of 0.9 s"), "{error}");
+    assert!(error.to_string().contains("JEVIFY_DEADLINE"), "{error}");
+    // The 1 s wait would end past the deadline: it is not started, nothing else is sent, and
+    // the verb ends as soon as the refusal is read, before the deadline itself.
+    assert!(
+        start.elapsed() < std::time::Duration::from_millis(900),
+        "{:?}",
+        start.elapsed()
+    );
+    let meta = serde_json::to_value(cfg.meta()).unwrap();
+    assert_eq!(arrivals.lock().unwrap().len(), 1, "{error}: {meta}");
+    assert_eq!(meta["usage"]["attempted"], 1);
+    assert_eq!(
+        meta["usage"]["waited"],
+        serde_json::json!({"count": 0, "total_ms": 0})
+    );
+}
+
+#[tokio::test]
+async fn the_deadline_cancels_a_request_in_flight() {
+    let server = MockServer::start().await;
+    Mock::given(method("POST"))
+        .respond_with(ResponseTemplate::new(200).set_delay(std::time::Duration::from_secs(3)))
+        .mount(&server)
+        .await;
+    let cfg = common::config(&server);
+    let client = Client::new(&cfg)
+        .unwrap()
+        .with_budget(std::time::Duration::from_millis(200));
+    let start = std::time::Instant::now();
+    let error = client
+        .ask(&serde_json::json!("x"), &one_noul())
+        .await
+        .unwrap_err();
+    assert_eq!(error.exit().code(), 4);
+    assert!(error.to_string().contains("deadline of 0.2 s"), "{error}");
+    assert!(
+        start.elapsed() < std::time::Duration::from_secs(2),
+        "{:?}",
+        start.elapsed()
+    );
+    let meta = serde_json::to_value(cfg.meta()).unwrap();
+    assert_eq!(meta["telemetry"]["inference_posts"]["cancelled"], 1);
+    assert_eq!(meta["usage"]["attempted"], 1);
+    assert_eq!(meta["usage"]["succeeded"], 0);
+}
+
+#[tokio::test]
+async fn daily_quota_is_one_request_and_exit_4_under_any_deadline() {
+    let server = MockServer::start().await;
+    Mock::given(method("POST"))
+        .respond_with(common::FakeJev::quota("rate_limit_day", 1))
+        .mount(&server)
+        .await;
+    let cfg = common::config(&server);
+    let client = Client::new(&cfg).unwrap();
+    let error = client
+        .ask(&serde_json::json!("x"), &one_noul())
+        .await
+        .unwrap_err();
+    assert_eq!(error.exit().code(), 4);
+    assert_eq!(
+        error.to_string(),
+        "API unavailable: daily quota of the free backend reached"
+    );
+    assert_eq!(server.received_requests().await.unwrap().len(), 1);
+}
+
+#[tokio::test]
+async fn usage_counts_a_cache_hit_as_a_hit_and_measured_tokens_as_numbers() {
+    let server = common::mock(common::FakeJev {
+        choose: |_, _, _| "NONE".into(),
+        noul: |_, _| 0.8,
+    })
+    .await;
+    let dir = tempfile::tempdir().unwrap();
+    let mut cfg = common::config(&server);
+    cfg.cache_dir = Some(dir.path().to_path_buf());
+    let client = Client::new(&cfg).unwrap();
+    let state = serde_json::json!("hello");
+    client.ask(&state, &one_noul()).await.unwrap();
+    client.ask(&state, &one_noul()).await.unwrap();
+    assert_eq!(server.received_requests().await.unwrap().len(), 1);
+    let meta = serde_json::to_value(cfg.meta()).unwrap();
+    assert_eq!(meta["usage"]["attempted"], 1);
+    assert_eq!(meta["usage"]["succeeded"], 1);
+    assert_eq!(meta["usage"]["cache_hits"], 1);
+    assert_eq!(
+        meta["usage"]["waited"],
+        serde_json::json!({"count": 0, "total_ms": 0})
+    );
+    assert!(meta["usage"]["tokens"]["input"].is_u64(), "{meta}");
+    assert!(meta["usage"]["tokens"]["output"].is_u64(), "{meta}");
+    assert_eq!(meta["usage"]["tokens"]["input"], meta["input_tokens"]);
+}

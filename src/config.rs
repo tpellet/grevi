@@ -101,6 +101,19 @@ pub fn config_dir(value: Option<&str>) -> Option<PathBuf> {
         })
 }
 
+/// The verb's overall budget, `JEVIFY_DEADLINE` in whole seconds (default 600). Read when a
+/// `Client` is built, so `capabilities`, `init` and `robot-docs` never need it; zero is a
+/// usage error.
+pub(crate) fn deadline() -> Result<std::time::Duration, JevifyError> {
+    let seconds: u64 = parse("JEVIFY_DEADLINE", 600)?;
+    if seconds == 0 {
+        return Err(JevifyError::Usage(
+            "JEVIFY_DEADLINE=0 is not valid; give the verb's budget in whole seconds".into(),
+        ));
+    }
+    Ok(std::time::Duration::from_secs(seconds))
+}
+
 fn parse<T: std::str::FromStr>(name: &str, default: T) -> Result<T, JevifyError> {
     match env(name) {
         None => Ok(default),
@@ -237,6 +250,8 @@ impl Config {
         let cost = tokens as f64 * self.price_per_mtok / 1_000_000.0;
         let cost_complete = usage.complete || self.price_per_mtok == 0.0;
         let input_tokens = usage.complete.then_some(tokens);
+        let output = &telemetry.usage.output_tokens;
+        let output_tokens = output.complete.then_some(output.reported_subtotal);
         telemetry.cost_estimate = Some(crate::output::CostEstimate {
             basis: if self.backend == Backend::Classifier && self.price_per_mtok == 0.0 {
                 "free_service"
@@ -257,6 +272,19 @@ impl Config {
             cost_usd: cost_complete.then_some(cost),
             threshold: self.threshold,
             request_id: s.request_id.lock().unwrap().clone(),
+            usage: crate::output::Usage {
+                attempted: telemetry.inference_posts.attempted,
+                succeeded: telemetry.inference_posts.succeeded,
+                waited: crate::output::Waited {
+                    count: telemetry.retry_waits,
+                    total_ms: telemetry.retry_sleep_ms,
+                },
+                cache_hits: s.cache_hits.load(Ordering::Relaxed),
+                tokens: crate::output::Tokens {
+                    input: input_tokens,
+                    output: output_tokens,
+                },
+            },
             telemetry,
         }
     }
@@ -377,6 +405,17 @@ mod tests {
         assert_eq!(c.meta().input_tokens, Some(0));
         assert_eq!(c.meta().cost_usd, Some(0.0));
         assert_eq!(c.meta().backend, "typesafe");
+        // Nothing attempted: a measured zero, not an unknown.
+        assert_eq!(
+            c.meta().usage,
+            crate::output::Usage {
+                tokens: crate::output::Tokens {
+                    input: Some(0),
+                    output: Some(0),
+                },
+                ..Default::default()
+            }
+        );
     }
     #[test]
     fn backend_limits_fit_each_api() {

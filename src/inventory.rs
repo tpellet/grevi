@@ -26,6 +26,8 @@ pub struct Inventory {
 
 const INDEX_TIMEOUT: Duration = Duration::from_secs(20);
 const READER_GRACE: Duration = Duration::from_millis(200);
+/// The bound on one child's stdout: `manpath` is a line, a man index is a few megabytes.
+const INDEX_OUTPUT_CAP: usize = 64 * 1024 * 1024;
 
 static ENTRY: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"([^\s,()]+)\s*\(([0-9][A-Za-z0-9]*)\)").unwrap());
@@ -72,7 +74,14 @@ fn executables(dirs: &[PathBuf]) -> HashSet<String> {
 /// The stdout of a command that exits before the deadline, whatever its status. A command
 /// still running at the deadline is killed and yields nothing, so a slow `man` never hangs the
 /// caller; a reader that has not reached EOF 200 ms after the exit yields nothing either.
-fn output_within(mut command: Command, deadline: Instant) -> Option<Vec<u8>> {
+/// stdin is `/dev/null`; only the first `cap` bytes of stdout are kept, the rest is drained so
+/// a chatty child never blocks on a full pipe. Also runs `man` and `pdftotext` for their
+/// callers, which is why it is crate-visible.
+pub(crate) fn output_within(
+    mut command: Command,
+    deadline: Instant,
+    cap: usize,
+) -> Option<Vec<u8>> {
     if Instant::now() >= deadline {
         return None;
     }
@@ -85,7 +94,19 @@ fn output_within(mut command: Command, deadline: Instant) -> Option<Vec<u8>> {
     let (tx, rx) = mpsc::channel();
     std::thread::spawn(move || {
         let mut bytes = Vec::new();
-        let _ = tx.send(stdout.read_to_end(&mut bytes).map(|_| bytes));
+        let mut buffer = [0u8; 8192];
+        let result = loop {
+            match stdout.read(&mut buffer) {
+                Ok(0) => break Ok(bytes),
+                Ok(n) => {
+                    let room = cap.saturating_sub(bytes.len()).min(n);
+                    bytes.extend_from_slice(&buffer[..room]);
+                }
+                Err(e) if e.kind() == std::io::ErrorKind::Interrupted => {}
+                Err(e) => break Err(e),
+            }
+        };
+        let _ = tx.send(result);
     });
     loop {
         match child.try_wait() {
@@ -106,7 +127,7 @@ fn output_within(mut command: Command, deadline: Instant) -> Option<Vec<u8>> {
 fn whatis_text(path: &OsStr, deadline: Instant) -> String {
     let mut manpath = Command::new("manpath");
     manpath.env("PATH", path);
-    let manpath = output_within(manpath, deadline)
+    let manpath = output_within(manpath, deadline, INDEX_OUTPUT_CAP)
         .map(|o| String::from_utf8_lossy(&o).trim().to_string())
         .unwrap_or_default();
     let mut text = String::new();
@@ -123,7 +144,7 @@ fn whatis_text(path: &OsStr, deadline: Instant) -> String {
         man.args(["-k", "."])
             .env("PATH", path)
             .env("MANPAGER", "cat");
-        if let Some(o) = output_within(man, deadline) {
+        if let Some(o) = output_within(man, deadline, INDEX_OUTPUT_CAP) {
             text = String::from_utf8_lossy(&o).into_owned();
         }
     }
@@ -315,6 +336,24 @@ mod tests {
         assert!(inventory.tools.iter().all(|t| t.summary == "(no man page)"));
         assert_eq!(std::fs::read_dir(&cache).unwrap().count(), 0);
         // An expired deadline runs no command at all.
-        assert!(output_within(Command::new("man"), Instant::now()).is_none());
+        assert!(output_within(Command::new("man"), Instant::now(), 1024).is_none());
+    }
+
+    #[test]
+    fn output_is_capped_and_the_rest_drained() {
+        let dir = bin_dir(0);
+        script(&dir, "chatty", "yes | head -c 200000");
+        let mut command = Command::new(dir.join("chatty"));
+        command.env("PATH", "/usr/bin:/bin");
+        let deadline = Instant::now() + Duration::from_secs(5);
+        let out = output_within(command, deadline, 100).unwrap();
+        assert_eq!(out.len(), 100);
+        assert!(out.iter().all(|b| *b == b'y' || *b == b'\n'));
+        let mut command = Command::new(dir.join("chatty"));
+        command.env("PATH", "/usr/bin:/bin");
+        assert_eq!(
+            output_within(command, deadline, usize::MAX).unwrap().len(),
+            200_000
+        );
     }
 }

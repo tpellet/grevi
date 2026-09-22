@@ -116,8 +116,9 @@ struct RetrySleep<'a> {
 
 impl Drop for RetrySleep<'_> {
     fn drop(&mut self) {
-        self.stats.telemetry.lock().unwrap().retry_sleep_ms +=
-            self.start.elapsed().as_millis().min(u64::MAX as u128) as u64;
+        let mut t = self.stats.telemetry.lock().unwrap();
+        t.retry_waits += 1;
+        t.retry_sleep_ms += self.start.elapsed().as_millis().min(u64::MAX as u128) as u64;
     }
 }
 
@@ -129,7 +130,7 @@ use futures::future::try_join_all;
 use futures::stream::FuturesUnordered;
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use tokio::sync::Semaphore;
 
 #[derive(Clone, Copy)]
@@ -148,6 +149,11 @@ pub struct Client {
     sem: Arc<Semaphore>,
     cache: Option<DiskCache>,
     stats: Arc<Stats>,
+    /// The verb's overall deadline (`JEVIFY_DEADLINE` seconds after the client was built): a
+    /// request queued or in flight past it is cancelled, and no retry wait reaches beyond it.
+    deadline: Instant,
+    /// The budget the deadline was built from, for the message that names it.
+    budget: Duration,
 }
 
 impl Client {
@@ -165,6 +171,7 @@ impl Client {
             .user_agent(concat!("jevify/", env!("CARGO_PKG_VERSION")))
             .build()
             .map_err(|e| JevifyError::Unavailable(e.to_string()))?;
+        let budget = crate::config::deadline()?;
         Ok(Self {
             http,
             backend: cfg.backend,
@@ -174,7 +181,28 @@ impl Client {
             sem: Arc::new(Semaphore::new(cfg.concurrency)),
             cache: cfg.cache_dir.clone().and_then(|d| DiskCache::new(d).ok()),
             stats: cfg.stats.clone(),
+            deadline: Instant::now() + budget,
+            budget,
         })
+    }
+
+    /// The overall budget, injected, counted from now: tests never touch the process
+    /// environment.
+    pub fn with_budget(mut self, budget: Duration) -> Self {
+        self.deadline = Instant::now() + budget;
+        self.budget = budget;
+        self
+    }
+
+    fn deadline_error(&self) -> JevifyError {
+        let seconds = if self.budget.subsec_nanos() == 0 {
+            self.budget.as_secs().to_string()
+        } else {
+            format!("{:.1}", self.budget.as_secs_f64())
+        };
+        JevifyError::Unavailable(format!(
+            "overall deadline of {seconds} s passed (JEVIFY_DEADLINE)"
+        ))
     }
 
     /// Opens the TLS connection while local work runs; the pooled connection is reused by `ask`.
@@ -443,8 +471,22 @@ impl Client {
 
     /// One POST with the shared retry policy, returning the 200 body. Both backends answer
     /// errors the same way as far as jevify is concerned: auth, a rejected body, or something
-    /// worth retrying.
+    /// worth retrying. The whole exchange, permit wait and retry waits included, is cancelled
+    /// at the overall deadline: exit 4, the message names the deadline.
     async fn post(
+        &self,
+        url: &str,
+        bytes: Vec<u8>,
+        caller: Caller,
+    ) -> Result<Vec<u8>, JevifyError> {
+        let deadline = tokio::time::Instant::from_std(self.deadline);
+        match tokio::time::timeout_at(deadline, self.post_within(url, bytes, caller)).await {
+            Ok(result) => result,
+            Err(_) => Err(self.deadline_error()),
+        }
+    }
+
+    async fn post_within(
         &self,
         url: &str,
         bytes: Vec<u8>,
@@ -457,11 +499,18 @@ impl Client {
             if attempt > 0 {
                 // The server's `retry-after(-ms)` replaces the backoff; it never adds to it.
                 let backoff = Duration::from_millis(250 * 2u64.pow(attempt - 1));
+                let wait = wait.take().unwrap_or(backoff);
+                // A wait that would end past the deadline is not started: nothing is sent
+                // before the server's named wait ends, and the sum of waits stays under the
+                // deadline.
+                if Instant::now() + wait >= self.deadline {
+                    return Err(self.deadline_error());
+                }
                 let sleep = RetrySleep {
                     stats: &self.stats,
-                    start: std::time::Instant::now(),
+                    start: Instant::now(),
                 };
-                tokio::time::sleep(wait.take().unwrap_or(backoff)).await;
+                tokio::time::sleep(wait).await;
                 drop(sleep);
                 self.stats.telemetry.lock().unwrap().retry_sends += 1;
             }

@@ -202,7 +202,7 @@ JSON switch for pipes. `--format jsonl` prints one line; `--format toon` encodes
 ```text
 {ok, command, version, exit_code, data,
  meta{backend, model, elapsed_ms, requests, cache_hits, input_tokens, cost_usd,
-      threshold, request_id, telemetry}, error{kind, message, hint, example} | null}
+      threshold, request_id, usage, telemetry}, error{kind, message, hint, example} | null}
 ```
 
 Branch on `exit_code`, which equals the process exit code, then read `data`. Error kinds are
@@ -224,8 +224,21 @@ transport and fail semantically. Dropped futures count as cancelled; pending pre
 flight. Semantic accounting includes cache hits and locally rejected calls. `semantic_questions`
 counts submitted questions. `logical_rounds` is null: HTTP accounting cannot infer stage counts.
 
-`retry_sends` counts actual sends after the first attempt. `retry_sleep_ms` sums elapsed completed
-or interrupted waits, excluding pending waits, HTTP time and semaphore waits.
+`retry_sends` counts actual sends after the first attempt. `retry_waits` counts the retry waits
+started, and `retry_sleep_ms` sums elapsed completed or interrupted waits, excluding pending waits,
+HTTP time and semaphore waits.
+
+`meta.usage` is the spend at a glance, five fields: `attempted` and `succeeded` inference POSTs
+(retries and failures included, as `inference_posts`), `waited{count, total_ms}` (the retry
+waits and their elapsed sum), `cache_hits` (answers served from the local cache; a hit is never a
+request) and `tokens{input, output}`, the service-reported counts, each `null` when any attempt
+left it unknown. An unknown count is never a measured zero: a verb that made no request reports
+`0`, one whose backend reports no usage reports `null`.
+
+Every verb runs under one overall deadline, `JEVIFY_DEADLINE` seconds (600 by default). A retry
+wait that would end past it is not started, the request queued for a permit or in flight at the
+deadline is cancelled (`inference_posts.cancelled`), and the verb ends exit 4 `api_unavailable`
+with a message that names the deadline. No request is sent before a server's `Retry-After` ends.
 
 `usage.input_tokens` and `usage.output_tokens` each contain `reported_subtotal`,
 `reported_attempts`, `unknown_attempts` and `complete`. Only valid service-reported counts enter

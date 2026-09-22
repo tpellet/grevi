@@ -75,19 +75,38 @@ pub(crate) fn excerpt(p: &Path) -> String {
     name
 }
 
+/// One `pdftotext` render of the first two pages; a hung or slow converter yields no text and
+/// the file is described by its name alone.
+const PDF_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(5);
+/// Two pages of text are a few kilobytes; the excerpt keeps 2,000 characters of it.
+const PDF_OUTPUT_CAP: usize = 64 * 1024;
+
 fn pdf_text(path: &Path) -> Option<String> {
-    let file = open_regular(path).ok()?;
-    let output = std::process::Command::new("pdftotext")
-        .args(["-l", "2", "-", "-"])
-        .stdin(file)
-        .output()
-        .ok()?;
-    output.status.success().then(|| {
-        String::from_utf8_lossy(&output.stdout)
-            .chars()
-            .take(2000)
-            .collect()
-    })
+    let path_env = std::env::var_os("PATH").unwrap_or_default();
+    pdf_text_within(path, &path_env, std::time::Instant::now() + PDF_TIMEOUT)
+}
+
+/// The text of the PDF at `path` from the `pdftotext` on `path_env`, killed at `deadline` (no
+/// text then), stdin at `/dev/null`, output bounded. `path` is absolute and normalized, and
+/// only a regular file that opens without following a link is handed to the converter.
+fn pdf_text_within(
+    path: &Path,
+    path_env: &std::ffi::OsStr,
+    deadline: std::time::Instant,
+) -> Option<String> {
+    open_regular(path).ok()?;
+    let mut command = std::process::Command::new("pdftotext");
+    command
+        .args(["-l", "2"])
+        .arg(path)
+        .arg("-")
+        .env("PATH", path_env);
+    let output = crate::inventory::output_within(command, deadline, PDF_OUTPUT_CAP)?;
+    let text: String = String::from_utf8_lossy(&output)
+        .chars()
+        .take(2000)
+        .collect();
+    (!text.trim().is_empty()).then_some(text)
 }
 
 // Walk every component without following links. Once opened, directory handles anchor
@@ -694,5 +713,53 @@ mod tests {
             .write_all(b"invalid legacy or damaged journal")
             .unwrap();
         assert!(undo(&log).is_err());
+    }
+
+    fn fake_pdftotext(body: &str) -> PathBuf {
+        use std::os::unix::fs::PermissionsExt;
+        let dir = tempfile::Builder::new()
+            .prefix("jevify-pdftotext-")
+            .tempdir()
+            .unwrap()
+            .keep();
+        let file = dir.join("pdftotext");
+        std::fs::write(&file, format!("#!/bin/sh\n{body}\n")).unwrap();
+        std::fs::set_permissions(&file, std::fs::Permissions::from_mode(0o700)).unwrap();
+        dir
+    }
+
+    #[test]
+    fn a_sleeping_pdftotext_is_killed_at_the_deadline_and_the_excerpt_goes_on() {
+        let d = tempfile::tempdir().unwrap();
+        let root = d.path().canonicalize().unwrap();
+        let pdf = root.join("scan.pdf");
+        std::fs::write(&pdf, "%PDF-1.4 binary\0").unwrap();
+        let slow = fake_pdftotext("exec /bin/sleep 5");
+        let start = std::time::Instant::now();
+        let budget = std::time::Duration::from_millis(300);
+        assert_eq!(
+            pdf_text_within(&pdf, slow.as_os_str(), start + budget),
+            None
+        );
+        assert!(
+            start.elapsed() < std::time::Duration::from_secs(2),
+            "{:?}",
+            start.elapsed()
+        );
+        // The converter receives the path, not stdin, and its text is read.
+        let quick = fake_pdftotext("test -f \"$3\" && printf 'invoice from acme'");
+        let far = std::time::Instant::now() + std::time::Duration::from_secs(5);
+        assert_eq!(
+            pdf_text_within(&pdf, quick.as_os_str(), far).as_deref(),
+            Some("invoice from acme")
+        );
+        // An expired deadline runs none, and a symlink is never handed over.
+        assert_eq!(
+            pdf_text_within(&pdf, quick.as_os_str(), std::time::Instant::now()),
+            None
+        );
+        let link = root.join("link.pdf");
+        std::os::unix::fs::symlink(&pdf, &link).unwrap();
+        assert_eq!(pdf_text_within(&link, quick.as_os_str(), far), None);
     }
 }

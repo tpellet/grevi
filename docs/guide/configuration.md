@@ -13,6 +13,7 @@ jevify has no config file. Every setting is a flag or an environment variable. `
 | `JEVIFY_MODEL` | `jev-1.13.0` on TypeSafe | TypeSafe model or alias; explicit overrides on classifier are usage errors because the service selects its model. `jev-latest` moves with TypeSafe releases. |
 | `JEVIFY_THRESHOLD` | `0.5` | Decision threshold on backend yes/no scores; calibration is task- and backend-specific. |
 | `JEVIFY_CONCURRENCY` | `8` on `typesafe`, `4` on `classifier` | Parallel requests within one round (the windows of a tournament). |
+| `JEVIFY_DEADLINE` | `600` | The verb's overall budget in whole seconds. A retry wait that would end past it is not started, a request still queued or in flight at the deadline is cancelled, and the verb ends exit 4 naming the deadline. Zero is a usage error. |
 | `JEVIFY_CACHE_DIR` | platform cache dir, `jevify` sub-directory | Where answers, the tool inventory, `sort`'s recovery journals and raw saved inputs in `outputs/` live. |
 | `JEVIFY_CONFIG_DIR` | platform configuration dir, `jevify` sub-directory | Where the user's `kinds.jsonl` lives. It is read only for a marker kind that is neither coded nor shipped. See [Kinds](kinds.md). |
 | `JEVIFY_NO_CACHE` | | Set to `1` to disable the answer cache (entries expire after 7 days anyway). |
@@ -57,7 +58,9 @@ Classifier also limits each instruction to 4,000 UTF-16 code units, each label t
 Routing and root-cause comparisons are in [evals/](../../evals/). Equal aggregate scores do not establish interchangeable probabilities. `meta.model` is a string; several reported answering models are joined with `", "`.
 
 A `rate_limit_day` HTTP 429 returns exit 4, `daily quota of the free backend reached`, without retry.
-Filter batches honour numeric `Retry-After` through 60 seconds and refuse longer delays.
+Filter batches honour numeric `Retry-After` through 60 seconds and refuse longer delays. No request
+is sent before a `Retry-After` ends, and the sum of the waits stays under `JEVIFY_DEADLINE`.
+`meta.usage` reports the attempts, successes, waits, cache hits and tokens of the run.
 
 Free calls a day on one IP, from the cost of each verb (measured 2026-09-22 with
 `JEVIFY_CONCURRENCY=4`, [benchmarks/results.md](../../benchmarks/results.md)): `is` costs one

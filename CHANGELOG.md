@@ -2,7 +2,22 @@
 
 ## Unreleased
 
+Added:
+
+- One overall deadline per verb, `JEVIFY_DEADLINE` seconds (600 by default): a retry wait that
+  would end past it is not started, a request still queued or in flight at the deadline is
+  cancelled, and the verb ends exit 4 `api_unavailable` naming the deadline. No request is sent
+  before a server's `Retry-After` ends.
+- `meta.usage{attempted, succeeded, waited{count, total_ms}, cache_hits, tokens{input, output}}`
+  under `--json`: a cache hit is a hit and not a request, and a token count left unknown by any
+  attempt is `null`, never zero. `telemetry.retry_waits` counts the retry waits started.
+
 Fixed:
+
+- `man` (route's synopsis and descriptions) and `pdftotext` (sort's PDF excerpts) run under a
+  5 s deadline with stdin at `/dev/null` and bounded output, through the same poll-and-kill
+  runner as the man index; a hung converter leaves the verb to go on without its text.
+  `pdftotext` reads the file by path, after the regular-file check, instead of from stdin.
 
 - `filter` and `label` send at most 60 records per classifier.dev request, the largest keyless
   request the service accepts: it refuses 75 with HTTP 402 `request_spending_limit` before

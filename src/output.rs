@@ -75,6 +75,8 @@ pub struct Telemetry {
     pub semantic_calls: AttemptCounts,
     pub semantic_questions: u64,
     pub retry_sends: u64,
+    /// Retry waits started, completed or interrupted; `retry_sleep_ms` is their elapsed sum.
+    pub retry_waits: u64,
     pub retry_sleep_ms: u64,
     pub usage: UsageAccounting,
     /// The client cannot infer logical rounds from physical requests.
@@ -89,6 +91,33 @@ pub enum Format {
     Json,
     Jsonl,
     Toon,
+}
+
+/// Retry waits: how many, and their elapsed milliseconds in total.
+#[derive(Serialize, Default, Debug, Clone, PartialEq, Eq)]
+pub struct Waited {
+    pub count: u64,
+    pub total_ms: u64,
+}
+
+/// Reported service usage: `None` when any inference attempt left it unknown, so an unknown
+/// count is never read as a measured zero.
+#[derive(Serialize, Default, Debug, Clone, PartialEq, Eq)]
+pub struct Tokens {
+    pub input: Option<u64>,
+    pub output: Option<u64>,
+}
+
+/// What the verb spent, at a glance: inference POSTs attempted and succeeded (retries and
+/// failures included), the retry waits, the answers served from the local cache (never a
+/// request), and the service-reported tokens or null.
+#[derive(Serialize, Default, Debug, Clone, PartialEq, Eq)]
+pub struct Usage {
+    pub attempted: u64,
+    pub succeeded: u64,
+    pub waited: Waited,
+    pub cache_hits: u32,
+    pub tokens: Tokens,
 }
 
 /// `Default` is the meta of a command that never reached a backend (a usage error before
@@ -107,6 +136,7 @@ pub struct Meta {
     /// `x-typesafe-request-id` of the last TypeSafe response seen (success or failure); what
     /// TypeSafe support asks for. `null` until a request was made.
     pub request_id: Option<String>,
+    pub usage: Usage,
     pub telemetry: Telemetry,
 }
 
