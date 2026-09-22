@@ -14,8 +14,30 @@ jevify robot-docs
 ```
 
 `capabilities` is the source of truth for commands, usage, exit codes, data and limits.
-`init agents` derives its bounded instruction block from that table. The
-[robot handbook](../ROBOT_MODE.md) includes the full telemetry and recovery contract.
+`init agents` derives its bounded instruction block from that table: one line per verb that
+pairs the situation with a complete command, the kinds, the quoting habit and the exit codes.
+The [robot handbook](../ROBOT_MODE.md) includes the full telemetry and recovery contract.
+
+## Situations
+
+An agent reaches for jevify at the moment it would otherwise run a listing only to choose from
+it by eye, or read a long output or many files one by one. Each situation has one command.
+
+| Situation | Command |
+|:---|:---|
+| Which branch holds some work | `jevify fill -- git log -1 --format=%H '@{branch:the allergy model and its schema migration}'` |
+| Which commit did something | `jevify fill -- git show '@{commit:restricted the correction to the primary metrics}'` |
+| Which CI run failed, and why | `jevify fill -- gh run view --log-failed '@{ci-run:the failed run on tag v0.7.0}' \| jevify why` |
+| The cause in a long log | `jevify why < ci.log`, then read the numbered cause, not the whole log |
+| Which source file does something | `git ls-files \| jevify pick --files 'guards agent downloads against internal addresses'` |
+| Which tests cover a topic | `fd -0 -e rs \| jevify filter -0 --files 'tests backend throttling'` |
+| Sort many reports into buckets | `ls reports/*.md \| jevify label --files bug,feature,docs` |
+| Which installed tool does a task | `jevify route 'render a terminal demo from a tape file'` |
+| Only the handle, no command | `jevify pick --from commit 'restricted the correction to the primary metrics'` |
+
+The kinds a marker or `pick --from` can name are `branch`, `commit`, `file`, `dir`, `tool`,
+`pr`, `issue`, `ci-run`, `stash`, `process`, `container`, `pod`, `-` for piped candidates, and
+the caller-written options `one` and `flag`; see [Kinds](kinds.md).
 
 ## One envelope
 

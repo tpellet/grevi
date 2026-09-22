@@ -16,21 +16,28 @@ question, the input is short enough to read, or you already know the required va
 
 ## The verbs
 
-| Situation | Verb | Result |
+Each situation below has one complete command. Reach for it at the moment you would otherwise
+run the listing (`git branch -a`, `git log | grep`, `gh run list`, `ls` then one read per file)
+only to choose from it by eye.
+
+| Situation | Command | Result |
 |:---|:---|:---|
-| About to list branches, commits, files, PRs or runs only to choose one | `fill` with `'@{branch:…}'`, `'@{commit:…}'`, `'@{file:…}'`, `'@{pr:…}'`, `'@{ci-run:…}'` | A real argument, then the command |
-| A tool can list the needed value | pipe into `fill` with `'@{-:description}'` | A handle from a supplied record |
-| Want the value without the run | `pick --from KIND` | A handle, or abstention |
-| An option depends on text you have not read | `fill` with `'@{one:a|b:question}'` or `'@{flag:--draft:question}'` | A caller-written option or conditional flag |
-| A failed build has more than about 50 lines, or grep finds only the symptom | `why` | A cause with line number and context |
-| Many records, one question | `filter` | Matching and unsure records, like `grep` by meaning |
-| Many files, one question | `filter --files` | Paths judged by file content |
-| Every record needs a bucket | `label a,b,c` | Each record with its label, `?` when unsure; like an `awk` key by meaning |
-| One record or file out of many, described rather than named | `pick` | A selected input record, or abstention |
-| The next step depends on a fact | `is` | An exit code, like `test` |
-| An unfamiliar task in the long tail of a large PATH | `route` | An installed tool and its summary; nothing executes |
-| Requested staging of one topic | `add` | Scores or stages individual hunks |
-| Requested organization of files with opaque names | `sort` | Proposes existing destination folders; moves only with `--apply` |
+| About to list branches only to choose one | `jevify fill -- git switch '@{branch:the auth refactor}'` | The real branch, then the command |
+| A commit by what it did | `jevify fill -- git show '@{commit:restricted the correction to the primary metrics}'` | The hash, then the command |
+| A failed CI run by description | `jevify fill -- gh run view --log-failed '@{ci-run:the failed run on tag v0.7.0}' \| jevify why` | The run's log, then its cause |
+| A file or PR by description | `jevify fill -- cat '@{file:parses the marker}'`, `jevify fill -- gh pr view '@{pr:the Windows path fix}'` | A real path or number, then the command |
+| A tool can list the needed value | `git log --oneline \| jevify fill -- git revert '@{-:the pricing change}'` | A handle from a supplied record |
+| Want the value without the run | `jevify pick --from branch 'the auth refactor'` | A handle, or abstention |
+| An option depends on text you have not read | `jevify fill --context report.md -- gh issue create --label '@{one:bug\|feature\|docs:what kind of report}'` | A caller-written option; `'@{flag:--draft:question}'` for a conditional flag |
+| A failed build has more than about 50 lines, or grep finds only the symptom | `cargo test 2>&1 \| jevify why` | A cause with line number and context; read that, not the whole log |
+| Many records, one question | `gh issue list \| jevify filter 'reports a crash'` | Matching and unsure records, like `grep` by meaning |
+| Many files, one question | `fd -0 -e rs \| jevify filter -0 --files 'tests backend throttling'` | Paths judged by file content |
+| Every record or file needs a bucket | `ls reports/*.md \| jevify label --files bug,feature,docs` | Each record with its label, `?` when unsure; one call, not one read per file |
+| One record or file out of many, described rather than named | `git ls-files \| jevify pick --files 'guards downloads against internal addresses'` | A selected input record, or abstention |
+| The next step depends on a fact | `cargo test 2>&1 \| jevify is 'every failure is a network timeout' && cargo test` | An exit code, like `test` |
+| An unfamiliar task in the long tail of a large PATH | `jevify route 'render a terminal demo from a tape file'` | An installed tool and its summary; nothing executes |
+| Requested staging of one topic | `jevify add --dry-run 'the token expiry fix'` | Scores or stages individual hunks |
+| Requested organization of files with opaque names | `jevify sort ~/Downloads` | Proposes existing destination folders; moves only with `--apply` |
 
 ```sh
 cargo build 2>&1 | jevify why
@@ -68,7 +75,10 @@ step. A saved full input is a way back, not proof that every line was judged.
 ### Habits
 
 - One jevify process per question, however many records. Never start one process per record
-  in a shell loop; use `filter`, `filter --files` or `label`. `label` takes at least two
+  in a shell loop, and never read files one by one to classify or find one; use `filter`,
+  `filter --files`, `label --files` or `pick --files`.
+- `why` answers with the cause and its line number: read that answer, and open the whole log
+  only when the answer is a symptom or `considered` is far below `total`. `label` takes at least two
   distinct labels, none `?` or `NONE`, at most 99 keyless or 200 on TypeSafe; it saves nothing. Polling a changing state with `until` is
   a different question on each snapshot.
 - Write literal statements: “the customer is about to stop being a customer” avoids the
