@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.8.3
 
 Added:
 
@@ -9,6 +9,15 @@ Added:
   `threshold` and `gates[]`, the scores at the gate of every decision (`best`, `next`, `none`,
   `any`, as the verb uses them; one entry per marker, statement, record, hunk, file or pick).
   Existing fields keep their names; no threshold or calibration change.
+
+Changed:
+
+- The `sort` section of the verbs guide holds the filesystem failure matrix for macOS and Linux,
+  per condition and per operation, and the tests cover a crash at each journal step, an ENOSPC
+  intent write and an undo over the journal a crashed apply leaves behind.
+- Opt-in live tests cover `fill` per kind, `label` and `filter` on both backends, from recorded
+  fixtures, and report SKIPPED when a key is missing or the free backend answers with another
+  model.
 
 ## 0.8.2
 
