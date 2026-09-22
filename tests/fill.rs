@@ -1274,6 +1274,74 @@ async fn path_handle_with_leading_dash_gets_dot_slash_and_non_utf8_reaches_the_c
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn file_tier_two_carries_meaningful_lines_and_withheld_paths_carry_none() {
+    let root = work_tree(&["src/cmd/add.rs", "src/other.rs", ".npmrc"]);
+    std::fs::write(
+        root.join("src/cmd/add.rs"),
+        "use crate::cmd::Outcome;\nuse std::{\n    io::Write,\n    process::Command,\n};\n\n//! STAGES-HUNKS doc line\npub async fn run() {}\n",
+    )
+    .unwrap();
+    std::fs::write(root.join(".npmrc"), "TOKEN=1099\n").unwrap();
+    // Round one over names alone is ambiguous or a no_match (low `any`): both reach the finals.
+    for request in ["ambiguous-names", "no-match-names"] {
+        let server = common::mock(fake().with_probabilities(|_, state, options| {
+            let items = state["items"].as_array().unwrap();
+            let second_round = items
+                .iter()
+                .any(|item| item.as_str().unwrap().contains("STAGES-HUNKS"));
+            if options == ["yes", "no"] {
+                return if second_round || state["request"] == "ambiguous-names" {
+                    vec![0.9, 0.1]
+                } else {
+                    vec![0.1, 0.9]
+                };
+            }
+            options
+                .iter()
+                .map(|option| {
+                    if option == "NONE" {
+                        return 0.01;
+                    }
+                    let text = items[option[1..].parse::<usize>().unwrap()]
+                        .as_str()
+                        .unwrap();
+                    match (
+                        second_round,
+                        text.contains("add.rs"),
+                        text.contains(".npmrc"),
+                    ) {
+                        (true, true, _) => 0.9,
+                        (true, ..) => 0.02,
+                        (false, true, _) => 0.45,
+                        (false, _, true) => 0.40,
+                        _ => 0.1,
+                    }
+                })
+                .collect()
+        }))
+        .await;
+        let mut cmd = common::jevify(&server);
+        cmd.current_dir(&root);
+        let marker = format!("@{{file:{request}}}");
+        let out = run(
+            cmd,
+            &["fill", "--dry-run", "--json", "--", "printf", &marker],
+            "",
+        );
+        assert_eq!(envelope(&out, 0)["data"]["argv"][1], "src/cmd/add.rs");
+        let requests = server.received_requests().await.unwrap();
+        assert_eq!(requests.len(), 2, "{request}");
+        let finals = String::from_utf8_lossy(&requests[1].body);
+        assert!(finals.contains("STAGES-HUNKS doc line"), "{finals}");
+        assert!(finals.contains("pub async fn run()"), "{finals}");
+        assert!(!finals.contains("use crate::cmd::Outcome"), "{finals}");
+        assert!(!finals.contains("io::Write"), "{finals}");
+        assert!(!finals.contains("1099"), "{finals}");
+        assert!(finals.contains(".npmrc"), "{finals}");
+    }
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn withheld_excerpts_count_finalists_only_and_never_leave_the_machine() {
     let root = work_tree(&["notes.txt", "other.txt", "third.txt", ".npmrc", ".env"]);
     std::fs::write(root.join(".npmrc"), "TOKEN=1099\n").unwrap();

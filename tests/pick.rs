@@ -152,7 +152,8 @@ async fn from_branch_ratio_retries_and_abstention_reasons() {
         let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
         assert_eq!(out.status.code(), Some(3));
         assert_eq!(v["data"]["reason"], "no_match");
-        assert_eq!(v["meta"]["requests"], usize::from(count != 0));
+        // A no_match over tier-one names still sends the finals with tier-two evidence.
+        assert_eq!(v["meta"]["requests"], 2 * usize::from(count != 0));
     }
 }
 

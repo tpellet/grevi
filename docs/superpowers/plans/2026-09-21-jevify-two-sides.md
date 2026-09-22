@@ -200,7 +200,8 @@ finals request) and with 9,802 items (`too_many`, no request).
      best of each window **by rank** (`n = 3`, the only value `fill` uses), all of them, with
      tier-two evidence for the first 24 of the finalist order (`MAX_FINALISTS`). A probability is never compared with
      one from another request (`src/tournament.rs:126-127` does that today and keeps 24). With
-     one window, round 2 runs only when the ratio failed and the kind has tier-two evidence.
+     one window, round 2 runs when the kind has tier-two evidence and round 1 is not a decisive
+     Found (`ambiguous` or `no_match`): names alone cannot refute a content phrase.
      This one-window shortcut applies to `fill` and `pick --from`; `pick --files` always runs
      round two, as today.
    - Finalist evidence needs no callback. A caller with tier-two evidence makes two calls:

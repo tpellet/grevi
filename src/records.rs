@@ -199,6 +199,56 @@ pub(crate) fn withheld(path: &Path) -> bool {
     })
 }
 
+/// The lines of an excerpt that carry meaning: blank lines, imports (`use`, `import`, `from`,
+/// `#include`, `mod`, `extern crate`, `package`, with their `{ ... }` continuations), shebang
+/// and inner-attribute lines, and license or copyright comment lines are dropped. Doc comments
+/// and every other line stay, in order, within the bound the excerpt already has.
+fn meaningful(text: &str) -> String {
+    const IMPORTS: &[&str] = &[
+        "use ",
+        "pub use ",
+        "pub(crate) use ",
+        "import ",
+        "from ",
+        "#include",
+        "mod ",
+        "pub mod ",
+        "pub(crate) mod ",
+        "extern crate ",
+        "package ",
+    ];
+    let mut kept = Vec::new();
+    let mut open_import = false;
+    for line in text.lines() {
+        let trimmed = line.trim();
+        if open_import {
+            open_import = !trimmed.ends_with(';');
+            continue;
+        }
+        if trimmed.is_empty() || trimmed.starts_with("#!") {
+            continue;
+        }
+        let import = IMPORTS.iter().any(|prefix| trimmed.starts_with(prefix))
+            && (!trimmed.starts_with("from ") || trimmed.contains(" import "));
+        if import {
+            open_import = trimmed.ends_with('{') || trimmed.ends_with(',');
+            continue;
+        }
+        let comment = trimmed.starts_with("//")
+            || trimmed.starts_with('#')
+            || trimmed.starts_with("/*")
+            || trimmed.starts_with('*');
+        let lower = trimmed.to_ascii_lowercase();
+        if comment
+            && (lower.contains("copyright") || lower.contains("license") || lower.contains("spdx"))
+        {
+            continue;
+        }
+        kept.push(line);
+    }
+    kept.join("\n")
+}
+
 /// Enrich only the supplied records (all records or pick's finalists), returning withheld count.
 pub async fn excerpts(records: &mut [Record], cwd: &Path) -> Result<usize, JevifyError> {
     let paths: Vec<_> = records.iter().map(|r| r.handle.clone()).collect();
@@ -233,7 +283,13 @@ pub async fn excerpts(records: &mut [Record], cwd: &Path) -> Result<usize, Jevif
                 if !metadata.is_file() {
                     return fallback;
                 }
-                evidence(crate::cmd::sort::excerpt(&resolved).as_bytes())
+                let excerpt = crate::cmd::sort::excerpt(&resolved);
+                let name = name.to_string_lossy();
+                let text = match excerpt.strip_prefix(&format!("{name}: ")) {
+                    Some(body) => format!("{name}: {}", meaningful(body)),
+                    None => excerpt,
+                };
+                evidence(text.as_bytes())
             })
             .collect();
         (values, count)
@@ -249,6 +305,17 @@ pub async fn excerpts(records: &mut [Record], cwd: &Path) -> Result<usize, Jevif
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn meaningful_drops_imports_headers_and_blanks_and_keeps_doc_comments() {
+        let text = "#!/usr/bin/env rust\n// Copyright 2026 Someone\n// SPDX-License-Identifier: MIT\n//! Stages hunks.\n\nuse crate::{\n    a,\n    b,\n};\nuse std::io;\npub mod x;\nextern crate y;\n#include <stdio.h>\nimport os\nfrom os import path\npackage main\n/// Doc.\nfn add() {}\nfrom here on, prose\n";
+        assert_eq!(
+            meaningful(text),
+            "//! Stages hunks.\n/// Doc.\nfn add() {}\nfrom here on, prose"
+        );
+        assert_eq!(meaningful(""), "");
+        assert_eq!(meaningful("use a;\n"), "");
+    }
 
     #[tokio::test]
     async fn excerpts_judge_caller_paths_not_working_directory_ancestors() {

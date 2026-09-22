@@ -343,10 +343,12 @@ pub async fn run(
             };
             if first.windows.len() == 1 {
                 let ranking = &first.windows[0];
+                // Names alone cannot refute a content phrase: only a decisive Found skips the
+                // finals when the kind has tier-two evidence.
                 if !tier_two
-                    || !matches!(
+                    || matches!(
                         tournament::decide(ranking, ctx.threshold),
-                        Decision::Ambiguous(_)
+                        Decision::Found(_)
                     )
                 {
                     return Ok(Some((ranking.clone(), 0)));

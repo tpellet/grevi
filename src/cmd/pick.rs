@@ -245,8 +245,7 @@ async fn from_kind(
             ranking = short.windows[0].clone();
         }
         if windows > 1
-            || (kind.has_tier_two
-                && matches!(decide(&ranking, ctx.threshold), Decision::Ambiguous(_)))
+            || (kind.has_tier_two && !matches!(decide(&ranking, ctx.threshold), Decision::Found(_)))
         {
             let mut finals: Vec<_> = short
                 .finalists
