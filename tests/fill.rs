@@ -617,10 +617,18 @@ async fn listing_capacity_and_three_finalists_on_each_backend() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn ties_none_and_duplicate_evidence_never_execute() {
-    for (best, second, none, reason) in [
-        (0.45, 0.45, 0.1, "ambiguous"),
-        (0.5, 0.1, 0.4, "ambiguous"),
-        (0.2, 0.1, 0.7, "no_match"),
+    // The status line names the rival that decided the abstention, NONE included, and a
+    // no_match names the top candidates instead of an empty field.
+    for (best, second, none, reason, closest) in [
+        (0.45, 0.45, 0.1, "ambiguous", "closest: a (0.45), b (0.45)"),
+        (0.5, 0.1, 0.4, "ambiguous", "closest: a (0.50), none (0.40)"),
+        (
+            0.2,
+            0.1,
+            0.7,
+            "no_match",
+            "closest: none (0.70), a (0.20), b (0.10)",
+        ),
     ] {
         let server = common::mock(move |request: &wiremock::Request| {
             let body: Value = serde_json::from_slice(&request.body).unwrap();
@@ -643,7 +651,12 @@ async fn ties_none_and_duplicate_evidence_never_execute() {
         assert_eq!(out.status.code(), Some(3));
         assert!(out.stdout.is_empty());
         assert!(!sentinel.exists());
-        assert!(String::from_utf8_lossy(&out.stderr).contains(reason));
+        let stderr = String::from_utf8_lossy(&out.stderr);
+        assert!(
+            stderr.contains(&format!("{reason}; {closest}; candidates 2 of 2")),
+            "{stderr}"
+        );
+        assert!(!stderr.contains("; ; "), "{stderr}");
     }
     // Distinct invalid UTF-8 handles have the same lossy evidence.
     let server = common::mock(fake()).await;
@@ -680,6 +693,28 @@ fn branch_fixture(count: usize, twin: bool) -> std::path::PathBuf {
     std::fs::write(dir.join("git"), b"#!/bin/sh\nprintf '%s\\n' \"$*\" >> \"$FILL_FIXTURE/calls\"\ncase \"$1\" in\nfor-each-ref) cat \"$FILL_FIXTURE/refs\";;\nlog) printf '\\000rich evidence\\000src/code.rs\\000';;\nesac\n").unwrap();
     std::fs::set_permissions(dir.join("git"), std::fs::Permissions::from_mode(0o755)).unwrap();
     dir
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn empty_branch_listing_says_there_is_nothing_to_choose_from() {
+    let server = common::mock(fake()).await;
+    let dir = branch_fixture(0, false);
+    let out = run(
+        fixture_command(&server, &dir),
+        &["fill", "--dry-run", "--json", "--", "printf", "@{branch:x}"],
+        "",
+    );
+    let value = envelope(&out, 3);
+    assert_eq!(value["data"]["reason"], "no_match");
+    assert_eq!(value["data"]["markers"][0]["candidates"], 0);
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert!(
+        stderr.contains(
+            "not run: arg 2 branch: no_match; no branch to choose from; candidates 0 of 0"
+        ),
+        "{stderr}"
+    );
+    assert!(posts(&server).await.is_empty());
 }
 
 fn fixture_command(server: &MockServer, dir: &std::path::Path) -> assert_cmd::Command {
@@ -1018,6 +1053,11 @@ async fn empty_input_abstains_without_a_request() {
     let value: Value = serde_json::from_slice(&out.stdout).unwrap();
     assert_eq!(value["data"]["reason"], "no_match");
     assert!(value["error"].is_null());
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert!(
+        stderr.contains("no_match; no record to choose from; candidates 0 of 0"),
+        "{stderr}"
+    );
     assert!(server.received_requests().await.unwrap().is_empty());
 }
 

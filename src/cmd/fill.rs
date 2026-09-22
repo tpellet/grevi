@@ -23,6 +23,8 @@ use std::{
 const FLAG_BAND: f64 = 0.15;
 const MAX_CONTEXT_CHARS: usize = 96_000;
 const MAX_FINALISTS: usize = 24;
+/// A rival within this ratio of the best blocks it: `tournament::decide`'s winner ratio.
+const RIVAL_RATIO: f64 = 2.0;
 
 pub struct FillFlags {
     pub dry_run: bool,
@@ -165,7 +167,16 @@ pub async fn run(
                 });
             }
             if state.records.is_empty() {
+                // An empty listing is not a judgment: nothing was there to choose from.
                 state.reason = Some(NO_MATCH);
+                state.detail = format!(
+                    "no {} to choose from",
+                    if m.kind == "-" {
+                        "record"
+                    } else {
+                        m.kind.as_str()
+                    }
+                );
             }
         } else if insufficient {
             state.reason = Some(INSUFFICIENT_EVIDENCE);
@@ -471,23 +482,54 @@ fn apply_ranking(state: &mut State, ranking: &Ranking, threshold: f64) {
                 }
             );
         }
-        Decision::NoMatch => state.reason = Some(NO_MATCH),
+        Decision::NoMatch => {
+            state.reason = Some(NO_MATCH);
+            let top: Vec<_> = ranking.candidates.iter().take(2).collect();
+            state.detail = closest_line(state, &top, ranking.none);
+        }
         Decision::Ambiguous(closest) => {
             state.reason = Some(AMBIGUOUS);
-            state.detail = format!(
-                "closest: {}",
-                closest
-                    .iter()
-                    .map(|c| format!(
-                        "{} ({:.2})",
-                        state.records[c.index].handle.to_string_lossy(),
-                        c.p
-                    ))
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            );
+            // The best, then every rival close enough to have blocked it, NONE included.
+            let best = closest[0].p;
+            let rivals: Vec<_> = closest
+                .iter()
+                .enumerate()
+                .filter(|(rank, c)| *rank == 0 || RIVAL_RATIO * c.p >= best)
+                .map(|(_, c)| c)
+                .collect();
+            let none = (RIVAL_RATIO * ranking.none >= best).then_some(ranking.none);
+            state.detail = closest_line(state, &rivals, none);
         }
     }
+}
+
+/// `closest: a (0.42), none (0.30), b (0.08)`: the named candidates and NONE, by probability.
+fn closest_line(
+    state: &State,
+    candidates: &[&tournament::Candidate],
+    none: impl Into<Option<f64>>,
+) -> String {
+    let mut entries: Vec<(String, f64)> = candidates
+        .iter()
+        .map(|c| {
+            (
+                state.records[c.index].handle.to_string_lossy().into_owned(),
+                c.p,
+            )
+        })
+        .collect();
+    if let Some(none) = none.into() {
+        entries.push(("none".into(), none));
+    }
+    entries.sort_by(|a, b| b.1.total_cmp(&a.1));
+    format!(
+        "closest: {}",
+        entries
+            .iter()
+            .map(|(name, p)| format!("{name} ({p:.2})"))
+            .collect::<Vec<_>>()
+            .join(", ")
+    )
 }
 
 fn finish(
@@ -513,11 +555,15 @@ fn finish(
     }
     for (m, state) in markers.iter().zip(&states) {
         if let Some(reason) = state.reason {
+            let detail = if state.detail.is_empty() {
+                String::new()
+            } else {
+                format!("{}; ", output::status_escape(&state.detail))
+            };
             eprintln!(
-                "jevify fill: not run: arg {} {}: {reason}; {}; candidates {} of {}, omitted {}; model {}",
+                "jevify fill: not run: arg {} {}: {reason}; {detail}candidates {} of {}, omitted {}; model {}",
                 m.argv_index + 1,
                 m.kind,
-                output::status_escape(&state.detail),
                 state.records.len(),
                 state.total,
                 state.omitted,
