@@ -13,9 +13,39 @@ pub fn live_key_present() -> bool {
     false
 }
 
+/// A repository with a known set of branches, so the branch case does not depend on the
+/// branches a developer happens to carry in this checkout.
+fn branch_fixture() -> std::path::PathBuf {
+    let root = tempfile::tempdir().unwrap().keep();
+    let git = |args: &[&str]| {
+        let status = std::process::Command::new("git")
+            .current_dir(&root)
+            .args([
+                "-c",
+                "user.name=example",
+                "-c",
+                "user.email=example@example.invalid",
+                "-c",
+                "commit.gpgsign=false",
+            ])
+            .args(args)
+            .status()
+            .unwrap();
+        assert!(status.success(), "git {args:?}");
+    };
+    std::fs::write(root.join("README"), "fixture\n").unwrap();
+    git(&["init", "-q", "-b", "main"]);
+    git(&["add", "-A"]);
+    git(&["commit", "-q", "-m", "initial"]);
+    git(&["branch", "auth-refactor"]);
+    git(&["branch", "payment-timeout"]);
+    root
+}
+
 #[test]
 #[ignore]
 fn live_fill_branch_and_one_per_backend() {
+    let repo = branch_fixture();
     for backend in ["classifier", "typesafe"] {
         if backend == "typesafe" && !live_key_present() {
             continue;
@@ -29,6 +59,7 @@ fn live_fill_branch_and_one_per_backend() {
         ] {
             let mut command = assert_cmd::Command::cargo_bin("jevify").unwrap();
             command
+                .current_dir(&repo)
                 .env("JEVIFY_BACKEND", backend)
                 .env("JEVIFY_NO_CACHE", "1")
                 .env("JEVIFY_CACHE_DIR", tempfile::tempdir().unwrap().keep());
