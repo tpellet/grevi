@@ -1424,6 +1424,108 @@ async fn file_tier_two_carries_meaningful_lines_and_withheld_paths_carry_none() 
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn file_finals_hold_every_name_not_ruled_out_and_skip_an_empty_pool() {
+    let root = work_tree(&[
+        "src/cmd/add.rs",
+        "src/gitdiff.rs",
+        "src/cmd/pick.rs",
+        "src/cmd/fill.rs",
+        "src/cli.rs",
+        "tests/x.rs",
+    ]);
+    // Names alone: a no_match that ranks the gold fifth at 0.03 behind a related sibling.
+    // The finals then read every name that kept a probability, not the top three, and the
+    // gold's excerpt wins there. A pool of names all at zero sends no finals request.
+    let server = common::mock(fake().with_probabilities(|_, state, options| {
+        let items = state["items"].as_array().unwrap();
+        let second_round = items
+            .iter()
+            .any(|item| item.as_str().unwrap().contains("VISIBLE"));
+        let empty_pool = state["request"] == "nothing here";
+        if options == ["yes", "no"] {
+            return if second_round {
+                vec![0.9, 0.1]
+            } else {
+                vec![0.45, 0.55]
+            };
+        }
+        options
+            .iter()
+            .map(|option| {
+                if option == "NONE" {
+                    return if second_round { 0.01 } else { 0.36 };
+                }
+                let text = items[option[1..].parse::<usize>().unwrap()]
+                    .as_str()
+                    .unwrap();
+                if empty_pool {
+                    0.0
+                } else if second_round {
+                    if text.contains("add.rs") { 0.9 } else { 0.02 }
+                } else if text.contains("gitdiff.rs") {
+                    0.27
+                } else if text.contains("pick.rs") {
+                    0.10
+                } else if text.contains("fill.rs") {
+                    0.04
+                } else if text.contains("cli.rs") || text.contains("add.rs") {
+                    0.03
+                } else {
+                    0.0
+                }
+            })
+            .collect()
+    }))
+    .await;
+    let mut cmd = common::jevify(&server);
+    cmd.current_dir(&root);
+    let out = run(
+        cmd,
+        &[
+            "fill",
+            "--dry-run",
+            "--json",
+            "--",
+            "printf",
+            "@{file:the module that stages hunks}",
+        ],
+        "",
+    );
+    assert_eq!(envelope(&out, 0)["data"]["argv"][1], "src/cmd/add.rs");
+    let requests = server.received_requests().await.unwrap();
+    assert_eq!(requests.len(), 2);
+    let finals: Value = serde_json::from_slice(&requests[1].body).unwrap();
+    let items = finals["state"]["items"].as_array().unwrap();
+    assert_eq!(items.len(), 5, "{items:?}");
+    let texts: Vec<_> = items.iter().map(|i| i.as_str().unwrap()).collect();
+    assert!(
+        texts
+            .iter()
+            .any(|t| t.contains("VISIBLE src/cmd/add.rs BODY")),
+        "{texts:?}"
+    );
+    assert!(!texts.iter().any(|t| t.contains("tests/x.rs")), "{texts:?}");
+
+    let mut cmd = common::jevify(&server);
+    cmd.current_dir(&root);
+    let out = run(
+        cmd,
+        &[
+            "fill",
+            "--dry-run",
+            "--json",
+            "--",
+            "printf",
+            "@{file:nothing here}",
+        ],
+        "",
+    );
+    let value = envelope(&out, 3);
+    assert_eq!(value["data"]["markers"][0]["reason"], "no_match");
+    assert_eq!(server.received_requests().await.unwrap().len(), 3);
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn dir_tier_two_names_children_and_withheld_dirs_carry_none() {
     let root = work_tree(&[
         "evals/why/cargo-build.log",
@@ -1543,7 +1645,9 @@ async fn withheld_excerpts_count_finalists_only_and_never_leave_the_machine() {
                     } else if text.contains("other.txt") || text.contains("third.txt") {
                         0.1
                     } else {
-                        0.01
+                        // Ruled out by name: a hidden file the names round gave no chance
+                        // stays out of the finals and is not counted as withheld.
+                        0.0
                     }
                 })
                 .collect()

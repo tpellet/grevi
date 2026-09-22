@@ -352,6 +352,7 @@ pub async fn run(
             let Some(first) = first else {
                 return Ok(None);
             };
+            let mut finalists = first.finalists.clone();
             if first.windows.len() == 1 {
                 let ranking = &first.windows[0];
                 // Names alone cannot refute a content phrase: only a decisive Found skips the
@@ -364,9 +365,22 @@ pub async fn run(
                 {
                     return Ok(Some((ranking.clone(), 0)));
                 }
+                // The names ranked a content phrase's file low, not out: every candidate the
+                // names did not rule out reaches the finals with its excerpt, as many as the
+                // finals hold. Three names alone left the finals choosing the best of three
+                // wrong files, and a related excerpt then won at 0.94.
+                finalists = ranking
+                    .candidates
+                    .iter()
+                    .filter(|c| c.p > 0.0)
+                    .take(MAX_FINALISTS)
+                    .copied()
+                    .collect();
+                if finalists.is_empty() {
+                    return Ok(Some((ranking.clone(), 0)));
+                }
             }
-            let handles: Vec<_> = first
-                .finalists
+            let handles: Vec<_> = finalists
                 .iter()
                 .take(MAX_FINALISTS)
                 .map(|c| records[c.index].handle.clone())
@@ -376,8 +390,7 @@ pub async fn run(
             } else {
                 (vec![], 0)
             };
-            let items: Vec<_> = first
-                .finalists
+            let items: Vec<_> = finalists
                 .iter()
                 .enumerate()
                 .map(|(rank, c)| {
