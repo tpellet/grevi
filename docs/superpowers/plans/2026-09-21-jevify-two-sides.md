@@ -743,10 +743,21 @@ exit 2; several failed markers report the first in argv order and list all in
 The recipe engine, the shipped recipes, the user's `kinds.jsonl`; `commit`, `file`, `dir`,
 `tool`. All in `src/source.rs` and `src/kinds.jsonl`, serial, then `tests/fill.rs` and
 `tests/pick.rs`, then the contract bead with `docs/guide/kinds.md`. The recipe bead adds
-`config_dir(Option<&str>)` for `JEVIFY_CONFIG_DIR` to `src/config.rs` and removes the variable in the sanitized test command of
-`tests/common/mod.rs`; the contract bead documents it in `docs/guide/configuration.md`. The
-`file` kind calls the withholding function of `src/records.rs` and does not define a second
-one.
+`config_dir(Option<&str>)` for `JEVIFY_CONFIG_DIR` to `src/config.rs`, and the sanitized test
+command `bin()` of `tests/common/mod.rs` sets the variable to a retained empty temporary
+directory, so no test reads the developer's own recipes (`config_dir(None)` falls back to the
+real configuration directory; a recipe test overrides the variable explicitly, and a regression
+test proves the isolation); the contract bead documents the variable in
+`docs/guide/configuration.md`. `source::kind()` and `KINDS` stay const over the shipped kinds;
+the recipe bead adds the env-aware `source::lookup(name, env)` that also sees user recipes, and
+the wiring bead moves the kind checks of `src/cmd/fill.rs` and `src/cmd/pick.rs` to it. Tier
+two comes from `source::enrich_in(kind, prefix, handles, env) -> (Vec<String>, usize)`; the
+`usize` counts the finalists whose excerpt is withheld, and `excerpts withheld: N` prints that
+count. `dir` has no tier two. The coded-kinds bead writes `src/inventory.rs` too: the `tool`
+kind enumerates completely (an `omitted` count above the 1,000/1,500 caps keeps `total`
+truthful), `manpath` and `man` run under the deadline, and `Env` carries an optional
+`cache_dir`. The `file` kind calls the withholding function of `src/records.rs` and does not
+define a second one.
 
 Done when `'@{commit:made folder moves atomic}'` prints a full OID under `--dry-run`; a log
 above the limit says `candidates N of M, newest first` with `M` from `git rev-list --count`;
@@ -754,8 +765,10 @@ a lister that sleeps, a lister whose child keeps the pipe open and a lister that
 than 64 MiB each give `lister_failed` within the deadline plus 200 ms; a bad line in the
 user's `kinds.jsonl` is `recipe_invalid` with its line number for any user kind, and is never
 read for `branch` or `pr`;
-`'src/cmd/@{file:stages hunks}'` becomes `src/cmd/add.rs`; a tracked `.npmrc` reports
-`excerpts withheld: 1` and its content is absent from the captured request; a line appended to
+`'src/cmd/@{file:stages hunks}'` becomes `src/cmd/add.rs`; a tracked `.npmrc` among the
+finalists reports `excerpts withheld: 1` and its content is absent from the captured request;
+more undocumented tools than the inventory cap give a truthful `candidates N of M` and a
+hanging `man` keeps `tool` within the deadline; a line appended to
 a temporary `kinds.jsonl` makes `'@{widget:…}'` resolve, the same line named `branch` is
 `recipe_invalid`, and a `kinds.jsonl` in the working directory is never read; a fake `gh` that
 prints "not logged in" gives `lister_failed` with that text.
@@ -763,7 +776,11 @@ prints "not logged in" gives `lister_failed` with that text.
 ### Phase 4 — `label` (hunch-qxn)
 
 `label a,b,c`: one Choice per record, the labels plus an internal `NONE`, through `ask_each`.
-Output is `LABEL<TAB>RECORD`; an unsure record has the label `?`. Needs Phase 1 only for its
+Output is `LABEL<TAB>RECORD`; an unsure record has the label `?`, decided by
+`tournament::decide` over a `Ranking` with `any = 1.0` (the threshold plays no part; `NONE`
+winning and the winner ratio do). The skeleton bead adds the `label` entry to `capabilities`
+in `src/cmd/agent.rs` and admits `label` in the guard regex of `tests/agent.rs`; the stub is
+`label::run(ctx, labels, LabelFlags { split, files }, machine)`. Needs Phase 1 only for its
 logic; it runs after release 0.6.0 because it shares the skeleton files. At most `W` labels
 (99 on classifier.dev, 200 on TypeSafe), because `NONE` takes one slot: more is exit 2 with
 the count, checked in `label` where the backend is known.
