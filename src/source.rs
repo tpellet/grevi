@@ -3,6 +3,7 @@ use crate::{
     records::{Record, Split},
 };
 use std::{
+    borrow::Cow,
     collections::{BTreeSet, HashSet},
     ffi::{OsStr, OsString},
     io::Read,
@@ -10,45 +11,258 @@ use std::{
     path::PathBuf,
     process::{Command, Stdio},
     sync::{
-        Arc,
+        Arc, LazyLock,
         atomic::{AtomicUsize, Ordering},
         mpsc,
     },
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
 
-pub const KINDS: &[&str] = &["-", "branch"];
+/// The coded kinds, then the shipped recipes of `src/kinds.jsonl`, in file order.
+pub const KINDS: &[&str] = &[
+    "-",
+    "branch",
+    "pr",
+    "issue",
+    "ci-run",
+    "stash",
+    "process",
+    "container",
+    "pod",
+];
 pub const LISTER_TIMEOUT: Duration = Duration::from_secs(20);
 const OUTPUT_CAP: usize = 64 * 1024 * 1024;
 const READER_GRACE: Duration = Duration::from_millis(200);
+/// The shipped recipes, one JSON object per line.
+const SHIPPED: &str = include_str!("kinds.jsonl");
+/// The user's recipes, in the configuration directory only, never in the working directory.
+const USER_FILE: &str = "kinds.jsonl";
+const BRANCH_ARGV: [&str; 6] = [
+    "git",
+    "for-each-ref",
+    "--sort=-committerdate",
+    "--format=%(refname)%00%(symref)%00%(committerdate:unix)%00%(subject)%00",
+    "refs/heads",
+    "refs/remotes",
+];
 
+#[derive(Debug, Clone)]
 pub struct Kind {
-    pub name: &'static str,
+    pub name: Cow<'static, str>,
     pub coded: bool,
     pub ordered: bool,
     pub path_kind: bool,
     pub has_tier_two: bool,
 }
 
+const fn recipe_kind(name: &'static str, ordered: bool) -> Kind {
+    Kind {
+        name: Cow::Borrowed(name),
+        coded: false,
+        ordered,
+        path_kind: false,
+        has_tier_two: false,
+    }
+}
+
 pub const REGISTRY: &[Kind] = &[
     Kind {
-        name: "-",
+        name: Cow::Borrowed("-"),
         coded: true,
         ordered: false,
         path_kind: false,
         has_tier_two: false,
     },
     Kind {
-        name: "branch",
+        name: Cow::Borrowed("branch"),
         coded: true,
         ordered: true,
         path_kind: false,
         has_tier_two: true,
     },
+    recipe_kind("pr", true),
+    recipe_kind("issue", true),
+    recipe_kind("ci-run", true),
+    recipe_kind("stash", true),
+    recipe_kind("process", false),
+    recipe_kind("container", false),
+    recipe_kind("pod", false),
 ];
 
+/// A shipped kind: coded, or a recipe of `src/kinds.jsonl`. User recipes need [`lookup`].
 pub fn kind(name: &str) -> Option<&'static Kind> {
     REGISTRY.iter().find(|kind| kind.name == name)
+}
+
+/// A kind as one JSON line: the lister argv and the handle.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Deserialize, serde::Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct Recipe {
+    pub kind: String,
+    pub list: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub field: Option<usize>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub key: Option<String>,
+    #[serde(default)]
+    pub ordered: bool,
+}
+
+fn valid_kind_name(name: &str) -> bool {
+    let mut bytes = name.bytes();
+    bytes.next().is_some_and(|b| b.is_ascii_lowercase())
+        && bytes.all(|b| b.is_ascii_lowercase() || b == b'-')
+}
+
+fn parse_recipe(line: &[u8]) -> Result<Recipe, String> {
+    let recipe: Recipe = serde_json::from_slice(line).map_err(|e| e.to_string())?;
+    if !valid_kind_name(&recipe.kind) {
+        return Err(format!(
+            "kind {:?} does not match [a-z][a-z-]*",
+            recipe.kind
+        ));
+    }
+    if recipe.list.is_empty() {
+        return Err(format!("kind {}: list is empty", recipe.kind));
+    }
+    if recipe.field.is_some() && recipe.key.is_some() {
+        return Err(format!(
+            "kind {}: field and key are mutually exclusive",
+            recipe.kind
+        ));
+    }
+    if recipe.field == Some(0) {
+        return Err(format!("kind {}: field numbers start at 1", recipe.kind));
+    }
+    Ok(recipe)
+}
+
+fn shipped() -> &'static [Recipe] {
+    static SHIPPED_RECIPES: LazyLock<Vec<Recipe>> = LazyLock::new(|| {
+        SHIPPED
+            .lines()
+            .map(|line| parse_recipe(line.as_bytes()).expect("a shipped recipe parses"))
+            .collect()
+    });
+    &SHIPPED_RECIPES
+}
+
+/// Read the user's `kinds.jsonl` from `env.config_dir`. Every line must parse and no line may
+/// name a shipped kind, or the whole file is `recipe_invalid`. A missing file holds no recipe.
+fn user_recipes(env: &Env) -> Result<Vec<Recipe>, JevifyError> {
+    let Some(dir) = &env.config_dir else {
+        return Ok(Vec::new());
+    };
+    let path = dir.join(USER_FILE);
+    let bytes = match std::fs::read(&path) {
+        Ok(bytes) => bytes,
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(Vec::new()),
+        Err(e) => {
+            return Err(JevifyError::recipe_invalid(format!(
+                "{}: {e}",
+                path.display()
+            )));
+        }
+    };
+    let mut recipes: Vec<Recipe> = Vec::new();
+    for (index, line) in bytes.split(|b| *b == b'\n').enumerate() {
+        if line.iter().all(u8::is_ascii_whitespace) {
+            continue;
+        }
+        let invalid = |message: String| {
+            JevifyError::recipe_invalid(format!("{} line {}: {message}", path.display(), index + 1))
+        };
+        let recipe = parse_recipe(line).map_err(invalid)?;
+        if kind(&recipe.kind).is_some() {
+            return Err(invalid(format!(
+                "kind {} is built in and cannot be replaced",
+                recipe.kind
+            )));
+        }
+        if recipes.iter().any(|r| r.kind == recipe.kind) {
+            return Err(invalid(format!("kind {} is defined twice", recipe.kind)));
+        }
+        recipes.push(recipe);
+    }
+    Ok(recipes)
+}
+
+/// Find a kind: coded kinds and shipped recipes first, and only for a name in neither, the
+/// user's `kinds.jsonl`. `Ok(None)` is a name found nowhere.
+pub fn lookup(name: &str, env: &Env) -> Result<Option<Kind>, JevifyError> {
+    if let Some(kind) = kind(name) {
+        return Ok(Some(kind.clone()));
+    }
+    Ok(user_recipes(env)?
+        .into_iter()
+        .find(|recipe| recipe.kind == name)
+        .map(|recipe| Kind {
+            name: Cow::Owned(recipe.kind),
+            coded: false,
+            ordered: recipe.ordered,
+            path_kind: false,
+            has_tier_two: false,
+        }))
+}
+
+/// The recipe of a kind that is not coded, with the same read rules as [`lookup`].
+fn recipe(name: &str, env: &Env) -> Result<Option<Recipe>, JevifyError> {
+    if kind(name).is_some_and(|kind| kind.coded) {
+        return Ok(None);
+    }
+    if let Some(recipe) = shipped().iter().find(|recipe| recipe.kind == name) {
+        return Ok(Some(recipe.clone()));
+    }
+    Ok(user_recipes(env)?
+        .into_iter()
+        .find(|recipe| recipe.kind == name))
+}
+
+/// One kind as `capabilities` prints it: where it comes from and the argv of its lister.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+pub struct CatalogEntry {
+    pub name: String,
+    /// `coded`, `shipped` or `user`.
+    pub origin: &'static str,
+    /// Empty for `-`, which reads stdin or `--candidates`.
+    pub list: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+pub struct Catalog {
+    pub kinds: Vec<CatalogEntry>,
+    /// Why the user's `kinds.jsonl` was not listed; a bad file never fails the caller.
+    pub error: Option<String>,
+}
+
+/// Every kind with its lister argv, the user's recipes included.
+pub fn catalog(env: &Env) -> Catalog {
+    let mut kinds = vec![
+        CatalogEntry {
+            name: "-".into(),
+            origin: "coded",
+            list: Vec::new(),
+        },
+        CatalogEntry {
+            name: "branch".into(),
+            origin: "coded",
+            list: BRANCH_ARGV.iter().map(|arg| (*arg).to_owned()).collect(),
+        },
+    ];
+    let entry = |recipe: &Recipe, origin| CatalogEntry {
+        name: recipe.kind.clone(),
+        origin,
+        list: recipe.list.clone(),
+    };
+    kinds.extend(shipped().iter().map(|recipe| entry(recipe, "shipped")));
+    let error = match user_recipes(env) {
+        Ok(recipes) => {
+            kinds.extend(recipes.iter().map(|recipe| entry(recipe, "user")));
+            None
+        }
+        Err(e) => Some(e.to_string()),
+    };
+    Catalog { kinds, error }
 }
 
 pub enum Scope {
@@ -85,9 +299,10 @@ impl Env {
                 .get(std::ffi::OsStr::new("PATH"))
                 .cloned()
                 .unwrap_or_default(),
-            config_dir: vars
-                .get(std::ffi::OsStr::new("JEVIFY_CONFIG_DIR"))
-                .map(PathBuf::from),
+            config_dir: crate::config::config_dir(
+                vars.get(std::ffi::OsStr::new("JEVIFY_CONFIG_DIR"))
+                    .and_then(|value| value.to_str()),
+            ),
             deadline: Instant::now() + timeout,
             // An unavailable cwd must fail in Command, never silently list another directory.
             cwd: std::env::current_dir().unwrap_or_default(),
@@ -112,8 +327,12 @@ pub async fn enumerate(
                 field,
                 key,
             },
-        ) => input_listing(&bytes, split, field, key.as_deref()),
+        ) => input_listing(&bytes, split, field, key.as_deref(), false, usize::MAX),
         ("branch", Scope::Prefix(None)) => branches(limit, &env),
+        (name, Scope::Prefix(None)) => match recipe(name, &env)? {
+            Some(recipe) => recipe_listing(&recipe, limit, &env),
+            None => Err(JevifyError::Usage(format!("unknown kind {name}"))),
+        },
         _ => Err(JevifyError::Usage(format!(
             "invalid kind or scope for {kind}"
         ))),
@@ -149,6 +368,8 @@ fn input_listing(
     split: Split,
     field: Option<usize>,
     key: Option<&str>,
+    ordered: bool,
+    limit: usize,
 ) -> Result<Listing, JevifyError> {
     if field.is_some() && key.is_some() {
         return Err(JevifyError::Usage(
@@ -163,7 +384,23 @@ fn input_listing(
     if let Some(field) = field {
         omitted += crate::records::field(&mut records, field)?;
     }
-    Ok(listing(records, omitted, false, usize::MAX))
+    Ok(listing(records, omitted, ordered, limit))
+}
+
+/// The `-` path over a lister's output. The evidence is the whole record; the limit only cuts
+/// an ordered listing, and the argv is never rewritten.
+fn recipe_listing(recipe: &Recipe, limit: usize, env: &Env) -> Result<Listing, JevifyError> {
+    let argv: Vec<OsString> = recipe.list.iter().map(OsString::from).collect();
+    let bytes = run_lister_blocking(&argv, env, OUTPUT_CAP)?;
+    input_listing(
+        &bytes,
+        Split::Lines,
+        recipe.field,
+        recipe.key.as_deref(),
+        recipe.ordered,
+        limit,
+    )
+    .map_err(|e| JevifyError::lister_failed(format!("{}: {e}", recipe.list[0])))
 }
 
 fn listing(mut records: Vec<Record>, mut omitted: usize, ordered: bool, limit: usize) -> Listing {
@@ -321,18 +558,7 @@ fn run_lister_blocking(argv: &[OsString], env: &Env, cap: usize) -> Result<Vec<u
 }
 
 fn branches(limit: usize, env: &Env) -> Result<Listing, JevifyError> {
-    let bytes = run_lister_blocking(
-        &[
-            "git".into(),
-            "for-each-ref".into(),
-            "--sort=-committerdate".into(),
-            "--format=%(refname)%00%(symref)%00%(committerdate:unix)%00%(subject)%00".into(),
-            "refs/heads".into(),
-            "refs/remotes".into(),
-        ],
-        env,
-        OUTPUT_CAP,
-    )?;
+    let bytes = run_lister_blocking(&BRANCH_ARGV.map(OsString::from), env, OUTPUT_CAP)?;
     let mut refs = Vec::new();
     for line in bytes.split(|b| *b == b'\n').filter(|line| !line.is_empty()) {
         let parts: Vec<_> = line.split(|b| *b == 0).collect();
@@ -629,7 +855,7 @@ mod tests {
         assert_eq!(age(3600, 0), "1 hour ago");
         assert_eq!(age(60, 0), "1 minute ago");
         assert_eq!(age(0, 10), "0 seconds ago");
-        assert_eq!(REGISTRY.iter().map(|k| k.name).collect::<Vec<_>>(), KINDS);
+        assert_eq!(REGISTRY.iter().map(|k| &k.name).collect::<Vec<_>>(), KINDS);
         assert!(kind("branch").unwrap().ordered);
         assert!(kind("branch").unwrap().has_tier_two);
         assert!(kind("-").unwrap().coded);
@@ -855,6 +1081,275 @@ done
                 assert!(error.to_string().contains("EOF"));
             }
         }
+    }
+
+    /// A scratch directory holding executable `name` (first on the injected PATH) and a
+    /// configuration directory `config` whose `kinds.jsonl` is `recipes`.
+    fn fake_tool(name: &str, body: &str, recipes: Option<&str>) -> Env {
+        let dir = scratch();
+        let tool = dir.join(name);
+        fs::write(&tool, format!("#!/bin/sh\n{body}\n")).unwrap();
+        fs::set_permissions(&tool, fs::Permissions::from_mode(0o700)).unwrap();
+        fs::create_dir(dir.join("config")).unwrap();
+        if let Some(recipes) = recipes {
+            fs::write(dir.join("config").join("kinds.jsonl"), recipes).unwrap();
+        }
+        Env {
+            path: format!("{}:/usr/bin:/bin", dir.display()).into(),
+            config_dir: Some(dir.join("config")),
+            ..environment(&dir)
+        }
+    }
+
+    fn handles(listing: &Listing) -> Vec<&OsStr> {
+        listing
+            .records
+            .iter()
+            .map(|r| r.handle.as_os_str())
+            .collect()
+    }
+
+    #[test]
+    fn shipped_recipes_parse_are_unique_and_match_the_registry() {
+        assert_eq!(SHIPPED.lines().count(), 7);
+        let recipes = shipped();
+        assert_eq!(recipes.len(), 7);
+        let mut names = HashSet::new();
+        for recipe in recipes {
+            assert!(valid_kind_name(&recipe.kind), "{}", recipe.kind);
+            assert!(names.insert(recipe.kind.as_str()), "{}", recipe.kind);
+            let kind = kind(&recipe.kind).unwrap();
+            assert!(!kind.coded && !kind.path_kind && !kind.has_tier_two);
+            assert_eq!(kind.ordered, recipe.ordered, "{}", recipe.kind);
+        }
+        let coded: Vec<_> = REGISTRY
+            .iter()
+            .filter(|k| k.coded)
+            .map(|k| &k.name)
+            .collect();
+        assert_eq!(coded, ["-", "branch"]);
+        let shipped_names: Vec<_> = recipes.iter().map(|r| r.kind.as_str()).collect();
+        assert_eq!(&KINDS[coded.len()..], shipped_names.as_slice());
+        assert_eq!(
+            shipped_names,
+            [
+                "pr",
+                "issue",
+                "ci-run",
+                "stash",
+                "process",
+                "container",
+                "pod"
+            ]
+        );
+        for name in ["", "Pr", "-x", "1pr", "pr_x", "pr x"] {
+            assert!(!valid_kind_name(name), "{name}");
+        }
+        assert!(valid_kind_name("ci-run") && valid_kind_name("x-"));
+    }
+
+    #[tokio::test]
+    async fn a_bad_user_line_is_recipe_invalid_with_its_number_for_any_user_kind() {
+        let good = r#"{"kind":"widget","list":["widget"]}"#;
+        for bad in [
+            r#"{"kind":"gadget","list":["gadget"],"evidence":"x"}"#,
+            r#"{"kind":"gadget","list":["gadget"],"field":1,"key":"id"}"#,
+            r#"{"kind":"gadget","list":[]}"#,
+            r#"{"kind":"Gadget","list":["gadget"]}"#,
+            r#"{"kind":"gadget","list":["gadget"]"#,
+        ] {
+            let env = fake_tool("widget", "echo w", Some(&format!("{good}\n\n{bad}\n")));
+            for name in ["widget", "gadget", "other"] {
+                let error = lookup(name, &env).unwrap_err();
+                assert_eq!(error.kind(), "recipe_invalid", "{bad}");
+                assert_eq!(error.exit().code(), 6);
+                assert!(error.to_string().contains("line 3"), "{error}");
+            }
+            let error = enumerate("widget", Scope::Prefix(None), 10, &env)
+                .await
+                .unwrap_err();
+            assert_eq!(error.kind(), "recipe_invalid");
+            assert!(catalog(&env).error.unwrap().contains("line 3"));
+        }
+    }
+
+    #[tokio::test]
+    async fn shipped_and_coded_kinds_never_open_the_user_file() {
+        // kinds.jsonl is a directory, and a config_dir that is a file: reading either fails.
+        let in_place = fake_tool("gh", "printf '[{\"number\":7,\"title\":\"fix\"}]'", None);
+        fs::create_dir(in_place.config_dir.as_ref().unwrap().join("kinds.jsonl")).unwrap();
+        let not_a_dir = Env {
+            config_dir: Some(in_place.cwd.join("gh")),
+            ..in_place.clone()
+        };
+        for env in [&in_place, &not_a_dir] {
+            for name in ["-", "branch", "pr", "pod"] {
+                assert_eq!(lookup(name, env).unwrap().unwrap().name, name);
+            }
+            let listing = enumerate("pr", Scope::Prefix(None), 10, env).await.unwrap();
+            assert_eq!(handles(&listing), ["7"]);
+            assert_eq!(lookup("widget", env).unwrap_err().kind(), "recipe_invalid");
+            let catalog = catalog(env);
+            assert_eq!(catalog.kinds.len(), KINDS.len());
+            assert!(catalog.error.is_some());
+        }
+    }
+
+    #[tokio::test]
+    async fn user_recipes_resolve_but_never_shadow_and_never_come_from_the_cwd() {
+        for shadow in ["branch", "pr"] {
+            let env = fake_tool(
+                "widget",
+                "echo w",
+                Some(&format!(
+                    "{{\"kind\":\"widget\",\"list\":[\"widget\"]}}\n{{\"kind\":\"{shadow}\",\"list\":[\"x\"]}}\n"
+                )),
+            );
+            let error = lookup("widget", &env).unwrap_err();
+            assert_eq!(error.kind(), "recipe_invalid");
+            assert!(error.to_string().contains("line 2"), "{error}");
+            // The shipped kind itself is unaffected: the file is not read.
+            assert!(lookup(shadow, &env).unwrap().unwrap().ordered);
+        }
+        let twice = fake_tool(
+            "widget",
+            "echo w",
+            Some(
+                "{\"kind\":\"widget\",\"list\":[\"a\"]}\n{\"kind\":\"widget\",\"list\":[\"b\"]}\n",
+            ),
+        );
+        assert!(
+            lookup("widget", &twice)
+                .unwrap_err()
+                .to_string()
+                .contains("line 2")
+        );
+        let env = fake_tool(
+            "widget",
+            "[ \"$1\" = --all ] || exit 9\nprintf 'w1 first widget\\nw2 second widget\\n'",
+            Some("{\"kind\":\"widget\",\"list\":[\"widget\",\"--all\"],\"field\":1}\n"),
+        );
+        let widget = lookup("widget", &env).unwrap().unwrap();
+        assert_eq!(widget.name, "widget");
+        assert!(!widget.coded && !widget.ordered);
+        // The const registry never sees a user recipe.
+        assert!(kind("widget").is_none());
+        assert!(!KINDS.contains(&"widget"));
+        let listing = enumerate("widget", Scope::Prefix(None), 1, &env)
+            .await
+            .unwrap();
+        assert_eq!(handles(&listing), ["w1", "w2"]);
+        assert_eq!(listing.records[1].evidence, "w2 second widget");
+        assert_eq!((listing.total, listing.ordered), (2, false));
+        let catalog = catalog(&env);
+        assert_eq!(catalog.error, None);
+        let last = catalog.kinds.last().unwrap();
+        assert_eq!(
+            (last.name.as_str(), last.origin, last.list.as_slice()),
+            (
+                "widget",
+                "user",
+                ["widget".to_owned(), "--all".to_owned()].as_slice()
+            )
+        );
+        assert_eq!(catalog.kinds[1].list[0], "git");
+        // A kinds.jsonl in the working directory is never read.
+        let cwd = fake_tool("widget", "echo w", None);
+        fs::write(
+            cwd.cwd.join("kinds.jsonl"),
+            "{\"kind\":\"widget\",\"list\":[\"widget\"]}\n",
+        )
+        .unwrap();
+        assert!(lookup("widget", &cwd).unwrap().is_none());
+        assert_eq!(
+            enumerate("widget", Scope::Prefix(None), 10, &cwd)
+                .await
+                .unwrap_err()
+                .kind(),
+            "usage"
+        );
+        let unset = Env {
+            config_dir: None,
+            ..cwd
+        };
+        assert!(lookup("widget", &unset).unwrap().is_none());
+    }
+
+    #[tokio::test]
+    async fn recipe_handles_key_field_whole_line_and_ordered_limit() {
+        let recipes = [
+            r#"{"kind":"lines","list":["tool","lines"],"key":"id","ordered":true}"#,
+            r#"{"kind":"array","list":["tool","array"],"key":"id"}"#,
+            r#"{"kind":"fields","list":["tool","fields"],"field":2}"#,
+            r#"{"kind":"whole","list":["tool","whole"],"ordered":true}"#,
+        ]
+        .join("\n");
+        let env = fake_tool(
+            "tool",
+            r#"case "$1" in
+lines) printf '{"id":3,"title":"c"}\n{"id":2,"title":"b"}\n{"id":1,"title":"a"}\n';;
+array) printf '[{"id":"x","t":"one"},{"id":"y","t":"two"}]';;
+fields) printf 'a b c\nd e f\nshort\n';;
+whole) printf 'newest line\nolder line\noldest line\n';;
+esac"#,
+            Some(&recipes),
+        );
+        let lines = enumerate("lines", Scope::Prefix(None), 2, &env)
+            .await
+            .unwrap();
+        assert_eq!(handles(&lines), ["3", "2"]);
+        assert_eq!((lines.total, lines.ordered), (3, true));
+        assert!(lines.records[0].evidence.contains("\"title\":\"c\""));
+        let array = enumerate("array", Scope::Prefix(None), 1, &env)
+            .await
+            .unwrap();
+        assert_eq!(handles(&array), ["x", "y"]);
+        assert_eq!((array.total, array.ordered), (2, false));
+        assert!(array.records[1].evidence.contains("two"));
+        let fields = enumerate("fields", Scope::Prefix(None), 10, &env)
+            .await
+            .unwrap();
+        assert_eq!(handles(&fields), ["b", "e"]);
+        assert_eq!(fields.records[0].evidence, "a b c");
+        assert_eq!(fields.omitted, 1);
+        let whole = enumerate("whole", Scope::Prefix(None), 1, &env)
+            .await
+            .unwrap();
+        assert_eq!(handles(&whole), ["newest line"]);
+        assert_eq!((whole.total, whole.ordered), (3, true));
+    }
+
+    #[tokio::test]
+    async fn a_failing_or_garbled_lister_is_lister_failed_with_its_text() {
+        let env = fake_tool(
+            "gh",
+            "echo 'To get started with GitHub CLI, please run: gh auth login' >&2\necho 'not logged in' >&2\nexit 1",
+            None,
+        );
+        for name in ["pr", "issue", "ci-run"] {
+            let error = enumerate(name, Scope::Prefix(None), 10, &env)
+                .await
+                .unwrap_err();
+            assert_eq!(error.kind(), "lister_failed");
+            assert!(error.to_string().contains("not logged in"), "{error}");
+        }
+        let missing = Env {
+            path: "/nonexistent".into(),
+            ..env
+        };
+        assert_eq!(
+            enumerate("pr", Scope::Prefix(None), 10, &missing)
+                .await
+                .unwrap_err()
+                .kind(),
+            "lister_failed"
+        );
+        let garbled = fake_tool("gh", "echo 'not json'", None);
+        let error = enumerate("pr", Scope::Prefix(None), 10, &garbled)
+            .await
+            .unwrap_err();
+        assert_eq!(error.kind(), "lister_failed");
+        assert!(error.to_string().contains("gh"));
     }
 
     #[test]

@@ -308,6 +308,10 @@ pub fn bin() -> assert_cmd::Command {
     ] {
         c.env_remove(var);
     }
+    // Removing the variable is not enough: jevify then reads the platform configuration
+    // directory, which holds the developer's own recipes. A fresh empty directory per call,
+    // kept on disk; a test with its own recipes overrides the variable after `bin()`.
+    c.env("JEVIFY_CONFIG_DIR", tempfile::tempdir().unwrap().keep());
     c
 }
 
