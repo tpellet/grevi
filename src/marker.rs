@@ -31,14 +31,6 @@ pub struct Marker {
 pub struct MarkerError(pub String);
 
 pub fn parse(argv: &[OsString]) -> Result<Vec<Arg>, MarkerError> {
-    if argv
-        .first()
-        .is_some_and(|arg| arg.as_bytes().contains(&b' '))
-    {
-        return Err(MarkerError(
-            "pass the command as separate arguments, for example 'git' 'switch' '@{branch:description}'".into(),
-        ));
-    }
     let mut args = Vec::with_capacity(argv.len());
     let mut count = 0;
     for (argv_index, arg) in argv.iter().enumerate() {
@@ -74,12 +66,6 @@ pub fn parse(argv: &[OsString]) -> Result<Vec<Arg>, MarkerError> {
                 ));
             }
             let end = pos + 1;
-            if argv_index == 0 {
-                return Err(literal_error(
-                    "the command must be literal; escape the marker",
-                    arg,
-                ));
-            }
             let body = std::str::from_utf8(&bytes[body_start..pos]).map_err(|_| {
                 literal_error("marker BODY must be UTF-8; escape it as a literal", arg)
             })?;
@@ -152,6 +138,21 @@ pub fn parse(argv: &[OsString]) -> Result<Vec<Arg>, MarkerError> {
                 flag,
             });
             pos = end;
+        }
+        // The command is literal: jevify never runs a model-chosen program. A marker in argv[0]
+        // is refused before the space guard, since its description usually holds spaces.
+        if argv_index == 0 {
+            if let Some(marker) = markers.first() {
+                return Err(MarkerError(format!(
+                    "the command must be literal; find the tool first with jevify pick --from tool {}",
+                    single_quoted(&marker.description)
+                )));
+            }
+            if bytes.contains(&b' ') {
+                return Err(MarkerError(
+                    "pass the command as separate arguments, for example 'git' 'switch' '@{branch:description}'".into(),
+                ));
+            }
         }
         for i in 0..markers.len() {
             let before = if i == 0 { 0 } else { markers[i - 1].span.end };
@@ -314,11 +315,16 @@ fn literal(bytes: &[u8]) -> OsString {
 
 fn literal_error(reason: &str, arg: &OsStr) -> MarkerError {
     let corrected = arg.to_string_lossy().replace("@{", "@@{");
-    let corrected = corrected
+    MarkerError(format!("{reason}: {}", single_quoted(&corrected)))
+}
+
+/// One single-quoted shell word on one line.
+fn single_quoted(text: &str) -> String {
+    let text = text
         .replace('\n', "\\n")
         .replace('\r', "\\r")
         .replace('\'', "'\\''");
-    MarkerError(format!("{reason}: '{corrected}'"))
+    format!("'{text}'")
 }
 
 #[cfg(test)]
@@ -484,6 +490,7 @@ mod tests {
             vec!["cmd", "@{file:}"],
             vec!["cmd", "@{file:''}"],
             vec!["@{tool:compiler}", "x"],
+            vec!["@{tool:the GitHub command line}", "--version"],
             vec!["cmd", "@{one:a:q}"],
             vec!["cmd", "@{one:a|a:q}"],
             vec!["cmd", "@{one:a|b}"],
@@ -501,6 +508,15 @@ mod tests {
         }
         let message = parse(&argv(&["cmd --arg"])).unwrap_err().to_string();
         assert!(message.contains("pass the command as separate arguments"));
+        let message = parse(&argv(&["@{tool:the GitHub command line}", "--version"]))
+            .unwrap_err()
+            .to_string();
+        assert!(message.contains("the command must be literal"), "{message}");
+        assert!(
+            message.contains("jevify pick --from tool 'the GitHub command line'"),
+            "{message}"
+        );
+        assert!(!message.contains("separate arguments"), "{message}");
         let input = vec![
             OsString::from("cmd"),
             OsString::from_vec(b"@{file:\xff}".to_vec()),

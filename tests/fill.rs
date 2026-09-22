@@ -1647,3 +1647,49 @@ async fn tool_lists_the_executables_of_the_path() {
     assert_eq!(value["data"]["argv"][1], "beta-tool");
     assert_eq!(value["data"]["markers"][0]["candidates"], 2);
 }
+
+#[tokio::test(flavor = "multi_thread")]
+async fn tool_marker_in_argv0_is_refused_with_pick_and_a_split_command_keeps_its_message() {
+    let server = common::mock(fake()).await;
+    let out = run(
+        common::jevify(&server),
+        &[
+            "fill",
+            "--dry-run",
+            "--json",
+            "--",
+            "@{tool:the GitHub command line}",
+            "--version",
+        ],
+        "",
+    );
+    let value = envelope(&out, 2);
+    let message = value["error"]["message"].as_str().unwrap();
+    assert!(message.contains("the command must be literal"), "{message}");
+    assert!(
+        message.contains("jevify pick --from tool 'the GitHub command line'"),
+        "{message}"
+    );
+    assert!(!message.contains("separate arguments"), "{message}");
+    let out = run(
+        common::jevify(&server),
+        &[
+            "fill",
+            "--dry-run",
+            "--json",
+            "--",
+            "git switch",
+            "@{file:x}",
+        ],
+        "",
+    );
+    let message = envelope(&out, 2)["error"]["message"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    assert!(
+        message.contains("pass the command as separate arguments"),
+        "{message}"
+    );
+    assert!(posts(&server).await.is_empty());
+}
