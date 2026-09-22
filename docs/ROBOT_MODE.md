@@ -83,8 +83,9 @@ argument; unchecked substitution can turn abstention into an empty argument.
   aggregate `verdict`, `truncated`. Oversized context adds a reason and null probabilities,
   with no inference. Exit 0 all yes, 1 any no, 3 otherwise.
 - `route <intent...>` prints a tool, summary and synopsis; starts no user command and selects
-  no arguments. Data: `tool`, `summary`, `synopsis`, `fit`, `alternatives[{tool,fit}]`.
-  Exit 0 found, 3 nothing fits. Missing synopsis is null.
+  no arguments. Data: `tool`, `summary`, `synopsis`, `fit`, `ties[{tool,fit}]`,
+  `alternatives[{tool,fit}]`. A tie is a tool above the threshold and within 0.05 of the best;
+  stdout still names the best. Exit 0 found, 3 nothing fits. Missing synopsis is null.
 - `add '<topic>' [--dry-run | --yes]` scores tracked unstaged hunks. Data:
   `hunks[{file,header,p,staged}]`. Exit 0 scored or staged, 3 no match, 6 empty or oversized,
   130 declined. Machine mode stages only with `--yes`; never commits.
@@ -238,13 +239,14 @@ the backend's own and are not a calibration; a threshold set for one backend and
 nothing about another.
 
 `round_one` holds one entry per tournament, in decision order: `fill` one per listing marker,
-`pick` and `why` one; a verb that runs no tournament leaves it empty. Each entry is what the
-shortlist round computed, with no extra request: `windows` in input order, each with every
-candidate of that window by rank (`ranks[{index, p}]`), its P(NONE) and its Noul; `finalists`,
-the indices the shortlist kept for the finals (`n` per window, by rank then by window); and `n`.
-`index` is the verb's own number, 1-based: the line for `why`, the record for `pick`, the
-listing position for `pick --from` and `fill`. A candidate below NONE is still listed, so the
-rank of any item, and whether it reached the finals, reads from one run.
+`pick`, `why` and `route` one; a verb that runs no tournament leaves it empty. Each entry is
+what the shortlist round computed, with no extra request: `windows` in input order, each with
+every candidate of that window by rank (`ranks[{index, p}]`), its P(NONE) and its Noul;
+`finalists`, the indices the shortlist kept for the finals (`n` per window, by rank then by
+window); and `n`. `index` is the verb's own number, 1-based: the line for `why`, the record for
+`pick`, the listing position for `pick --from` and `fill`, the inventory position for `route`.
+A candidate below NONE is still listed, so the rank of any item, and whether it reached the
+finals, reads from one run.
 
 `meta.requests` counts attempted inference POSTs, including retries and failures, excluding
 health and prewarm GETs. `meta.telemetry` separates `inference_posts`, `health_gets`,

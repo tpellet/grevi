@@ -48,6 +48,7 @@ pub async fn route(
     };
     // Round 1: windows only. The absolute fit Nouls below are round 2, so no Choice finals round.
     let short = shortlist(client, request, &items, &prompts, Finalists::Fixed(3)).await?;
+    short.record(&ctx.stats, |i| i + 1);
     let mut pool: Vec<_> = short
         .windows
         .iter()

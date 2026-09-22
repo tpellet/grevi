@@ -46,6 +46,21 @@ async fn routes_to_the_tool() {
         "a clear winner has no tie: {v}"
     );
     assert!(v["data"].get("synopsis").is_some());
+    // Round one of the one tournament: one window over the three tools, indexed by inventory
+    // position (1-based), and drutil (third) among the finalists.
+    let rounds = v["meta"]["decision"]["round_one"].as_array().unwrap();
+    assert_eq!(rounds.len(), 1, "{v}");
+    let windows = rounds[0]["windows"].as_array().unwrap();
+    assert_eq!(windows.len(), 1, "{v}");
+    assert_eq!(windows[0]["ranks"].as_array().unwrap().len(), 3, "{v}");
+    assert_eq!(windows[0]["ranks"][0]["index"], 3, "{v}");
+    assert!(
+        rounds[0]["finalists"]
+            .as_array()
+            .unwrap()
+            .contains(&serde_json::json!(3)),
+        "{v}"
+    );
     for field in [
         "argv",
         "flags",

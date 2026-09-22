@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+Added:
+
+- `meta.decision.round_one` in the envelope: one entry per tournament, in decision order, with
+  every window of round one (each candidate by rank, its P(NONE) and Noul), the finalist
+  indices the shortlist kept and `n` per window; no extra request. `why`, `pick`, `fill` and
+  `route` record it. `index` is the verb's own 1-based number.
+- `route` names a near-tie: a tool above the threshold and within 0.05 of the best goes to
+  `data.ties[{tool,fit}]` and to stderr (`also fits: ...`); stdout still names the best and a
+  tie never abstains. Capabilities and ROBOT_MODE state the rule.
+
 ## 0.9.0
 
 Changed:
