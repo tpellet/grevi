@@ -3,7 +3,10 @@ use crate::config::Config;
 use crate::exit::{Exit, JevifyError};
 use crate::jev::client::Client;
 use crate::records::{self, Split};
+use crate::source::{self, Scope};
+use crate::tournament::{Decision, decide};
 use crate::tournament::{Finalists, Prompts, Ranking, rank, shortlist, window};
+use std::os::unix::ffi::OsStrExt;
 
 /// 100k lines would be 500 requests: a 429 storm and ~25 s. pick ranks a list, it does not scan.
 pub const MAX_LINES: usize = 20_000;
@@ -18,8 +21,8 @@ pub async fn run(
     files: bool,
     from: Option<&str>,
 ) -> Result<Outcome, JevifyError> {
-    if from.is_some() {
-        return Err(JevifyError::Input("pick --from is not implemented".into()));
+    if let Some(kind) = from {
+        return from_kind(ctx, intent, top, kind).await;
     }
     if top == 0 {
         return Err(JevifyError::Usage("-n must be at least 1".into()));
@@ -156,4 +159,177 @@ pub async fn run(
         human,
         exec: None,
     })
+}
+
+async fn from_kind(
+    ctx: &Config,
+    intent: &str,
+    top: usize,
+    name: &str,
+) -> Result<Outcome, JevifyError> {
+    let kind = source::kind(name).ok_or_else(|| {
+        let nearest = source::KINDS
+            .iter()
+            .min_by_key(|candidate| distance(name, candidate))
+            .copied()
+            .unwrap_or("branch");
+        JevifyError::Usage(format!(
+            "unknown kind {name:?}; did you mean {nearest:?}? kinds: {}",
+            source::KINDS.join(", ")
+        ))
+    })?;
+    if name == "-" {
+        return Err(JevifyError::Usage(
+            "stdin is the default source; omit --from -".into(),
+        ));
+    }
+    if top == 0 {
+        return Err(JevifyError::Usage("-n must be at least 1".into()));
+    }
+    let size = ctx.backend.window();
+    let limit = (size * size).min(MAX_LINES);
+    let env = source::Env::from_process(source::LISTER_TIMEOUT);
+    let listing = source::enumerate(name, Scope::Prefix(None), limit, &env).await?;
+    let count = listing.records.len();
+    let n = Finalists::Auto.per_window(count, size)?;
+    if count > limit {
+        return Err(JevifyError::Kinded {
+            kind: "too_many",
+            exit: Exit::Input,
+            message: format!("{count} candidates exceed the limit of {limit}"),
+            hint: "narrow with a prefix, or pipe a narrower list into stdin pick",
+            example: "head -n 1000 candidates | jevify pick 'description'",
+        });
+    }
+    let windows = count.div_ceil(size);
+    if listing.ordered && listing.total > count {
+        eprintln!(
+            "jevify pick: candidates {count} of {}, newest first; windows {windows}",
+            listing.total
+        );
+    } else {
+        eprintln!("jevify pick: candidates {count}, windows {windows}");
+    }
+    if n != 3 {
+        eprintln!("jevify pick: finalists per window: {n}");
+    }
+    let prompts = Prompts {
+        choose: "Which entry in `items` is the one described by `request`? Choose NONE if no entry matches.".into(),
+        none: "no entry in the list matches the request".into(),
+        any: "Is at least one entry in `items` the thing described by `request`?".into(),
+    };
+    let mut ranking = Ranking {
+        candidates: vec![],
+        any: 0.0,
+        none: 1.0,
+        windows,
+        n,
+    };
+    if count != 0 {
+        let client = Client::new(ctx)?;
+        let items: Vec<_> = listing.records.iter().map(|r| r.evidence.clone()).collect();
+        let short = shortlist(&client, intent, &items, &prompts, Finalists::Auto).await?;
+        if windows == 1 {
+            ranking = short.windows[0].clone();
+        }
+        if windows > 1
+            || (kind.has_tier_two
+                && matches!(decide(&ranking, ctx.threshold), Decision::Ambiguous(_)))
+        {
+            let mut finals: Vec<_> = short
+                .finalists
+                .iter()
+                .map(|c| (c.index, items[c.index].clone()))
+                .collect();
+            if kind.has_tier_two {
+                let handles: Vec<_> = short
+                    .finalists
+                    .iter()
+                    .take(MAX_FINALISTS)
+                    .map(|c| listing.records[c.index].handle.clone())
+                    .collect();
+                for ((_, text), extra) in
+                    finals.iter_mut().zip(source::enrich(name, &handles).await)
+                {
+                    if !extra.is_empty() {
+                        text.push('\n');
+                        text.push_str(&extra);
+                    }
+                }
+            }
+            ranking = window(&client, intent, &finals, &prompts).await?;
+            ranking.windows = windows;
+            ranking.n = n;
+        }
+    }
+    let reason = match decide(&ranking, ctx.threshold) {
+        Decision::Found(_) => None,
+        Decision::NoMatch => Some(crate::exit::NO_MATCH),
+        Decision::Ambiguous(_) => Some(crate::exit::AMBIGUOUS),
+    };
+    let mut matches = Vec::new();
+    let mut human = Vec::new();
+    if let Some(reason) = reason {
+        let closest: Vec<_> = ranking
+            .candidates
+            .iter()
+            .take(2)
+            .map(|c| listing.records[c.index].handle.to_string_lossy())
+            .collect();
+        eprintln!("jevify pick: {reason}; closest: {}", closest.join(", "));
+    } else {
+        for candidate in ranking
+            .candidates
+            .iter()
+            .filter(|c| c.p > ranking.none)
+            .take(top)
+        {
+            let handle = &listing.records[candidate.index].handle;
+            human.extend_from_slice(handle.as_bytes());
+            human.push(b'\n');
+            matches.push(serde_json::json!({"text": handle.to_string_lossy(), "lossy": handle.to_str().is_none(), "ordinal": candidate.index + 1, "p": candidate.p}));
+        }
+    }
+    Ok(Outcome {
+        exit: if reason.is_some() {
+            Exit::Abstain
+        } else {
+            Exit::Ok
+        },
+        data: serde_json::json!({"matches": matches, "reason": reason, "any": ranking.any, "source": name, "candidates": count, "total": listing.total, "omitted": listing.omitted, "windows": windows, "finalists_per_window": n}),
+        human,
+        exec: None,
+    })
+}
+
+fn distance(a: &str, b: &str) -> usize {
+    let mut row: Vec<_> = (0..=b.chars().count()).collect();
+    for (i, left) in a.chars().enumerate() {
+        let mut diagonal = row[0];
+        row[0] = i + 1;
+        for (j, right) in b.chars().enumerate() {
+            let above = row[j + 1];
+            row[j + 1] = (above + 1)
+                .min(row[j] + 1)
+                .min(diagonal + usize::from(left != right));
+            diagonal = above;
+        }
+    }
+    *row.last().unwrap()
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn kind_distance_handles_empty_unicode_and_edits() {
+        for (a, b, expected) in [
+            ("", "", 0),
+            ("", "branch", 6),
+            ("branc", "branch", 1),
+            ("branch", "branch", 0),
+            ("é", "a", 1),
+        ] {
+            assert_eq!(super::distance(a, b), expected);
+        }
+    }
 }

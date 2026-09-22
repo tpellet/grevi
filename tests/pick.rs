@@ -1,5 +1,323 @@
 mod common;
 
+fn fake_branches(count: usize) -> std::path::PathBuf {
+    use std::os::unix::fs::PermissionsExt;
+    let root = tempfile::tempdir().unwrap().keep();
+    std::fs::write(
+        root.join("git"),
+        format!(
+            r#"#!/bin/sh
+printf '%s\n' "$*" >> "$PICK_GIT_LOG"
+case "$1" in
+  for-each-ref)
+    i=0
+    while [ "$i" -lt {count} ]; do
+      printf 'refs/heads/branch-%s\000\0001700000000\000subject\000\n' "$i"
+      i=$((i + 1))
+    done ;;
+  log) printf '\000richer evidence\000\000src/file\000' ;;
+  *) exit 1 ;;
+esac
+"#
+        ),
+    )
+    .unwrap();
+    std::fs::set_permissions(root.join("git"), std::fs::Permissions::from_mode(0o755)).unwrap();
+    root
+}
+
+fn branch_command(
+    server: &wiremock::MockServer,
+    root: &std::path::Path,
+    classifier: bool,
+) -> assert_cmd::Command {
+    let mut cmd = if classifier {
+        common::jevify_classifier(server)
+    } else {
+        common::jevify(server)
+    };
+    cmd.env("PATH", root)
+        .env("PICK_GIT_LOG", root.join("calls"));
+    cmd
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn from_branch_decisive_is_one_request_and_ignores_stdin() {
+    let server = common::mock(FakeJev {
+        choose: |_, s, o| option_containing(s, o, "branch-3"),
+        noul: |_, _| 0.9,
+    })
+    .await;
+    let root = fake_branches(5);
+    for machine in [false, true] {
+        let mut cmd = branch_command(&server, &root, false);
+        if machine {
+            cmd.arg("--json");
+        }
+        let out = cmd
+            .args(["pick", "--from", "branch", "x"])
+            .write_stdin("STDIN_SENTINEL")
+            .output()
+            .unwrap();
+        assert_eq!(out.status.code(), Some(0), "{out:?}");
+        if machine {
+            let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+            assert_eq!(v["data"]["matches"][0]["text"], "branch-3");
+            assert_eq!(v["meta"]["requests"], 1);
+        } else {
+            assert_eq!(out.stdout, b"branch-3\n");
+        }
+    }
+    let calls = std::fs::read_to_string(root.join("calls")).unwrap();
+    assert_eq!(calls.lines().count(), 2);
+    assert!(!calls.lines().any(|s| s.starts_with("log ")));
+    let requests = server.received_requests().await.unwrap();
+    assert_eq!(requests.len(), 2);
+    assert!(
+        requests
+            .iter()
+            .all(|r| !String::from_utf8_lossy(&r.body).contains("STDIN_SENTINEL"))
+    );
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn from_branch_ratio_retries_and_abstention_reasons() {
+    for enriched_wins in [false, true] {
+        let server = common::mock(
+            FakeJev {
+                choose: |_, _, _| "L000".into(),
+                noul: |_, _| 0.9,
+            }
+            .with_probabilities(|_, state, options| {
+                if options == ["yes", "no"] {
+                    return vec![0.9, 0.1];
+                }
+                let wins =
+                    state["request"] == "resolve" && state.to_string().contains("richer evidence");
+                options
+                    .iter()
+                    .map(|o| match o.as_str() {
+                        "L000" if wins => 0.9,
+                        _ if wins => 0.1 / (options.len() - 1) as f64,
+                        "L000" | "L001" => 0.45,
+                        _ => 0.025,
+                    })
+                    .collect()
+            }),
+        )
+        .await;
+        let root = fake_branches(5);
+        let out = branch_command(&server, &root, false)
+            .args([
+                "--json",
+                "pick",
+                "--from",
+                "branch",
+                if enriched_wins { "resolve" } else { "tie" },
+            ])
+            .output()
+            .unwrap();
+        let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+        assert_eq!(
+            out.status.code(),
+            Some(if enriched_wins { 0 } else { 3 }),
+            "{v}"
+        );
+        assert_eq!(v["meta"]["requests"], 2);
+        if !enriched_wins {
+            assert_eq!(v["data"]["reason"], "ambiguous");
+            let stderr = String::from_utf8_lossy(&out.stderr);
+            assert!(stderr.contains("branch-0") && stderr.contains("branch-1"));
+        }
+        assert_eq!(
+            std::fs::read_to_string(root.join("calls"))
+                .unwrap()
+                .lines()
+                .filter(|s| s.starts_with("log "))
+                .count(),
+            3
+        );
+    }
+    let server = common::mock(FakeJev {
+        choose: |_, _, _| "NONE".into(),
+        noul: |_, _| 0.1,
+    })
+    .await;
+    for count in [0, 5] {
+        let root = fake_branches(count);
+        let out = branch_command(&server, &root, false)
+            .args(["--json", "pick", "--from", "branch", "x"])
+            .output()
+            .unwrap();
+        let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+        assert_eq!(out.status.code(), Some(3));
+        assert_eq!(v["data"]["reason"], "no_match");
+        assert_eq!(v["meta"]["requests"], usize::from(count != 0));
+    }
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn from_branch_classifier_volume_enriches_only_first_24_finalists() {
+    let server = common::mock_classifier(FakeJev {
+        choose: |_, _, o| o[0].clone(),
+        noul: |_, _| 0.9,
+    })
+    .await;
+    for (count, kept, n) in [(4000, 4000_usize, 2), (9802, 9801, 1)] {
+        let root = fake_branches(count);
+        let out = branch_command(&server, &root, true)
+            .args(["--json", "pick", "--from", "branch", "x"])
+            .output()
+            .unwrap();
+        let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+        assert_eq!(out.status.code(), Some(0), "{v}");
+        assert_eq!(v["data"]["candidates"], kept);
+        assert_eq!(v["data"]["finalists_per_window"], n);
+        assert_eq!(v["meta"]["requests"], kept.div_ceil(99) + 1);
+        let stderr = String::from_utf8_lossy(&out.stderr);
+        assert!(stderr.contains(&format!("finalists per window: {n}")));
+        if count == 9802 {
+            assert!(stderr.contains("candidates 9801 of 9802, newest first"));
+        }
+        let calls = std::fs::read_to_string(root.join("calls")).unwrap();
+        let logs: Vec<_> = calls.lines().filter(|s| s.starts_with("log ")).collect();
+        assert_eq!(logs.len(), 24);
+        for (i, log) in logs.iter().enumerate() {
+            assert!(log.ends_with(&format!("branch-{} --", i * 99)), "{log}");
+        }
+    }
+}
+
+#[test]
+fn from_kind_validation_and_lister_failure() {
+    let root = tempfile::tempdir().unwrap().keep();
+    for (kind, exit, message) in [
+        ("branc", 2, "branch"),
+        ("-", 2, "default source"),
+        ("branch", 6, "lister_failed"),
+    ] {
+        let out = common::bin()
+            .current_dir(&root)
+            .env("GIT_CEILING_DIRECTORIES", &root)
+            .args(["--json", "pick", "--from", kind, "x"])
+            .output()
+            .unwrap();
+        assert_eq!(out.status.code(), Some(exit));
+        assert!(String::from_utf8_lossy(&out.stdout).contains(message));
+    }
+    for flag in ["--files", "--index", "-0", "--para"] {
+        common::bin()
+            .args(["pick", "--from", "branch", flag, "x"])
+            .assert()
+            .code(2);
+    }
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn from_branch_top_handles_and_non_utf8_are_preserved() {
+    let server = common::mock(
+        FakeJev {
+            choose: |_, _, _| "L000".into(),
+            noul: |_, _| 0.9,
+        }
+        .with_probabilities(|_, _, options| {
+            if options == ["yes", "no"] {
+                return vec![0.9, 0.1];
+            }
+            options
+                .iter()
+                .map(|o| match o.as_str() {
+                    "L000" => 0.7,
+                    "L001" => 0.2,
+                    _ => 0.1,
+                })
+                .collect()
+        }),
+    )
+    .await;
+    let root = fake_branches(2);
+    let out = branch_command(&server, &root, false)
+        .args(["pick", "--from", "branch", "-n", "2", "x"])
+        .output()
+        .unwrap();
+    assert_eq!(out.status.code(), Some(0));
+    assert_eq!(out.stdout, b"branch-0\nbranch-1\n");
+    std::fs::write(
+        root.join("git"),
+        "#!/bin/sh\nprintf 'refs/heads/raw-\\377\\000\\0001700000000\\000subject\\000\\n'\n",
+    )
+    .unwrap();
+    for machine in [false, true] {
+        let mut cmd = branch_command(&server, &root, false);
+        if machine {
+            cmd.arg("--json");
+        }
+        let out = cmd
+            .args(["pick", "--from", "branch", "x"])
+            .output()
+            .unwrap();
+        assert_eq!(out.status.code(), Some(0), "{out:?}");
+        if machine {
+            let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+            assert_eq!(v["data"]["matches"][0]["text"], "raw-\u{fffd}");
+            assert_eq!(v["data"]["matches"][0]["lossy"], true);
+            assert_eq!(v["data"]["matches"][0]["ordinal"], 1);
+        } else {
+            assert_eq!(out.stdout, b"raw-\xff\n");
+        }
+    }
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn from_branch_remote_twin_uses_local_handle() {
+    let root = tempfile::tempdir().unwrap().keep();
+    for args in [
+        vec!["init", "-q"],
+        vec![
+            "-c",
+            "user.name=Test",
+            "-c",
+            "user.email=test@example.invalid",
+            "commit",
+            "--allow-empty",
+            "--no-gpg-sign",
+            "-qm",
+            "subject",
+        ],
+        vec!["branch", "release"],
+        vec!["update-ref", "refs/remotes/origin/release", "HEAD"],
+    ] {
+        assert!(
+            std::process::Command::new("git")
+                .current_dir(&root)
+                .args(args)
+                .status()
+                .unwrap()
+                .success()
+        );
+    }
+    let server = common::mock(FakeJev {
+        choose: |_, s, o| option_containing(s, o, "release"),
+        noul: |_, _| 0.9,
+    })
+    .await;
+    let out = common::jevify(&server)
+        .current_dir(root)
+        .args(["pick", "--from", "branch", "release"])
+        .output()
+        .unwrap();
+    assert_eq!(out.status.code(), Some(0));
+    assert_eq!(out.stdout, b"release\n");
+    assert!(
+        !server
+            .received_requests()
+            .await
+            .unwrap()
+            .iter()
+            .any(|r| String::from_utf8_lossy(&r.body).contains("origin/release"))
+    );
+}
+
 #[tokio::test(flavor = "multi_thread")]
 async fn classifier_capacity_is_too_many_before_any_request() {
     let server = common::mock_classifier(FakeJev {
