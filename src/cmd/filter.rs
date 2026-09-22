@@ -62,14 +62,7 @@ pub async fn run(
         .iter()
         .map(|&i| records[i].evidence.clone())
         .collect();
-    let questions = Questions::from([(
-        "filter".into(),
-        Question::noul_with(
-            format!("judge this one record: {statement}"),
-            "the statement holds",
-            "the statement does not hold",
-        ),
-    )]);
+    let questions = Questions::from([("filter".into(), question(statement))]);
     let size = batch_size(client.backend(), questions.len());
     eprintln!(
         "jevify filter: {} records, {} distinct, {} requests",
@@ -86,9 +79,14 @@ pub async fn run(
     let mut stdout = stdout.lock();
     let result = score(&client, &evidence, &questions, |batch| {
         for response in batch {
-            let p = response.noul("filter")?;
-            ctx.stats.gate(crate::output::Gate::noul(p));
-            let (_, verdict) = super::is::band_verdict(p, ctx.threshold, 0.15);
+            let scores = response.probs("filter")?;
+            let (p, fails, silent) = (scores[HOLDS], scores[FAILS], scores[SILENT]);
+            ctx.stats.gate(crate::output::Gate {
+                any: Some(p),
+                none: Some(silent),
+                ..Default::default()
+            });
+            let verdict = verdict(p, fails, ctx.threshold, 0.15);
             answers.push((p, verdict));
         }
         while cursor < records.len() && occurrences[cursor] < answers.len() {
@@ -176,6 +174,56 @@ pub async fn run(
     })
 }
 
+pub(crate) const HOLDS: &str = "the record says the statement holds";
+pub(crate) const FAILS: &str = "the record says the statement does not hold";
+pub(crate) const SILENT: &str = "the record does not say";
+
+/// Three answers, not two: a record that says nothing either way is neither a yes nor a no.
+/// A Noul reads "not stated" as a confident no (measured 2026-09-22 on both backends: merge
+/// subjects under "the change is a bug fix" scored 0.00–0.17), so the third option takes that
+/// mass and the band can see it.
+pub(crate) fn question(statement: &str) -> Question {
+    Question::choice(
+        format!("judge this one record on its own: {statement}"),
+        [
+            (
+                HOLDS.into(),
+                Some("the record shows that the statement is true of it".into()),
+            ),
+            (
+                FAILS.into(),
+                Some(
+                    "the record shows that the statement is false of it: it says the opposite, \
+                     or it is about something else"
+                        .into(),
+                ),
+            ),
+            (
+                SILENT.into(),
+                Some(
+                    "the record has no content to judge by: a bare reference such as a number, \
+                     a name or a merge line"
+                        .into(),
+                ),
+            ),
+        ]
+        .into(),
+    )
+}
+
+/// yes when the statement holds at or above `threshold + band`, no when it fails at or above
+/// the same mark, unsure otherwise: below the mark on both sides, or mostly unstated.
+pub(crate) fn verdict(holds: f64, fails: f64, threshold: f64, band: f64) -> &'static str {
+    let mark = (threshold + band).min(1.0);
+    if holds >= mark {
+        "yes"
+    } else if fails >= mark {
+        "no"
+    } else {
+        "unsure"
+    }
+}
+
 fn selected(verdict: &str, invert: bool, strict: bool) -> bool {
     if verdict == "unsure" {
         !strict
@@ -225,6 +273,29 @@ pub(crate) fn write_record(
 mod tests {
     use super::*;
     use crate::config::Backend;
+
+    #[test]
+    fn a_record_that_says_nothing_is_unsure_not_no() {
+        assert_eq!(verdict(0.9, 0.05, 0.5, 0.15), "yes");
+        assert_eq!(verdict(0.65, 0.3, 0.5, 0.15), "yes");
+        assert_eq!(verdict(0.05, 0.9, 0.5, 0.15), "no");
+        assert_eq!(verdict(0.3, 0.65, 0.5, 0.15), "no");
+        // says nothing: the third option holds the mass
+        assert_eq!(verdict(0.1, 0.1, 0.5, 0.15), "unsure");
+        // split between the two sides, neither at the mark
+        assert_eq!(verdict(0.5, 0.5, 0.5, 0.15), "unsure");
+        assert_eq!(verdict(0.64, 0.36, 0.5, 0.15), "unsure");
+        // band 0: the threshold alone
+        assert_eq!(verdict(0.5, 0.4, 0.5, 0.0), "yes");
+        assert_eq!(verdict(0.4, 0.5, 0.5, 0.0), "no");
+        // clamped at 1
+        assert_eq!(verdict(1.0, 0.0, 1.0, 0.15), "yes");
+        assert_eq!(verdict(0.0, 1.0, 1.0, 0.15), "no");
+        assert!(matches!(
+            question("x"),
+            Question::Choice { criteria, .. } if criteria.len() == 3 && criteria.contains_key(SILENT)
+        ));
+    }
 
     #[test]
     fn selection_keeps_doubt_in_both_directions_unless_strict() {

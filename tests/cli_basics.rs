@@ -470,7 +470,14 @@ fn clap_errors_preserve_non_utf8_args_and_stop_format_scanning_at_double_dash() 
 #[tokio::test(flavor = "multi_thread")]
 async fn record_forms_are_implemented_and_ask_the_backend() {
     let server = common::mock(common::FakeJev {
-        choose: |_, _, _| "NONE".into(),
+        // NONE for the selection verbs; `filter` offers three options and NONE is not one
+        choose: |_, _, options| {
+            options
+                .iter()
+                .find(|option| *option == "NONE")
+                .unwrap_or(&options[0])
+                .clone()
+        },
         noul: |_, _| 0.9,
     })
     .await;

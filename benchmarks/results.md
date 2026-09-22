@@ -186,6 +186,49 @@ on one case each, which is not evidence. The calibration split has no `unsure` g
 validation split have no calibration counterpart and the band stays where it is. The
 validation split is scored once and is not used to choose anything.
 
+### `filter` asked three ways (measured 2026-09-22)
+
+The run above asked `filter` a yes/no Noul, which reads "the record does not say" as a
+confident no. `filter` asks a three-way Choice instead: the record says the statement holds,
+the record says it does not hold, or the record does not say; a record is kept at
+P(holds) ≥ 0.65, dropped at P(does not hold) ≥ 0.65 and unsure otherwise. Same binary
+otherwise, same set, same backends, `JEVIFY_NO_CACHE=1`, the 40 `filter` cases of both
+splits, one run per backend:
+
+| Gold | n | TypeSafe, Noul | TypeSafe, three-way | classifier.dev, Noul | classifier.dev, three-way |
+|:---|---:|:---|:---|:---|:---|
+| keep | 17 | 17 keep | 17 keep | 17 keep | 17 keep |
+| drop | 19 | 19 drop | 16 drop, 3 unsure | 19 drop | 13 drop, 6 unsure |
+| unsure | 4 | 4 drop | 4 unsure | 4 drop | 4 unsure |
+
+Scored: TypeSafe cov 0.82 / acc 1.00 / abst 0.17 / false 0; classifier.dev 0.75 / 1.00 / 0.25 /
+0 (Noul: 1.00 / 0.90 / 0.00 / 4 on both). The four `Merge branch 'pr-NNN'` records score
+P(does not say) 0.96–0.99 (TypeSafe) and 1.00 (classifier.dev). The kept records score
+P(holds) 0.79 and up (TypeSafe) and 0.81 and up (classifier.dev); the dropped ones
+P(does not hold) 0.83 and up and 0.67 and up, with P(holds) at most 0.03 and 0.02. The new
+abstentions are `Merge pull request #NNN from cli/<branch>` subjects under "the change is a
+bug fix" (`filter-cal-cli-x-01`, `-02`, `-04`, adjudicated `drop` from one `drop` and one
+`unsure` annotation) at P(does not say) 0.78–0.95 on TypeSafe, and on classifier.dev those
+three plus `filter-cal-cli-x-03`, `filter-cal-cli-07` and `filter-val-ruff-04`, decided
+records whose P(does not hold) stops at 0.31–0.60. Every abstention keeps its record, so the
+cost of the change is three to six extra records to glance at over 40, against four silent
+drops before it.
+
+Two other wordings of the three options were measured on the same set before this one. One
+named the third option only as "nothing in the record decides it either way" and sent 6
+(TypeSafe) and 10 (classifier.dev) of the 19 `drop` golds into it, among them `Prioritize
+HackerOne for vulnerability reports` under "the commit bumps a dependency version" at
+P(does not say) 0.36 and 0.88. One said that a record describing something else "than what
+the statement is about" is a no: it decided the set as the wording in place does, and scored
+`assertion failed: left == right` under "reports a failed assertion" at P(holds) 0.64
+(TypeSafe) and 0.05 (classifier.dev), an unsure and a no on the plainest yes there is. The
+wording in place scores that record 0.77 and 0.67, so the keyless margin on it is 0.02 above
+the mark. On a repeat of the first wording, TypeSafe decided every case the same and
+classifier.dev moved two `drop` golds across the 0.65 mark (`filter-cal-cli-03`, `-05`), so
+a keyless score near the mark is worth about one run's variation.
+
+`is` keeps its Noul; its two `unsure` golds are not re-measured here.
+
 ### Not measured
 
 Repeatability (each case ran once per backend; the score differences between backends above

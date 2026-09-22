@@ -15,14 +15,26 @@ use wiremock::{
     matchers::{method, path},
 };
 
+/// The three options of `filter` arrive in key order; the fake answers by their wording.
+fn answer(options: &[String], side: &str) -> String {
+    options
+        .iter()
+        .find(|option| option.ends_with(side))
+        .cloned()
+        .expect("one of the three filter options ends with the side")
+}
+
 fn fake() -> FakeJev {
     FakeJev {
-        choose: |_, _, _| unreachable!(),
-        noul: |_, state| match state.as_str().unwrap_or_default() {
-            "no" => 0.1,
-            "unsure" => 0.5,
-            _ => 0.9,
+        choose: |_, state, options| {
+            let side = match state.as_str().unwrap_or_default() {
+                "no" => "does not hold",
+                "unsure" => "does not say",
+                _ => "statement holds",
+            };
+            answer(options, side)
         },
+        noul: |_, _| unreachable!(),
     }
 }
 
@@ -173,7 +185,11 @@ async fn bytes_splits_order_and_judge_once() {
     let dimension = &first["dimensions"]["filter"];
     assert_eq!(
         dimension["labels"],
-        serde_json::json!(["the statement holds", "the statement does not hold"])
+        serde_json::json!([
+            "the record does not say",
+            "the record says the statement does not hold",
+            "the record says the statement holds"
+        ])
     );
     assert!(
         dimension["instructions"]
@@ -316,16 +332,23 @@ async fn file_excerpts_are_relative_and_secrets_are_withheld() {
 #[tokio::test]
 async fn fake_predicates_commute_and_model_provenance_is_visible() {
     let predicate = FakeJev {
-        choose: |_, _, _| unreachable!(),
-        noul: |instructions, state| {
+        choose: |instructions, state, options| {
             let text = state.as_str().unwrap();
-            let needle = if instructions.ends_with('A') {
+            let needle = if instructions.contains("own: A") {
                 'a'
             } else {
                 'b'
             };
-            if text.contains(needle) { 0.9 } else { 0.1 }
+            answer(
+                options,
+                if text.contains(needle) {
+                    "statement holds"
+                } else {
+                    "does not hold"
+                },
+            )
         },
+        noul: |_, _| unreachable!(),
     };
     let server = common::mock_classifier(predicate).await;
     let mut results = Vec::new();

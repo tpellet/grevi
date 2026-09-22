@@ -79,40 +79,47 @@ async fn is_records_one_noul_gate_per_statement() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn filter_records_one_noul_gate_per_judged_record() {
+async fn filter_records_one_three_way_gate_per_judged_record() {
     let server = common::mock_classifier(FakeJev {
-        choose: |_, _, _| unreachable!(),
-        noul: |_, state| {
-            if state.as_str() == Some("no") {
-                0.1
-            } else {
-                0.9
-            }
+        choose: |_, state, options| {
+            let side = match state.as_str() {
+                Some("no") => "does not hold",
+                Some("silent") => "does not say",
+                _ => "statement holds",
+            };
+            options
+                .iter()
+                .find(|option| option.ends_with(side))
+                .cloned()
+                .expect("one of the three filter options ends with the side")
         },
+        noul: |_, _| unreachable!(),
     })
     .await;
     let mut c = common::jevify_classifier(&server);
     let out = tokio::task::spawn_blocking(move || {
         c.args(["--json", "filter", "x"])
-            .write_stdin("yes\nno\nyes\n")
+            .write_stdin("yes\nno\nyes\nsilent\n")
             .output()
             .unwrap()
     })
     .await
     .unwrap();
     let v = envelope(&out);
-    // A duplicate record is judged once: two gates for three records. classifier.dev derives
-    // the Noul from a two-label Choice, so the second score is 1 - 0.9 within rounding.
+    // A duplicate record is judged once: three gates for four records. `any` is P(holds) and
+    // `none` is P(the record does not say); the fake gives 0.9 to its pick and 0.05 to the rest.
     let gates = decision(&v, "filter", "classifier");
-    assert_eq!(gates.len(), 2, "{v}");
-    for (gate, p) in gates.iter().zip([0.9, 0.1]) {
-        assert!((gate["any"].as_f64().unwrap() - p).abs() < 1e-9, "{v}");
+    assert_eq!(gates.len(), 3, "{v}");
+    for (gate, (holds, silent)) in gates.iter().zip([(0.9, 0.05), (0.05, 0.05), (0.05, 0.9)]) {
+        assert!((gate["any"].as_f64().unwrap() - holds).abs() < 1e-9, "{v}");
         assert!(
-            gate["best"].is_null() && gate["next"].is_null() && gate["none"].is_null(),
+            (gate["none"].as_f64().unwrap() - silent).abs() < 1e-9,
             "{v}"
         );
+        assert!(gate["best"].is_null() && gate["next"].is_null(), "{v}");
     }
-    assert_eq!(v["data"]["kept"], 2, "{v}");
+    assert_eq!(v["data"]["kept"], 3, "{v}");
+    assert_eq!(v["data"]["unsure"], 1, "{v}");
 }
 
 #[tokio::test(flavor = "multi_thread")]

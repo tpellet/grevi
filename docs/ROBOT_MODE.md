@@ -64,6 +64,10 @@ argument; unchecked substitution can turn abstention into an empty argument.
   `hint`, `saved_input`, `complete`. Exit 0 found, 3 abstain. Pipe stderr with `2>&1`.
 - `filter '<statement>' [-v] [-c] [--strict] [-0 | --para] [--files] [--no-save]` keeps records.
   `-v` inverts, `-c` counts, unsure records stay unless `--strict`. `--verbose` has no short flag.
+  Each record is judged three ways: the statement holds, it does not hold, or the record does
+  not say. A record that says nothing either way (`Merge branch 'pr-248'` under "is a bug fix")
+  is unsure, not a no; `p` is the probability that the statement holds, and the gate's `none`
+  in `meta.decision` is the probability that the record does not say.
   Data: `records[{text,ordinal,p,verdict,lossy?}]`, `kept`, `total`, `unsure`, `complete`,
   `saved_input`, `excerpts_withheld`. Exit 0 kept some, 1 kept none, 3 every record unsure.
 - `label a,b,c [-0 | --para] [--files]` tags every record with one of the labels and prints
