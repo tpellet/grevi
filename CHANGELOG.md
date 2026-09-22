@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.8.0
 
 Added:
 
@@ -18,15 +18,23 @@ Fixed:
   5 s deadline with stdin at `/dev/null` and bounded output, through the same poll-and-kill
   runner as the man index; a hung converter leaves the verb to go on without its text.
   `pdftotext` reads the file by path, after the regular-file check, instead of from stdin.
-
 - `filter` and `label` send at most 60 records per classifier.dev request, the largest keyless
   request the service accepts: it refuses 75 with HTTP 402 `request_spending_limit` before
   judging anything, so a keyless run over about 70 records ended exit 4 `api_protocol` with the
   raw body. A 402 is reported as exit 4 `api_unavailable` naming the service code, without
   retry. `capabilities.limits.records_per_request.classifier` is 60.
+- A marker in the command position (`argv[0]`) is exit 2 with its own message: the command
+  must be literal, and `jevify pick --from tool '<description>'` finds it first.
+- `fill`'s abstention line names the rival that decided it, `none` included with its
+  probability, and never prints an empty field. An empty listing says `no KIND to choose from`
+  (reason `no_match`, exit 3, no request).
 
 Changed:
 
+- `dir` finalists carry the names of their first 24 children as round-two evidence; a
+  withheld or symlinked directory carries none and counts as withheld.
+- `why` and stdin `pick` print their line, candidate and window counts on stderr before the
+  first request, like `filter` and `label`.
 - `jevify init agents` pairs every situation with a complete command and lists the kinds; the
   skill and the agents guide do the same.
 - The keyless quota is measured per verb against the service's own accounting: one
