@@ -721,6 +721,142 @@ mod tests {
         assert!(undo(&log).is_err());
     }
 
+    // The four places a process can die between journal steps, each as the journal it leaves
+    // behind. `undo` reads that journal with no other memory of the run.
+    #[test]
+    fn a_crash_between_journal_steps_leaves_undo_one_consistent_choice() {
+        let d = tempfile::tempdir().unwrap();
+        let root = d.path().canonicalize().unwrap();
+        let (from, to) = (root.join("from"), root.join("to"));
+        std::fs::write(&from, "source").unwrap();
+        let intent = Intent::new(&from, &to).unwrap();
+        // Before the intent line was durable: an empty journal. Nothing to restore, exit 3.
+        let (empty, _keep) = journal(&root).unwrap();
+        let out = undo(&empty).unwrap();
+        assert_eq!(out.exit, Exit::Abstain);
+        assert!(out.data["skipped"].as_array().unwrap().is_empty());
+        // Mid-write of the first intent line: a torn journal is refused, and the file, which
+        // is only moved after the intent line is synced, is untouched.
+        let (torn, mut writer) = journal(&root).unwrap();
+        writer.write_all(b"{\"event\":\"intent\",\"id\":0").unwrap();
+        assert_eq!(undo(&torn).err().unwrap().exit(), Exit::Input);
+        assert_eq!(std::fs::read_to_string(&from).unwrap(), "source");
+        // After the intent, before the rename: the source is still at its original path, so
+        // undo leaves it alone and says why. A second run says the same.
+        let (pending, mut writer) = journal(&root).unwrap();
+        record(
+            &mut writer,
+            &Record::Intent {
+                id: 0,
+                file: intent.clone(),
+            },
+        )
+        .unwrap();
+        drop(writer);
+        let out = undo(&pending).unwrap();
+        assert_eq!(out.exit, Exit::Abstain);
+        assert_eq!(
+            out.data["skipped"][0]["reason"],
+            "original path occupied or intent not performed"
+        );
+        assert_eq!(std::fs::read_to_string(&from).unwrap(), "source");
+        assert!(!to.exists());
+        // After the rename, before the completion line: the durable intent plus the file's
+        // identity at the destination are enough to move it back.
+        move_file(&from, &to, &intent).unwrap();
+        assert_eq!(undo(&pending).unwrap().exit, Exit::Ok);
+        assert_eq!(std::fs::read_to_string(&from).unwrap(), "source");
+        assert!(!to.exists());
+        assert_eq!(undo(&pending).unwrap().exit, Exit::Abstain);
+    }
+
+    // `/dev/full` answers every write with ENOSPC: the exact error a full volume gives the
+    // intent line. Nothing moves, and the error counts zero completed moves.
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn a_full_disk_at_the_intent_write_moves_nothing() {
+        let d = tempfile::tempdir().unwrap();
+        let root = d.path().canonicalize().unwrap();
+        let (from, to) = (root.join("from"), root.join("to"));
+        std::fs::write(&from, "source").unwrap();
+        let intent = Intent::new(&from, &to).unwrap();
+        let mut full = File::options().write(true).open("/dev/full").unwrap();
+        let error = apply_moves(&[intent], Path::new("/dev/full"), &mut full)
+            .unwrap_err()
+            .to_string();
+        assert!(error.contains("completed 0"), "{error}");
+        assert!(
+            error.contains("No space left on device"),
+            "ENOSPC is reported as such: {error}"
+        );
+        assert_eq!(std::fs::read_to_string(&from).unwrap(), "source");
+        assert!(!to.exists());
+    }
+
+    // A real full volume, opt in: `JEVIFY_SMALL_VOLUME_DIR` names a directory on a small
+    // dedicated volume (a 2 MiB disk image on macOS, a size-bounded tmpfs on Linux). The test
+    // fills that volume itself, tries a move and a journal on it, and checks the invariants
+    // that hold whatever the filesystem answers: the file is at exactly one of its two paths,
+    // undo reconciles it, and a journal that could not be written moves nothing.
+    #[test]
+    fn a_full_volume_keeps_the_file_at_exactly_one_path() {
+        let Some(dir) = std::env::var_os("JEVIFY_SMALL_VOLUME_DIR") else {
+            println!("SKIPPED: set JEVIFY_SMALL_VOLUME_DIR=<dir on a small dedicated volume>");
+            return;
+        };
+        let root = Path::new(&dir).canonicalize().unwrap();
+        let stamp = std::process::id();
+        let sub = root.join(format!("full-{stamp}"));
+        std::fs::create_dir(&sub).unwrap();
+        let target_dir = sub.join("target");
+        std::fs::create_dir(&target_dir).unwrap();
+        let (from, to) = (sub.join("from"), target_dir.join("from"));
+        std::fs::write(&from, "source").unwrap();
+        let intent = Intent::new(&from, &to).unwrap();
+        let (log, mut writer) = journal(&sub).unwrap();
+        // Fill the volume; a 64 KiB block that fails to write in full is the end.
+        let mut filler = File::create(sub.join("filler")).unwrap();
+        let block = vec![0u8; 64 * 1024];
+        let mut written = 0u64;
+        loop {
+            match filler.write_all(&block) {
+                Ok(()) => written += block.len() as u64,
+                Err(e) => {
+                    assert_eq!(e.kind(), io::ErrorKind::StorageFull, "{e}");
+                    break;
+                }
+            }
+            assert!(written < 1 << 30, "the volume is not small: 1 GiB written");
+        }
+        filler.sync_all().ok();
+        let moved = apply_moves(std::slice::from_ref(&intent), &log, &mut writer);
+        eprintln!(
+            "full volume at {}: apply_moves -> {moved:?}",
+            root.display()
+        );
+        let at_from = std::fs::symlink_metadata(&from).is_ok();
+        let at_to = intent.matches(&to);
+        assert!(at_from != at_to, "exactly one path holds the file");
+        if let Err(e) = moved {
+            // Either the intent line or the completion line got ENOSPC; the rename, atomic
+            // in both directions, is reflected in exactly one of the two paths above.
+            let text = e.to_string();
+            assert!(text.contains("No space left on device"), "{text}");
+        }
+        // A journal that cannot be created is ENOSPC, reported before any move.
+        match journal(&sub) {
+            Ok(_) => eprintln!("the full volume still creates an empty journal"),
+            Err(e) => assert_eq!(e.kind(), io::ErrorKind::StorageFull, "{e}"),
+        }
+        // Free the space (truncate, never delete) and reconcile.
+        filler.set_len(0).unwrap();
+        filler.sync_all().unwrap();
+        let out = undo(&log).unwrap();
+        eprintln!("undo after freeing space -> {}", out.data);
+        assert_eq!(std::fs::read_to_string(&from).unwrap(), "source");
+        assert!(!to.exists());
+    }
+
     fn fake_pdftotext(body: &str) -> PathBuf {
         use std::os::unix::fs::PermissionsExt;
         let dir = tempfile::Builder::new()

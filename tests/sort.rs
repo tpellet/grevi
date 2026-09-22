@@ -230,3 +230,59 @@ async fn dry_run_then_apply_then_undo() {
     run(vec!["sort".into(), dir, "--undo".into(), log]).await;
     assert!(d.path().join("march.txt").exists());
 }
+
+// A journal as a crashed `--apply` leaves it, with no completion line, read by a fresh
+// process: an intent whose rename never happened is skipped, an intent whose completion
+// line was lost is restored, and an empty journal restores nothing (exit 3).
+#[test]
+fn undo_reads_the_journal_a_crashed_apply_left_behind() {
+    use std::os::unix::fs::MetadataExt;
+    let d = tempfile::tempdir().unwrap();
+    let root = d.path().canonicalize().unwrap();
+    std::fs::create_dir(root.join("Finance")).unwrap();
+    let pending = (root.join("pending.txt"), root.join("Finance/pending.txt"));
+    let moved = (root.join("moved.txt"), root.join("Finance/moved.txt"));
+    std::fs::write(&pending.0, "pending").unwrap();
+    std::fs::write(&moved.1, "moved").unwrap();
+    let intent = |id: usize, (from, to): &(std::path::PathBuf, std::path::PathBuf)| {
+        let m = std::fs::metadata(if id == 0 { from } else { to }).unwrap();
+        serde_json::json!({
+            "event": "intent", "id": id,
+            "file": {
+                "from": from.to_str().unwrap().as_bytes(),
+                "to": to.to_str().unwrap().as_bytes(),
+                "dev": m.dev(), "ino": m.ino(),
+            }
+        })
+    };
+    let log = root.join("sort-undo-crashed.jsonl");
+    std::fs::write(
+        &log,
+        format!("{}\n{}\n", intent(0, &pending), intent(1, &moved)),
+    )
+    .unwrap();
+    let out = common::bin()
+        .args(["--json", "sort", ".", "--undo"])
+        .arg(&log)
+        .output()
+        .unwrap();
+    let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+    assert_eq!(v["exit_code"], 0, "{v}");
+    assert_eq!(v["data"]["moves"].as_array().unwrap().len(), 1, "{v}");
+    assert_eq!(
+        v["data"]["skipped"][0]["reason"], "original path occupied or intent not performed",
+        "{v}"
+    );
+    assert_eq!(std::fs::read_to_string(&moved.0).unwrap(), "moved");
+    assert_eq!(std::fs::read_to_string(&pending.0).unwrap(), "pending");
+    assert!(!moved.1.exists() && !pending.1.exists());
+    let empty = root.join("sort-undo-empty.jsonl");
+    std::fs::write(&empty, "").unwrap();
+    let out = common::bin()
+        .args(["--json", "sort", ".", "--undo"])
+        .arg(&empty)
+        .output()
+        .unwrap();
+    let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+    assert_eq!(v["exit_code"], 3, "{v}");
+}

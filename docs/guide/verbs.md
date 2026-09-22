@@ -289,6 +289,42 @@ unsupported. Failures name the recovery journal and completed progress. No confi
 Exit 0 proposed, applied or restored, 3 nothing can be placed or restored, 6 input error.
 Data: `moves[{from,to,p}]`, `skipped[{file,reason}]`, `undo_log`, `applied`.
 
+### Filesystem failure matrix
+
+`--apply` runs one journal per invocation: for each file, an intent line (paths and the
+file's device and inode) is written and synced, the rename runs with no-replace semantics
+(`renameat2(RENAME_NOREPLACE)` on Linux, `renameatx_np(RENAME_EXCL)` on macOS), then a
+completion line is written and synced. Directory handles are opened component by component
+without following links and anchor the rename; the source is rechecked by identity through
+that handle. `--undo` reads the whole journal first and then, newest intent first, moves a
+file back only when its original path is free and the destination still holds that identity.
+`add` stages through `git apply --cached`, which writes `index.lock` and renames it over
+`index`, so the index either changes in full or not at all.
+
+Each cell says what happens on macOS (APFS, HFS+) and Linux (ext4, xfs, btrfs, tmpfs) and how
+it is known: **refuses** stops with exit 6, names the journal and the count of confirmed
+moves, and changes nothing else; **recovers** means `--undo` reconciles the file from the
+journal; **unsupported** means the outcome is not guaranteed and is documented as such;
+**untested** names the reason.
+
+| Condition | move (`--apply`) | journal write | `--undo` | `add` index write |
+|:---|:---|:---|:---|:---|
+| source replaced during the move | macOS, Linux: **unsupported**. The identity check runs on the handle before the rename; a swap in the window after it moves the replacement. Tested for a swap before the check (refuses). | — | same as move: the identity check precedes the rename | — |
+| destination appears during the move | macOS, Linux: **refuses** (`EEXIST` from the no-replace rename), the source stays; tested with a regular file and a dangling symlink appearing after the check | macOS, Linux: **refuses**; the journal is created with `O_EXCL` and a new name is tried up to 1,000 times | macOS, Linux: **refuses** that file (skipped, "original path occupied"), restores the others | macOS, Linux: **refuses**; a second `index.lock` makes `git apply` fail and nothing is staged |
+| symlinked parent | macOS, Linux: **refuses** (`ELOOP` from `O_NOFOLLOW` on the component); tested by replacing a source parent with a link after the move: undo reports the failure and the file stays where it is | macOS, Linux: **refuses** when the cache directory is reached through a link that was replaced; the journal directory is canonicalized once at creation | as move | not applicable: git resolves its own paths |
+| crash after the intent line, before the move | macOS, Linux: **recovers**; the file is still at its source, `--undo` skips it with "intent not performed" and exits 3 when nothing else moved; tested | — | — | — |
+| crash after the move, before the completion line | macOS, Linux: **recovers**; the durable intent and the identity at the destination are enough, `--undo` moves the file back; tested with a missing and a torn completion line | — | — | git: **recovers**; a leftover `index.lock` makes the next `git apply` refuse until it is removed, and the index is unchanged |
+| crash before the intent line is durable | macOS, Linux: **refuses** on `--undo` when the line is torn (exit 6, nothing moves because the rename only runs after the sync); an empty journal restores nothing (exit 3); tested | — | — | — |
+| disk full at the journal creation | macOS, Linux: **refuses** before any move ("create recovery journal before moving") | same | — | — |
+| disk full at the intent line | macOS, Linux: **refuses**, "confirmed completed N move(s)", the file stays; Linux: tested with `/dev/full` (`ENOSPC`); macOS: measured on a 2 MiB APFS image (the volume still creates the empty journal, the first step after it fails with `ENOSPC`, the file stays at its source and `--undo` reports it as not performed) | same | — | — |
+| disk full at the move | macOS, Linux: **refuses**; a rename that fails leaves both names as they were (POSIX), the intent is durable and `--undo` reports the file as not performed. The rename's own `ENOSPC` is **untested** in the default gate: it needs a full volume; `JEVIFY_SMALL_VOLUME_DIR` opts a test into filling a dedicated small volume and checks that the file is at exactly one of its two paths | — | as move | git: **refuses**; `index.lock` cannot be written in full and `git apply` fails, nothing is staged; **untested** here |
+| disk full at the completion line | macOS, Linux: **recovers**; the error names N + 1 confirmed moves and `--undo` reads the durable intent; tested with a torn completion line, `ENOSPC` itself covered by the opt-in test | same | — | — |
+| unsupported filesystem (no atomic no-replace rename) | macOS, Linux: **refuses** (`EINVAL` or `ENOTSUP` from the rename flag), nothing falls back to a replacing rename; **untested**: no such filesystem in the gate (NFS and FUSE mounts are the usual cases) | macOS, Linux: **unsupported**; a journal on a filesystem without durable `fsync` may lose lines after a power loss | as move | git: **unsupported** on filesystems without atomic rename (git's own limit) |
+| cross-volume destination | macOS, Linux: **refuses** ("--into must be on the same volume"); no copy is ever made | — | as move | — |
+
+`--undo` after a partial failure is safe to run twice: the second run finds nothing to
+restore and exits 3.
+
 ## Utility commands
 
 | Command | Output / data | Exit |
