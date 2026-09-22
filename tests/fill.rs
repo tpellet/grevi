@@ -1526,6 +1526,123 @@ async fn file_finals_hold_every_name_not_ruled_out_and_skip_an_empty_pool() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn decisive_names_reach_the_finals_only_when_the_runner_up_is_in_play() {
+    let root = work_tree(&[
+        "src/input.rs",
+        "src/records.rs",
+        "src/source.rs",
+        "scripts/release.sh",
+        ".github/workflows/publish-crates.yml",
+    ]);
+    // Names alone give a decisive Found in both requests. "content": input.rs 0.51 over
+    // records.rs 0.20 with NONE 0.17, a field of 0.37 the winner does not beat twice over, so
+    // the runner-up is in play and the finals read the excerpts, where records.rs wins.
+    // "name": publish-crates.yml 0.97 over release.sh 0.01 with NONE 0.02, a field of 0.03,
+    // so the runner-up is out of play, one request decides, and the withheld `.github/`
+    // winner never competes on its name alone in a finals.
+    let server = common::mock(fake().with_probabilities(|_, state, options| {
+        if options == ["yes", "no"] {
+            return vec![0.9, 0.1];
+        }
+        let items = state["items"].as_array().unwrap();
+        let second_round = items
+            .iter()
+            .any(|item| item.as_str().unwrap().contains("VISIBLE"));
+        let content = state["request"] == "content";
+        options
+            .iter()
+            .map(|option| {
+                if option == "NONE" {
+                    return match (second_round, content) {
+                        (true, _) => 0.01,
+                        (false, true) => 0.17,
+                        (false, false) => 0.02,
+                    };
+                }
+                let text = items[option[1..].parse::<usize>().unwrap()]
+                    .as_str()
+                    .unwrap();
+                if second_round {
+                    if text.contains("records.rs") {
+                        0.9
+                    } else {
+                        0.02
+                    }
+                } else if content {
+                    if text.contains("input.rs") {
+                        0.51
+                    } else if text.contains("records.rs") {
+                        0.20
+                    } else {
+                        0.0
+                    }
+                } else if text.contains("publish-crates.yml") {
+                    0.97
+                } else if text.contains("release.sh") {
+                    0.01
+                } else {
+                    0.0
+                }
+            })
+            .collect()
+    }))
+    .await;
+    let mut cmd = common::jevify(&server);
+    cmd.current_dir(&root);
+    let out = run(
+        cmd,
+        &[
+            "fill",
+            "--dry-run",
+            "--json",
+            "--",
+            "printf",
+            "@{file:content}",
+        ],
+        "",
+    );
+    assert_eq!(envelope(&out, 0)["data"]["argv"][1], "src/records.rs");
+    let requests = server.received_requests().await.unwrap();
+    assert_eq!(requests.len(), 2);
+    let finals: Value = serde_json::from_slice(&requests[1].body).unwrap();
+    let items = finals["state"]["items"].as_array().unwrap();
+    assert_eq!(items.len(), 2, "{items:?}");
+    let texts: Vec<_> = items.iter().map(|i| i.as_str().unwrap()).collect();
+    assert!(
+        texts
+            .iter()
+            .any(|t| t.contains("VISIBLE src/records.rs BODY")),
+        "{texts:?}"
+    );
+    assert!(!texts.iter().any(|t| t.contains(".github")), "{texts:?}");
+
+    let mut cmd = common::jevify(&server);
+    cmd.current_dir(&root);
+    let out = run(
+        cmd,
+        &[
+            "fill",
+            "--dry-run",
+            "--json",
+            "--",
+            "printf",
+            "@{file:name}",
+        ],
+        "",
+    );
+    assert_eq!(
+        envelope(&out, 0)["data"]["argv"][1],
+        ".github/workflows/publish-crates.yml"
+    );
+    let requests = server.received_requests().await.unwrap();
+    assert_eq!(requests.len(), 3);
+    let names = String::from_utf8_lossy(&requests[2].body);
+    assert!(!names.contains("VISIBLE"), "{names}");
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert!(!stderr.contains("excerpts withheld"), "{stderr}");
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn dir_tier_two_names_children_and_withheld_dirs_carry_none() {
     let root = work_tree(&[
         "evals/why/cargo-build.log",

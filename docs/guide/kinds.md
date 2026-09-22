@@ -31,6 +31,13 @@ jevify fill -- gh run view --log-failed '@{ci-run:the last failed run on main}'
 | `pr`, `issue`, `ci-run`, `stash`, `process`, `container`, `pod` | a recipe: the owning tool's listing | the whole line of the listing |
 | `one`, `flag` | options written in the marker | stdin, or `--context FILE` |
 
+A kind with finalist evidence decides on names alone when the names round is decisive and its
+winner holds at least twice the probability of the rest of the field, the other names and NONE
+together. When the field stays in play, the finals read the excerpts before anything runs,
+which is where a phrase that describes a file's content and not its name is decided; a
+names-only answer to such a phrase can be confident and wrong, and `--dry-run` shows the file
+before anything runs.
+
 `branch` and `commit` are ordered: the lister prints newest first. `pr`, `issue`, `ci-run` and
 `stash` are ordered by their recipe. The others are not.
 

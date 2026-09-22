@@ -355,13 +355,13 @@ pub async fn run(
             let mut finalists = first.finalists.clone();
             if first.windows.len() == 1 {
                 let ranking = &first.windows[0];
-                // Names alone cannot refute a content phrase: only a decisive Found skips the
-                // finals when the kind has tier-two evidence.
+                // Names alone cannot refute a content phrase: a decisive Found skips the finals
+                // of a kind with tier-two evidence only when the runner-up name is out of play.
                 if !tier_two
-                    || matches!(
+                    || (matches!(
                         tournament::decide(ranking, ctx.threshold),
                         Decision::Found(_)
-                    )
+                    ) && !runner_up_matches(ranking))
                 {
                     return Ok(Some((ranking.clone(), 0)));
                 }
@@ -461,6 +461,28 @@ fn guard_model(ctx: &Config) -> Result<(), JevifyError> {
         )));
     }
     Ok(())
+}
+
+/// The runner-up name also matches the phrase when the winner of the names round does not
+/// beat the field it leads, the runner-up and every other name together with NONE, by the
+/// winner ratio: `RIVAL_RATIO * (none + sum of the other names) > best.p`, the same ratio
+/// that lets one rival or NONE block the best in `tournament::decide`. A content phrase leaves
+/// the winner about half the mass ("the code that splits input into records": input.rs 0.51
+/// to 0.59, records.rs 0.14 to 0.20, NONE 0.15 to 0.18), a name phrase leaves it nearly all
+/// ("the workflow that publishes to crates.io": publish-crates.yml 0.96 to 0.98, NONE and
+/// release.sh 0.01 to 0.03). The runner-up is measured with the field, not against NONE
+/// alone: the backend reports two decimals, and a runner-up at 0.01 against NONE at 0.01 is
+/// noise that sent the withheld `.github/` finalist into a finals it lost on its name. Only
+/// when the field is in play does a decisive Found on names go on to the finals, where the
+/// excerpts decide; otherwise the one-request path stands and a finalist whose excerpt would
+/// be withheld never competes on its name alone. Read from round one only: no request, no
+/// threshold change, no new ratio.
+fn runner_up_matches(ranking: &Ranking) -> bool {
+    let Some(best) = ranking.candidates.first() else {
+        return false;
+    };
+    let field: f64 = ranking.none + ranking.candidates[1..].iter().map(|c| c.p).sum::<f64>();
+    RIVAL_RATIO * field > best.p
 }
 
 fn apply_ranking(state: &mut State, ranking: &Ranking, threshold: f64) {
@@ -826,6 +848,42 @@ mod tests {
             0.5,
         );
         assert_eq!(empty.reason, Some(NO_MATCH));
+    }
+
+    #[test]
+    fn runner_up_matches_when_the_winner_does_not_beat_the_field_by_the_ratio() {
+        let ranking = |best: f64, second: f64, rest: f64, none: f64| Ranking {
+            candidates: vec![
+                tournament::Candidate { index: 0, p: best },
+                tournament::Candidate {
+                    index: 1,
+                    p: second,
+                },
+                tournament::Candidate { index: 2, p: rest },
+            ],
+            any: 0.9,
+            none,
+            windows: 1,
+            n: 3,
+        };
+        // Measured names rounds: records.rs behind input.rs, in play in every run.
+        assert!(runner_up_matches(&ranking(0.51, 0.20, 0.12, 0.17)));
+        assert!(runner_up_matches(&ranking(0.54, 0.14, 0.14, 0.18)));
+        assert!(runner_up_matches(&ranking(0.59, 0.14, 0.12, 0.15)));
+        // release.sh behind publish-crates.yml, out of play in every run, including the
+        // run where it tied NONE at 0.01; release.yml at 0.08 behind release.sh 0.91 too.
+        assert!(!runner_up_matches(&ranking(0.97, 0.01, 0.0, 0.02)));
+        assert!(!runner_up_matches(&ranking(0.98, 0.01, 0.0, 0.01)));
+        assert!(!runner_up_matches(&ranking(0.91, 0.08, 0.0, 0.01)));
+        // The boundary is the winner ratio: twice the field must exceed the winner.
+        assert!(runner_up_matches(&ranking(0.66, 0.20, 0.10, 0.04)));
+        assert!(!runner_up_matches(&ranking(0.68, 0.20, 0.10, 0.02)));
+        assert!(!runner_up_matches(&ranking(1.0, 0.0, 0.0, 0.0)));
+        let mut single = ranking(0.5, 0.0, 0.0, 0.5);
+        single.candidates.truncate(1);
+        assert!(runner_up_matches(&single));
+        single.candidates.clear();
+        assert!(!runner_up_matches(&single));
     }
 
     #[test]
