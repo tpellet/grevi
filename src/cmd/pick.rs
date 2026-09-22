@@ -52,6 +52,11 @@ pub async fn run(
         }));
     }
     let items: Vec<String> = kept.iter().map(|&i| records[i].evidence.clone()).collect();
+    eprintln!(
+        "jevify pick: candidates {}, windows {}",
+        kept.len(),
+        kept.len().div_ceil(ctx.backend.window())
+    );
     let prompts = if files {
         Prompts {
             choose: "Each entry in `items` is a file: its path, and for some entries the beginning of its content. Which file is the one described by `request`? Choose NONE if no file matches.".into(),

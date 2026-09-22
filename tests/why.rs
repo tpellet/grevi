@@ -159,6 +159,12 @@ async fn points_at_root_cause_with_context() {
         v["data"]["causes"][0]["context"].as_array().unwrap().len(),
         3
     );
+    // The count line precedes the first request, like filter and label.
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert!(
+        stderr.contains("jevify why: 4 lines, candidates 4, windows 1"),
+        "{stderr}"
+    );
 }
 
 // The removed child-command form is rejected before requests or execution.

@@ -722,6 +722,12 @@ async fn blank_and_duplicate_lines_are_skipped_but_line_numbers_are_original() {
     let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
     assert_eq!(v["data"]["matches"][0]["line"], 3, "{v}");
     assert_eq!(v["data"]["matches"][0]["text"], "invoice-march.pdf");
+    // Distinct non-blank candidates and windows, before the first request, like filter and label.
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert!(
+        stderr.contains("jevify pick: candidates 2, windows 1"),
+        "{stderr}"
+    );
 }
 
 #[tokio::test(flavor = "multi_thread")]

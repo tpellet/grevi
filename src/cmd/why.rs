@@ -92,6 +92,12 @@ pub async fn run(
         return Err(JevifyError::EmptyInput("stdin was empty"));
     }
     let kept = prefilter(&lines);
+    eprintln!(
+        "jevify why: {} lines, candidates {}, windows {}",
+        lines.len(),
+        kept.len(),
+        kept.len().div_ceil(ctx.backend.window())
+    );
     let no_signal = !kept.iter().any(|&i| SIGNAL.is_match(&lines[i]));
     let items: Vec<String> = kept
         .iter()
