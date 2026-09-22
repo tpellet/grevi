@@ -137,6 +137,9 @@ unauthenticated tool is exit 6 `lister_failed` with its own text. `--field N` is
 whitespace field; `--key KEY` extracts a JSON handle while retaining the record as evidence.
 The `fill` status line reads
 `candidates N[ of M[, newest first]][, omitted K], windows W[, excerpts withheld: E]`.
+The last stderr line is `jevify fill: exec <quoted argv>` in a run, `jevify fill: would run
+<quoted argv>` under `--dry-run`, or `jevify fill: not run: <reason>` when nothing ran; only
+`exec` means the command started.
 
 Quote the whole marker argument with single quotes, including any prefix or suffix. Spell an
 apostrophe `'\''`. Marker escapes are `\}`, `\:` and `\|`; `one` separates options with `|`.

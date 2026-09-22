@@ -597,8 +597,9 @@ fn finish(
     data["argv"] = json!(argv.iter().map(|s| s.to_string_lossy()).collect::<Vec<_>>());
     let mut quoted = output::shell_quote(&argv);
     if !flags.quiet {
+        let verb = if flags.dry_run { "would run" } else { "exec" };
         eprintln!(
-            "jevify fill: exec {}",
+            "jevify fill: {verb} {}",
             output::status_escape(&String::from_utf8_lossy(&quoted))
         );
     }

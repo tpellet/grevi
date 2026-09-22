@@ -39,7 +39,9 @@ printf 'A crash with no reproduction steps.\n' | jevify fill --dry-run -- printf
 `fill [--dry-run] [-q] [--candidates FILE] [--context FILE] [--field N | --key KEY]
 [-0 | --para] -- COMMAND ARGS...` fills markers then becomes the caller-written command,
 without a shell. All markers resolve together; if any abstains, nothing runs. `--dry-run`
-prints shell-quoted argv and exits 0 on success. Inspect it, never `eval` it. Machine output
+prints shell-quoted argv and exits 0 on success; its last stderr line reads
+`jevify fill: would run 'git' 'switch' 'origin/ticket/TPE-791'`, while a run ends with
+`jevify fill: exec ...` before the command takes over. Inspect it, never `eval` it. Machine output
 requires `--dry-run` and returns `argv`, `reason`, and
 `markers[{arg,kind,reason,handle,p,candidates,total,omitted}]`.
 
