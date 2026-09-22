@@ -243,11 +243,29 @@ fn live_route_routes_tar() {
 //
 // The cases are the held-out sets of the 0.8.x evaluations: one marker per kind over this
 // repository's own history and files, `evals/live/titles.tsv` (30 issue titles with their gold
-// label and a crash-or-hang flag) and `evals/live/tests.txt` (70 test names). A test passes on
-// the gold answer or an honest abstention (exit 3 with a reason), never on a wrong pick.
+// label and a crash-or-hang flag), `evals/live/tests.txt` (70 test names) and
+// `evals/live/runs.json` (34 recorded GitHub Actions runs, served by a fake `gh` on the PATH so
+// the ci-run case never depends on the runs GitHub still lists). A test passes on the gold
+// answer or an honest abstention (exit 3 with a reason), never on a wrong pick.
 
 const TITLES: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/evals/live/titles.tsv");
 const TESTS: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/evals/live/tests.txt");
+const RUNS: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/evals/live/runs.json");
+
+/// A directory holding a `gh` that answers `run list` with the recorded listing and refuses
+/// every other call, so the ci-run recipe reads the fixture and nothing reaches GitHub.
+fn fake_gh_dir() -> std::path::PathBuf {
+    use std::os::unix::fs::PermissionsExt;
+    let dir = tempfile::tempdir().unwrap().keep();
+    let gh = dir.join("gh");
+    std::fs::write(
+        &gh,
+        format!("#!/bin/sh\n[ \"$1\" = run ] && [ \"$2\" = list ] && exec cat '{RUNS}'\nexit 1\n"),
+    )
+    .unwrap();
+    std::fs::set_permissions(&gh, std::fs::Permissions::from_mode(0o755)).unwrap();
+    dir
+}
 
 /// A `jevify` process on `backend`, or `None` (with SKIPPED on stderr) when TypeSafe has no key.
 fn live_command(backend: &str) -> Option<assert_cmd::Command> {
@@ -389,26 +407,17 @@ fn fill_cases() -> Vec<FillCase> {
     ]
 }
 
-/// `gh` listing runs needs the CLI and a login; without them the `ci-run` case is SKIPPED.
-fn gh_available() -> bool {
-    let ok = std::process::Command::new("gh")
-        .args(["auth", "status"])
-        .output()
-        .is_ok_and(|o| o.status.success());
-    if !ok {
-        eprintln!("SKIPPED: ci-run needs `gh` logged in to GitHub");
-    }
-    ok
-}
-
 fn live_fill_kinds(backend: &str) {
+    let gh = fake_gh_dir();
     for case in fill_cases() {
-        if case.kind == "ci-run" && !gh_available() {
-            continue;
-        }
         let Some(mut cmd) = live_command(backend) else {
             return;
         };
+        if case.kind == "ci-run" {
+            let mut path = vec![gh.clone()];
+            path.extend(std::env::split_paths(&std::env::var_os("PATH").unwrap()));
+            cmd.env("PATH", std::env::join_paths(path).unwrap());
+        }
         let out = cmd
             .args(["fill", "--dry-run", "--json", "--"])
             .args(case.argv)
