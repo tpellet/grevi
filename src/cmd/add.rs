@@ -118,6 +118,9 @@ pub async fn run(
         .into_iter()
         .flatten()
         .collect();
+    for p in &ps {
+        ctx.stats.gate(crate::output::Gate::noul(*p));
+    }
     let chosen: Vec<bool> = ps.iter().map(|p| *p >= ctx.threshold).collect();
     let rows: Vec<_> = flat.iter().zip(&ps).zip(&chosen)
         .map(|(((fi, hi, _), p), c)| serde_json::json!({ "file": file_name(*fi), "header": files[*fi].hunks[*hi].header.trim(), "p": p, "staged": *c && !dry_run }))

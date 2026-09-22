@@ -11,6 +11,16 @@ pub mod run;
 pub mod sort;
 pub mod why;
 
+/// The gate scores of a ranking: the two top Choice probabilities, P(NONE) and the Noul.
+pub(crate) fn gate_of(ranking: &crate::tournament::Ranking) -> crate::output::Gate {
+    crate::output::Gate {
+        best: ranking.candidates.first().map(|c| c.p),
+        next: ranking.candidates.get(1).map(|c| c.p),
+        none: Some(ranking.none),
+        any: Some(ranking.any),
+    }
+}
+
 /// Result of a verb: exit code, machine data, and the exact human stdout text.
 pub struct Outcome {
     pub exit: Exit,

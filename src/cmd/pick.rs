@@ -107,6 +107,7 @@ pub async fn run(
     if ranking.n != 3 {
         eprintln!("jevify pick: finalists per window: {}", ranking.n);
     }
+    ctx.stats.gate(super::gate_of(&ranking));
     // Found only if the absolute Noul agrees and the best line beats NONE in the Choice.
     let found = ranking.any >= ctx.threshold
         && ranking
@@ -281,6 +282,7 @@ async fn from_kind(
             ranking.n = n;
         }
     }
+    ctx.stats.gate(super::gate_of(&ranking));
     let reason = match decide(&ranking, ctx.threshold) {
         Decision::Found(_) => None,
         Decision::NoMatch => Some(crate::exit::NO_MATCH),

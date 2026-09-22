@@ -8,6 +8,8 @@ pub struct Stats {
     /// `x-typesafe-request-id` of the last response seen, success or failure (surfaced in `meta`).
     pub request_id: Mutex<Option<String>>,
     telemetry: Mutex<crate::output::Telemetry>,
+    /// The scores of every decision the verb made, in decision order (surfaced in `meta`).
+    gates: Mutex<Vec<crate::output::Gate>>,
 }
 
 #[derive(Clone, Copy)]
@@ -32,6 +34,15 @@ impl AttemptKind {
 impl Stats {
     pub fn telemetry(&self) -> crate::output::Telemetry {
         self.telemetry.lock().unwrap().clone()
+    }
+
+    /// Records the scores of one decision at its gate.
+    pub fn gate(&self, gate: crate::output::Gate) {
+        self.gates.lock().unwrap().push(gate);
+    }
+
+    pub fn gates(&self) -> Vec<crate::output::Gate> {
+        self.gates.lock().unwrap().clone()
     }
 
     pub(crate) fn start(self: &Arc<Self>, kind: AttemptKind) -> AttemptGuard {

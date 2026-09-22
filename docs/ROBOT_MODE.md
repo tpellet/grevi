@@ -207,13 +207,30 @@ JSON switch for pipes. `--format jsonl` prints one line; `--format toon` encodes
 ```text
 {ok, command, version, exit_code, data,
  meta{backend, model, elapsed_ms, requests, cache_hits, input_tokens, cost_usd,
-      threshold, request_id, usage, telemetry}, error{kind, message, hint, example} | null}
+      threshold, request_id, usage, telemetry, decision}, error{kind, message, hint, example} | null}
 ```
 
 Branch on `exit_code`, which equals the process exit code, then read `data`. Error kinds are
 stable identifiers. `meta.model` is a string, several answering models joined with `", "`.
 TypeSafe defaults to `jev-1.13.0`; classifier chooses its model and rejects explicit overrides.
 `meta.request_id` names the last TypeSafe inference request when reported; `health` records none.
+
+`meta.decision` is what every decision of the verb was made with, in one structure:
+
+```text
+decision{verb, backend, model{requested, answering}, threshold, gates[{best, next, none, any}]}
+```
+
+`model.requested` is the model the request names; it is null on classifier, which chooses its
+own. `model.answering` is the model the service reported, `unknown` when it did not say; the two
+stay apart. `threshold` is the one threshold every gate is compared to. `gates` holds one entry
+per decision, in decision order: `fill` one per marker, `is` one per statement, `filter` and
+`label` one per judged record, `add` one per hunk, `sort` one per file, `pick`, `why` and `route`
+one. `best` and `next` are the two top Choice probabilities, `none` is P(NONE) of that Choice,
+`any` is the Noul: the absolute score of a selection, or the whole answer of a yes/no question
+(`is`, `filter`, `add`, a `flag` marker). A score the verb does not use is null. The scores are
+the backend's own and are not a calibration; a threshold set for one backend and task says
+nothing about another.
 
 `meta.requests` counts attempted inference POSTs, including retries and failures, excluding
 health and prewarm GETs. `meta.telemetry` separates `inference_posts`, `health_gets`,

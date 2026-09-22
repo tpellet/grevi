@@ -189,6 +189,7 @@ pub async fn run(
     if ranking.n != 3 {
         eprintln!("jevify why: finalists per window: {}", ranking.n);
     }
+    ctx.stats.gate(super::gate_of(&ranking));
     let found = ranking.any >= ctx.threshold
         && ranking
             .candidates

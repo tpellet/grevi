@@ -284,6 +284,7 @@ pub async fn run(
         if let Some(answer) = &answers {
             if m.kind == "flag" {
                 let p = answer.noul(&format!("m{i}"))?;
+                ctx.stats.gate(crate::output::Gate::noul(p));
                 let (exit, verdict) = super::is::band_verdict(p, ctx.threshold, FLAG_BAND);
                 states[i].p = Some(p);
                 states[i].detail = format!(
@@ -326,17 +327,19 @@ pub async fn run(
                     })
                     .collect();
                 candidates.sort_by(|a, b| b.p.total_cmp(&a.p));
-                apply_ranking(
-                    &mut states[i],
-                    &Ranking {
-                        candidates,
-                        any: 1.0,
-                        none: probabilities["NONE"],
-                        windows: 1,
-                        n: 3,
-                    },
-                    ctx.threshold,
-                );
+                let ranking = Ranking {
+                    candidates,
+                    any: 1.0,
+                    none: probabilities["NONE"],
+                    windows: 1,
+                    n: 3,
+                };
+                // `one` judges no Noul: only the options and NONE compete.
+                ctx.stats.gate(crate::output::Gate {
+                    any: None,
+                    ..super::gate_of(&ranking)
+                });
+                apply_ranking(&mut states[i], &ranking, ctx.threshold);
             }
         }
     }
@@ -411,6 +414,7 @@ pub async fn run(
     for (i, ranking) in finals.into_iter().enumerate() {
         if let Some((ranking, withheld)) = ranking? {
             states[i].withheld = withheld;
+            ctx.stats.gate(super::gate_of(&ranking));
             apply_ranking(&mut states[i], &ranking, ctx.threshold);
         }
     }

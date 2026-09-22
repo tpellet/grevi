@@ -99,6 +99,12 @@ pub async fn route(
         .take(4)
         .map(|(i, p)| (tools[*i].name.clone(), *p))
         .collect();
+    ctx.stats.gate(crate::output::Gate {
+        best: Some(fit),
+        next: fits.get(1).map(|(_, p)| *p),
+        none: None,
+        any: None,
+    });
     let tool = (fit >= ctx.threshold).then(|| tools[best].clone());
     Ok(Route {
         tool,

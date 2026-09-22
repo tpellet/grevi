@@ -245,13 +245,31 @@ fn capabilities_lists_verbs_exit_codes_env() {
         .find(|e| e["name"] == "JEVIFY_DEADLINE")
         .unwrap();
     assert_eq!(deadline["default"], 600);
-    assert!(
-        d["envelope"]["fields"]
-            .as_array()
+    assert!(d["envelope"]["fields"].as_array().unwrap().iter().any(|f| {
+        f.as_str()
             .unwrap()
-            .iter()
-            .any(|f| f.as_str().unwrap().contains("request_id,usage,telemetry}"))
+            .contains("request_id,usage,telemetry,decision}")
+    }));
+    // The decision structure is stated the same way in capabilities and in ROBOT_MODE.md.
+    let decision = d["envelope"]["decision"]["fields"].as_str().unwrap();
+    assert_eq!(
+        decision,
+        "decision{verb,backend,model{requested,answering},threshold,gates[{best,next,none,any}]}"
     );
+    let robot_docs = include_str!("../docs/ROBOT_MODE.md");
+    assert!(robot_docs.contains(
+        "decision{verb, backend, model{requested, answering}, threshold, gates[{best, next, none, any}]}"
+    ));
+    for field in [
+        "verb",
+        "backend",
+        "model{requested,answering}",
+        "threshold",
+        "gates",
+    ] {
+        assert!(decision.contains(field), "{field}");
+    }
+    assert!(robot_docs.contains("`model.answering`") && robot_docs.contains("`unknown`"));
     assert_eq!(d["limits"]["choice_options"], 255);
     let fill = commands.iter().find(|c| c["name"] == "fill").unwrap();
     assert!(

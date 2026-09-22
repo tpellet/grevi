@@ -120,6 +120,57 @@ pub struct Usage {
     pub tokens: Tokens,
 }
 
+/// The scores of one decision at the gate, as the verb uses them: `best` and `next` are the two
+/// top Choice probabilities, `none` is P(NONE) of that Choice, `any` is the Noul (the absolute
+/// score of a selection, or the whole answer of a yes/no question). A score the verb does not
+/// use is null. Compared to `threshold` as the code compares them, without a calibration.
+#[derive(Serialize, Default, Debug, Clone, PartialEq)]
+pub struct Gate {
+    pub best: Option<f64>,
+    pub next: Option<f64>,
+    pub none: Option<f64>,
+    pub any: Option<f64>,
+}
+
+impl Gate {
+    /// A yes/no question: the Noul alone.
+    pub fn noul(p: f64) -> Self {
+        Self {
+            any: Some(p),
+            ..Self::default()
+        }
+    }
+}
+
+/// The model the request named and the model the service says answered, kept apart. The free
+/// backend chooses its model, so `requested` is null there; `answering` is `unknown` until a
+/// response names one.
+#[derive(Serialize, Debug, Clone, PartialEq)]
+pub struct DecisionModel {
+    pub requested: Option<String>,
+    pub answering: String,
+}
+
+impl Default for DecisionModel {
+    fn default() -> Self {
+        Self {
+            requested: None,
+            answering: "unknown".into(),
+        }
+    }
+}
+
+/// What every decision of the verb was made with: one structure per envelope, one gate per
+/// decision (a marker, a statement, a record, a hunk, a file, or the one pick).
+#[derive(Serialize, Default, Debug, Clone)]
+pub struct Decision {
+    pub verb: String,
+    pub backend: &'static str,
+    pub model: DecisionModel,
+    pub threshold: f64,
+    pub gates: Vec<Gate>,
+}
+
 /// `Default` is the meta of a command that never reached a backend (a usage error before
 /// `Config` loaded): `backend` is then the empty string, since nothing answered.
 #[derive(Serialize, Default, Debug, Clone)]
@@ -138,6 +189,7 @@ pub struct Meta {
     pub request_id: Option<String>,
     pub usage: Usage,
     pub telemetry: Telemetry,
+    pub decision: Decision,
 }
 
 #[derive(Serialize, Debug)]
@@ -223,6 +275,17 @@ mod tests {
         assert_eq!(pretty["error"], serde_json::Value::Null);
         // Which API answered is part of the envelope, not just of `-v` output.
         assert_eq!(pretty["meta"]["backend"], "classifier");
+        // Nothing answered: the answering model is unknown, never an empty string.
+        assert_eq!(pretty["meta"]["decision"]["model"]["answering"], "unknown");
+        assert_eq!(pretty["meta"]["decision"]["gates"], serde_json::json!([]));
+    }
+    #[test]
+    fn a_noul_gate_leaves_the_choice_scores_null() {
+        let v = serde_json::to_value(Gate::noul(0.7)).unwrap();
+        assert_eq!(
+            v,
+            serde_json::json!({ "best": null, "next": null, "none": null, "any": 0.7 })
+        );
     }
     #[test]
     fn toon_renders_the_fields() {

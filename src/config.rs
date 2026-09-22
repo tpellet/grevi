@@ -262,9 +262,21 @@ impl Config {
             reported_input_subtotal_usd: cost,
             complete: cost_complete,
         });
+        let answering = s.model.lock().unwrap().clone();
         Meta {
             backend: self.backend.as_str(),
-            model: s.model.lock().unwrap().clone(),
+            model: answering.clone(),
+            decision: crate::output::Decision {
+                verb: String::new(),
+                backend: self.backend.as_str(),
+                model: crate::output::DecisionModel {
+                    // classifier.dev chooses its model: nothing was requested there.
+                    requested: (self.backend == Backend::Typesafe).then(|| self.model.clone()),
+                    answering: answering.unwrap_or_else(|| "unknown".into()),
+                },
+                threshold: self.threshold,
+                gates: s.gates(),
+            },
             elapsed_ms: 0,
             requests: telemetry.inference_posts.attempted,
             cache_hits: s.cache_hits.load(Ordering::Relaxed),
@@ -405,6 +417,17 @@ mod tests {
         assert_eq!(c.meta().input_tokens, Some(0));
         assert_eq!(c.meta().cost_usd, Some(0.0));
         assert_eq!(c.meta().backend, "typesafe");
+        let decision = c.meta().decision;
+        assert_eq!(decision.backend, "typesafe");
+        assert_eq!(decision.model.requested.as_deref(), Some(""));
+        assert_eq!(decision.model.answering, "unknown");
+        assert_eq!(decision.threshold, 0.5);
+        assert!(decision.gates.is_empty());
+        c.stats.gate(crate::output::Gate::noul(0.9));
+        assert_eq!(
+            c.meta().decision.gates,
+            vec![crate::output::Gate::noul(0.9)]
+        );
         // Nothing attempted: a measured zero, not an unknown.
         assert_eq!(
             c.meta().usage,

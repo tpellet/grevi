@@ -240,6 +240,7 @@ async fn run_cli(cli: Cli) -> i32 {
     let result = dispatch(&cli, &ctx).await;
     let mut meta = ctx.meta();
     meta.elapsed_ms = start.elapsed().as_millis();
+    meta.decision.verb = name.into();
     match result {
         Ok(out) => {
             if format == Format::Human {
@@ -327,7 +328,9 @@ fn report_fill_error(format: Format, e: &JevifyError, meta: Meta, quiet: bool) -
     }
 }
 
-fn report_error(format: Format, name: &str, e: &JevifyError, meta: Meta) -> i32 {
+fn report_error(format: Format, name: &str, e: &JevifyError, mut meta: Meta) -> i32 {
+    // A usage error under --json still names the verb it was decided for.
+    meta.decision.verb = name.into();
     if format == Format::Human {
         eprintln!(
             "jevify {name}: error: {e}\n  hint: {}\n  try:  {}",

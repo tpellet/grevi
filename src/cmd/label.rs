@@ -88,7 +88,9 @@ pub async fn run(
     let mut stdout = stdout.lock();
     let result = score(&client, &evidence, &questions, |batch| {
         for response in batch {
-            answers.push(verdict(&labels, response.probs("label")?, ctx.threshold));
+            let (label, p, gate) = verdict(&labels, response.probs("label")?, ctx.threshold);
+            ctx.stats.gate(gate);
+            answers.push((label, p));
         }
         while cursor < records.len() && occurrences[cursor] < answers.len() {
             let (label, p) = &answers[occurrences[cursor]];
@@ -184,8 +186,12 @@ fn question(labels: &[String]) -> Question {
 }
 
 /// The label of one record and the probability behind it: the winner's, or the best label's
-/// when the answer is `?`.
-fn verdict(labels: &[String], probs: &BTreeMap<String, f64>, threshold: f64) -> (String, f64) {
+/// when the answer is `?`; with the gate scores (`any` is null: the Noul plays no part).
+fn verdict(
+    labels: &[String],
+    probs: &BTreeMap<String, f64>,
+    threshold: f64,
+) -> (String, f64, crate::output::Gate) {
     let mut candidates: Vec<Candidate> = labels
         .iter()
         .enumerate()
@@ -203,9 +209,13 @@ fn verdict(labels: &[String], probs: &BTreeMap<String, f64>, threshold: f64) -> 
         windows: 1,
         n: labels.len(),
     };
+    let gate = crate::output::Gate {
+        any: None,
+        ..super::gate_of(&ranking)
+    };
     match decide(&ranking, threshold) {
-        Decision::Found(winner) => (labels[winner.index].clone(), winner.p),
-        Decision::NoMatch | Decision::Ambiguous(_) => (UNSURE.into(), best),
+        Decision::Found(winner) => (labels[winner.index].clone(), winner.p, gate),
+        Decision::NoMatch | Decision::Ambiguous(_) => (UNSURE.into(), best, gate),
     }
 }
 
@@ -253,8 +263,10 @@ mod tests {
             ),
             (probs(&[("NONE", 1.0)]), 0.5, ("?", 0.0)),
         ] {
-            let (label, p) = verdict(&labels, &answer, threshold);
+            let (label, p, gate) = verdict(&labels, &answer, threshold);
             assert_eq!((label.as_str(), p), expected, "{answer:?}");
+            assert_eq!(gate.any, None, "label judges no Noul");
+            assert_eq!(gate.none, answer.get("NONE").copied(), "{answer:?}");
         }
         assert_eq!(verdict(&[], &probs(&[("NONE", 0.0)]), 0.5).0, "?");
     }

@@ -87,6 +87,7 @@ pub async fn run(
     let answer = client.ask(&serde_json::Value::String(text), &qs).await?;
     if statements.len() == 1 {
         let p = answer.noul("is")?;
+        ctx.stats.gate(crate::output::Gate::noul(p));
         let (exit, verdict) = band_verdict(p, ctx.threshold, band);
         return Ok(Outcome {
             exit,
@@ -101,6 +102,7 @@ pub async fn run(
     let mut human = Vec::new();
     for (i, statement) in statements.iter().enumerate() {
         let p = answer.noul(&format!("is_{i}"))?;
+        ctx.stats.gate(crate::output::Gate::noul(p));
         let (item_exit, item_verdict) = band_verdict(p, ctx.threshold, band);
         if item_exit == Exit::No || (item_exit == Exit::Abstain && exit == Exit::Ok) {
             exit = item_exit;

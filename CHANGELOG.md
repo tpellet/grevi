@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+Added:
+
+- `meta.decision` in the envelope: `verb`, `backend`, `model{requested, answering}` (the
+  requested and the answering model kept apart, `unknown` when the service names none),
+  `threshold` and `gates[]`, the scores at the gate of every decision (`best`, `next`, `none`,
+  `any`, as the verb uses them; one entry per marker, statement, record, hunk, file or pick).
+  Existing fields keep their names; no threshold or calibration change.
+
 ## 0.8.2
 
 Fixed:

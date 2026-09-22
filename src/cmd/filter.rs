@@ -87,6 +87,7 @@ pub async fn run(
     let result = score(&client, &evidence, &questions, |batch| {
         for response in batch {
             let p = response.noul("filter")?;
+            ctx.stats.gate(crate::output::Gate::noul(p));
             let (_, verdict) = super::is::band_verdict(p, ctx.threshold, 0.15);
             answers.push((p, verdict));
         }

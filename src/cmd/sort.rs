@@ -451,6 +451,12 @@ pub async fn run(
         .collect();
     let mut moves = vec![];
     for (f, (c, p, none, any)) in files.iter().zip(&picks) {
+        ctx.stats.gate(crate::output::Gate {
+            best: Some(*p),
+            next: None,
+            none: Some(*none),
+            any: Some(*any),
+        });
         let Some(d) = c
             .strip_prefix('D')
             .and_then(|n| n.parse::<usize>().ok())
