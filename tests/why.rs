@@ -11,6 +11,7 @@ async fn classifier_max_keep_and_single_window_preserve_context_finals() {
         .await;
         let mut lines: Vec<_> = (0..count).map(|i| format!("error step {i}")).collect();
         lines[count - 1] = "error ROOT".into();
+        lines[0] = "test step 0 ... FAILED".into();
         let input = format!("{}\n", lines.join("\n"));
         let mut cmd = common::jevify_classifier(&server);
         let out = tokio::task::spawn_blocking(move || {
@@ -39,6 +40,12 @@ async fn classifier_max_keep_and_single_window_preserve_context_finals() {
             s.as_str()
                 .unwrap()
                 .contains("context only, not a candidate; before:")
+        }));
+        // The finals carry the nearest failure statement (`FAILED` on line 1) as context.
+        assert!(finalists.iter().any(|s| {
+            s.as_str()
+                .unwrap()
+                .contains("not a candidate; nearest failure statement, ")
         }));
         if count > 3 {
             assert!(String::from_utf8_lossy(&out.stderr).contains("finalists per window: 2"));
