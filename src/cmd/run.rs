@@ -7,9 +7,17 @@ use crate::jev::{Question, Questions};
 use crate::manpage;
 use crate::tournament::{Finalists, Prompts, shortlist};
 
+/// Two fits closer than this are a tie: the absolute fit of a command is a Noul of its own
+/// request, so several commands that serve one task all score high, and a gap this small is
+/// noise, not an order. `route` prints and starts nothing, so a tie names every tied command
+/// instead of abstaining: the caller reads the names and writes the command.
+pub const TIE_MARGIN: f64 = 0.05;
+
 pub struct Route {
     pub tool: Option<Tool>,
     pub fit: f64,
+    /// Commands that fit within `TIE_MARGIN` of the best one, above the threshold.
+    pub ties: Vec<(String, f64)>,
     pub alternatives: Vec<(String, f64)>,
 }
 
@@ -51,6 +59,7 @@ pub async fn route(
         return Ok(Route {
             tool: None,
             fit: 0.0,
+            ties: vec![],
             alternatives: vec![],
         });
     }
@@ -106,9 +115,19 @@ pub async fn route(
         any: None,
     });
     let tool = (fit >= ctx.threshold).then(|| tools[best].clone());
+    let ties = if tool.is_some() {
+        fits.iter()
+            .skip(1)
+            .take_while(|(_, p)| *p >= ctx.threshold && fit - p <= TIE_MARGIN)
+            .map(|(i, p)| (tools[*i].name.clone(), *p))
+            .collect()
+    } else {
+        Vec::new()
+    };
     Ok(Route {
         tool,
         fit,
+        ties,
         alternatives,
     })
 }
@@ -142,7 +161,7 @@ pub async fn run(ctx: &Config, intent: &str, machine: bool) -> Result<Outcome, J
         }
         return Ok(Outcome {
             exit: Exit::Abstain,
-            data: serde_json::json!({ "tool": null, "summary": null, "synopsis": null, "fit": r.fit, "alternatives": alts }),
+            data: serde_json::json!({ "tool": null, "summary": null, "synopsis": null, "fit": r.fit, "ties": [], "alternatives": alts }),
             human: Vec::new(),
             exec: None,
         });
@@ -156,10 +175,23 @@ pub async fn run(ctx: &Config, intent: &str, machine: bool) -> Result<Outcome, J
         if let Some(text) = &synopsis {
             eprintln!("  {text}");
         }
+        if !r.ties.is_empty() {
+            let named: Vec<String> = r
+                .ties
+                .iter()
+                .map(|(n, p)| format!("{n} ({p:.2})"))
+                .collect();
+            eprintln!("  also fits: {}", named.join(", "));
+        }
     }
+    let ties: Vec<_> = r
+        .ties
+        .iter()
+        .map(|(n, p)| serde_json::json!({ "tool": n, "fit": p }))
+        .collect();
     Ok(Outcome {
         exit: Exit::Ok,
-        data: serde_json::json!({ "tool": tool.name, "summary": tool.summary, "synopsis": synopsis, "fit": r.fit, "alternatives": alts }),
+        data: serde_json::json!({ "tool": tool.name, "summary": tool.summary, "synopsis": synopsis, "fit": r.fit, "ties": ties, "alternatives": alts }),
         human: format!("{}\n", tool.name).into_bytes(),
         exec: None,
     })

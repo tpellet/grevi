@@ -40,6 +40,11 @@ async fn routes_to_the_tool() {
     assert_eq!(v["data"]["summary"], "interact with CD/DVD burners");
     assert!(v["data"]["fit"].is_number());
     assert!(v["data"]["alternatives"].is_array());
+    assert_eq!(
+        v["data"]["ties"],
+        serde_json::json!([]),
+        "a clear winner has no tie: {v}"
+    );
     assert!(v["data"].get("synopsis").is_some());
     for field in [
         "argv",
@@ -52,6 +57,69 @@ async fn routes_to_the_tool() {
         assert!(v["data"].get(field).is_none(), "{field}: {v}");
     }
     assert_eq!(out.status.code(), Some(0));
+}
+
+/// Two commands that fit within the tie margin: `route` names the best on stdout and the tied
+/// one in `ties`, and abstains on neither. A command below the threshold is never a tie.
+#[tokio::test(flavor = "multi_thread")]
+async fn a_near_tie_names_both() {
+    let server = common::mock(FakeJev {
+        choose: |_, s, o| common::option_containing(s, o, "tar"),
+        noul: |i, s| {
+            if !i.contains("a correct, direct way") {
+                return 0.9;
+            }
+            let k: usize = i
+                .split("commands[")
+                .nth(1)
+                .and_then(|r| r.split(']').next())
+                .and_then(|n| n.parse().ok())
+                .unwrap();
+            let described = s["commands"][k].as_str().unwrap();
+            if described.starts_with("tar:") {
+                0.9
+            } else if described.starts_with("curl:") {
+                0.88
+            } else {
+                0.2
+            }
+        },
+    })
+    .await;
+    let dir = tempfile::tempdir().unwrap();
+    let mut c = common::jevify(&server);
+    c.env("JEVIFY_INVENTORY_FILE", inv(&dir));
+    let out = tokio::task::spawn_blocking(move || {
+        c.args(["--json", "route", "fetch", "an", "archive"])
+            .output()
+            .unwrap()
+    })
+    .await
+    .unwrap();
+    let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+    assert_eq!(out.status.code(), Some(0), "{v}");
+    assert_eq!(v["data"]["tool"], "tar", "{v}");
+    assert_eq!(v["data"]["ties"].as_array().map(Vec::len), Some(1), "{v}");
+    assert_eq!(v["data"]["ties"][0]["tool"], "curl", "{v}");
+    assert!(v["data"]["ties"][0]["fit"].is_number());
+    assert_eq!(
+        v["data"]["alternatives"].as_array().map(Vec::len),
+        Some(2),
+        "{v}"
+    );
+    let mut c = common::jevify(&server);
+    c.env("JEVIFY_INVENTORY_FILE", inv(&dir));
+    let out = tokio::task::spawn_blocking(move || {
+        c.args(["route", "fetch", "an", "archive"])
+            .output()
+            .unwrap()
+    })
+    .await
+    .unwrap();
+    assert_eq!(out.status.code(), Some(0));
+    assert_eq!(out.stdout, b"tar\n");
+    let err = String::from_utf8(out.stderr).unwrap();
+    assert!(err.contains("also fits: curl (0.88)"), "{err}");
 }
 
 #[tokio::test(flavor = "multi_thread")]
