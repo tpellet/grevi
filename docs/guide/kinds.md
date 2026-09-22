@@ -26,7 +26,7 @@ jevify fill -- gh run view --log-failed '@{ci-run:the last failed run on main}'
 | `-` | records on stdin, or `--candidates FILE` | the whole record; `--key` or `--field` names the handle inside it |
 | `branch` | local and remote refs | name, last commit subject, age; a remote ref folds into its local twin |
 | `commit` | the log of the current branch | subject; finalists add body and changed paths |
-| `file`, `dir` | tracked and untracked files that are not ignored, hidden ones included | path; `file` finalists add first lines |
+| `file`, `dir` | tracked and untracked files that are not ignored, hidden ones included | path; `file` finalists add first lines, `dir` finalists the names of their first children |
 | `tool` | the commands on the PATH, for `route` and `pick --from tool` | name and one-line manual summary |
 | `pr`, `issue`, `ci-run`, `stash`, `process`, `container`, `pod` | a recipe: the owning tool's listing | the whole line of the listing |
 | `one`, `flag` | options written in the marker | stdin, or `--context FILE` |
@@ -39,8 +39,9 @@ jevify fill -- gh run view --log-failed '@{ci-run:the last failed run on main}'
 Two kinds of kind exist. A coded kind needs logic: `branch` folds a remote ref into its local
 twin and skips symbolic refs; `commit` runs `git log` and `git rev-list --count` at the same
 time so the total is exact; `file` and `dir` walk the tree, honour a literal prefix and withhold
-excerpts of secrets; `tool` reads the PATH and the man index once and caches the inventory under
-`JEVIFY_CACHE_DIR`. `-` is the coded form of every list a pipe can supply.
+the excerpts and listings of secret or hidden paths; `tool` reads the PATH and the man index
+once and caches the inventory under `JEVIFY_CACHE_DIR`. `-` is the coded form of every list a
+pipe can supply.
 
 A recipe kind is the `-` form with a name: the command that lists, and which field is the
 handle. The lister's own flags choose what each line says, so a recipe has no evidence option.
@@ -126,7 +127,7 @@ model. `pick --from` prints the count part before the first request:
 ```text
 jevify pick: candidates 150, windows 2
 jevify pick: candidates 9801 of 9802, newest first; windows 99
-jevify fill: not run: arg 3 -: no_match; ; candidates 0 of 0, omitted 0; model not requested
+jevify fill: not run: arg 3 -: no_match; no record to choose from; candidates 0 of 0, omitted 0; model not requested
 ```
 
 The count part reads `candidates N[ of M[, newest first]][, omitted K], windows W[, excerpts

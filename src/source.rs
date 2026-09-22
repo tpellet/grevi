@@ -106,7 +106,7 @@ pub const REGISTRY: &[Kind] = &[
         coded: true,
         ordered: false,
         path_kind: true,
-        has_tier_two: false,
+        has_tier_two: true,
     },
     Kind {
         name: Cow::Borrowed("tool"),
@@ -398,9 +398,10 @@ pub async fn enrich_with_env(kind: &str, handles: &[OsString], env: &Env) -> Vec
 }
 
 /// Tier-two evidence for the given finalists only, and the number of finalists whose excerpt
-/// was withheld. `file` handles are relative to `prefix` (the literal of the marker, resolved
-/// as in enumeration) under `env.cwd`; the other kinds ignore `prefix` and withhold nothing.
-/// `dir` has no tier two. Missing enrichment is empty evidence.
+/// was withheld. `file` and `dir` handles are relative to `prefix` (the literal of the marker,
+/// resolved as in enumeration) under `env.cwd`; the other kinds ignore `prefix` and withhold
+/// nothing. `file` finalists carry their first lines, `dir` finalists the names of their first
+/// children. Missing enrichment is empty evidence.
 pub async fn enrich_in(
     kind: &str,
     prefix: &Path,
@@ -411,6 +412,29 @@ pub async fn enrich_in(
     let evidence: fn(&OsStr, &Env) -> Result<String, JevifyError> = match kind {
         "branch" => branch_evidence,
         "commit" => commit_evidence,
+        "dir" => {
+            let prefix = (!prefix.as_os_str().is_empty()).then_some(prefix);
+            let Ok(relative) = resolve_prefix(prefix, env) else {
+                return empty();
+            };
+            let root = env.cwd.join(relative);
+            let handles = handles.to_vec();
+            let count = handles.len();
+            return tokio::task::spawn_blocking(move || {
+                let mut withheld = 0;
+                let values = handles
+                    .iter()
+                    .map(|handle| {
+                        let (evidence, kept_out) = dir_children(&root, Path::new(handle));
+                        withheld += usize::from(kept_out);
+                        evidence
+                    })
+                    .collect();
+                (values, withheld)
+            })
+            .await
+            .unwrap_or_else(|_| (vec![String::new(); count], 0));
+        }
         "file" => {
             let prefix = (!prefix.as_os_str().is_empty()).then_some(prefix);
             let Ok(relative) = resolve_prefix(prefix, env) else {
@@ -862,6 +886,53 @@ fn resolve_prefix(prefix: Option<&Path>, env: &Env) -> Result<PathBuf, JevifyErr
         "prefix {} names no directory",
         prefix.display()
     )))
+}
+
+/// The most children a `dir` finalist names; the rest is a count.
+const DIR_CHILDREN: usize = 24;
+
+/// Tier-two evidence of one `dir` finalist: the names of its first children in name order,
+/// subdirectories marked with `/`, `.git` left out, and whether the policy withheld it. A
+/// directory whose path has a withheld component or that is a symbolic link is withheld and
+/// carries no evidence; one that cannot be read carries none and is not withheld.
+fn dir_children(root: &Path, handle: &Path) -> (String, bool) {
+    if crate::records::withheld(handle) {
+        return (String::new(), true);
+    }
+    let path = root.join(handle);
+    match path.symlink_metadata() {
+        Ok(metadata) if metadata.is_symlink() => return (String::new(), true),
+        Ok(metadata) if metadata.is_dir() => {}
+        _ => return (String::new(), false),
+    }
+    let Ok(entries) = std::fs::read_dir(&path) else {
+        return (String::new(), false);
+    };
+    let mut names: Vec<String> = entries
+        .filter_map(Result::ok)
+        .filter(|entry| entry.file_name() != ".git")
+        .map(|entry| {
+            let name: String = entry
+                .file_name()
+                .to_string_lossy()
+                .chars()
+                .filter(|c| !c.is_control())
+                .collect();
+            let is_dir = entry.file_type().is_ok_and(|kind| kind.is_dir());
+            if is_dir { format!("{name}/") } else { name }
+        })
+        .collect();
+    names.sort();
+    let total = names.len();
+    let mut text = format!(
+        "{} entries: {}",
+        total,
+        names[..total.min(DIR_CHILDREN)].join(", ")
+    );
+    if total > DIR_CHILDREN {
+        text.push_str(&format!(", +{} more", total - DIR_CHILDREN));
+    }
+    (crate::input::redact(&text), false)
 }
 
 /// A lister failure that means "no repository here", where a walk lists instead.
@@ -1425,7 +1496,7 @@ done
         assert_eq!(coded, ["-", "branch", "commit", "file", "dir", "tool"]);
         assert!(kind("commit").unwrap().ordered && kind("commit").unwrap().has_tier_two);
         assert!(kind("file").unwrap().path_kind && kind("file").unwrap().has_tier_two);
-        assert!(kind("dir").unwrap().path_kind && !kind("dir").unwrap().has_tier_two);
+        assert!(kind("dir").unwrap().path_kind && kind("dir").unwrap().has_tier_two);
         assert!(!kind("tool").unwrap().ordered && !kind("tool").unwrap().has_tier_two);
         let shipped_names: Vec<_> = recipes.iter().map(|r| r.kind.as_str()).collect();
         assert_eq!(&KINDS[coded.len()..], shipped_names.as_slice());
@@ -1935,7 +2006,7 @@ esac
         assert_eq!(sorted(&dirs), [b"cmd".to_vec(), b"cmd/.hidden".to_vec()]);
         assert_eq!(
             enrich_in("dir", Path::new("src/"), &["cmd".into()], &env).await,
-            (vec![String::new()], 0)
+            (vec!["3 entries: .hidden/, a.rs, new.rs".to_owned()], 0)
         );
     }
 
@@ -1987,6 +2058,73 @@ esac
             enrich_in("file", Path::new("nope/"), &["a.rs".into()], &env).await,
             (vec![String::new()], 0)
         );
+    }
+
+    #[tokio::test]
+    async fn dir_tier_two_names_children_of_finalists_only_and_withholds_hidden_dirs() {
+        let env = tree();
+        let (evidence, withheld) = enrich_in(
+            "dir",
+            Path::new(""),
+            &[
+                "src".into(),
+                "src/cmd".into(),
+                "src/cmd/.hidden".into(),
+                "a/.hidden".into(),
+                "src/lib.rs".into(),
+                "missing".into(),
+            ],
+            &env,
+        )
+        .await;
+        assert_eq!(withheld, 2);
+        assert!(
+            evidence[0].contains("cmd/") && evidence[0].contains("lib.rs"),
+            "{}",
+            evidence[0]
+        );
+        assert!(evidence[0].starts_with("2 entries: "), "{}", evidence[0]);
+        assert!(
+            evidence[1].contains("a.rs")
+                && evidence[1].contains("new.rs")
+                && evidence[1].contains(".hidden/"),
+            "{}",
+            evidence[1]
+        );
+        assert!(!evidence[1].contains("MARKER"), "{}", evidence[1]);
+        assert_eq!(evidence[2], "");
+        assert_eq!(evidence[3], "");
+        // A file and a missing path carry nothing and are not withheld.
+        assert_eq!(evidence[4], "");
+        assert_eq!(evidence[5], "");
+        // Under a prefix, handles are relative to it.
+        let (evidence, withheld) =
+            enrich_in("dir", Path::new("--config=src/"), &["cmd".into()], &env).await;
+        assert_eq!(withheld, 0);
+        assert!(evidence[0].contains("a.rs"), "{}", evidence[0]);
+        assert_eq!(
+            enrich_in("dir", Path::new("nope/"), &["cmd".into()], &env).await,
+            (vec![String::new()], 0)
+        );
+        // A symbolic link to a directory is withheld; a long listing ends in a count.
+        let dir = scratch();
+        fs::create_dir(dir.join("real")).unwrap();
+        for i in 0..30 {
+            fs::write(dir.join("real").join(format!("f{i:02}.txt")), "x\n").unwrap();
+        }
+        std::os::unix::fs::symlink("real", dir.join("link")).unwrap();
+        let env = environment(&dir);
+        let (evidence, withheld) =
+            enrich_in("dir", Path::new(""), &["real".into(), "link".into()], &env).await;
+        assert_eq!(withheld, 1);
+        assert!(
+            evidence[0].starts_with("30 entries: f00.txt, "),
+            "{}",
+            evidence[0]
+        );
+        assert!(evidence[0].ends_with("f23.txt, +6 more"), "{}", evidence[0]);
+        assert!(!evidence[0].contains("f24.txt"), "{}", evidence[0]);
+        assert_eq!(evidence[1], "");
     }
 
     #[tokio::test]

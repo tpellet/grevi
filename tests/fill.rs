@@ -1382,6 +1382,85 @@ async fn file_tier_two_carries_meaningful_lines_and_withheld_paths_carry_none() 
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn dir_tier_two_names_children_and_withheld_dirs_carry_none() {
+    let root = work_tree(&[
+        "evals/why/cargo-build.log",
+        "evals/why/pytest.log",
+        "evals/report.md",
+        "src/lib.rs",
+        ".secrets/token.txt",
+    ]);
+    // Round one over directory names alone is a no_match (low `any`): the finals decide.
+    let server = common::mock(fake().with_probabilities(|_, state, options| {
+        let items = state["items"].as_array().unwrap();
+        let second_round = items
+            .iter()
+            .any(|item| item.as_str().unwrap().contains("entries:"));
+        if options == ["yes", "no"] {
+            return if second_round {
+                vec![0.9, 0.1]
+            } else {
+                vec![0.1, 0.9]
+            };
+        }
+        options
+            .iter()
+            .map(|option| {
+                if option == "NONE" {
+                    return 0.01;
+                }
+                let text = items[option[1..].parse::<usize>().unwrap()]
+                    .as_str()
+                    .unwrap();
+                match (
+                    second_round,
+                    text.contains("pytest.log"),
+                    text.contains(".secrets"),
+                ) {
+                    (true, true, _) => 0.9,
+                    (true, ..) => 0.02,
+                    (false, _, true) => 0.45,
+                    (false, ..) => 0.40,
+                }
+            })
+            .collect()
+    }))
+    .await;
+    let mut cmd = common::jevify(&server);
+    cmd.current_dir(&root);
+    let out = run(
+        cmd,
+        &[
+            "fill",
+            "--dry-run",
+            "--json",
+            "--",
+            "ls",
+            "@{dir:the failure logs}",
+        ],
+        "",
+    );
+    let value = envelope(&out, 0);
+    assert_eq!(value["data"]["argv"][1], "evals/why");
+    assert_eq!(value["data"]["markers"][0]["candidates"], 4);
+    let requests = server.received_requests().await.unwrap();
+    assert_eq!(requests.len(), 2);
+    let names = String::from_utf8_lossy(&requests[0].body);
+    assert!(!names.contains("entries:"), "{names}");
+    let finals = String::from_utf8_lossy(&requests[1].body);
+    assert!(
+        finals.contains("2 entries: cargo-build.log, pytest.log"),
+        "{finals}"
+    );
+    assert!(finals.contains("report.md, why/"), "{finals}");
+    assert!(finals.contains(".secrets"), "{finals}");
+    assert!(!finals.contains("token.txt"), "{finals}");
+    assert!(!finals.contains("VISIBLE"), "{finals}");
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert!(stderr.contains("excerpts withheld: 1"), "{stderr}");
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn withheld_excerpts_count_finalists_only_and_never_leave_the_machine() {
     let root = work_tree(&["notes.txt", "other.txt", "third.txt", ".npmrc", ".env"]);
     std::fs::write(root.join(".npmrc"), "TOKEN=1099\n").unwrap();

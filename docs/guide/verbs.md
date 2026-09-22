@@ -84,7 +84,7 @@ and exit code, including 2–6. Status lines use the `jevify fill:` prefix; `-q`
 `not run:`. Empty candidates produce this status without a model request:
 
 ```text
-jevify fill: not run: arg 3 -: no_match; ; candidates 0 of 0, omitted 0; model not requested
+jevify fill: not run: arg 3 -: no_match; no record to choose from; candidates 0 of 0, omitted 0; model not requested
 ```
 
 Exit 3 has `error: null`: `data.reason` is the first failed marker in argv order; every marker
