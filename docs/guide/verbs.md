@@ -43,15 +43,24 @@ requires `--dry-run` and returns `argv`, `reason`, and
 
 | Family | Marker argument | Source |
 |:---|:---|:---|
-| existing things | `'@{branch:the auth refactor}'` | local and remote refs, subject and age; twins collapse |
+| existing things | `'@{branch:the auth refactor}'`, `'@{commit:made folder moves atomic}'`, `'src/@{file:parses the marker}'`, `'@{pod:the payment worker}'` | a lister per kind: `branch`, `commit`, `file`, `dir`, `tool`, and the recipes `pr`, `issue`, `ci-run`, `stash`, `process`, `container`, `pod` |
 | supplied records | `'@{-:the retry test}'` | stdin or `--candidates FILE` |
 | caller options | `'@{one:bug\|feature\|docs:what kind of report is this}'` | options in the marker, judged against context |
 | caller options | `'@{flag:--draft:the report lacks steps to reproduce}'` | yes keeps, no removes, unsure abstains |
 
-`branch` runs `git for-each-ref`, newest first, then `git log` for richer finalist evidence.
-`capabilities.kinds` lists the exact argv; the other kinds run no lister. `--field N` extracts
-a 1-based whitespace field, `--key KEY` a JSON handle, while the complete record is evidence.
-The default split is lines; `-0` reads NUL records and `--para` paragraphs.
+```sh
+jevify fill --dry-run -- git revert '@{commit:made folder moves atomic}'
+jevify fill --dry-run -- cat 'src/@{file:parses the marker}'
+```
+
+Each kind lists its own candidates: `branch` runs `git for-each-ref`, newest first, then
+`git log` for richer finalist evidence; `commit` runs `git log`; `file` and `dir` run
+`git ls-files`; a recipe kind runs the owning tool's listing. `capabilities.kinds` lists the
+exact argv of every kind, user recipes included; `-`, `one` and `flag` run no lister. A
+literal prefix ending in `/` narrows `file` and `dir`. [Kinds](kinds.md) has the table, the
+recipe line and the rules. `--field N` extracts a 1-based whitespace field, `--key KEY` a JSON
+handle, while the complete record is evidence. The default split is lines; `-0` reads NUL
+records and `--para` paragraphs.
 
 The whole marker argument is single-quoted, including any prefix or suffix, for example
 `'--value=@{-:the retry test}'`. An apostrophe is `'\''`; marker escapes are `\}`, `\:` and
@@ -65,8 +74,10 @@ other role with a file. If consumed, the command receives empty stdin; otherwise
 stdin and the terminal. Environment and working directory pass through unchanged.
 
 Each marker accepts 3,267 candidates keyless or 13,200 on TypeSafe, keeping three finalists
-per window. Ordered kinds retain newest candidates and report coverage; unordered overflow
-is exit 6 `too_many`. `one` accepts 99 options keyless or 200 on TypeSafe; overflow is exit 2.
+per window. Ordered kinds retain newest candidates and report `candidates N of M, newest first`;
+unordered overflow is exit 6 `too_many`. `one` accepts 99 options keyless or 200 on TypeSafe;
+overflow is exit 2. Every lister has one 20 s deadline; a tool that is missing, not logged in
+or rate-limited is exit 6 `lister_failed` with the tool's own text.
 
 Before execution, exits 2–6 mean nothing ran; after execution the command owns output, signals
 and exit code, including 2–6. Status lines use the `jevify fill:` prefix; `-q` keeps only
@@ -130,13 +141,17 @@ Check the selection's exit code before passing its output as a command argument.
 
 ```sh
 jevify pick --from branch 'the auth refactor'
+jevify pick --from commit 'made folder moves atomic'
 printf 'retry_backoff\nparse_header\n' | jevify pick 'the retry test'
 ```
 
-`pick --from KIND '<intent>' [-n N]` prints handles from `branch`, without running a
-user command. stdin is plain `pick`; `--from -` is exit 2. `--from` conflicts with `--files`,
-`--index`, `-0` and `--para`. Selection uses the
-same ratio and fit gates as `fill`, with exit 3 for `no_match` or `ambiguous`.
+`pick --from KIND '<intent>' [-n N]` prints handles of any kind of [Kinds](kinds.md) except
+`one` and `flag`, without running a user command: a branch name, a commit OID, a path, a tool
+name, or the handle of a recipe such as a PR number. stdin is plain `pick`; `--from -` is
+exit 2. `--from` conflicts with `--files`, `--index`, `-0` and `--para`. Selection uses the
+same ratio and fit gates as `fill`, with exit 3 for `no_match` or `ambiguous`. Stderr prints
+`jevify pick: candidates N, windows W` before the first request, `of M, newest first` when an
+ordered listing was cut, and `excerpts withheld: N` for `file` finalists.
 Data: `matches[{text,ordinal,p,lossy}]`, `reason`, `any`, `source`, `candidates`, `total`,
 `omitted`, `windows`, `finalists_per_window`.
 

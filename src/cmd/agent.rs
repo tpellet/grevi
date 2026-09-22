@@ -2,10 +2,73 @@ use crate::cli::Shell;
 use crate::cmd::Outcome;
 use crate::config::{Backend, Config};
 use crate::exit::{Exit, JevifyError};
+use crate::source;
 
 const GUIDE: &str = include_str!("../../docs/ROBOT_MODE.md");
 
+/// The path patterns whose excerpts `--files` and the `file` kind withhold, as
+/// `records::withheld` judges them: one line per component rule.
+pub const WITHHELD_PATTERNS: [&str; 6] =
+    [".*", "id_*", "*.pem", "*.key", "*credentials*", "*secret*"];
+
+/// Every kind with its lister argv: the coded kinds, the shipped recipes, the user's recipes
+/// from `kinds.jsonl` in the configuration directory, then the two caller-option kinds that
+/// list nothing. A bad user file adds `kinds_error` and never fails the caller.
+fn kinds() -> (Vec<serde_json::Value>, Option<String>) {
+    let env = source::Env::from_process(source::LISTER_TIMEOUT);
+    let catalog = source::catalog(&env);
+    let mut kinds: Vec<serde_json::Value> = catalog
+        .kinds
+        .iter()
+        .map(|entry| {
+            let mut value = serde_json::json!({
+                "name": entry.name,
+                "origin": entry.origin,
+                "family": if entry.name == "-" { "input records" } else { "existing things" },
+                "list": entry.list,
+            });
+            let extra = match entry.name.as_str() {
+                "-" => serde_json::json!({ "input": "stdin or --candidates FILE; --field is 1-based whitespace, --key selects a JSON handle" }),
+                "branch" => serde_json::json!({
+                    "enrich": ["git", "log", "-5", "--format=%x00%s%x00", "--name-only", "-z", "--no-renames", "--no-ext-diff", "--end-of-options", "<handle>", "--"],
+                    "evidence": "name, subject, age; local and remote twins collapse; newest first",
+                    "ordered": true,
+                }),
+                "commit" => serde_json::json!({
+                    "evidence": "full OID and subject; finalists add body and changed paths; -n <limit> after log, the total from git rev-list --count HEAD; newest first",
+                    "ordered": true,
+                }),
+                "file" => serde_json::json!({
+                    "evidence": "path; finalists add first lines, withheld for the patterns of withheld; a literal prefix ending in / narrows the walk; outside a work tree a no-follow walk",
+                    "ordered": false,
+                }),
+                "dir" => serde_json::json!({
+                    "evidence": "directory path; a literal prefix ending in / narrows the walk",
+                    "ordered": false,
+                }),
+                "tool" => serde_json::json!({
+                    "evidence": "name and one-line manual summary from the PATH and the man index, cached under JEVIFY_CACHE_DIR",
+                    "ordered": false,
+                }),
+                _ => serde_json::json!({
+                    "evidence": "the whole line of the listing; the handle is field N or key KEY of the recipe",
+                    // A shipped recipe is in the registry; a user recipe is known to lookup only.
+                    "ordered": source::lookup(&entry.name, &env).ok().flatten().is_some_and(|kind| kind.ordered),
+                }),
+            };
+            if let (Some(target), Some(fields)) = (value.as_object_mut(), extra.as_object()) {
+                target.extend(fields.clone());
+            }
+            value
+        })
+        .collect();
+    kinds.push(serde_json::json!({ "name": "one", "origin": "coded", "family": "caller options", "list": [], "input": "options in '@{one:a|b|c:question}'; context on stdin or --context FILE" }));
+    kinds.push(serde_json::json!({ "name": "flag", "origin": "coded", "family": "caller options", "list": [], "input": "whole argument '@{flag:--name:question}'; yes keeps, no removes, unsure abstains" }));
+    (kinds, catalog.error)
+}
+
 pub fn capabilities() -> Outcome {
+    let (kinds, kinds_error) = kinds();
     let exit_codes: Vec<_> = Exit::ALL
         .iter()
         .map(|(e, d)| {
@@ -26,8 +89,8 @@ pub fn capabilities() -> Outcome {
         "global_flags": ["--json (alias --robot)", "--format human|json|jsonl|toon", "-t/--threshold <0..1>", "--model <id>", "--no-cache", "--verbose"],
         "output": "human stdout is plain text made for pipes: pick and filter preserve input records; label prints LABEL<TAB>RECORD; why prints numbered context; is prints nothing for one statement and VERDICT<TAB>STATEMENT lines for several. Pass --json for the envelope; non-UTF-8 records have text, lossy: true, ordinal",
         "commands": [
-            { "name": "fill", "usage": "jevify fill [--dry-run] [-q] [--candidates FILE] [--context FILE] [--field N | --key KEY] [-0 | --para] -- COMMAND ARGS...", "stdin": true, "exit": [0, 2, 3, 4, 5, 6], "exit_meaning": "2–6 nothing ran; otherwise the command's own exit code; --dry-run exits 0 on resolution. After exec the command can also exit 2–6.", "data": "argv under --dry-run on success, markers[{arg,kind,reason,handle,p,candidates,total,omitted}], reason", "when": "resolve a description to a real argument before running a command", "example": "jevify fill -- git switch '@{branch:the auth refactor}'", "note": "all-or-nothing; machine output requires --dry-run; quote the whole marker argument with single quotes; preview, never eval; stdin has one role and is empty for the command when consumed" },
-            { "name": "pick", "usage": "<stdin> | jevify pick '<intent>' [-n N] [--index | --files] [-0 | --para]; jevify pick --from KIND '<intent>' [-n N]", "stdin": true, "exit": [0, 3], "data": "matches[{line?,text,ordinal,p,lossy?}], any, source; --from adds reason, candidates, total, omitted, windows, finalists_per_window", "when": "choose one record by description, or use pick --from branch for a handle without running a command; --files ranks stdin paths then excerpts", "example": "git ls-files | jevify pick --files 'where man pages are parsed'", "note": "--from accepts branch; stdin is the default source and --from - is exit 2; --from conflicts with --files, --index, -0 and --para; hidden or secret-looking paths and symlink files receive no excerpt; selected stdin records retain their bytes and input order; input is not saved" },
+            { "name": "fill", "usage": "jevify fill [--dry-run] [-q] [--candidates FILE] [--context FILE] [--field N | --key KEY] [-0 | --para] -- COMMAND ARGS...", "stdin": true, "exit": [0, 2, 3, 4, 5, 6], "exit_meaning": "2–6 nothing ran; otherwise the command's own exit code; --dry-run exits 0 on resolution. After exec the command can also exit 2–6.", "data": "argv under --dry-run on success, markers[{arg,kind,reason,handle,p,candidates,total,omitted}], reason", "when": "resolve a description to a real argument before running a command: about to list branches, commits, files, PRs or runs only to choose one", "example": "jevify fill -- git switch '@{branch:the auth refactor}'", "note": "all-or-nothing; machine output requires --dry-run; quote the whole marker argument with single quotes; preview, never eval; stdin has one role and is empty for the command when consumed; every kind of capabilities.kinds is a marker kind; status line: candidates N[ of M[, newest first]][, omitted K], windows W[, excerpts withheld: E]" },
+            { "name": "pick", "usage": "<stdin> | jevify pick '<intent>' [-n N] [--index | --files] [-0 | --para]; jevify pick --from KIND '<intent>' [-n N]", "stdin": true, "exit": [0, 3], "data": "matches[{line?,text,ordinal,p,lossy?}], any, source; --from adds reason, candidates, total, omitted, windows, finalists_per_window", "when": "choose one record by description, or use pick --from KIND for a handle without running a command; --files ranks stdin paths then excerpts", "example": "git ls-files | jevify pick --files 'where man pages are parsed'", "note": "--from accepts every kind of capabilities.kinds except one and flag; stdin is the default source and --from - is exit 2; --from conflicts with --files, --index, -0 and --para; hidden or secret-looking paths and symlink files receive no excerpt; selected stdin records retain their bytes and input order; input is not saved" },
             { "name": "why", "usage": "<cmd> 2>&1 | jevify why [-C N] [-n N] [--no-save]", "stdin": true, "exit": [0, 3], "data": "causes[{line,text,p,context[]}], any, considered, total, hint, saved_input, complete", "when": "find the cause in a long build, test or CI log, especially when grep found only the symptom", "example": "gh run view --log-failed | jevify why --json", "note": "prints numbered lines with context; no split options; past 1,500 distinct lines keeps error neighbourhoods within 4,000 lines: compare considered with total" },
             { "name": "route", "usage": "jevify route <intent...>", "stdin": false, "exit": [0, 3], "data": "tool, summary, synopsis, fit, alternatives[]", "when": "find the installed tool for a task", "example": "jevify route 'keep my mac awake for an hour'", "note": "prints a tool, summary and synopsis; starts no command" },
             { "name": "filter", "usage": "<stdin> | jevify filter [-v] [-c] [--strict] [-0|--para] [--files] [--no-save] '<statement>'", "stdin": true, "exit": [0, 1, 3], "data": "records[{text,ordinal,p,verdict,lossy?}], kept, total, unsure, complete, saved_input, excerpts_withheld", "when": "many records or files, one question: keep matching records in one process", "example": "cargo test 2>&1 | jevify filter 'reports a failed assertion'", "note": "-v inverts; -c counts; unsure records stay unless --strict; 0 kept some, 1 kept none, 3 every record unsure; --files reads stdin paths and withholds hidden or secret-looking excerpts" },
@@ -42,12 +105,22 @@ pub fn capabilities() -> Outcome {
         ],
         "common_exit": { "codes": [2, 4, 5, 6], "meaning": "any command: usage, API unavailable, auth, input" },
         "exit_codes": exit_codes,
-        "kinds": [
-            { "name": "-", "family": "input records", "list": [], "input": "stdin or --candidates FILE; --field is 1-based whitespace, --key selects a JSON handle" },
-            { "name": "branch", "family": "existing things", "list": ["git", "for-each-ref", "--sort=-committerdate", "--format=%(refname)%00%(symref)%00%(committerdate:unix)%00%(subject)%00", "refs/heads", "refs/remotes"], "enrich": ["git", "log", "-5", "--format=%x00%s%x00", "--name-only", "-z", "--no-renames", "--no-ext-diff", "--end-of-options", "<handle>", "--"], "evidence": "name, subject, age; local and remote twins collapse; newest first" },
-            { "name": "one", "family": "caller options", "list": [], "input": "options in '@{one:a|b|c:question}'; context on stdin or --context FILE" },
-            { "name": "flag", "family": "caller options", "list": [], "input": "whole argument '@{flag:--name:question}'; yes keeps, no removes, unsure abstains" }
-        ],
+        "kinds": kinds,
+        "kinds_error": kinds_error,
+        "recipes": {
+            "file": "kinds.jsonl in JEVIFY_CONFIG_DIR, or the platform configuration directory (~/Library/Application Support/jevify on macOS; $XDG_CONFIG_HOME/jevify or ~/.config/jevify on Linux)",
+            "line": "one JSON object per line: kind (required, [a-z][a-z-]*), list (required, the lister argv), field N (1-based whitespace field) or key KEY (a key of a JSON value) as the handle, default the whole line, ordered (default false: the lister prints newest first)",
+            "example": "{\"kind\":\"pod\",\"list\":[\"kubectl\",\"get\",\"pods\",\"--no-headers\"],\"field\":1}",
+            "rules": [
+                "jevify reads no recipe from a repository or the working directory; a user recipe is the user's own command, as an alias is",
+                "a user recipe cannot replace a coded kind or a shipped recipe",
+                "the user's file is read only for a kind that is neither coded nor shipped; then any bad line is exit 6 recipe_invalid with its line number, whichever kind was asked for",
+                "every lister runs with one 20 s deadline, stdin at /dev/null, GH_PROMPT_DISABLED=1, GIT_TERMINAL_PROMPT=0 and NO_COLOR=1; a tool that is missing, not logged in or rate-limited is exit 6 lister_failed with the tool's own text",
+                "a list above the limit: an ordered kind keeps its newest part and the status line says candidates N of M, newest first; any other kind is exit 6 too_many",
+                "a list with no kind is a pipe into '@{-:...}', shaped by sed, cut or jq first"
+            ]
+        },
+        "withheld": { "patterns": WITHHELD_PATTERNS, "rule": "a path with a component matching one pattern is listed and its excerpt withheld; symlink files receive no excerpt; the status line says excerpts withheld: N" },
         "input_errors": { "exit": 6, "field": "error.kind", "kinds": ["stdin_is_tty", "lister_failed", "too_many", "cannot_run", "recipe_invalid"] },
         "fill_abstention": { "exit": 3, "error": null, "field": "data.reason", "marker_field": "data.markers[].reason", "order": "first failed marker in argv order", "reasons": ["no_match", "ambiguous", "unsure_flag", "insufficient_evidence"] },
         "fill_model_guard": { "exit": 4, "kind": "api_unavailable", "message": "answered by <model>, not Jev", "missing_model": "unknown", "rule": "every answering model must be Jev, including under --dry-run" },
@@ -67,6 +140,7 @@ pub fn capabilities() -> Outcome {
             { "name": "JEVIFY_THRESHOLD", "default": 0.5 },
             { "name": "JEVIFY_CONCURRENCY", "default": "8 on typesafe, 4 on classifier" },
             { "name": "JEVIFY_CACHE_DIR", "default": "platform cache dir/jevify" },
+            { "name": "JEVIFY_CONFIG_DIR", "default": "platform config dir/jevify", "meaning": "where the user's kinds.jsonl lives; read only for a kind that is neither coded nor shipped" },
             { "name": "JEVIFY_NO_CACHE", "meaning": "disable the answer cache (entries expire after 7 days anyway)" },
             { "name": "JEVIFY_PRICE_PER_MTOK", "default": 0.042 },
             { "name": "JEVIFY_INVENTORY_FILE", "meaning": "JSON array of {name, summary} replacing the PATH inventory (tests, evals)" },
@@ -98,6 +172,8 @@ pub fn capabilities() -> Outcome {
         "workflows": [
             { "goal": "preview a command with a described branch", "command": "jevify fill --dry-run -- git switch '@{branch:the auth refactor}'" },
             { "goal": "get a branch handle without running a command", "command": "jevify pick --from branch 'the auth refactor'" },
+            { "goal": "revert a described commit", "command": "jevify fill --dry-run -- git revert '@{commit:made folder moves atomic}'" },
+            { "goal": "open a described file under one directory", "command": "jevify fill --dry-run -- cat 'src/@{file:parses the marker}'" },
             { "goal": "find the tool for a task", "command": "jevify route --json '<task>'" },
             { "goal": "explain a failure", "command": "<cmd> 2>&1 | jevify why --json" },
             { "goal": "explain a failed CI run, however long the log", "command": "gh run view --log-failed | jevify why --json" },
@@ -367,6 +443,53 @@ mod tests {
                 "{c}"
             );
         }
+    }
+    #[test]
+    fn capabilities_list_every_coded_kind_and_shipped_recipe_with_its_argv() {
+        let d = capabilities().data;
+        let kinds = d["kinds"].as_array().unwrap();
+        // The coded kinds and the shipped recipes come first, in registry order; a developer's
+        // own recipes may follow, then the two caller-option kinds.
+        let names: Vec<&str> = kinds.iter().map(|k| k["name"].as_str().unwrap()).collect();
+        assert!(names.starts_with(crate::source::KINDS), "{names:?}");
+        assert_eq!(&names[names.len() - 2..], ["one", "flag"]);
+        for kind in kinds {
+            assert!(kind["list"].is_array(), "{kind}");
+            assert!(
+                ["coded", "shipped", "user"].contains(&kind["origin"].as_str().unwrap()),
+                "{kind}"
+            );
+        }
+        let pod = kinds.iter().find(|k| k["name"] == "pod").unwrap();
+        assert_eq!(pod["origin"], "shipped");
+        assert_eq!(
+            pod["list"],
+            serde_json::json!(["kubectl", "get", "pods", "--no-headers"])
+        );
+        assert_eq!(pod["ordered"], false);
+        let pr = kinds.iter().find(|k| k["name"] == "pr").unwrap();
+        assert_eq!(pr["ordered"], true);
+        for name in ["-", "tool", "one", "flag"] {
+            let kind = kinds.iter().find(|k| k["name"] == name).unwrap();
+            assert_eq!(kind["list"], serde_json::json!([]), "{kind}");
+        }
+        assert_eq!(
+            d["withheld"]["patterns"],
+            serde_json::json!(WITHHELD_PATTERNS)
+        );
+        assert!(
+            d["recipes"]["file"]
+                .as_str()
+                .unwrap()
+                .contains("JEVIFY_CONFIG_DIR")
+        );
+        assert!(
+            d["env"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|e| e["name"] == "JEVIFY_CONFIG_DIR")
+        );
     }
     #[test]
     fn robot_docs_default_to_the_guide_and_reject_unknown_topics() {

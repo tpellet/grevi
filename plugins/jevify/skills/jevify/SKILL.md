@@ -1,6 +1,6 @@
 ---
 name: jevify
-description: Use the jevify CLI when a question is about meaning and a literal search cannot answer it. Fill command arguments from branches, piped candidates or context-dependent options; get a handle with pick --from. Find the cause in a long failure log, filter records or files, label every record with one of your tags, pick a record, branch on a fact or discover an unfamiliar tool. Stage hunks or propose folders when requested. Do not use for already-known values, counting, arithmetic, quality judgments, generating text or security decisions.
+description: Use the jevify CLI when a question is about meaning and a literal search cannot answer it. Fill command arguments from branches, commits, files, PRs, CI runs, pods, piped candidates or context-dependent options; get a handle with pick --from. Find the cause in a long failure log, filter records or files, label every record with one of your tags, pick a record, branch on a fact or discover an unfamiliar tool. Stage hunks or propose folders when requested. Do not use for already-known values, counting, arithmetic, quality judgments, generating text or security decisions.
 ---
 
 # jevify
@@ -18,9 +18,9 @@ question, the input is short enough to read, or you already know the required va
 
 | Situation | Verb | Result |
 |:---|:---|:---|
-| About to list branches only to choose one | `fill` | A real branch argument, then the command |
+| About to list branches, commits, files, PRs or runs only to choose one | `fill` with `'@{branch:…}'`, `'@{commit:…}'`, `'@{file:…}'`, `'@{pr:…}'`, `'@{ci-run:…}'` | A real argument, then the command |
 | A tool can list the needed value | pipe into `fill` with `'@{-:description}'` | A handle from a supplied record |
-| Want the value without the run | `pick --from branch` | A handle, or abstention |
+| Want the value without the run | `pick --from KIND` | A handle, or abstention |
 | An option depends on text you have not read | `fill` with `'@{one:a|b:question}'` or `'@{flag:--draft:question}'` | A caller-written option or conditional flag |
 | A failed build has more than about 50 lines, or grep finds only the symptom | `why` | A cause with line number and context |
 | Many records, one question | `filter` | Matching and unsure records, like `grep` by meaning |
@@ -89,16 +89,29 @@ step. A saved full input is a way back, not proof that every line was judged.
 
 ```sh
 jevify fill --dry-run -- git switch '@{branch:the auth refactor}'
+jevify fill --dry-run -- git revert '@{commit:made folder moves atomic}'
+jevify fill --dry-run -- cat 'src/@{file:parses the marker}'
 printf 'retry_backoff\nparse_header\n' | jevify fill --dry-run -- cargo test '@{-:the retry test}'
 printf 'A crash with no reproduction steps.\n' | jevify fill --dry-run -- printf '%s\n' \
   '@{one:bug|feature|docs:what kind of report is this}' '@{flag:--draft:the report lacks steps to reproduce}'
 jevify pick --from branch 'the auth refactor'
 ```
 
-The three families are things that exist (`branch`: local and remote refs with subject and age),
-caller-written options (`one`, `flag`), and supplied records (`-`). `branch` runs `git for-each-ref`
-and enriches finalists with `git log`; `capabilities` lists their exact argv. `-` uses stdin or
-`--candidates FILE`, with `--field N` or `--key KEY` to name a handle inside the evidence.
+```text
+jevify fill -- kubectl logs '@{pod:the payment worker}'
+jevify fill -- gh pr view '@{pr:the Windows path fix}'
+```
+
+The three families are things that exist, caller-written options (`one`, `flag`), and supplied
+records (`-`). The kinds that exist: `branch` (local and remote refs with subject and age),
+`commit` (the log, newest first), `file` and `dir` (tracked and untracked paths, narrowed by a
+literal prefix ending in `/`), `tool` (the PATH), and the recipes `pr`, `issue`, `ci-run`,
+`stash`, `process`, `container`, `pod` (the owning tool's listing, one line per candidate).
+`jevify capabilities --json` lists every kind with its exact lister argv, including the user's
+own recipes from `kinds.jsonl` under `JEVIFY_CONFIG_DIR`; a recipe is one JSON line with
+`kind`, `list` and `field` or `key`, never read from a repository. `-` uses stdin or
+`--candidates FILE`, with `--field N` or `--key KEY` to name a handle inside the evidence. A
+list with no kind is a pipe into `'@{-:…}'`, shaped by `sed`, `cut` or `jq` first.
 `one` and `flag` judge stdin or `--context FILE`. stdin has one role; supply the other with a file.
 File inputs leave stdin for the command; consumed stdin becomes empty for it.
 
@@ -149,9 +162,12 @@ not error kinds:
 | `no_match` | read candidates N of M and narrow or correct the description |
 | `unsure_flag` | write the flag or drop the marker |
 | `insufficient_evidence` | supply a complete context that fits |
-| `lister_failed` (exit 6) | run the named lister yourself |
+| `lister_failed` (exit 6) | run the named lister yourself; the message carries the tool's own text (a login, a rate limit) |
+| `recipe_invalid` (exit 6) | fix the named line of `kinds.jsonl`; it does not parse or names a shipped kind |
 
-The other input error kinds are `stdin_is_tty`, `cannot_run`, `recipe_invalid`. `fill` refuses
+The other input error kinds are `stdin_is_tty` and `cannot_run`. The `fill` status line reads
+`candidates N[ of M[, newest first]][, omitted K], windows W[, excerpts withheld: E]`; `of M,
+newest first` means an ordered listing was cut to its newest part. `fill` refuses
 non-Jev answers with exit 4, `api_unavailable`, `answered by <model>, not Jev`; a missing model
 name appears as `unknown` in `meta.model` and refuses too. This guard also applies to dry runs.
 

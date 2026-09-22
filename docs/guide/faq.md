@@ -49,9 +49,16 @@ The status reports `excerpts withheld: N`; this is not a guarantee that every se
 ## Does it run a command or invent flags?
 
 `fill` starts the command you wrote, substituting existing handles or options you supplied.
-`branch` lists refs, `-` selects supplied records, and `one`/`flag` judge context. It invents
-nothing. Preview with `--dry-run`, never `eval`; allow execution exactly as the underlying
-command is allowed. Use `pick --from branch` when you want a handle without execution.
+`branch`, `commit`, `file`, `dir` and `tool` list what exists; `pr`, `issue`, `ci-run`, `stash`,
+`process`, `container` and `pod` run the owning tool's listing; `-` selects supplied records;
+`one` and `flag` judge context. It invents nothing. Preview with `--dry-run`, never `eval`;
+allow execution exactly as the underlying command is allowed. Use `pick --from KIND` when you
+want a handle without execution.
+
+A recipe kind is one JSON line: the command that lists, and which field is the handle. Your
+own kinds live in `kinds.jsonl` under `JEVIFY_CONFIG_DIR` or the platform configuration
+directory, never in a repository, and cannot replace a shipped kind. `jevify capabilities --json`
+lists every kind with its command. See [Kinds](kinds.md).
 
 `route` prints an installed tool, summary and synopsis. It supplies no arguments and starts no
 user command. `why`, `pick`, `filter`, `label` and `is` judge supplied text. `add` can stage tracked hunks;
@@ -66,8 +73,10 @@ a second shell. stdin cannot serve both candidates and context; supply `--candid
 or `--context FILE` for the other role. A required terminal stdin is exit 6 `stdin_is_tty`.
 
 `too_many` means narrow with a prefix, `grep`, `head` or a smaller pipe. `lister_failed` means
-run the named lister yourself. `ambiguous` means inspect the two handles and write one;
-`unsure_flag` means write the flag or drop its marker. For `no_match`, inspect candidates N of M.
+run the named lister yourself: the message carries the tool's own text, such as `gh` asking for
+a login. `recipe_invalid` names the line of your `kinds.jsonl` that does not parse, or that
+names a shipped kind. `ambiguous` means inspect the two handles and write one; `unsure_flag`
+means write the flag or drop its marker. For `no_match`, inspect candidates N of M.
 
 ## Whose exit code does fill return?
 

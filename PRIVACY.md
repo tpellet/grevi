@@ -20,8 +20,8 @@ by `", "`. A free-backend response is service-controlled and can name a differen
 
 | Verb | Sent | Not sent |
 |:---|:---|:---|
-| `fill` | descriptions, context of `one` and `flag`, and candidates' evidence, with best-effort redaction | literal command arguments outside markers are not semantic evidence; the caller-written command executes locally |
-| `pick --from` | description and listed candidates' evidence; branch subjects, ages and finalist commit subjects and changed paths | no user command executes |
+| `fill` | descriptions, context of `one` and `flag`, and candidates' evidence, with best-effort redaction: branch names and subjects, commit subjects and, for finalists, bodies and changed paths, file paths and, for finalists, first lines, tool names and summaries, the whole line of a recipe's listing | literal command arguments outside markers are not semantic evidence; the caller-written command executes locally; the content of a withheld file |
+| `pick --from` | the same evidence as `fill` for the kind | no user command executes |
 | `pick` | description and distinct stdin records, clipped to 200–2,000 characters per selection item | unselected evidence beyond the clipping budget |
 | `pick --files` | description, stdin paths, masked excerpts of at most 24 finalists | withheld file contents; other files not listed on stdin |
 | `filter` | statement and distinct record evidence; with `--files`, stdin paths and eligible file excerpts | file content beyond excerpts, or content withheld by the path rules |
@@ -38,11 +38,19 @@ PDF excerpts use text from the first two pages when `pdftotext` is installed, cl
 characters. File excerpts do not establish a whole-document verdict.
 
 `fill` starts the command the caller wrote. `--dry-run` resolves and prints argv without starting
-it; both forms send evidence. `branch` runs local Git listers; `-` reads supplied candidates;
-`one` and `flag` read context. `fill` and `pick --from` do not save raw inputs. Execution requires
+it; both forms send evidence. `branch`, `commit`, `file` and `dir` run local Git listers; `tool`
+reads the PATH and the man index; `pr`, `issue`, `ci-run`, `stash`, `process`, `container` and
+`pod` run the owning tool's listing; `-` reads supplied candidates; `one` and `flag` read
+context. `jevify capabilities --json` prints the argv of every lister. A user recipe in
+`kinds.jsonl` under `JEVIFY_CONFIG_DIR` is the user's own command, as an alias is: jevify reads
+no recipe from a repository, so a clone never adds a command that `fill` runs. Every lister runs
+with stdin at `/dev/null`, `GH_PROMPT_DISABLED=1`, `GIT_TERMINAL_PROMPT=0` and `NO_COLOR=1`,
+under one 20 s deadline. `fill` and `pick --from` do not save raw inputs. Execution requires
 every answering model to be Jev; a missing model name is `unknown` and refuses execution.
 
-`--files` is a boolean on `pick`, `filter` and `label`, with paths supplied by the caller on stdin.
+`--files` is a boolean on `pick`, `filter` and `label`, with paths supplied by the caller on stdin;
+the `file` kind lists paths itself, hidden ones included, and applies the same rule to its
+finalists. Paths of hidden files leave the machine as names; their content does not.
 Before reading an excerpt, jevify withholds any path whose written components:
 
 - start with `.` (except navigation `.` and `..`), or with `id_`;

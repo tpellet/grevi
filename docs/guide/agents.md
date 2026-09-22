@@ -4,7 +4,8 @@ Use jevify when a literal search cannot ask the question or the output is too lo
 Cheap tools narrow the input first. `why` points to a cause, `pick` selects a record, `filter`
 keeps a subset, `label` tags every record, and `is` decides whether the next step should act.
 On the input side, `fill` resolves real arguments and runs the command you wrote;
-`pick --from branch` returns the handle alone.
+`pick --from KIND` returns the handle alone. `capabilities.kinds` lists every kind with the
+command that lists it, user recipes included; see [Kinds](kinds.md).
 
 ```sh
 jevify capabilities --json
@@ -39,6 +40,9 @@ order; `data.markers[].reason` reports every marker. Reasons are `no_match`, `am
 `stdin_is_tty`, `lister_failed`, `too_many`, `cannot_run`, `recipe_invalid`.
 Read candidates N of M for no match; read the two handles for ambiguity; write or drop an unsure
 flag. Narrow oversized lists with a prefix, `grep`, `head` or a pipe; run failed listers yourself.
+`lister_failed` carries the tool's own text; `recipe_invalid` names the line of the user's
+`kinds.jsonl`. The `fill` status line reads
+`candidates N[ of M[, newest first]][, omitted K], windows W[, excerpts withheld: E]`.
 
 Every answering model must be Jev for `fill`, including a dry run: otherwise exit 4,
 `api_unavailable`, `answered by <model>, not Jev`. Missing names are `unknown` in `meta.model`.

@@ -9,6 +9,19 @@ Added:
   least two, distinct, at most 99 keyless or 200 on TypeSafe. It shares the record limits and
   batching of `filter`, takes `-0`, `--para` and `--files`, and saves nothing. Capabilities,
   the agent block, the skill and the privacy table name it.
+- Marker kinds `commit`, `file`, `dir` and `tool`, coded, and the shipped recipes `pr`, `issue`,
+  `ci-run`, `stash`, `process`, `container` and `pod`, read from `src/kinds.jsonl`. `fill` and
+  `pick --from` resolve every kind. A recipe is one JSON line (`kind`, `list`, `field` or `key`,
+  `ordered`); user recipes come from `kinds.jsonl` under `JEVIFY_CONFIG_DIR` or the platform
+  configuration directory, never from a repository, and cannot replace a shipped kind.
+- Every lister runs under one 20 s deadline with prompts disabled; a missing or unauthenticated
+  tool is `lister_failed` with its own text, and a bad `kinds.jsonl` is `recipe_invalid` with
+  its line number. A literal prefix ending in `/` narrows `file` and `dir`. Above the limit an
+  ordered kind keeps its newest part and reports `candidates N of M, newest first`; any other
+  is `too_many`.
+- `capabilities` lists every kind with its lister argv and origin (`coded`, `shipped`, `user`),
+  the recipe fields and rules, the withheld path patterns and `JEVIFY_CONFIG_DIR`. The guide
+  gains `docs/guide/kinds.md`.
 
 ## 0.6.0
 

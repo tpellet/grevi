@@ -14,6 +14,7 @@ jevify has no config file. Every setting is a flag or an environment variable. `
 | `JEVIFY_THRESHOLD` | `0.5` | Decision threshold on backend yes/no scores; calibration is task- and backend-specific. |
 | `JEVIFY_CONCURRENCY` | `8` on `typesafe`, `4` on `classifier` | Parallel requests within one round (the windows of a tournament). |
 | `JEVIFY_CACHE_DIR` | platform cache dir, `jevify` sub-directory | Where answers, the tool inventory, `sort`'s recovery journals and raw saved inputs in `outputs/` live. |
+| `JEVIFY_CONFIG_DIR` | platform configuration dir, `jevify` sub-directory | Where the user's `kinds.jsonl` lives. It is read only for a marker kind that is neither coded nor shipped. See [Kinds](kinds.md). |
 | `JEVIFY_NO_CACHE` | | Set to `1` to disable the answer cache (entries expire after 7 days anyway). |
 | `JEVIFY_PRICE_PER_MTOK` | `0.042` | Dollars per million input tokens, used for `meta.cost_usd`. Change it if your TypeSafe pricing differs. |
 | `JEVIFY_INVENTORY_FILE` | | A JSON array of `{name, summary}` that replaces the PATH inventory for `route`. Used by the tests and the evals so every machine routes over the same tools. |
@@ -98,6 +99,7 @@ own budgeting comes back as `api_rejected_request`, exit 6.
 - Answers expire after seven days and use hashes of redacted requests; `--no-cache` disables this cache. Expiry does not reclaim old files.
 - Only `why` and `filter` save raw input, secrets included, as `outputs/<blake3-16>.log` under the base directory, never pruned. `--no-save` disables saving independently of `--no-cache`; skipped or failed saves set `data.complete=false`.
 - `sort --apply` writes a unique JSONL recovery journal and prints its path (`data.undo_log`). Preserve journals needed for undo. Tool inventory also lives under the base directory.
+- Configuration directory: `JEVIFY_CONFIG_DIR`, otherwise the platform configuration directory (`~/Library/Application Support/jevify` on macOS, `$XDG_CONFIG_HOME/jevify` or `~/.config/jevify` on Linux). It holds `kinds.jsonl`, the user's own marker kinds; jevify reads no recipe from a repository.
 
 ## Shell integration
 

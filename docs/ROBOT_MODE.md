@@ -9,8 +9,8 @@ It selects and never generates. Use `jevify capabilities --json` as the source o
 
 | Trigger | Verb | Classical twin |
 |:---|:---|:---|
-| about to list branches only to choose one, or a tool can list the needed value | `fill` | argument lookup |
-| want the handle without executing | `pick --from branch` | selection |
+| about to list branches, commits, files, PRs or runs only to choose one, or a tool can list the needed value | `fill` | argument lookup |
+| want the handle without executing | `pick --from KIND` | selection |
 | an option depends on unread context | `fill` with `one` or `flag` | conditional arguments |
 | a long failed build or a grep that found only the symptom | `why` | — |
 | one record described but not named | `pick` | `fzf --filter` |
@@ -53,7 +53,9 @@ argument; unchecked substitution can turn abstention into an empty argument.
   Data: `matches[{line,text,ordinal,p,lossy?}]`, `any`, `source`. Exit 0 found, 3 nothing fits.
   `--files` is boolean: `git ls-files | jevify pick --files 'where man pages are parsed'`.
   Paths are ranked first, then eligible excerpts of at most 24 finalists. Input is not saved.
-  `pick --from branch '<intent>' [-n N]` lists branches; plain `pick` uses stdin. It prints handles,
+  `pick --from KIND '<intent>' [-n N]` lists a kind's candidates (`branch`, `commit`, `file`,
+  `dir`, `tool`, `pr`, `issue`, `ci-run`, `stash`, `process`, `container`, `pod`, or a user
+  recipe); plain `pick` uses stdin. It prints handles,
   starts no user command, and conflicts with `--files`, `--index`, `-0`, `--para`.
   Data adds `reason`, `candidates`, `total`, `omitted`, `windows`, `finalists_per_window`;
   its matches have `text`, `ordinal`, `p`, `lossy`, without `line`.
@@ -112,17 +114,29 @@ and `complete=false`. Compare `why.considered` with `why.total` separately for s
 
 ```sh
 jevify fill --dry-run -- git switch '@{branch:the auth refactor}'
+jevify fill --dry-run -- git revert '@{commit:made folder moves atomic}'
+jevify fill --dry-run -- cat 'src/@{file:parses the marker}'
 printf 'retry_backoff\nparse_header\n' | jevify fill --dry-run -- cargo test '@{-:the retry test}'
 printf 'A crash with no reproduction steps.\n' | jevify fill --dry-run -- printf '%s\n' \
   '@{one:bug|feature|docs:what kind of report is this}' '@{flag:--draft:the report lacks steps to reproduce}'
 jevify pick --from branch 'the auth refactor'
 ```
 
-Three families: existing things (`branch`), caller-written options (`one`, `flag`), supplied
-records (`-`). `branch` lists local and remote refs using `git for-each-ref`, newest first,
-folds twins, and enriches finalists with `git log`. `capabilities.kinds` gives exact lister argv;
-`-`, `one`, `flag` have empty lister arrays. `--field N` is a 1-based whitespace field;
-`--key KEY` extracts a JSON handle while retaining the record as evidence.
+Three families: existing things (`branch`, `commit`, `file`, `dir`, `tool`, and the recipes
+`pr`, `issue`, `ci-run`, `stash`, `process`, `container`, `pod`), caller-written options
+(`one`, `flag`), supplied records (`-`). `capabilities.kinds` lists every kind with its exact
+lister argv and its origin, `coded`, `shipped` or `user`; `-`, `tool`, `one` and `flag` have
+empty lister arrays. `branch` and `commit` are newest first; `branch` folds remote twins.
+`file` and `dir` take a literal prefix ending in `/`; a `file` finalist adds first lines, withheld
+for the patterns in `capabilities.withheld`. A recipe kind is one JSON line in `kinds.jsonl`
+under `JEVIFY_CONFIG_DIR` or the platform configuration directory: `kind`, `list`, `field` or
+`key`, `ordered`; `capabilities.recipes` states the fields and the rules. jevify reads no recipe
+from a repository, a user recipe cannot replace a shipped kind, and a bad file is exit 6
+`recipe_invalid` with its line number. Every lister has one 20 s deadline; a missing or
+unauthenticated tool is exit 6 `lister_failed` with its own text. `--field N` is a 1-based
+whitespace field; `--key KEY` extracts a JSON handle while retaining the record as evidence.
+The `fill` status line reads
+`candidates N[ of M[, newest first]][, omitted K], windows W[, excerpts withheld: E]`.
 
 Quote the whole marker argument with single quotes, including any prefix or suffix. Spell an
 apostrophe `'\''`. Marker escapes are `\}`, `\:` and `\|`; `one` separates options with `|`.

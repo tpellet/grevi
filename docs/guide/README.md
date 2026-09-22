@@ -9,6 +9,7 @@ nothing fits. Scores are specific to the backend and task, not universally calib
 |:---|:---|
 | [Getting started](getting-started.md) | Install, keyless access, first commands, shell integration |
 | [Verbs](verbs.md) | `fill`, its markers, `pick --from`, output verbs and utility commands |
+| [Kinds](kinds.md) | Every marker kind, a recipe in one line, where `kinds.jsonl` lives, the status line |
 | [Agents](agents.md) | One machine envelope, exit codes, capabilities and permissions |
 | [How it works](how-it-works.md) | Selection, NONE, thresholds, batching, cache and measurements |
 | [Configuration](configuration.md) | Environment variables, global flags and storage |

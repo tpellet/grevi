@@ -110,18 +110,41 @@ jevify pick --from branch 'the auth refactor'
 ```
 
 `--dry-run` prints shell-quoted argv; inspect it, never `eval` it. Omit `--dry-run` to execute.
-Use `pick --from branch` when you want the handle alone. Plain `pick` selects from stdin.
+Use `pick --from KIND` when you want the handle alone. Plain `pick` selects from stdin.
 
-### Kinds and the marker
+## Kinds
 
-| Family | Kind | Candidates or context |
+| Kind | Candidates | Evidence |
 |:---|:---|:---|
-| things that exist | `branch` | local and remote refs, with subject and age; local/remote twins collapse |
-| caller-written options | `one`, `flag` | options inside the marker, judged against stdin or `--context FILE` |
-| values in supplied records | `-` | stdin or `--candidates FILE`; `--field N` or `--key KEY` selects the handle |
+| `-` | records on stdin, or `--candidates FILE` | the whole record; `--key` or `--field` names the handle inside it |
+| `branch` | local and remote refs | name, last commit subject, age |
+| `commit` | the log of the current branch | subject, body, changed paths |
+| `file`, `dir` | tracked and untracked files that are not ignored, hidden ones included | path, first lines |
+| `tool` | the commands on the PATH, for `route` and `pick --from tool` | name and one-line manual summary |
+| `pr`, `issue`, `ci-run`, `stash`, `process`, `container`, `pod` | a recipe: the owning tool's listing | the whole line of the listing |
+| `one`, `flag` | options written in the marker | stdin, or `--context FILE` |
 
-`branch` runs `git for-each-ref`, newest first, and uses `git log` for richer finalist evidence.
-`jevify capabilities --json` lists the exact argv. The other kinds start no lister.
+```sh
+jevify fill --dry-run -- git revert '@{commit:made folder moves atomic}'
+jevify fill --dry-run -- cat 'src/@{file:parses the marker}'
+jevify pick --from commit 'made folder moves atomic'
+```
+
+A kind is a recipe: the command that lists, and which field is the handle. jevify's own
+recipes are data, one JSON object per line, and `jevify capabilities --json` lists every kind
+with its command:
+
+```text
+{"kind":"pod","list":["kubectl","get","pods","--no-headers"],"field":1}
+```
+
+Your own kinds go in `kinds.jsonl` in the configuration directory: `JEVIFY_CONFIG_DIR`, or
+`~/Library/Application Support/jevify` on macOS and `~/.config/jevify` on Linux. A new kind is
+one appended line. jevify reads no recipe from a repository, and a user recipe cannot replace
+a shipped kind. A list with no kind is a pipe into `'@{-:…}'`. [Kinds](docs/guide/kinds.md)
+has the fields, the rules and the status line.
+
+### The marker
 
 Put the whole marker argument in single quotes: `'--value=@{-:the retry test}'`.
 An apostrophe uses the shell spelling `'\''`. A marker ends at the first unescaped `}`;

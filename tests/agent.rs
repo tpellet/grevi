@@ -192,6 +192,7 @@ fn capabilities_lists_verbs_exit_codes_env() {
     );
     let pick = commands.iter().find(|c| c["name"] == "pick").unwrap();
     assert!(pick["usage"].as_str().unwrap().contains("pick --from KIND"));
+    // bin() points JEVIFY_CONFIG_DIR at an empty directory, so no user recipe is listed.
     assert_eq!(
         d["kinds"]
             .as_array()
@@ -199,8 +200,25 @@ fn capabilities_lists_verbs_exit_codes_env() {
             .iter()
             .map(|k| k["name"].as_str().unwrap())
             .collect::<Vec<_>>(),
-        ["-", "branch", "one", "flag"]
+        [
+            "-",
+            "branch",
+            "commit",
+            "file",
+            "dir",
+            "tool",
+            "pr",
+            "issue",
+            "ci-run",
+            "stash",
+            "process",
+            "container",
+            "pod",
+            "one",
+            "flag"
+        ]
     );
+    assert!(d["kinds_error"].is_null());
     assert_eq!(
         d["kinds"][1]["list"],
         serde_json::json!([
@@ -323,14 +341,22 @@ fn agent_block_is_bounded_and_public_help_has_no_removed_forms() {
         outputs.push(String::from_utf8(out.stdout).unwrap());
     }
     let removed = regex::Regex::new(
-        r"jevify run(?:\s|$)|why -- |jevify -v(?:\s|$)|@\{(?:commit|file|dir|tool|pod|pr|issue|ci-run|stash|process|container):",
-    ).unwrap();
+        r"jevify run(?:\s|$)|why -- |jevify -v(?:\s|$)|@\{(?:test|script|complete):",
+    )
+    .unwrap();
     for allowed in [
         "jevify fill",
         "jevify pick --from branch",
+        "jevify pick --from commit",
         "jevify label x",
         "'@{-:x}'",
         "'@{branch:x}'",
+        "'@{commit:x}'",
+        "'@{file:x}'",
+        "'@{dir:x}'",
+        "'@{tool:x}'",
+        "'@{pod:x}'",
+        "'@{pr:x}'",
         "'@{one:a|b:x}'",
         "'@{flag:--draft:x}'",
     ] {
@@ -338,12 +364,10 @@ fn agent_block_is_bounded_and_public_help_has_no_removed_forms() {
     }
     for forbidden in [
         "jevify run x",
-        "'@{commit:x}'",
-        "'@{file:x}'",
-        "'@{dir:x}'",
-        "'@{tool:x}'",
-        "'@{pod:x}'",
-        "'@{pr:x}'",
+        "why -- cargo build",
+        "'@{test:x}'",
+        "'@{script:x}'",
+        "'@{complete:x}'",
     ] {
         assert!(removed.is_match(forbidden), "{forbidden}");
     }
@@ -357,6 +381,108 @@ fn agent_block_is_bounded_and_public_help_has_no_removed_forms() {
         assert!(script.contains("alias ,=") && script.contains("jevify route"));
         assert!(script.contains("then jevify route \"$*\""));
     }
+}
+
+/// Every coded kind and every shipped recipe is listed with the argv of its lister, and a user
+/// recipe from `JEVIFY_CONFIG_DIR` joins them with origin `user`; a bad user file is reported in
+/// `kinds_error` and never fails `capabilities`.
+#[test]
+fn capabilities_list_every_kind_with_its_argv_and_the_user_recipes() {
+    let shipped: Vec<serde_json::Value> = include_str!("../src/kinds.jsonl")
+        .lines()
+        .map(|line| serde_json::from_str(line).unwrap())
+        .collect();
+    assert_eq!(shipped.len(), 7);
+    let dir = tempfile::tempdir().unwrap().keep();
+    std::fs::write(
+        dir.join("kinds.jsonl"),
+        "{\"kind\":\"widget\",\"list\":[\"printf\",\"w1\\\\n\"],\"ordered\":true}\n",
+    )
+    .unwrap();
+    let out = common::bin()
+        .env("JEVIFY_CONFIG_DIR", &dir)
+        .args(["capabilities", "--json"])
+        .output()
+        .unwrap();
+    assert!(out.status.success());
+    let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+    let kinds = v["data"]["kinds"].as_array().unwrap();
+    let entry = |name: &str| kinds.iter().find(|k| k["name"] == name).unwrap();
+    for (name, argv) in [
+        ("branch", vec!["git", "for-each-ref"]),
+        (
+            "commit",
+            vec!["git", "log", "-z", "--format=%H%x00%s", "HEAD", "--"],
+        ),
+        (
+            "file",
+            vec!["git", "ls-files", "-co", "--exclude-standard", "-z"],
+        ),
+        (
+            "dir",
+            vec!["git", "ls-files", "-co", "--exclude-standard", "-z"],
+        ),
+    ] {
+        let kind = entry(name);
+        assert_eq!(kind["origin"], "coded", "{kind}");
+        let list: Vec<&str> = kind["list"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|a| a.as_str().unwrap())
+            .collect();
+        assert!(list.starts_with(&argv), "{kind}");
+    }
+    for recipe in &shipped {
+        let kind = entry(recipe["kind"].as_str().unwrap());
+        assert_eq!(kind["origin"], "shipped", "{kind}");
+        assert_eq!(kind["list"], recipe["list"], "{kind}");
+        assert_eq!(
+            kind["ordered"],
+            recipe["ordered"].as_bool().unwrap_or(false),
+            "{kind}"
+        );
+    }
+    let widget = entry("widget");
+    assert_eq!(widget["origin"], "user");
+    assert_eq!(widget["list"], serde_json::json!(["printf", "w1\\n"]));
+    assert_eq!(widget["ordered"], true);
+    assert!(v["data"]["kinds_error"].is_null());
+    let position = |name: &str| kinds.iter().position(|k| k["name"] == name).unwrap();
+    assert!(position("pod") < position("widget"));
+    assert!(position("widget") < position("one"));
+    assert_eq!(
+        v["data"]["withheld"]["patterns"],
+        serde_json::json!([".*", "id_*", "*.pem", "*.key", "*credentials*", "*secret*"])
+    );
+    assert!(
+        v["data"]["env"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|e| e["name"] == "JEVIFY_CONFIG_DIR")
+    );
+
+    // A bad file: the shipped kinds are still listed, and the reason names the line.
+    std::fs::write(dir.join("kinds.jsonl"), "{\"kind\":\"widget\"}\n").unwrap();
+    let out = common::bin()
+        .env("JEVIFY_CONFIG_DIR", &dir)
+        .args(["capabilities", "--json"])
+        .output()
+        .unwrap();
+    assert!(out.status.success());
+    let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+    let kinds = v["data"]["kinds"].as_array().unwrap();
+    assert!(kinds.iter().any(|k| k["name"] == "pod"));
+    assert!(kinds.iter().all(|k| k["name"] != "widget"));
+    assert!(
+        v["data"]["kinds_error"]
+            .as_str()
+            .unwrap()
+            .contains("line 1"),
+        "{}",
+        v["data"]["kinds_error"]
+    );
 }
 
 #[test]
