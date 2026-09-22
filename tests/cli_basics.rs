@@ -47,13 +47,15 @@ fn fill_parser_preserves_command_bytes_and_rejects_conflicts() {
         .args(["pick", "--from", "branch", "x", "--json"])
         .output()
         .unwrap();
+    // A real kind is listed and judged; an empty repository or no match abstains (3), a
+    // usage or input error is 2 or 6. Never a "not implemented" stub.
     let value: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
-    assert_eq!(out.status.code(), Some(6));
-    assert_eq!(value["meta"]["requests"], 0);
+    assert!(matches!(out.status.code(), Some(2 | 3 | 6)));
+    assert_eq!(value["command"], "pick");
     assert!(
-        value["error"]["message"]
+        !value["error"]["message"]
             .as_str()
-            .unwrap()
+            .unwrap_or("")
             .contains("not implemented")
     );
 }
@@ -99,7 +101,7 @@ fn fill_errors_share_the_not_run_format() {
     for (args, bad_config, kind) in [
         (vec!["fill", "--nope", "--", "x"], false, "usage"),
         (vec!["fill", "--", "x"], true, "usage"),
-        (vec!["fill", "--", "x"], false, "input"),
+        (vec!["fill", "--", "x"], false, "usage"), // no marker is a usage error
     ] {
         let mut command = common::bin();
         command

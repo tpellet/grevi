@@ -15,6 +15,53 @@ pub fn live_key_present() -> bool {
 
 #[test]
 #[ignore]
+fn live_fill_branch_and_one_per_backend() {
+    for backend in ["classifier", "typesafe"] {
+        if backend == "typesafe" && !live_key_present() {
+            continue;
+        }
+        for (marker, context) in [
+            ("@{branch:the main development branch}", ""),
+            (
+                "@{one:bug|feature|docs:what kind of report is this}",
+                "The program crashes on empty input; this is a reproducible defect.",
+            ),
+        ] {
+            let mut command = assert_cmd::Command::cargo_bin("jevify").unwrap();
+            command
+                .env("JEVIFY_BACKEND", backend)
+                .env("JEVIFY_NO_CACHE", "1")
+                .env("JEVIFY_CACHE_DIR", tempfile::tempdir().unwrap().keep());
+            if backend == "classifier" {
+                command
+                    .env_remove("TYPESAFE_API_KEY")
+                    .env_remove("TYPESAFE_API_KEY_FILE");
+            }
+            let out = command
+                .args(["fill", "--dry-run", "--json", "--", "printf", marker])
+                .write_stdin(context)
+                .output()
+                .unwrap();
+            let value: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+            assert_eq!(out.status.code(), Some(0), "{value}");
+            assert_eq!(
+                value["data"]["argv"][1],
+                if marker.starts_with("@{branch:") {
+                    "main"
+                } else {
+                    "bug"
+                }
+            );
+            assert!(jevify::jev::all_jev(
+                value["meta"]["model"].as_str().unwrap()
+            ));
+            assert_eq!(value["meta"]["backend"], backend);
+        }
+    }
+}
+
+#[test]
+#[ignore]
 fn live_filter_one_batch_per_backend() {
     for backend in ["classifier", "typesafe"] {
         if backend == "typesafe" && !live_key_present() {
