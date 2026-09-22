@@ -228,8 +228,8 @@ cargo test 2>&1 | jevify is 'every failure is a network timeout' && cargo test  
 - A record is a line. `--para` makes it a block between blank lines, for test failures and stack
   traces. `-0` reads NUL-separated records. `--files` reads paths and judges each file's first
   lines. `why` takes none of the three. Records come out unchanged and in their input order.
-  Without a key each record is judged alone, up to a thousand in one request, so ten thousand
-  lines are about ten requests. With a key twenty records share one request, and each question
+  Without a key each record is judged alone, up to sixty in one request, so ten thousand
+  lines are about 170 requests. With a key twenty records share one request, and each question
   names its record.
 - `pick --from KIND 'description'` selects among a kind's candidates in place of stdin and prints
   the handle. `route 'task'` is `pick --from tool`: it names the installed tool for a task, with

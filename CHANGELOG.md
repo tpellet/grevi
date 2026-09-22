@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+Fixed:
+
+- `capabilities.selection_limits.finalists_per_window` states the `fill` finalist rule as the
+  code applies it: three names per window in the shortlist round, and with one window up to 24
+  in the finals for `branch`, `commit`, `file` and `dir` when the names leave the pick
+  undecided. `capabilities.exit_codes` names exit 7 `reserved`, never returned, instead of
+  `child_failed`. The `--dry-run` example prints `would run`, the `git switch` example names
+  `ticket/TPE-791`, and the keyless batch figure is 60 records.
+
 ## 0.8.1
 
 Fixed:
@@ -93,7 +104,8 @@ Known limits:
 
 - `file` resolves phrases that match a path, and abstains on phrases that describe only a
   file's content (measured 2026-09-22 on jev-1.13.0: "stages hunks" does not reach
-  `src/cmd/add.rs`).
+  `src/cmd/add.rs`). With 0.8.1, which sends every name not ruled out to the finals, the same
+  phrase reaches `src/cmd/add.rs` at 0.68 (measured 2026-09-22 on jev-1.13.0).
 
 ## 0.6.0
 

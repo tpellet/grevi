@@ -40,7 +40,7 @@ printf 'A crash with no reproduction steps.\n' | jevify fill --dry-run -- printf
 [-0 | --para] -- COMMAND ARGS...` fills markers then becomes the caller-written command,
 without a shell. All markers resolve together; if any abstains, nothing runs. `--dry-run`
 prints shell-quoted argv and exits 0 on success; its last stderr line reads
-`jevify fill: would run 'git' 'switch' 'origin/ticket/TPE-791'`, while a run ends with
+`jevify fill: would run 'git' 'switch' 'ticket/TPE-791'`, while a run ends with
 `jevify fill: exec ...` before the command takes over. Inspect it, never `eval` it. Machine output
 requires `--dry-run` and returns `argv`, `reason`, and
 `markers[{arg,kind,reason,handle,p,candidates,total,omitted}]`.
@@ -77,8 +77,10 @@ stdin supplies either candidates for `-` or context for `one`/`flag`; never both
 other role with a file. If consumed, the command receives empty stdin; otherwise it inherits
 stdin and the terminal. Environment and working directory pass through unchanged.
 
-Each marker accepts 3,267 candidates keyless or 13,200 on TypeSafe, keeping three finalists
-per window. Ordered kinds retain newest candidates and report `candidates N of M, newest first`;
+Each marker accepts 3,267 candidates keyless or 13,200 on TypeSafe, keeping three names per
+window in the shortlist round; with one window, when the names leave a `branch`, `commit`,
+`file` or `dir` undecided, every name not ruled out reaches the finals with its evidence, up to
+24. Ordered kinds retain newest candidates and report `candidates N of M, newest first`;
 unordered overflow is exit 6 `too_many`. `one` accepts 99 options keyless or 200 on TypeSafe;
 overflow is exit 2. Every lister has one 20 s deadline; a tool that is missing, not logged in
 or rate-limited is exit 6 `lister_failed` with the tool's own text.

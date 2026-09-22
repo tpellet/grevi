@@ -344,6 +344,32 @@ fn capabilities_lists_verbs_exit_codes_env() {
             .unwrap()
             .contains("else 1")
     );
+    // `fill` keeps three names in the shortlist round; an undecided single window sends every
+    // name with p > 0 to the finals, up to 24, for the four kinds with tier-two evidence.
+    let finalists = d["selection_limits"]["finalists_per_window"]
+        .as_str()
+        .unwrap();
+    assert!(finalists.contains("up to 24"), "{finalists}");
+    assert!(
+        finalists.contains("branch, commit, file or dir"),
+        "{finalists}"
+    );
+    // Exit 7 is reserved: no verb reports a child command's failure, and the name must not
+    // read as if one did.
+    let seven = d["exit_codes"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|e| e["code"] == 7)
+        .unwrap();
+    assert_eq!(seven["name"], "reserved");
+    assert!(
+        seven["meaning"]
+            .as_str()
+            .unwrap()
+            .starts_with("reserved, never returned"),
+        "{seven}"
+    );
     assert_eq!(
         d["input_errors"]["kinds"],
         serde_json::json!([

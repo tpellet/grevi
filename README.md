@@ -63,7 +63,7 @@ process, a container or a pod: `'@{branch:the auth refactor}'`, `'src/@{file:par
 ```console
 $ jevify fill --dry-run -- cat 'src/@{file:reads the recipes of the kinds}'
 jevify fill: file kinds.jsonl 0.63 (next 0.02, none 0.19) kinds.jsonl; candidates 32, windows 1; model jev-1.13.0
-jevify fill: exec 'cat' 'src/kinds.jsonl'
+jevify fill: would run 'cat' 'src/kinds.jsonl'
 'cat' 'src/kinds.jsonl'
 ```
 

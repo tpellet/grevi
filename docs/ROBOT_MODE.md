@@ -153,8 +153,10 @@ stdin supplies candidates for `-` or context for `one`/`flag`, never both. Use `
 or `--context FILE` for the other role; file inputs preserve the command's stdin. All markers
 resolve against one snapshot; any abstention prevents the entire execution.
 
-Let W be the backend window: 99 on classifier.dev, 200 on TypeSafe. `fill` keeps three finalists
-per window and accepts F = W × floor(W / 3): 3,267 or 13,200 candidates. `pick` and `pick --from`
+Let W be the backend window: 99 on classifier.dev, 200 on TypeSafe. `fill` keeps three names
+per window in the shortlist round and accepts F = W × floor(W / 3): 3,267 or 13,200 candidates;
+with one window, when the names leave a `branch`, `commit`, `file` or `dir` undecided, every
+name not ruled out reaches the finals with its evidence, up to 24. `pick` and `pick --from`
 accept min(W × W, 20,000): 9,801 or 20,000. They keep three finalists per window when those fit
 W, else two when those fit, else one, always by rank within each window. `one` accepts at most
 W options; more is exit 2. Ordered kinds retain the newest candidates and report coverage;

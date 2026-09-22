@@ -15,7 +15,8 @@ pub enum Exit {
     Unavailable = 4,
     Auth = 5,
     Input = 6,
-    ChildFailed = 7,
+    /// Never returned: no verb reports a child command's failure.
+    Reserved = 7,
     Interrupted = 130,
 }
 
@@ -31,7 +32,10 @@ impl Exit {
         (Exit::Unavailable, "the API is unavailable after retries"),
         (Exit::Auth, "API key missing or rejected"),
         (Exit::Input, "input error: empty, too large, or unreadable"),
-        (Exit::ChildFailed, "reserved"),
+        (
+            Exit::Reserved,
+            "reserved, never returned: a command started by fill owns its own exit code",
+        ),
         (Exit::Interrupted, "interrupted or declined at confirmation"),
     ];
 }
