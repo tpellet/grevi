@@ -48,8 +48,10 @@ window, never by comparing probabilities from separate requests. With W as the b
 when 2 × windows fits W, otherwise one. All finalists enter the final comparison. The first
 24 finalists can receive richer evidence; 24 is not a cap on the comparison pool.
 
-`fill` keeps three finalists per window and accepts F = W × floor(W / 3): 3,267 candidates
-keyless and 13,200 on TypeSafe. `pick` and `pick --from` accept min(W × W, 20,000): 9,801 and
+`fill` keeps three names per window in the shortlist round; with one window, when the names
+leave a branch, commit, file or dir undecided, every name with p > 0 reaches the finals with its
+evidence, up to 24. It accepts F = W × floor(W / 3): 3,267 candidates keyless and 13,200 on
+TypeSafe. `pick` and `pick --from` accept min(W × W, 20,000): 9,801 and
 20,000. Ordered kinds retain the newest candidates and report coverage; unordered overflow is
 exit 6 `too_many`. `one` accepts at most W options and returns exit 2 above that count.
 
@@ -164,15 +166,16 @@ verb. A 0.6 threshold excludes 17 accepted routes, including 12 correct ones. Tw
 decisions lie within 0.06 of the threshold, the measured uncached probability jitter for identical
 requests on this model. A changed model or prompt needs new evidence.
 
-Root-cause accuracy, measured 2026-09-19 on TypeSafe `jev-1.13.0`: twenty real CI logs, 136–300
-lines each, four per ecosystem, hand-labelled cause ranges; `jevify why -n 3`. Three abstentions,
-zero errors. Baselines use the first or last line matching the same error-signal regex.
+Root-cause accuracy, measured 2026-09-22 at 0.8.1 on TypeSafe `jev-1.13.0`: twenty-one real CI
+logs, 136–300 lines each, hand-labelled cause ranges (`evals/why/corpus.jsonl`); `jevify why -n 3`.
+Zero abstentions, zero errors. Baselines use the first or last line matching the same
+error-signal regex.
 
 | Method | hit@1 | hit@3 |
 |:---|---:|---:|
-| jevify | 15/20 | 16/20 |
-| first signal match | 4/20 | 10/20 |
-| last signal match | 1/20 | 3/20 |
+| jevify | 19/21 | 20/21 |
+| first signal match | 4/21 | 10/21 |
+| last signal match | 1/21 | 3/21 |
 
 Every log contains a failure, so the three abstentions are misses. `data.any` has minimum 0.17
 and median 0.77; the abstentions score 0.17, 0.43 and 0.46. Failures include a data race, an

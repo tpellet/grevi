@@ -1,31 +1,44 @@
 # `why` eval cases
 
-Twenty real failing logs from public GitHub Actions runs of MIT/Apache-2.0 projects, four per
-ecosystem (cargo, npm/tsc, pytest, go, docker), each hand-labelled with the root-cause line range.
-`scripts/eval_why.py` runs `jevify why --json -n 3 < <id>.log` on every case and scores hit@1 and
-hit@3 against `<id>.expect`, next to two regex baselines on the same files.
+Twenty-one real failing logs, each hand-labelled with the root-cause line range: twenty from
+public GitHub Actions runs of MIT/Apache-2.0 projects, four per ecosystem (cargo, npm/tsc, pytest,
+go, docker), and one from this repository's own CI. `scripts/eval_why.py` runs
+`jevify why --json -n 3 < <id>.log` on every case in `corpus.jsonl` and scores hit@1 and hit@3
+against the labelled range, next to two regex baselines on the same files.
 
-Collected 2026-09-19. The runs were the most recent genuine tool failures on each repository's
-default or PR branches at that date (workflow cancellations, runner infrastructure faults and
-obvious flakes were skipped and are not represented).
+At jevify 0.8.1 with jev-1.13.0 (2026-09-22): hit@1 19/21, hit@3 20/21.
+
+The twenty GitHub cases were collected 2026-09-19 as the most recent genuine tool failures on each
+repository's default or PR branches at that date (workflow cancellations, runner infrastructure
+faults and obvious flakes were skipped and are not represented).
 
 ## Files
 
-- `<id>.log` — the failing job's log, normalised (below). Between 136 and 300 lines.
-- `<id>.expect` — `{ "lines": [start, end], "source": "<job URL>", "license": "<SPDX id>" }`.
-  `lines` is the 1-based inclusive range in `<id>.log` that a competent engineer would point to as
-  the cause: the first diagnostic that names the actual problem, through the end of its block (the
-  `-->` location and the source excerpt of a rustc/tsc/ruff diagnostic; the `E` lines and the
-  `file:line: AssertionError` of a pytest failure; the `--- FAIL` header and the assertion message
-  of a go test). Summary lines are never labelled (`error: could not compile`, `FAILED tests/...`,
+- `corpus.jsonl` — the manifest, one JSON object per distinct log:
+  `{ "id", "source", "license", "lines": [start, end], "sha256" }`. `sha256` is the digest of
+  `<id>.log`. The script scores exactly the cases listed here: a `*.log` absent from the manifest
+  is named and skipped, never scored; an entry without `source` or `license`, without a valid
+  range, whose log is missing or has another hash, or whose content is byte-identical to an earlier
+  case stops the run before any request is paid.
+- `<id>.log` — the failing job's log. The GitHub cases are normalised (below) and hold between 136
+  and 300 lines; `cargo-05` is the output of `gh run view --log-failed` as it prints, prefixes and
+  escapes included, 199 lines.
+- `<id>.expect` — the same `lines`, `source` and `license` as the case's manifest entry, next to
+  its log. `lines` is the 1-based inclusive range in `<id>.log` that a competent engineer would
+  point to as the cause: the first diagnostic that names the actual problem, through the end of
+  its block (the `-->` location and the source excerpt of a rustc/tsc/ruff diagnostic; the `E`
+  lines and the `file:line: AssertionError` of a pytest failure; the `--- FAIL` header and the
+  assertion message of a go test; the `thread '...' panicked at` line and the message of a Rust
+  test). Summary lines are never labelled (`error: could not compile`, `FAILED tests/...`,
   `Process completed with exit code 1`, `ERROR: failed to solve: ...`, `make: *** Error 1`). When
   several independent errors appear, the first one's block is labelled.
-- `source` is the job URL inside the run; the raw log is downloadable from there while GitHub keeps
-  it (90 days from the run).
+- `source` is the job URL inside the run; the raw log is downloadable from there while GitHub
+  keeps it (90 days from the run).
 
 ## Normalisation
 
-Applied to the raw job log (`gh api repos/<owner>/<repo>/actions/jobs/<job>/logs`) before saving:
+Applied to the raw job log (`gh api repos/<owner>/<repo>/actions/jobs/<job>/logs`) of the twenty
+GitHub cases before saving:
 
 1. the `<job>\t<step>\t<timestamp> ` prefix GitHub puts on every line is removed;
 2. ANSI escape sequences are removed (a tool writing to a pipe does not emit them either);
@@ -51,6 +64,7 @@ No log contains an email address, a credential, or a home directory other than t
 | cargo-02 | ratatui/ratatui | MIT | [job](https://github.com/ratatui/ratatui/actions/runs/33818641650/job/100856226867) | `cargo minimal-versions check`: resolver conflict on `bitflags` (^2.11 vs selected 2.9.0) | lines 259–394 of 394 | 121–131 |
 | cargo-03 | sharkdp/fd | MIT OR Apache-2.0 | [job](https://github.com/sharkdp/fd/actions/runs/34986632764/job/104440291301) | `cargo clippy -D warnings`: `clippy::io_other_error` denied in `src/error.rs` | lines 172–420 of 420 | 230–241 |
 | cargo-04 | nushell/nushell | MIT | [job](https://github.com/nushell/nushell/actions/runs/35194238619/job/105174299306) | `cargo test` (Windows): `assertion left == right failed` in a nu-cli completion test (backslash vs slash) | last 300 of 3,701 lines | 277–282 |
+| cargo-05 | tpellet/jevify | MIT | [run](https://github.com/tpellet/jevify/actions/runs/35736209634) (`gh run view --log-failed`) | `cargo test`: `documented_input_side_shell_examples_run_against_the_binary` panicked at `tests/agent.rs:64`, `fill --dry-run` on `@{branch:…}` reported `no_match` with 0 candidates, after 7 loud passing tests | the failed step, 199 lines | 185–188 |
 | npm-01 | vitejs/vite | MIT | [job](https://github.com/vitejs/vite/actions/runs/35400465072/job/105779041544) | `pnpm run build`: rolldown `[PARSE_ERROR] Identifier fileToUrl has already been declared` (duplicate import) | lines 130–322 of 322 | 166–175 |
 | npm-02 | vitejs/vite | MIT | [job](https://github.com/vitejs/vite/actions/runs/35263531980/job/105345046146) | vitest (Windows): `ssrStacktrace.spec.ts` AssertionError, backslash vs slash in a stack trace path | last 300 of 473 lines | 275–284 |
 | npm-03 | colinhacks/zod | MIT | [job](https://github.com/colinhacks/zod/actions/runs/35144047901/job/104955470997) | vitest typecheck under TypeScript 5.5: `TypeCheckError: Cannot find name 'Temporal'` (first of 7) | lines 1150–1449 of 1,987 | 251–257 |
@@ -62,7 +76,7 @@ No log contains an email address, a credential, or a home directory other than t
 | go-01 | helm/helm | Apache-2.0 | [job](https://github.com/helm/helm/actions/runs/35346725778/job/105604936715) | `go test`: `--- FAIL: TestSqlUpdate`, sqlmock "could not match actual sql" | lines 90–262 of 262 | 162–168 |
 | go-02 | helm/helm | Apache-2.0 | [job](https://github.com/helm/helm/actions/runs/35279589611/job/105398199049) | `go test`: `--- FAIL: TestStatusWaitMultipleNamespaces/...`, "resource ... still exists" | last 300 of 449 lines | 288–295 |
 | go-03 | ollama/ollama | MIT | [job](https://github.com/ollama/ollama/actions/runs/35277313408/job/105390981312) | `go test`: `--- FAIL: TestPullHandlerForceBypassesFitCheck`, blob requests = 2, want at most 1 | lines 1550–1849 of 2,756 | 189–190 |
-| go-04 | ollama/ollama | MIT | [job](https://github.com/ollama/ollama/actions/runs/35009350621/job/104517105390) | `go test -race`: `WARNING: DATA RACE` in `TestPullModelManifestListDownloadsSelectedChildOnly` | lines 600–899 of 1,911 | 155–158 |
+| go-04 | ollama/ollama | MIT | [job](https://github.com/ollama/ollama/actions/runs/35009350621/job/104517105390) | `go test -race`: `WARNING: DATA RACE` in `TestPullModelManifestListDownloadsSelectedChildOnly`, the whole race report through `--- FAIL` and `race detected during execution of test` | lines 600–899 of 1,911 | 155–239 |
 | docker-01 | distribution/distribution | Apache-2.0 | [job](https://github.com/distribution/distribution/actions/runs/34435460797/job/102740205237) | `docker buildx bake`: Dockerfile parse error, `COPY --from=binary /registry` with one argument | lines 590–874 of 874 | 279–283 |
 | docker-02 | distribution/distribution | Apache-2.0 | [job](https://github.com/distribution/distribution/actions/runs/34444127685/job/102767511732) | `docker buildx bake`: `pull access denied` loading metadata for `docker.io/upx/upx:latest` | last 300 of 6,378 lines | 223–224 |
 | docker-03 | home-assistant/core | Apache-2.0 | [job](https://github.com/home-assistant/core/actions/runs/35415573571/job/105824031008) | `docker build`, `RUN uv pip install`: no solution found, `installer>=1.0` unavailable for `pipdeptree==4.2.2` | lines 130–378 of 378 | 204–210 |
