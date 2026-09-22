@@ -6,8 +6,11 @@ measurement and claim criteria; the audit records operational checks and remaini
 Neither turns the spot checks below into confirmatory results.
 
 The [paired pilot](PILOT.md) measures eight tasks with and without jevify on the seven verbs, with
-the adoption, correctness and resource figures kept apart and the limits of each one stated. It is
-a pilot: both arms answer the same tasks and neither figure is confirmatory.
+the adoption, correctness and resource figures kept apart and the limits of each one stated. Its
+second run repeats the eight tasks under enforced isolation (one sandboxed directory and a fresh
+answer cache per run, canaries, a scan after every run) and records backend cost per pair with
+cache hits apart; the runner is `scripts/pilot_r4/`. It is a pilot: both arms answer the same
+tasks and neither figure is confirmatory.
 
 Does jevify help a coding agent that already has `grep`, can read files and knows the usual
 command-line tools? Two experiments. The first gives an agent one question about a text (`why`,

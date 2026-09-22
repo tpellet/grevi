@@ -1,14 +1,27 @@
 # Paired agent pilot on the seven verbs
 
-Bead `hunch-evl`. Every number below was measured on 2026-09-22 with jevify 0.8.3 (the installed
-release binary, commit `38b8b5c`), answering model `jev-1.13.0`, on a macOS dev machine. The
-backend is TypeSafe with a key unless a row says classifier.dev (keyless). The agent model is
-`claude-haiku` in both arms.
+Two runs of the same eight tasks. The **first run** (bead `hunch-evl`) was measured on 2026-09-22
+with jevify 0.8.3 (the installed release binary, commit `38b8b5c`); its isolation held by
+construction only and its cost was measured per arm. The **second run** (bead `hunch-iu8`, later
+the same day, jevify 0.9.1, commit `4279c06`) repeats the eight tasks under enforced isolation
+and records cost per pair; it is in [its own section](#second-run-enforced-isolation-and-cost-per-pair)
+and both sets of figures stay side by side. Answering model `jev-1.13.0`, macOS dev machine,
+TypeSafe with a key unless a row says classifier.dev (keyless), agent model `claude-haiku` in
+both arms, one run per cell.
+
+The two runs are not comparable case by case: between 0.8.3 and 0.9.1 `filter` gained an unsure
+band (a record that says nothing either way is kept, not dropped), `why` points at the line that
+carries a panic's message instead of the `panicked at` header, and `pick` over a plain listing
+prefers the entry that is the thing described over a page that documents it (`CHANGELOG.md`,
+0.9.0). The second run also confines every command to a wrapper, forbids the Read, Grep and
+Glob tools, and gives each run a fresh answer cache; the first run did none of these.
 
 This is a pilot, not a confirmation. It does not support a claim that jevify makes an agent more
-accurate: both arms answer the same tasks, and the arm without jevify answers 8 of 8.
+accurate: both arms answer the same tasks, and the arm without jevify answers 8 of 8 in both runs.
 
-## The design
+## First run (0.8.3): isolation by construction, cost per arm
+
+### The design
 
 Eight tasks, each run twice: once by an agent whose instructions are the output of
 `jevify init agents` and a path to the binary, once by an agent told that jevify is not available.
@@ -28,7 +41,7 @@ user on the same filesystem, and one of them (T6, without jevify) wrote two scra
 by the OS or the harness, is **not met**; it is enforced by construction and by inspection of the
 transcripts afterwards.
 
-## Adoption, correctness, resources
+### Adoption, correctness, resources
 
 jevify was called in **4 of 8** with-arm runs (T1 `pick --from branch`, T3 `fill --dry-run` and
 `why`, T4 `why`, T7 `label --files` twice) and in **0 of 8** without-arm runs. Six calls in all,
@@ -70,7 +83,142 @@ Two of the six calls were answered from the local answer cache (`requests: 0`): 
 T3 and T4 repeat inputs an earlier round measured. The latency and backend cost of the with arm are
 therefore lower than a first run would be; turns, tool uses and token counts are unaffected.
 
-## The four items folded in from `hunch-lpp`
+## Second run: enforced isolation and cost per pair
+
+Bead `hunch-iu8`, 2026-09-22, jevify 0.9.1 (commit `4279c06`), `jev-1.13.0`, TypeSafe with a
+key, `claude-haiku` in both arms, one run per cell. Same eight tasks, same gold, same
+`jevify init agents` block (0.9.1's, 3,584 characters) as the only documentation the with arm
+gets. Raw material outside the repository under `eval/r4/`: sixteen transcripts, the per-run
+jevify log, the sixteen scan outputs and the canary record. The runner is
+`scripts/pilot_r4/` (`setup.py` builds the run directories, `jevify_log.py` wraps the binary,
+`check.sh` marks and scans, `collect.py` reads the transcripts, `canary.sh` is the canary run).
+
+### How isolation was enforced
+
+Each of the sixteen runs has its own directory `runs/T<n><arm>/` with `work/` (the working
+directory), `cache/` (a fresh `JEVIFY_CACHE_DIR`, so no run can hit another run's answers),
+`tmp/`, and `bin/run`, a wrapper that executes one quoted shell command under
+`sandbox-exec` (macOS Seatbelt) with a profile generated per run:
+
+- **writes**: denied everywhere except the run directory and `/dev`;
+- **reads**: `file-read-data` denied on the whole evaluation tree except the task inputs
+  (`sets/`) and the run itself, so no run can read the gold, another run, or the first run's
+  transcripts;
+- **the control arm** additionally cannot read or execute `~/.cargo/bin/jevify`, any
+  `target/*/jevify`, or `~/.ssh/typesafe-ai-key`.
+
+The agent is told to use only the Bash tool and to run every command through the wrapper. Of the
+118 Bash calls in the sixteen runs, 117 went through it; the one that did not was
+`echo "Test completed successfully"` (T3 without). No run used Read, Grep, Glob, Write or Edit.
+The with arm's `jevify` is a logging wrapper inside the run directory that sets the run's cache
+and key file (the key is read by jevify, never by the harness) and appends one JSON line per call.
+
+**Canaries** (the containment checks of the 2026-09-20 protocol, `EXPERIMENT.md` stage 1), run
+through both arms' wrappers before the tasks:
+
+| Canary | with arm | without arm |
+|:---|:---|:---|
+| write into `~/Projects/testify` | denied | denied |
+| write into `/tmp` | denied | denied |
+| read the sentinel `runs/_sentinel/gold.txt` | denied | denied |
+| list another run's directory | denied | denied |
+| the key file readable (`test -r`) | **readable** | denied |
+| execute `~/.cargo/bin/jevify` | allowed (the arm needs it) | denied, exit 126 |
+| execute `target/release/jevify` | allowed | denied, exit 126 |
+| write inside `work/` | allowed | allowed |
+| `mktemp` in the system temp dir | denied (mktemp ignores `TMPDIR`) | denied |
+| `gh run list` over the network | allowed | allowed |
+| a write from Bash outside the wrapper | **not stopped**, named by the scan | same |
+
+Two limits are real: the key must stay readable to the with arm's shell because jevify reads it
+inside the same sandbox, so a with-arm agent could `cat` it (none did; the transcripts contain no
+read of `~/.ssh`); and a command the agent runs without the wrapper is outside the sandbox, which
+only the post-run scan catches. The control arm's binary rule matched directories named `jevify`
+under `target/` too, so one `find` in T6 without skipped ten of them ("Operation not permitted");
+it found the answer anyway.
+
+**The check after each run.** `check.sh mark` drops a time marker before the run;
+`check.sh scan` lists every file or directory newer than the marker under `~/Projects`,
+`~/.config`, `~/.cache`, `~/.cargo`, `~/.local`, `~/.ssh`, `/private/tmp`, the user temp
+directory and the evaluation tree, outside the run's own directory. Sixteen scans, **nothing
+written by any arm outside its directory**. Everything the scans listed belongs to the host or
+the harness: the Agent Mail server's log and sqlite, the Claude Code statusline cache, a `bunx`
+cache, the harness's task output files, a launchd backup log, macOS daemon temp items, and (batch
+4) files this evaluator wrote under `r4/` while bisecting the T7 defect after the runs. The first
+run's "T6 without wrote two files under `/tmp`" cannot recur: the write is denied.
+
+### Adoption, correctness, cost per pair
+
+jevify was called in **5 of 8** with-arm runs (T1 `fill` twice, T3 `fill` and `why --json`, T4
+`why --json`, T7 `label` three times, T8 `route`), nine calls, and in **0 of 8** without-arm runs.
+Exits: 6 of 9 exit 0; T1's first `fill` exit 6 (`lister_failed`: the run's working directory is
+not a git repository, the agent then `cd`'d), T1's second `fill` exit 128 (see `hunch-x4w`),
+T7's first `label` exit 3 (paths without `--files`: 12 unsure). Not used on T2 (`git log --grep`),
+T5 (`find` and `cat`), T6 (`grep`).
+
+Correctness: **8 of 8 without, 7 of 8 with**. T3 with quotes the right line this time (the
+`no_match; candidates 0 of 0` line, 189, that 0.8.3's `why` missed). T4 without quotes lines 238
+and 239 correctly and misnumbers `WARNING: DATA RACE` as 141 (it is 155); counted correct. T6:
+both arms list the same 8 functions, the 7 in the gold plus one neighbour. The with-arm miss is
+**T7**: `label --files bug,feature,docs` over the twelve reports returned `docs` for all twelve,
+exit 0, "labelled 12 of 12, 0 unsure", and the agent reported 0 / 0 / 12 against a gold of
+5 / 4 / 3 (which the without arm got by reading the twelve files). The cause is the sandbox meeting
+a silent fallback in jevify: the excerpt reader walks every path component from `/` and the
+profile denies reading the evaluation directory above `sets/`, so every excerpt failed and each
+report was labelled from its file name alone at p 0.77–0.99 with `excerpts_withheld: 0`
+(`hunch-3fj`). Outside the sandbox the same command gives 5 / 4 / 2 with one unsure. `cat`, `wc`
+and Python read the same files under the same profile.
+
+| Task | turns with / without | tool uses | input tokens | output tokens | wall s | jevify calls (with) | requests | questions | cache hits | cost USD |
+|:---|---:|---:|---:|---:|---:|:---|---:|---:|---:|---:|
+| T1 branch by description | 15 / 24 | 6 / 10 | 452k / 711k | 3,050 / 3,756 | 33 / 38 | 2 `fill` (exit 6, 128) | 1 | 2 | 0 | 0.00004 |
+| T2 commit by description | 7 / 11 | 2 / 4 | 197k / 313k | 1,522 / 1,673 | 17 / 18 | 0 | 0 | 0 | 0 | 0 |
+| T3 failed CI run on a tag | 17 / 21 | 7 / 8 | 541k / 705k | 3,656 / 3,380 | 53 / 42 | `fill`, `why --json` | 4 | 8 | 0 | 0.00155 |
+| T4 root cause in a CI log | 5 / 13 | 1 / 4 | 151k / 495k | 970 / 2,922 | 13 / 32 | `why --json` | 3 | 6 | 0 | 0.00073 |
+| T5 source file by content | 25 / 25 | 11 / 11 | 892k / 790k | 3,999 / 3,335 | 58 / 53 | 0 | 0 | 0 | 0 | 0 |
+| T6 tests by topic | 37 / 92 | 17 / 44 | 1,306k / 3,551k | 6,339 / 13,259 | 77 / 147 | 0 | 0 | 0 | 0 | 0 |
+| T7 triage of 12 reports | 12 / 33 | 4 / 14 | 366k / 1,006k | 2,159 / 5,899 | 27 / 56 | 3 `label` (exit 3, 0, 0) | 2 | 36 | 1 | 0.00016 |
+| T8 the tool for a job | 12 / 25 | 4 / 11 | 347k / 747k | 1,492 / 3,449 | 24 / 36 | `route` | 11 | 32 | 0 | 0.00244 |
+| **total** | **130 / 244** | **52 / 106** | **4.25M / 8.32M** | **23.2k / 37.7k** | **302 / 421** | **9** | **21** | **84** | **1** | **0.0049** |
+
+Turns, tool uses and tokens are the harness's per-run usage of the agent model, wall time is
+first to last transcript timestamp. Requests, questions, cache hits and cost are read from the
+jevify envelope of every call of that task (`meta.requests`, `meta.telemetry.semantic_questions`,
+`meta.cache_hits`, `meta.cost_usd` at the configured input price, 0.042 USD per Mtok; every
+estimate reports `complete: true`). Cache hits are counted apart: one, T7's third `label`, a
+repeat of its second within the same run; every other call was a live request against a fresh
+cache. When the agent did not ask for a machine format (5 of 9 calls), the wrapper ran the same
+call with `--json` first (and `--dry-run` for `fill`), recorded that envelope, and let the agent's
+own call replay the answers from the run's cache; the requests and cost in the table are the
+first call's, the agent saw one command's latency plus a replay of a few milliseconds. The
+whole with arm cost half a cent of backend inference; T8's `route` (11 requests, 32 questions
+over the installed-tool inventory) is half of it.
+
+The with arm spends 53 % of the turns, 49 % of the tool uses and 51 % of the input tokens of the
+without arm. Four pairs carry the gap (T6, T7, T4, T8); in T4, T7 and T8 the jevify call replaced
+the reading loop (T7 without read all twelve reports, T8 without read `vhs --help` and its man
+page five ways), and in T6 neither arm called jevify: the with arm simply stopped after 17 tool
+uses and the without arm after 44, on the same answer. T5 is the one pair where the with arm cost
+more; it did not call jevify. Eight pairs, one run each: figures, not an effect, and one of the
+four large gaps (T6) has nothing to do with jevify.
+
+### What the second run adds and what it still cannot say
+
+- Isolation is enforced by the OS for every command that goes through the wrapper, and the scan
+  found no write outside any run; the wrapper is the agent's to skip (1 of 118 calls did, an
+  `echo`), and the key stays readable to the with arm's shell.
+- Cost is per pair, with cache hits apart: 21 requests, 84 questions, one cache hit, 0.0049 USD
+  for the whole with arm; the without arm's backend cost is zero by construction.
+- The with arm answers 7 of 8 again, for a different reason than in the first run: 0.8.3's `why`
+  quoted the wrong line on T3 and 0.9.1 quotes the right one; 0.9.1's `label --files` under the
+  sandbox labelled from file names alone on T7. Adoption is 5 of 8 instead of 4 of 8; the extra
+  is T8's `route`.
+- The sandbox itself changes the task: the with arm's T7 miss is a jevify defect the sandbox
+  exposed, not a model decision, and a harness without that profile would not see it. Both are
+  reported because both are true of an agent running jevify inside a deny-listed sandbox.
+- The gold is still the evaluator's, one run per cell, eight pairs.
+
+## The four items folded in from `hunch-lpp` (first run)
 
 ### `filter` at the unsure boundary, labelled independently
 
@@ -157,16 +305,25 @@ about 120 classifications of the 20,000 a day one IP is allowed.
 
 ## What these numbers cannot support
 
-- Both arms answer 8 of 8 (the with arm 7 of 8 on the quoted line of T3). Adoption is not
-  effectiveness: nothing here shows jevify changed an outcome for the better.
-- One run per cell, eight pairs. The turn and token gaps are dominated by three pairs.
-- The isolation between arms is by construction, not enforced.
-- Two of the six calls were cache hits, so the backend cost of the with arm is understated.
+- Both arms answer 8 of 8 (the with arm 7 of 8: on the quoted line of T3 in the first run, on
+  T7's labels in the second). Adoption is not effectiveness: nothing here shows jevify changed an
+  outcome for the better.
+- One run per cell, eight pairs, twice. The turn and token gaps are dominated by three or four
+  pairs, and one large gap of the second run (T6) involves no jevify call.
+- First run only: the isolation between arms is by construction, not enforced, and two of the
+  six calls were cache hits, so its backend cost is understated. The second run enforces the
+  sandbox per command and counts its one cache hit apart, with the two limits stated there.
 - The finalist-miss figure is a reconstruction of round one, because no hook exposes it.
 
 ## Beads filed
 
-`hunch-93l` (P2, `pick` prefers a documentation page to the source file a description names),
-`hunch-8b3` (P3, no hook exposes round-one ranks or the finalist set), `hunch-n35` (P3, `why`
-points at the panic header rather than the line that explains the failure), `hunch-63r` (P3,
-the unsure band never fires: `filter` reads "the record does not say" as a confident no).
+First run: `hunch-93l` (P2, `pick` prefers a documentation page to the source file a description
+names), `hunch-8b3` (P3, no hook exposes round-one ranks or the finalist set), `hunch-n35` (P3,
+`why` points at the panic header rather than the line that explains the failure), `hunch-63r`
+(P3, the unsure band never fires: `filter` reads "the record does not say" as a confident no).
+The first three shipped in 0.9.0 and 0.9.1 and the second run reflects them.
+
+Second run: `hunch-3fj` (P2, `label`/`pick --files`: a file whose excerpt cannot be read is
+labelled from its name alone, confidently and silently, `excerpts_withheld` stays 0),
+`hunch-x4w` (P2, `fill @{branch:}` resolves a remote-only branch to its bare name, which git
+cannot resolve; the status line shows `origin/…` but the command gets the bare name).
