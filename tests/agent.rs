@@ -126,6 +126,15 @@ fn capabilities_lists_verbs_exit_codes_env() {
         assert!(!codes.is_empty());
         assert!(codes.iter().all(|code| code.is_u64()));
     }
+    let label = commands.iter().find(|c| c["name"] == "label").unwrap();
+    assert_eq!(label["exit"], serde_json::json!([0, 3]));
+    assert!(label["usage"].as_str().unwrap().contains("[-0|--para]"));
+    assert!(
+        label["example"]
+            .as_str()
+            .unwrap()
+            .contains("jevify label bug,feature,question")
+    );
     assert_eq!(d["limits"]["distinct_records"], 20_000);
     assert_eq!(d["limits"]["records_per_request"]["classifier"], 1_000);
     assert_eq!(d["limits"]["records_per_request"]["typesafe"], 20);
@@ -293,11 +302,12 @@ fn agent_block_is_bounded_and_public_help_has_no_removed_forms() {
         outputs.push(String::from_utf8(out.stdout).unwrap());
     }
     let removed = regex::Regex::new(
-        r"jevify (?:run|label)(?:\s|$)|why -- |jevify -v(?:\s|$)|@\{(?:commit|file|dir|tool|pod|pr|issue|ci-run|stash|process|container):",
+        r"jevify run(?:\s|$)|why -- |jevify -v(?:\s|$)|@\{(?:commit|file|dir|tool|pod|pr|issue|ci-run|stash|process|container):",
     ).unwrap();
     for allowed in [
         "jevify fill",
         "jevify pick --from branch",
+        "jevify label x",
         "'@{-:x}'",
         "'@{branch:x}'",
         "'@{one:a|b:x}'",
@@ -306,7 +316,7 @@ fn agent_block_is_bounded_and_public_help_has_no_removed_forms() {
         assert!(!removed.is_match(allowed), "{allowed}");
     }
     for forbidden in [
-        "jevify label x",
+        "jevify run x",
         "'@{commit:x}'",
         "'@{file:x}'",
         "'@{dir:x}'",

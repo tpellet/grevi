@@ -62,6 +62,46 @@ fn fill_parser_preserves_command_bytes_and_rejects_conflicts() {
     );
 }
 
+// `label` takes one comma-separated list; a malformed one is a usage error with one corrected
+// form in the message, under the human and the machine format alike.
+#[test]
+fn label_parses_its_list_and_rejects_malformed_lists_with_a_corrected_form() {
+    use clap::{CommandFactory, FromArgMatches};
+    let matches = jevify::cli::Cli::command()
+        .mut_args(|a| a.env(None))
+        .try_get_matches_from(["jevify", "label", "bug,feature"])
+        .unwrap();
+    let cli = jevify::cli::Cli::from_arg_matches(&matches).unwrap();
+    assert!(
+        matches!(cli.cmd, jevify::cli::Cmd::Label { labels, nul: false, para: false, files: false } if labels.0 == ["bug", "feature"])
+    );
+    for args in [
+        vec!["label", "bug"],
+        vec!["label", "bug,bug"],
+        vec!["label", "bug,,feature"],
+        vec!["label", "bug,?"],
+        vec!["label", "-0", "--para", "bug,feature"],
+    ] {
+        let out = common::bin().args(&args).output().unwrap();
+        assert_eq!(out.status.code(), Some(2), "{args:?}");
+        assert!(out.stdout.is_empty());
+        let stderr = String::from_utf8(out.stderr).unwrap();
+        assert!(stderr.starts_with("jevify label: error:"), "{stderr}");
+        assert!(
+            stderr.contains("jevify label bug,feature") || stderr.contains("cannot be used with"),
+            "{stderr}"
+        );
+        let out = common::bin().arg("--json").args(&args).output().unwrap();
+        assert_eq!(out.status.code(), Some(2), "{args:?}");
+        let value: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+        assert_eq!(value["command"], "label");
+        assert_eq!(value["exit_code"], 2);
+        assert_eq!(value["error"]["kind"], "usage");
+        assert!(value["data"].is_null());
+        assert_eq!(value["meta"]["requests"], 0);
+    }
+}
+
 #[test]
 fn argv_helper_preserves_bytes_stdin_and_exit() {
     use std::{
@@ -234,6 +274,7 @@ fn help_lists_every_verb() {
         "why",
         "route",
         "filter",
+        "label",
         "is",
         "capabilities",
         "robot-docs",
@@ -264,6 +305,7 @@ fn bare_jevify_prints_the_quick_start_card_as_a_usage_error() {
         "jevify is",
         "jevify route",
         "jevify filter",
+        "jevify label",
         "jevify add",
         "jevify sort",
         "--json",
@@ -464,6 +506,7 @@ fn all_help_uses_the_cutover_grammar() {
         "why",
         "route",
         "filter",
+        "label",
         "is",
         "add",
         "sort",

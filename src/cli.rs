@@ -141,6 +141,24 @@ pub enum Cmd {
         #[arg(long)]
         no_save: bool,
     },
+    /// Tag each stdin record with one of the given labels: a label, a tab, the record; ? when unsure
+    #[command(
+        after_help = "Example:\n  gh issue list | jevify label bug,feature,question | cut -f1 | sort | uniq -c\n\nLabels are comma-separated: at least two, distinct, none empty, none ? or NONE. Each record comes out as LABEL<TAB>RECORD, in input order and unchanged after the tab; an unsure record gets ?. --files reads stdin paths and judges each file's first lines. Saves nothing.\nExit: 0 labelled, 3 every record unsure. --json data: records[{label, text, ordinal, p, lossy?}], labelled, total, unsure. Non-UTF-8 records have lossy: true."
+    )]
+    Label {
+        /// The labels, comma-separated, e.g. bug,feature,question
+        #[arg(value_name = "LABELS", value_parser = parse_labels)]
+        labels: Labels,
+        /// Split stdin on NUL bytes
+        #[arg(short = '0', conflicts_with = "para")]
+        nul: bool,
+        /// Split stdin into paragraphs
+        #[arg(long)]
+        para: bool,
+        /// Read paths from stdin and use file excerpts as evidence
+        #[arg(long)]
+        files: bool,
+    },
     /// Ask a yes-or-no question about the text on stdin; the answer is the exit code (0 yes, 1 no, 3 unsure)
     #[command(
         after_help = "Examples:\n  jevify is \"the customer asks for a refund\" < mail.txt && ./refund\n  jevify is 'asks for a refund' 'mentions an order' --context mail.txt\n\nWrite the condition so that yes means act. Each statement is judged literally. No counting, arithmetic, dates or quality judgments. Oversized input is not judged.\nOne statement prints nothing on human stdout; several print VERDICT<TAB>STATEMENT lines. Exit: 0 all yes, 1 one no, 3 otherwise. --json data: p, verdict, truncated, reason (when oversized); several: statements[{statement, verdict, p}], verdict, truncated."
@@ -196,6 +214,36 @@ pub enum Cmd {
     Health,
     /// Print shell integration (`,` alias for `jevify route`) or an agent instruction block
     Init { shell: Shell },
+}
+
+/// The labels of `label`, validated once by the parser: at least two, distinct, none empty,
+/// none `?` (the unsure mark) or `NONE` (the internal option). Their count against the
+/// backend's window is checked in `cmd::label`, where the backend is known.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Labels(pub Vec<String>);
+
+const LABELS_FORM: &str = "at least two comma-separated labels, distinct, none empty, none ? or NONE: jevify label bug,feature";
+
+fn parse_labels(text: &str) -> Result<Labels, String> {
+    let labels: Vec<String> = text.split(',').map(str::to_owned).collect();
+    let repeated = labels
+        .iter()
+        .enumerate()
+        .find(|(i, l)| labels[..*i].contains(l))
+        .map(|(_, l)| l);
+    let problem = if labels.len() < 2 {
+        Some("one label".to_owned())
+    } else if let Some(empty) = labels.iter().position(String::is_empty) {
+        Some(format!("label {} is empty", empty + 1))
+    } else if let Some(reserved) = labels.iter().find(|l| *l == "?" || *l == "NONE") {
+        Some(format!("{reserved} is reserved"))
+    } else {
+        repeated.map(|repeated| format!("{repeated} is repeated"))
+    };
+    match problem {
+        Some(problem) => Err(format!("{problem}; expected {LABELS_FORM}")),
+        None => Ok(Labels(labels)),
+    }
 }
 
 #[derive(ValueEnum, Clone, Copy, Debug)]
@@ -269,6 +317,9 @@ mod tests {
                 no_save: true
             }
         ));
+        assert!(
+            matches!(parse_without_env(&["jevify", "label", "--para", "--files", "bug,feature"]).cmd, Cmd::Label { labels, nul: false, para: true, files: true } if labels.0 == ["bug", "feature"])
+        );
         assert!(matches!(
             parse_without_env(&["jevify", "init", "agents"]).cmd,
             Cmd::Init {
@@ -288,12 +339,42 @@ mod tests {
             vec!["jevify", "why", "--files"],
             vec!["jevify", "pick", "--files", "DIR", "q"],
             vec!["jevify", "pick", "--files", "--index", "q"],
+            vec!["jevify", "label", "-0", "--para", "a,b"],
+            vec!["jevify", "label", "bug"],
+            vec!["jevify", "label", "bug,bug"],
+            vec!["jevify", "label", "bug,,feature"],
+            vec!["jevify", "label", "bug,?"],
+            vec!["jevify", "label", "NONE,bug"],
+            vec!["jevify", "label", "a,b", "c,d"],
         ] {
             let error = Cli::command()
                 .mut_args(|a| a.env(None))
                 .try_get_matches_from(&args)
                 .unwrap_err();
             assert_eq!(error.exit_code(), 2, "{args:?}");
+        }
+    }
+
+    #[test]
+    fn label_lists_are_validated_with_a_corrected_form() {
+        assert_eq!(
+            parse_labels("bug,feature,question").unwrap().0,
+            ["bug", "feature", "question"]
+        );
+        for (text, problem) in [
+            ("bug", "one label"),
+            ("", "one label"),
+            ("bug,bug", "bug is repeated"),
+            ("bug,,feature", "label 2 is empty"),
+            ("bug,?", "? is reserved"),
+            ("NONE,bug", "NONE is reserved"),
+        ] {
+            let error = parse_labels(text).unwrap_err();
+            assert!(error.starts_with(problem), "{text}: {error}");
+            assert!(
+                error.ends_with("jevify label bug,feature"),
+                "{text}: {error}"
+            );
         }
     }
 }

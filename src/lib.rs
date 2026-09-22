@@ -24,12 +24,13 @@ use std::ffi::OsString;
 use std::io::Write;
 use std::time::Instant;
 
-const VERBS: [&str; 12] = [
+const VERBS: [&str; 13] = [
     "fill",
     "pick",
     "why",
     "route",
     "filter",
+    "label",
     "is",
     "add",
     "sort",
@@ -50,11 +51,12 @@ pub const QUICK_START: &str = concat!(
   jevify is "<statement>" < file          yes / no / unsure as exit code 0 / 1 / 3
   jevify route "<task>"                  find the installed command for a task
   <list> | jevify filter "<statement>"    keep matching records
+  <list> | jevify label a,b,c             tag each record with a label
   jevify add --dry-run "<topic>"          stage only the git changes about a topic
   jevify sort <dir>                       propose a folder for each file (dry run)
 Add --json for one JSON object on stdout. No key needed.
 Exit: 0 ok, 1 no, 2 usage, 3 nothing fits or unsure, 4 API unavailable, 5 auth, 6 input.
-More: jevify <verb> --help | jevify --help | agents: jevify capabilities --json, jevify robot-docs
+More: jevify <verb> --help | agents: jevify capabilities --json, jevify robot-docs
 "#
 );
 
@@ -208,6 +210,7 @@ fn command_name(cmd: &Cmd) -> &'static str {
         Cmd::Why { .. } => "why",
         Cmd::Route { .. } => "route",
         Cmd::Filter { .. } => "filter",
+        Cmd::Label { .. } => "label",
         Cmd::Is { .. } => "is",
         Cmd::Add { .. } => "add",
         Cmd::Sort { .. } => "sort",
@@ -447,6 +450,23 @@ async fn dispatch(cli: &Cli, ctx: &config::Config) -> Result<cmd::Outcome, Jevif
                     split: split(*nul, *para),
                     files: *files,
                     no_save: *no_save,
+                },
+                machine,
+            )
+            .await
+        }
+        Cmd::Label {
+            labels,
+            nul,
+            para,
+            files,
+        } => {
+            cmd::label::run(
+                ctx,
+                labels.0.clone(),
+                cmd::label::LabelFlags {
+                    split: split(*nul, *para),
+                    files: *files,
                 },
                 machine,
             )

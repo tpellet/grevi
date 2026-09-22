@@ -5,6 +5,7 @@ pub mod agent;
 pub mod fill;
 pub mod filter;
 pub mod is;
+pub mod label;
 pub mod pick;
 pub mod run;
 pub mod sort;
