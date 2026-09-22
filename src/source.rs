@@ -1354,9 +1354,14 @@ done
 
     #[tokio::test]
     async fn runner_discards_partial_output_after_exit_or_inherited_pipe() {
+        // The second body exits 0 while a background child keeps the pipes open for
+        // 5 s. Had the runner waited for EOF instead of giving the readers READER_GRACE
+        // after exit, the pipes would close with exit 0 and `enumerate` would succeed,
+        // so `unwrap_err` plus the "EOF" message prove the early return without a
+        // wall-clock bound that a loaded machine could miss.
         for body in [
             "printf 'refs/heads/x\\000\\0001\\000tip\\000\\n'; printf 'tool failed' >&2; exit 1",
-            "printf 'refs/heads/x\\000\\0001\\000tip\\000\\n'; /bin/sleep 2 & exit 0",
+            "printf 'refs/heads/x\\000\\0001\\000tip\\000\\n'; /bin/sleep 5 & exit 0",
         ] {
             let env = fake_git(body);
             let start = Instant::now();
@@ -1364,7 +1369,7 @@ done
                 .await
                 .unwrap_err();
             assert_eq!(error.kind(), "lister_failed");
-            assert!(start.elapsed() < Duration::from_millis(900));
+            assert!(start.elapsed() < Duration::from_secs(5));
             if body.contains("exit 1") {
                 assert!(error.to_string().contains("tool failed"));
             } else {
