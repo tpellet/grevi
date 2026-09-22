@@ -47,8 +47,15 @@ pub async fn run(
     }
     let args = marker::parse(cmd).map_err(|e| JevifyError::Usage(e.to_string()))?;
     let markers: Vec<_> = args.iter().flat_map(|arg| &arg.markers).collect();
+    let env = source::Env::from_process(source::LISTER_TIMEOUT);
+    // One `Kind` per marker (`None` for `one` and `flag`), resolved once, before any other I/O.
+    let mut kinds = Vec::with_capacity(markers.len());
     for marker in &markers {
-        validate_kind(marker, &args[marker.argv_index].literal)?;
+        kinds.push(validate_kind(
+            marker,
+            &args[marker.argv_index].literal,
+            &env,
+        )?);
         if marker.options.len() > ctx.backend.window() {
             return Err(JevifyError::Usage(format!(
                 "one has {} options; the backend accepts at most {}",
@@ -91,14 +98,16 @@ pub async fn run(
     let insufficient =
         context.chars().count() > MAX_CONTEXT_CHARS.min(ctx.backend.max_state_chars());
     let limit = ctx.backend.window() * (ctx.backend.window() / 3);
-    let env = source::Env::from_process(source::LISTER_TIMEOUT);
+    // The literal before a path marker is its scope; every other kind lists from the cwd.
+    let prefix_of = |i: usize| -> Option<PathBuf> {
+        kinds[i].as_ref().filter(|k| k.path_kind).and_then(|_| {
+            (!markers[i].prefix.is_empty()).then(|| PathBuf::from(&markers[i].prefix))
+        })
+    };
     let mut scopes = Vec::new();
-    for m in &markers {
-        if source::kind(&m.kind).is_some() {
-            let prefix = source::kind(&m.kind)
-                .filter(|k| k.path_kind)
-                .and_then(|_| (!m.prefix.is_empty()).then(|| PathBuf::from(&m.prefix)));
-            let key = (m.kind.clone(), prefix);
+    for (i, m) in markers.iter().enumerate() {
+        if kinds[i].is_some() {
+            let key = (m.kind.clone(), prefix_of(i));
             if !scopes.contains(&key) {
                 scopes.push(key);
             }
@@ -119,12 +128,10 @@ pub async fn run(
     }))
     .await;
     let mut states = Vec::new();
-    for m in &markers {
+    for (i, m) in markers.iter().enumerate() {
         let mut state = State::default();
-        if source::kind(&m.kind).is_some() {
-            let prefix = source::kind(&m.kind)
-                .filter(|k| k.path_kind)
-                .and_then(|_| (!m.prefix.is_empty()).then(|| PathBuf::from(&m.prefix)));
+        if let Some(kind) = &kinds[i] {
+            let prefix = prefix_of(i);
             let index = scopes
                 .iter()
                 .position(|(kind, scope)| kind == &m.kind && scope == &prefix)
@@ -137,7 +144,8 @@ pub async fn run(
             state.records = listing.records.clone();
             state.omitted = listing.omitted;
             state.total = listing.total;
-            if m.opens_argument && !source::kind(&m.kind).unwrap().path_kind {
+            state.newest = listing.ordered && listing.total > listing.records.len();
+            if m.opens_argument && !kind.path_kind {
                 state.records.retain(|r| {
                     let keep = !r.handle.as_bytes().starts_with(b"-");
                     state.omitted += usize::from(!keep);
@@ -326,11 +334,13 @@ pub async fn run(
         let records = &states[i].records;
         let client = &client;
         let prompts = &prompts;
+        let env = &env;
+        let tier_two = kinds[i].as_ref().is_some_and(|k| k.has_tier_two);
+        let prefix = prefix_of(i).unwrap_or_default();
         async move {
             let Some(first) = first else {
                 return Ok(None);
             };
-            let tier_two = source::kind(&m.kind).is_some_and(|k| k.has_tier_two);
             if first.windows.len() == 1 {
                 let ranking = &first.windows[0];
                 if !tier_two
@@ -339,7 +349,7 @@ pub async fn run(
                         Decision::Ambiguous(_)
                     )
                 {
-                    return Ok(Some(ranking.clone()));
+                    return Ok(Some((ranking.clone(), 0)));
                 }
             }
             let handles: Vec<_> = first
@@ -348,10 +358,10 @@ pub async fn run(
                 .take(MAX_FINALISTS)
                 .map(|c| records[c.index].handle.clone())
                 .collect();
-            let evidence = if tier_two {
-                source::enrich(&m.kind, &handles).await
+            let (evidence, withheld) = if tier_two {
+                source::enrich_in(&m.kind, &prefix, &handles, env).await
             } else {
-                vec![]
+                (vec![], 0)
             };
             let items: Vec<_> = first
                 .finalists
@@ -368,12 +378,13 @@ pub async fn run(
                 .collect();
             let mut ranking = tournament::window(client, &m.description, &items, prompts).await?;
             ranking.windows = first.windows.len();
-            Ok::<_, JevifyError>(Some(ranking))
+            Ok::<_, JevifyError>(Some((ranking, withheld)))
         }
     }))
     .await;
     for (i, ranking) in finals.into_iter().enumerate() {
-        if let Some(ranking) = ranking? {
+        if let Some((ranking, withheld)) = ranking? {
+            states[i].withheld = withheld;
             apply_ranking(&mut states[i], &ranking, ctx.threshold);
         }
     }
@@ -388,10 +399,32 @@ struct State {
     records: Vec<Record>,
     total: usize,
     omitted: usize,
+    /// An ordered listing above the limit kept its newest part.
+    newest: bool,
+    /// Finalists whose excerpt the withholding policy kept out of round two.
+    withheld: usize,
     handle: Option<OsString>,
     reason: Option<&'static str>,
     p: Option<f64>,
     detail: String,
+}
+
+impl State {
+    /// `candidates N`, `candidates N of M` when the listing was cut, `newest first` when the
+    /// cut kept the head of an ordered listing, and the omitted count when there is one.
+    fn count_line(&self) -> String {
+        let mut line = format!("candidates {}", self.records.len());
+        if self.total > self.records.len() {
+            line.push_str(&format!(" of {}", self.total));
+            if self.newest {
+                line.push_str(", newest first");
+            }
+        }
+        if self.omitted > 0 {
+            line.push_str(&format!(", omitted {}", self.omitted));
+        }
+        line
+    }
 }
 
 fn guard_model(ctx: &Config) -> Result<(), JevifyError> {
@@ -421,16 +454,19 @@ fn apply_ranking(state: &mut State, ranking: &Ranking, threshold: f64) {
             state.handle = Some(record.handle.clone());
             state.p = Some(best.p);
             state.detail = format!(
-                "{} {:.2} (next {:.2}, none {:.2}) {}; candidates {} of {}, omitted {}, windows {}",
+                "{} {:.2} (next {:.2}, none {:.2}) {}; {}, windows {}{}",
                 record.handle.to_string_lossy(),
                 best.p,
                 ranking.candidates.get(1).map_or(0.0, |c| c.p),
                 ranking.none,
                 record.evidence,
-                state.records.len(),
-                state.total,
-                state.omitted,
-                ranking.windows
+                state.count_line(),
+                ranking.windows,
+                if state.withheld > 0 {
+                    format!(", excerpts withheld: {}", state.withheld)
+                } else {
+                    String::new()
+                }
             );
         }
         Decision::NoMatch => state.reason = Some(NO_MATCH),
@@ -590,14 +626,31 @@ fn check_program(program: &OsStr) -> Result<(), JevifyError> {
     }
 }
 
-fn validate_kind(marker: &Marker, argument: &OsStr) -> Result<(), JevifyError> {
-    if matches!(marker.kind.as_str(), "one" | "flag") || source::kind(&marker.kind).is_some() {
-        return Ok(());
+/// The kind of a listing marker; `None` for `one` and `flag`. A name that is neither coded nor
+/// shipped is looked up in the user's recipes; a name found nowhere is exit 2 with the nearest
+/// kind, and a bad recipe file is `recipe_invalid` with its line number.
+fn validate_kind(
+    marker: &Marker,
+    argument: &OsStr,
+    env: &source::Env,
+) -> Result<Option<source::Kind>, JevifyError> {
+    if matches!(marker.kind.as_str(), "one" | "flag") {
+        return Ok(None);
     }
-    let kinds: Vec<_> = source::KINDS
+    if let Some(kind) = source::lookup(&marker.kind, env)? {
+        return Ok(Some(kind));
+    }
+    let user: Vec<String> = source::catalog(env)
+        .kinds
+        .into_iter()
+        .filter(|entry| entry.origin == "user")
+        .map(|entry| entry.name)
+        .collect();
+    let kinds: Vec<&str> = source::KINDS
         .iter()
         .copied()
         .chain(["one", "flag"])
+        .chain(user.iter().map(String::as_str))
         .collect();
     let nearest = kinds
         .iter()

@@ -66,3 +66,23 @@ fn bin_never_reads_the_platform_configuration_directory() {
             .is_none()
     );
 }
+
+#[tokio::test(flavor = "multi_thread")]
+async fn an_explicit_config_dir_resolves_the_planted_recipe_through_bin() {
+    let (_home, planted, _vars) = planted_home();
+    let server = common::mock(common::FakeJev {
+        choose: |_, s, o| common::option_containing(s, o, "w1"),
+        noul: |_, _| 0.9,
+    })
+    .await;
+    let mut cmd = common::jevify(&server);
+    cmd.env("JEVIFY_CONFIG_DIR", &planted);
+    let out = fill_widget(&mut cmd, &[]);
+    assert_eq!(
+        out.status.code(),
+        Some(0),
+        "{}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    assert_eq!(out.stdout, b"'printf' 'w1'\n");
+}

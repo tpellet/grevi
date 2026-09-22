@@ -864,3 +864,189 @@ async fn files_mode_rejects_index_and_empty_input_and_abstains_honestly() {
     assert_eq!(out.status.code(), Some(2));
     assert_eq!(v(&out)["error"]["kind"], "usage");
 }
+
+/// A fake `git` for `commit` (full 40-hex OIDs, newest first, `commits` of them) and `file`
+/// (`ls-files` prints `files`), and a fake `gh` that lists one pull request. The scripts use
+/// shell builtins only: the fixture directory is the whole PATH.
+fn kinds_fixture(commits: usize, files: &[&str]) -> std::path::PathBuf {
+    use std::os::unix::fs::PermissionsExt;
+    let root = tempfile::tempdir().unwrap().keep();
+    std::fs::write(
+        root.join("git"),
+        format!(
+            r#"#!/bin/sh
+printf '%s\n' "$*" >> "$PICK_GIT_LOG"
+total={commits}
+case "$1" in
+  rev-list) printf '%s\n' "$total" ;;
+  ls-files) printf '%s\000' {files} ;;
+  log)
+    if [ "$2" = "-n" ]; then
+      n=$3
+      [ "$n" -gt "$total" ] && n=$total
+      i=0
+      while [ "$i" -lt "$n" ]; do
+        printf '%040d\000subject %s\000' "$i" "$i"
+        i=$((i + 1))
+      done
+    else
+      printf 'body\000\000src/file\000'
+    fi ;;
+  *) exit 1 ;;
+esac
+"#,
+            files = if files.is_empty() {
+                "''".to_owned()
+            } else {
+                files.join(" ")
+            }
+        ),
+    )
+    .unwrap();
+    std::fs::write(
+        root.join("gh"),
+        "#!/bin/sh\nprintf '[{\"number\":7,\"title\":\"Windows path fix\",\"state\":\"OPEN\",\"headRefName\":\"x\"}]\\n'\n",
+    )
+    .unwrap();
+    for name in ["git", "gh"] {
+        std::fs::set_permissions(root.join(name), std::fs::Permissions::from_mode(0o755)).unwrap();
+    }
+    root
+}
+
+fn kinds_command(
+    server: &wiremock::MockServer,
+    root: &std::path::Path,
+    classifier: bool,
+) -> assert_cmd::Command {
+    let mut cmd = branch_command(server, root, classifier);
+    cmd.env("PICK_FIXTURE", root);
+    cmd
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn from_commit_passes_the_capacity_as_limit_and_prints_a_full_oid() {
+    let server = common::mock_classifier(FakeJev {
+        choose: |_, _, o| o[0].clone(),
+        noul: |_, _| 0.9,
+    })
+    .await;
+    // Above fill's F = 3267 but within pick's W × W: nothing is cut, so no "of".
+    let count = 99 * 33 + 1;
+    let root = kinds_fixture(count, &[]);
+    let out = kinds_command(&server, &root, true)
+        .args(["--json", "pick", "--from", "commit", "x"])
+        .output()
+        .unwrap();
+    let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+    assert_eq!(out.status.code(), Some(0), "{v}");
+    let handle = v["data"]["matches"][0]["text"].as_str().unwrap();
+    assert_eq!(handle.len(), 40);
+    assert!(handle.bytes().all(|b| b.is_ascii_hexdigit()));
+    assert_eq!(v["data"]["candidates"], count);
+    assert_eq!(v["data"]["total"], count);
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert!(
+        stderr.contains(&format!("candidates {count}, windows 34")),
+        "{stderr}"
+    );
+    assert!(!stderr.contains(" of "), "{stderr}");
+    let calls = std::fs::read_to_string(root.join("calls")).unwrap();
+    assert!(
+        calls.lines().any(|line| line.starts_with("log -n 9801 ")),
+        "{calls}"
+    );
+    assert_eq!(
+        calls
+            .lines()
+            .filter(|line| line.starts_with("log -1 "))
+            .count(),
+        24
+    );
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn from_file_tool_and_pr_print_a_handle() {
+    use std::os::unix::fs::PermissionsExt;
+    let server = common::mock(FakeJev {
+        choose: |_, s, o| {
+            let needle = match s["request"].as_str().unwrap() {
+                "the invoice" => "invoice",
+                "the beta tool" => "beta-tool",
+                _ => "Windows",
+            };
+            option_containing(s, o, needle)
+        },
+        noul: |_, _| 0.9,
+    })
+    .await;
+    let root = kinds_fixture(0, &["invoice.txt", "notes.txt"]);
+    for name in ["alpha-tool", "beta-tool"] {
+        std::fs::write(root.join(name), "#!/bin/sh\n").unwrap();
+        std::fs::set_permissions(root.join(name), std::fs::Permissions::from_mode(0o755)).unwrap();
+    }
+    for (kind, request, handle) in [
+        ("file", "the invoice", "invoice.txt\n"),
+        ("tool", "the beta tool", "beta-tool\n"),
+        ("pr", "the Windows path fix", "7\n"),
+    ] {
+        let out = kinds_command(&server, &root, false)
+            .args(["pick", "--from", kind, request])
+            .output()
+            .unwrap();
+        assert_eq!(
+            out.status.code(),
+            Some(0),
+            "{kind}: {}",
+            String::from_utf8_lossy(&out.stderr)
+        );
+        assert_eq!(out.stdout, handle.as_bytes(), "{kind}");
+    }
+}
+
+#[test]
+fn from_kind_reads_user_recipes_and_reports_a_bad_line() {
+    let valid = tempfile::tempdir().unwrap().keep();
+    std::fs::write(
+        valid.join("kinds.jsonl"),
+        "{\"kind\":\"widget\",\"list\":[\"printf\",\"w1\\\\n\"]}\n{\"kind\":\"gadget\"}\n",
+    )
+    .unwrap();
+    let out = common::bin()
+        .env("JEVIFY_CONFIG_DIR", &valid)
+        .args(["--json", "pick", "--from", "widget", "x"])
+        .output()
+        .unwrap();
+    assert_eq!(
+        out.status.code(),
+        Some(6),
+        "{}",
+        String::from_utf8_lossy(&out.stdout)
+    );
+    let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+    assert_eq!(v["error"]["kind"], "recipe_invalid");
+    assert!(
+        v["error"]["message"].as_str().unwrap().contains("line 2"),
+        "{v}"
+    );
+    // The suggestion for an unknown kind names the user's recipes once the file is valid.
+    std::fs::write(
+        valid.join("kinds.jsonl"),
+        "{\"kind\":\"widget\",\"list\":[\"printf\",\"w1\\\\n\"]}\n",
+    )
+    .unwrap();
+    let out = common::bin()
+        .env("JEVIFY_CONFIG_DIR", &valid)
+        .args(["--json", "pick", "--from", "widgt", "x"])
+        .output()
+        .unwrap();
+    assert_eq!(out.status.code(), Some(2));
+    let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+    assert!(
+        v["error"]["message"]
+            .as_str()
+            .unwrap()
+            .contains("did you mean \"widget\""),
+        "{v}"
+    );
+}

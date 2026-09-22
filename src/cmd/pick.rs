@@ -167,17 +167,30 @@ async fn from_kind(
     top: usize,
     name: &str,
 ) -> Result<Outcome, JevifyError> {
-    let kind = source::kind(name).ok_or_else(|| {
-        let nearest = source::KINDS
+    let env = source::Env::from_process(source::LISTER_TIMEOUT);
+    // Coded kinds and shipped recipes, then the user's kinds.jsonl for a name in neither.
+    let Some(kind) = source::lookup(name, &env)? else {
+        let user: Vec<String> = source::catalog(&env)
+            .kinds
+            .into_iter()
+            .filter(|entry| entry.origin == "user")
+            .map(|entry| entry.name)
+            .collect();
+        let kinds: Vec<&str> = source::KINDS
+            .iter()
+            .copied()
+            .chain(user.iter().map(String::as_str))
+            .collect();
+        let nearest = kinds
             .iter()
             .min_by_key(|candidate| distance(name, candidate))
             .copied()
             .unwrap_or("branch");
-        JevifyError::Usage(format!(
+        return Err(JevifyError::Usage(format!(
             "unknown kind {name:?}; did you mean {nearest:?}? kinds: {}",
-            source::KINDS.join(", ")
-        ))
-    })?;
+            kinds.join(", ")
+        )));
+    };
     if name == "-" {
         return Err(JevifyError::Usage(
             "stdin is the default source; omit --from -".into(),
@@ -188,7 +201,6 @@ async fn from_kind(
     }
     let size = ctx.backend.window();
     let limit = (size * size).min(MAX_LINES);
-    let env = source::Env::from_process(source::LISTER_TIMEOUT);
     let listing = source::enumerate(name, Scope::Prefix(None), limit, &env).await?;
     let count = listing.records.len();
     let n = Finalists::Auto.per_window(count, size)?;
@@ -248,13 +260,16 @@ async fn from_kind(
                     .take(MAX_FINALISTS)
                     .map(|c| listing.records[c.index].handle.clone())
                     .collect();
-                for ((_, text), extra) in
-                    finals.iter_mut().zip(source::enrich(name, &handles).await)
-                {
+                let (evidence, withheld) =
+                    source::enrich_in(name, std::path::Path::new(""), &handles, &env).await;
+                for ((_, text), extra) in finals.iter_mut().zip(evidence) {
                     if !extra.is_empty() {
                         text.push('\n');
                         text.push_str(&extra);
                     }
+                }
+                if withheld > 0 {
+                    eprintln!("jevify pick: excerpts withheld: {withheld}");
                 }
             }
             ranking = window(&client, intent, &finals, &prompts).await?;

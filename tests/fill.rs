@@ -85,9 +85,11 @@ async fn dry_run_round_trips_raw_argv_and_consumes_stdin() {
     assert!(exec.status.success());
     assert_eq!(exec.stdout, b"literal\xff'\nline\0handle\xfe\0stdin:eof\n");
     assert!(exec.stderr.is_empty());
+    // The shell reads the printed line back from a script file, as a caller would run it.
+    let replay_script = tempfile::tempdir().unwrap().keep().join("replay.sh");
+    std::fs::write(&replay_script, &dry.stdout).unwrap();
     let replay = std::process::Command::new("sh")
-        .arg("-c")
-        .arg(OsString::from_vec(dry.stdout))
+        .arg(&replay_script)
         .stdin(std::process::Stdio::null())
         .output()
         .unwrap();
@@ -946,11 +948,9 @@ async fn inherited_lister_pipe_fails_without_a_request() {
     assert!(posts(&server).await.is_empty());
 }
 
-#[tokio::test(flavor = "multi_thread")]
-async fn unknown_kind_does_not_read_stdin_or_invoke_lister() {
-    let server = common::mock(fake()).await;
-    let dir = branch_fixture(1, false);
-    let configured = fixture_command(&server, &dir);
+/// Run with the environment of `configured` and a stdin that stays open with no bytes: any
+/// attempted stdin read blocks, and a process that exits within five seconds never read it.
+fn run_with_open_stdin(configured: &assert_cmd::Command, args: &[&str]) -> Output {
     let mut cmd = std::process::Command::new(env!("CARGO_BIN_EXE_jevify"));
     for (key, value) in configured.get_envs() {
         if let Some(value) = value {
@@ -959,20 +959,14 @@ async fn unknown_kind_does_not_read_stdin_or_invoke_lister() {
             cmd.env_remove(key);
         }
     }
-    cmd.args([
-        "fill",
-        "--dry-run",
-        "--",
-        "printf",
-        "@{branch:x}",
-        "@{-:x}",
-        "{user}@{host:>8}",
-    ])
-    .stdin(std::process::Stdio::piped())
-    .stdout(std::process::Stdio::piped())
-    .stderr(std::process::Stdio::piped());
+    if let Some(dir) = configured.get_current_dir() {
+        cmd.current_dir(dir);
+    }
+    cmd.args(args)
+        .stdin(std::process::Stdio::piped())
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped());
     let mut child = cmd.spawn().unwrap();
-    // Keep the writer open with no bytes: any attempted stdin read would block.
     let _stdin = child.stdin.take().unwrap();
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
     let exited = loop {
@@ -986,7 +980,26 @@ async fn unknown_kind_does_not_read_stdin_or_invoke_lister() {
         std::thread::sleep(std::time::Duration::from_millis(10));
     };
     let out = child.wait_with_output().unwrap();
-    assert!(exited, "unknown kind read stdin before validation");
+    assert!(exited, "the kind check read stdin before validation");
+    out
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn unknown_kind_does_not_read_stdin_or_invoke_lister() {
+    let server = common::mock(fake()).await;
+    let dir = branch_fixture(1, false);
+    let out = run_with_open_stdin(
+        &fixture_command(&server, &dir),
+        &[
+            "fill",
+            "--dry-run",
+            "--",
+            "printf",
+            "@{branch:x}",
+            "@{-:x}",
+            "{user}@{host:>8}",
+        ],
+    );
     assert_eq!(out.status.code(), Some(2));
     assert!(String::from_utf8_lossy(&out.stderr).contains("'{user}@@{host:>8}'"));
     assert!(!dir.join("calls").exists());
@@ -1006,4 +1019,563 @@ async fn empty_input_abstains_without_a_request() {
     assert_eq!(value["data"]["reason"], "no_match");
     assert!(value["error"].is_null());
     assert!(server.received_requests().await.unwrap().is_empty());
+}
+
+/// A fake `git` for the `commit` and `file` kinds, and a `gh` that is not logged in. The log
+/// holds `count` commits with full 40-hex OIDs, newest first; `ls-files` prints `files`.
+const KINDS_GIT: &str = r#"#!/bin/sh
+printf '%s\n' "$*" >> "$FILL_FIXTURE/calls"
+case "$1" in
+  rev-list) cat "$FILL_FIXTURE/count" ;;
+  ls-files) cat "$FILL_FIXTURE/files" ;;
+  log)
+    if [ "$2" = "-n" ]; then
+      n=$3
+      total=$(cat "$FILL_FIXTURE/count")
+      [ "$n" -gt "$total" ] && n=$total
+      i=0
+      while [ "$i" -lt "$n" ]; do
+        printf '%040d\000made folder moves atomic %s\000' "$i" "$i"
+        i=$((i + 1))
+      done
+    else
+      printf 'body of the commit\000\000src/moves.rs\000'
+    fi ;;
+  *) exit 1 ;;
+esac
+"#;
+
+fn kinds_fixture(commits: usize, files: &[u8]) -> std::path::PathBuf {
+    use std::os::unix::fs::PermissionsExt;
+    let dir = tempfile::tempdir().unwrap().keep();
+    std::fs::write(dir.join("count"), format!("{commits}\n")).unwrap();
+    std::fs::write(dir.join("files"), files).unwrap();
+    std::fs::write(dir.join("git"), KINDS_GIT).unwrap();
+    std::fs::write(
+        dir.join("gh"),
+        "#!/bin/sh\nprintf '%s\\n' \"$*\" >> \"$FILL_FIXTURE/calls\"\nprintf 'not logged in\\n' >&2\nexit 1\n",
+    )
+    .unwrap();
+    for name in ["git", "gh"] {
+        std::fs::set_permissions(dir.join(name), std::fs::Permissions::from_mode(0o755)).unwrap();
+    }
+    dir
+}
+
+fn calls(dir: &std::path::Path) -> Vec<String> {
+    std::fs::read_to_string(dir.join("calls"))
+        .unwrap_or_default()
+        .lines()
+        .map(str::to_owned)
+        .collect()
+}
+
+fn is_full_oid(value: &Value) -> bool {
+    let text = value.as_str().unwrap_or_default();
+    text.len() == 40 && text.bytes().all(|b| b.is_ascii_hexdigit())
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn commit_resolves_to_a_full_oid_in_two_rounds_above_one_window() {
+    let server = common::mock_classifier(fake()).await;
+    let dir = kinds_fixture(150, b"");
+    let mut cmd = common::jevify_classifier(&server);
+    cmd.env("FILL_FIXTURE", &dir)
+        .env("PATH", format!("{}:/usr/bin:/bin", dir.display()));
+    let out = run(
+        cmd,
+        &[
+            "fill",
+            "--dry-run",
+            "--json",
+            "--",
+            "git",
+            "revert",
+            "@{commit:made folder moves atomic}",
+        ],
+        "",
+    );
+    let value = envelope(&out, 0);
+    assert!(is_full_oid(&value["data"]["argv"][2]), "{value}");
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert!(stderr.contains("candidates 150, windows 2"), "{stderr}");
+    assert!(!stderr.contains(" of "), "{stderr}");
+    // Two windows, then one finals request with tier-two evidence for the six finalists only.
+    let requests = server.received_requests().await.unwrap();
+    assert_eq!(requests.len(), 3);
+    assert!(String::from_utf8_lossy(&requests[2].body).contains("body of the commit"));
+    let tier_two: Vec<_> = calls(&dir)
+        .into_iter()
+        .filter(|line| line.starts_with("log -1 "))
+        .collect();
+    assert_eq!(tier_two.len(), 6);
+    assert!(
+        calls(&dir)
+            .iter()
+            .any(|line| line.starts_with("log -n 3267 "))
+    );
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn commit_above_capacity_keeps_newest_and_exact_capacity_says_no_of() {
+    let server = common::mock_classifier(fake()).await;
+    let capacity = 99 * 33;
+    for (count, expected) in [
+        (
+            capacity + 1,
+            "candidates 3267 of 3268, newest first, windows 33",
+        ),
+        (capacity, "candidates 3267, windows 33"),
+    ] {
+        let dir = kinds_fixture(count, b"");
+        let mut cmd = common::jevify_classifier(&server);
+        cmd.env("FILL_FIXTURE", &dir)
+            .env("PATH", format!("{}:/usr/bin:/bin", dir.display()));
+        let before = server.received_requests().await.unwrap().len();
+        let out = run(
+            cmd,
+            &["fill", "--dry-run", "--json", "--", "printf", "@{commit:x}"],
+            "",
+        );
+        let value = envelope(&out, 0);
+        assert_eq!(value["data"]["markers"][0]["candidates"], capacity);
+        assert_eq!(value["data"]["markers"][0]["total"], count);
+        let stderr = String::from_utf8_lossy(&out.stderr);
+        assert!(stderr.contains(expected), "{stderr}");
+        assert_eq!(stderr.contains(" of "), count > capacity);
+        assert_eq!(server.received_requests().await.unwrap().len() - before, 34);
+    }
+}
+
+/// A git work tree with the given files, each holding its own name as content, all tracked.
+fn work_tree(files: &[&str]) -> std::path::PathBuf {
+    let root = tempfile::tempdir().unwrap().keep();
+    for file in files {
+        let path = root.join(file);
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        std::fs::write(&path, format!("VISIBLE {file} BODY\n")).unwrap();
+    }
+    for args in [vec!["init", "-q"], vec!["add", "-A"]] {
+        assert!(
+            std::process::Command::new("git")
+                .current_dir(&root)
+                .args(args)
+                .status()
+                .unwrap()
+                .success()
+        );
+    }
+    root
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn file_prefix_scopes_the_listing_and_substitutes_relative_to_it() {
+    let server = common::mock(FakeJev {
+        choose: |_, state, options| {
+            let needle = if state["request"].as_str().unwrap().contains("stages") {
+                "add.rs"
+            } else {
+                "app.toml"
+            };
+            common::option_containing(state, options, needle)
+        },
+        noul: |_, _| 0.9,
+    })
+    .await;
+    let root = work_tree(&[
+        "src/cmd/add.rs",
+        "src/cmd/other.rs",
+        "conf/app.toml",
+        "README",
+    ]);
+    let mut cmd = common::jevify(&server);
+    cmd.current_dir(&root);
+    let out = run(
+        cmd,
+        &[
+            "fill",
+            "--dry-run",
+            "--json",
+            "--",
+            "printf",
+            "src/cmd/@{file:stages hunks}",
+            "--config=conf/@{file:the app configuration}",
+        ],
+        "",
+    );
+    let value = envelope(&out, 0);
+    assert_eq!(
+        value["data"]["argv"],
+        serde_json::json!(["printf", "src/cmd/add.rs", "--config=conf/app.toml"])
+    );
+    assert_eq!(value["data"]["markers"][0]["candidates"], 2);
+    assert_eq!(value["data"]["markers"][1]["candidates"], 1);
+    // A prefix that names no directory fails the lister, before any request.
+    let before = posts(&server).await.len();
+    let mut cmd = common::jevify(&server);
+    cmd.current_dir(&root);
+    let out = run(
+        cmd,
+        &[
+            "fill",
+            "--dry-run",
+            "--json",
+            "--",
+            "printf",
+            "nope/@{file:x}",
+        ],
+        "",
+    );
+    assert_eq!(envelope(&out, 6)["error"]["kind"], "lister_failed");
+    assert_eq!(posts(&server).await.len(), before);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn path_handle_with_leading_dash_gets_dot_slash_and_non_utf8_reaches_the_command() {
+    let server = common::mock(FakeJev {
+        choose: |_, state, options| {
+            let needle = if state["request"] == "dash" {
+                "-weird"
+            } else {
+                "caf"
+            };
+            common::option_containing(state, options, needle)
+        },
+        noul: |_, _| 0.9,
+    })
+    .await;
+    let dir = kinds_fixture(0, b"-weird\0caf\xe9.txt\0");
+    let out = run(
+        fixture_command(&server, &dir),
+        &[
+            "fill",
+            "--dry-run",
+            "--json",
+            "--",
+            "printf",
+            "@{file:dash}",
+        ],
+        "",
+    );
+    assert_eq!(envelope(&out, 0)["data"]["argv"][1], "./-weird");
+    let helper = format!("{}/tests/bin/argv.sh", env!("CARGO_MANIFEST_DIR"));
+    let out = run(
+        fixture_command(&server, &dir),
+        &["fill", "-q", "--", "sh", &helper, "0", "@{file:the cafe}"],
+        "inherited\n",
+    );
+    assert_eq!(
+        out.status.code(),
+        Some(0),
+        "{}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    assert_eq!(out.stdout, b"caf\xe9.txt\0stdin:data\n");
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn withheld_excerpts_count_finalists_only_and_never_leave_the_machine() {
+    let root = work_tree(&["notes.txt", "other.txt", "third.txt", ".npmrc", ".env"]);
+    std::fs::write(root.join(".npmrc"), "TOKEN=1099\n").unwrap();
+    std::fs::write(root.join(".env"), "SECRET=zq7mvalue\n").unwrap();
+    for (request, withheld) in [("npmrc-finalist", 1), ("plain-finalists", 0)] {
+        let server = common::mock(fake().with_probabilities(|_, state, options| {
+            if options == ["yes", "no"] {
+                return vec![0.9, 0.1];
+            }
+            let items = state["items"].as_array().unwrap();
+            let second_round = items
+                .iter()
+                .any(|item| item.as_str().unwrap().contains("VISIBLE"));
+            let runner_up = if state["request"] == "npmrc-finalist" {
+                ".npmrc"
+            } else {
+                "other.txt"
+            };
+            options
+                .iter()
+                .map(|option| {
+                    if option == "NONE" {
+                        return 0.01;
+                    }
+                    let text = items[option[1..].parse::<usize>().unwrap()]
+                        .as_str()
+                        .unwrap();
+                    if second_round {
+                        if text.contains("notes.txt") {
+                            0.9
+                        } else {
+                            0.02
+                        }
+                    } else if text.contains("notes.txt") {
+                        0.45
+                    } else if text.contains(runner_up) {
+                        0.40
+                    } else if text.contains("other.txt") || text.contains("third.txt") {
+                        0.1
+                    } else {
+                        0.01
+                    }
+                })
+                .collect()
+        }))
+        .await;
+        let mut cmd = common::jevify(&server);
+        cmd.current_dir(&root);
+        let marker = format!("@{{file:{request}}}");
+        let out = run(
+            cmd,
+            &["fill", "--dry-run", "--json", "--", "printf", &marker],
+            "",
+        );
+        assert_eq!(envelope(&out, 0)["data"]["argv"][1], "notes.txt");
+        let stderr = String::from_utf8_lossy(&out.stderr);
+        if withheld > 0 {
+            assert!(
+                stderr.contains(&format!("excerpts withheld: {withheld}")),
+                "{stderr}"
+            );
+        } else {
+            assert!(!stderr.contains("excerpts withheld"), "{stderr}");
+        }
+        let requests = server.received_requests().await.unwrap();
+        assert_eq!(requests.len(), 2);
+        let finals = String::from_utf8_lossy(&requests[1].body);
+        assert!(finals.contains("VISIBLE notes.txt BODY"));
+        assert_eq!(finals.contains(".npmrc"), withheld > 0);
+        for request in &requests {
+            let body = String::from_utf8_lossy(&request.body);
+            assert!(!body.contains("1099"), "{body}");
+            assert!(!body.contains("zq7mvalue"), "{body}");
+        }
+    }
+}
+
+const WIDGET_RECIPE: &str = "{\"kind\":\"widget\",\"list\":[\"sh\",\"-c\",\"printf 'w1 alpha\\\\nw2 beta\\\\n'\"],\"field\":1}\n";
+
+fn with_env(
+    mut cmd: assert_cmd::Command,
+    key: &str,
+    value: &std::path::Path,
+) -> assert_cmd::Command {
+    cmd.env(key, value);
+    cmd
+}
+
+fn in_dir(mut cmd: assert_cmd::Command, dir: &std::path::Path) -> assert_cmd::Command {
+    cmd.current_dir(dir);
+    cmd
+}
+
+fn config_with(lines: &str) -> std::path::PathBuf {
+    let dir = tempfile::tempdir().unwrap().keep();
+    std::fs::write(dir.join("kinds.jsonl"), lines).unwrap();
+    dir
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn user_recipe_resolves_and_a_shadowing_line_is_recipe_invalid_with_its_number() {
+    let server = common::mock(FakeJev {
+        choose: |_, state, options| {
+            let pick = common::option_containing(state, options, "alpha");
+            if pick == "NONE" {
+                // The branch listing of the fixture: pick its only candidate.
+                options.iter().find(|s| *s != "NONE").unwrap().clone()
+            } else {
+                pick
+            }
+        },
+        noul: |_, _| 0.9,
+    })
+    .await;
+    let valid = config_with(WIDGET_RECIPE);
+    let out = run(
+        with_env(common::jevify(&server), "JEVIFY_CONFIG_DIR", &valid),
+        &["fill", "--dry-run", "--json", "--", "printf", "@{widget:x}"],
+        "",
+    );
+    assert_eq!(envelope(&out, 0)["data"]["argv"][1], "w1");
+    // The nearest-kind suggestion knows the user's recipes.
+    let out = run(
+        with_env(common::jevify(&server), "JEVIFY_CONFIG_DIR", &valid),
+        &["fill", "--dry-run", "--", "printf", "@{widgt:x}"],
+        "",
+    );
+    assert_eq!(out.status.code(), Some(2));
+    assert!(String::from_utf8_lossy(&out.stderr).contains("nearest kind: widget"));
+
+    // The same line named `branch` on line 2: invalid for `widget`, never read for `branch`.
+    let dir = branch_fixture(1, false);
+    let shadowing = config_with(&format!(
+        "{WIDGET_RECIPE}{}",
+        WIDGET_RECIPE.replace("\"widget\"", "\"branch\"")
+    ));
+    let before = posts(&server).await.len();
+    let out = run(
+        with_env(
+            fixture_command(&server, &dir),
+            "JEVIFY_CONFIG_DIR",
+            &shadowing,
+        ),
+        &["fill", "--dry-run", "--json", "--", "printf", "@{widget:x}"],
+        "",
+    );
+    let value = envelope(&out, 6);
+    assert_eq!(value["error"]["kind"], "recipe_invalid");
+    assert!(
+        value["error"]["message"]
+            .as_str()
+            .unwrap()
+            .contains("line 2"),
+        "{value}"
+    );
+    assert_eq!(posts(&server).await.len(), before);
+    assert!(!dir.join("calls").exists());
+    let out = run(
+        with_env(
+            fixture_command(&server, &dir),
+            "JEVIFY_CONFIG_DIR",
+            &shadowing,
+        ),
+        &["fill", "--dry-run", "--json", "--", "printf", "@{branch:x}"],
+        "",
+    );
+    assert_eq!(envelope(&out, 0)["data"]["argv"][1], "b0");
+
+    // A kinds.jsonl in the working directory is never read.
+    let out = run(
+        in_dir(common::jevify(&server), &valid),
+        &["fill", "--dry-run", "--", "printf", "@{widget:x}"],
+        "",
+    );
+    assert_eq!(out.status.code(), Some(2));
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert!(stderr.contains("unknown kind 'widget'") && stderr.contains("nearest kind"));
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn user_recipe_kind_check_runs_before_stdin_and_listers() {
+    let server = common::mock(fake()).await;
+    let dir = branch_fixture(1, false);
+    // A valid recipe passes the check; the unknown kind after it fails before stdin is read.
+    let valid = config_with(WIDGET_RECIPE);
+    let mut configured = fixture_command(&server, &dir);
+    configured.env("JEVIFY_CONFIG_DIR", &valid);
+    let out = run_with_open_stdin(
+        &configured,
+        &[
+            "fill",
+            "--dry-run",
+            "--",
+            "printf",
+            "@{widget:x}",
+            "@{-:x}",
+            "{user}@{host:>8}",
+        ],
+    );
+    assert_eq!(out.status.code(), Some(2));
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert!(stderr.contains("unknown kind 'host'"), "{stderr}");
+    // A bad recipe file is recipe_invalid at the check, before stdin and before any lister.
+    let invalid = config_with("{\"kind\":\"widget\"}\n");
+    let mut configured = fixture_command(&server, &dir);
+    configured.env("JEVIFY_CONFIG_DIR", &invalid);
+    let out = run_with_open_stdin(
+        &configured,
+        &[
+            "fill",
+            "--dry-run",
+            "--json",
+            "--",
+            "printf",
+            "@{branch:x}",
+            "@{-:x}",
+            "@{widget:x}",
+        ],
+    );
+    let value = envelope(&out, 6);
+    assert_eq!(value["error"]["kind"], "recipe_invalid");
+    assert!(
+        value["error"]["message"]
+            .as_str()
+            .unwrap()
+            .contains("line 1")
+    );
+    assert!(!dir.join("calls").exists());
+    assert!(posts(&server).await.is_empty());
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn gh_not_logged_in_is_lister_failed_with_its_text_and_no_request() {
+    let server = common::mock(fake()).await;
+    let dir = kinds_fixture(0, b"");
+    let out = run(
+        fixture_command(&server, &dir),
+        &["fill", "--dry-run", "--json", "--", "printf", "@{pr:x}"],
+        "",
+    );
+    let value = envelope(&out, 6);
+    assert_eq!(value["error"]["kind"], "lister_failed");
+    assert!(
+        value["error"]["message"]
+            .as_str()
+            .unwrap()
+            .contains("not logged in"),
+        "{value}"
+    );
+    assert!(posts(&server).await.is_empty());
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn too_many_files_names_both_ways_to_narrow_and_sends_nothing() {
+    let server = common::mock_classifier(fake()).await;
+    let files: Vec<u8> = (0..99 * 33 + 1)
+        .flat_map(|i| format!("f{i}\0").into_bytes())
+        .collect();
+    let dir = kinds_fixture(0, &files);
+    let mut cmd = common::jevify_classifier(&server);
+    cmd.env("FILL_FIXTURE", &dir)
+        .env("PATH", format!("{}:/usr/bin:/bin", dir.display()));
+    let out = run(
+        cmd,
+        &["fill", "--dry-run", "--json", "--", "printf", "@{file:x}"],
+        "",
+    );
+    let value = envelope(&out, 6);
+    assert_eq!(value["error"]["kind"], "too_many");
+    let hint = value["error"]["hint"].as_str().unwrap();
+    assert!(hint.contains("prefix") && hint.contains("@{-:"), "{hint}");
+    assert!(server.received_requests().await.unwrap().is_empty());
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn tool_lists_the_executables_of_the_path() {
+    use std::os::unix::fs::PermissionsExt;
+    let server = common::mock(FakeJev {
+        choose: |_, state, options| common::option_containing(state, options, "beta-tool"),
+        noul: |_, _| 0.9,
+    })
+    .await;
+    let dir = tempfile::tempdir().unwrap().keep();
+    for name in ["alpha-tool", "beta-tool"] {
+        std::fs::write(dir.join(name), "#!/bin/sh\n").unwrap();
+        std::fs::set_permissions(dir.join(name), std::fs::Permissions::from_mode(0o755)).unwrap();
+    }
+    let mut cmd = common::jevify(&server);
+    cmd.env("PATH", &dir);
+    let out = run(
+        cmd,
+        &[
+            "fill",
+            "--dry-run",
+            "--json",
+            "--",
+            "/bin/echo",
+            "@{tool:x}",
+        ],
+        "",
+    );
+    let value = envelope(&out, 0);
+    assert_eq!(value["data"]["argv"][1], "beta-tool");
+    assert_eq!(value["data"]["markers"][0]["candidates"], 2);
 }
