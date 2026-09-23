@@ -1,0 +1,19 @@
+   Compiling probe v0.0.0 (/tmp/holdout)
+error[E0061]: this function takes 2 arguments but 1 argument was supplied
+ --> src/main.rs:7:26
+  |
+7 |         println!("[{}]", render(label));
+  |                          ^^^^^^------- argument #2 of type `usize` is missing
+  |
+note: function defined here
+ --> src/main.rs:1:4
+  |
+1 | fn render(label: &str, width: usize) -> String {
+  |    ^^^^^^              ------------
+help: provide the argument
+  |
+7 |         println!("[{}]", render(label, /* usize */));
+  |                                      +++++++++++++
+
+For more information about this error, try `rustc --explain E0061`.
+error: could not compile `probe` (bin "probe") due to 1 previous error

@@ -1,0 +1,18 @@
+{
+ "id": "sh-set-e",
+ "produced_by": "evals/holdout/make_why_logs.py",
+ "command": [
+  "sh",
+  "release.sh"
+ ],
+ "exit_code": 4,
+ "tool": "sh",
+ "files": [
+  "assets/alpha.tar.gz",
+  "assets/beta.tar.gz",
+  "checksums.txt",
+  "release.sh"
+ ],
+ "lines": 11,
+ "sha256": "bf0f038675071bcd9f825b51bab723fa39ab624041e5e836befffea2d3be7b57"
+}

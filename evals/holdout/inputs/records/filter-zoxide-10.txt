@@ -1,0 +1,10 @@
+templates/fish.txt
+src/db/dir.rs
+contrib/completions/_zoxide.ps1
+zoxide.plugin.zsh
+Cargo.toml
+src/shell.rs
+init.fish
+man/man1/zoxide-query.1
+templates/posix.txt
+src/cmd/init.rs

@@ -1,0 +1,4 @@
+warn.c:4:9: warning: unused variable 'unused_total' [-Wunused-variable]
+    4 |     int unused_total = 0;
+      |         ^~~~~~~~~~~~
+1 warning generated.

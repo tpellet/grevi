@@ -1,0 +1,16 @@
+{
+ "id": "rust-test-assert",
+ "produced_by": "evals/holdout/make_why_logs.py",
+ "command": [
+  "cargo",
+  "test"
+ ],
+ "exit_code": 101,
+ "tool": "cargo 1.93.1 (083ac5135 2025-12-15)",
+ "files": [
+  "Cargo.toml",
+  "src/main.rs"
+ ],
+ "lines": 25,
+ "sha256": "7334bfb6876a760df1d9d52df92317be487ad80609204d54545fab3a58d35983"
+}

@@ -1,0 +1,17 @@
+{
+ "id": "rust-clean-build",
+ "produced_by": "evals/holdout/make_why_logs.py",
+ "command": [
+  "cargo",
+  "build",
+  "--verbose"
+ ],
+ "exit_code": 0,
+ "tool": "cargo 1.93.1 (083ac5135 2025-12-15)",
+ "files": [
+  "Cargo.toml",
+  "src/main.rs"
+ ],
+ "lines": 3,
+ "sha256": "d96ab6860e1e84e767d74c1b36abcc50e80a280ed9c17c426fdbc80624b830b8"
+}

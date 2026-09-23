@@ -1,0 +1,7 @@
+count.c:17:26: error: incompatible integer to pointer conversion passing 'int' to parameter of type 'const char *' [-Wint-conversion]
+   17 |     printf("%d\n", words(42));
+      |                          ^~
+count.c:4:30: note: passing argument to parameter 'line' here
+    4 | static int words(const char *line) {
+      |                              ^
+1 error generated.

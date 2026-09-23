@@ -1,0 +1,16 @@
+{
+ "id": "py-json-decode",
+ "produced_by": "evals/holdout/make_why_logs.py",
+ "command": [
+  "python3",
+  "config.py"
+ ],
+ "exit_code": 1,
+ "tool": "Python 3.14.7",
+ "files": [
+  "config.py",
+  "settings.json"
+ ],
+ "lines": 21,
+ "sha256": "c9c7502b13a1a060f30270a5e43de0c93594e9080103b12619c570764f29ab93"
+}

@@ -1,0 +1,16 @@
+{
+ "id": "py-module-not-found",
+ "produced_by": "evals/holdout/make_why_logs.py",
+ "command": [
+  "python3",
+  "pipeline.py"
+ ],
+ "exit_code": 1,
+ "tool": "Python 3.14.7",
+ "files": [
+  "counts.csv",
+  "pipeline.py"
+ ],
+ "lines": 4,
+ "sha256": "1ce5894fa9cfa73b39a27789e986ceee57e039a9e9eadc52a3b1ef0ae354b3fb"
+}

@@ -1,0 +1,19 @@
+{
+ "id": "c-warnings-only",
+ "produced_by": "evals/holdout/make_why_logs.py",
+ "command": [
+  "/usr/bin/clang",
+  "-Wall",
+  "-Wextra",
+  "-o",
+  "warn",
+  "warn.c"
+ ],
+ "exit_code": 0,
+ "tool": "Apple clang version 21.0.0 (clang-2100.1.1.101)",
+ "files": [
+  "warn.c"
+ ],
+ "lines": 4,
+ "sha256": "42560b05acb4e74b234903f2398872eec9a73d8828f2abead557df0d104b6fea"
+}

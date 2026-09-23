@@ -1,0 +1,25 @@
+   Compiling probe v0.0.0 (/tmp/holdout)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in Xs
+     Running unittests src/main.rs (target/debug/deps/probe-2a9fe6a60eded594)
+
+running 2 tests
+test tests::trims_and_lowercases ... ok
+test tests::collapses_inner_runs ... FAILED
+
+failures:
+
+---- tests::collapses_inner_runs stdout ----
+
+thread 'tests::collapses_inner_runs' (16869944) panicked at src/main.rs:20:9:
+assertion `left == right` failed
+  left: "two  words"
+ right: "two words"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    tests::collapses_inner_runs
+
+test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in Xs
+
+error: test failed, to rerun pass `--bin probe`

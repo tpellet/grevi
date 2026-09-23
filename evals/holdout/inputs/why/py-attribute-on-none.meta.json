@@ -1,0 +1,15 @@
+{
+ "id": "py-attribute-on-none",
+ "produced_by": "evals/holdout/make_why_logs.py",
+ "command": [
+  "python3",
+  "lookup.py"
+ ],
+ "exit_code": 1,
+ "tool": "Python 3.14.7",
+ "files": [
+  "lookup.py"
+ ],
+ "lines": 10,
+ "sha256": "2343df2ad3be3e8d26cca7e1c474336b0a3a424115a28f4d85331f7b8904d37d"
+}

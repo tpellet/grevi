@@ -1,0 +1,16 @@
+{
+ "id": "make-compile-error",
+ "produced_by": "evals/holdout/make_why_logs.py",
+ "command": [
+  "make"
+ ],
+ "exit_code": 2,
+ "tool": "GNU Make 3.81",
+ "files": [
+  "Makefile",
+  "main.c",
+  "parse.c"
+ ],
+ "lines": 10,
+ "sha256": "ab3bdfbe95549f7fe700b332de78a7292ebc70da6e634c98dc93883592e3ed79"
+}

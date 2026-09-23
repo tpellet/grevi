@@ -1,0 +1,19 @@
+{
+ "id": "c-link-undefined",
+ "produced_by": "evals/holdout/make_why_logs.py",
+ "command": [
+  "/usr/bin/clang",
+  "-o",
+  "app",
+  "main.c",
+  "util.c"
+ ],
+ "exit_code": 1,
+ "tool": "Apple clang version 21.0.0 (clang-2100.1.1.101)",
+ "files": [
+  "main.c",
+  "util.c"
+ ],
+ "lines": 5,
+ "sha256": "97c09aad8dbedb3cd34dc35734bb9316d95342905799037906fca632ec1afff8"
+}

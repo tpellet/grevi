@@ -1,0 +1,17 @@
+{
+ "id": "rust-index-panic",
+ "produced_by": "evals/holdout/make_why_logs.py",
+ "command": [
+  "cargo",
+  "run",
+  "--quiet"
+ ],
+ "exit_code": 101,
+ "tool": "cargo 1.93.1 (083ac5135 2025-12-15)",
+ "files": [
+  "Cargo.toml",
+  "src/main.rs"
+ ],
+ "lines": 6,
+ "sha256": "8663858e7c0b5e61e26d3df57d4b949506f7affa8fe6b7855f2eb2af9ddeb0db"
+}

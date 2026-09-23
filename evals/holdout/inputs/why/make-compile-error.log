@@ -1,0 +1,10 @@
+/usr/bin/clang -Wall -c main.c
+/usr/bin/clang -Wall -c parse.c
+parse.c:4:20: error: too many arguments to function call, expected 1, have 2
+    4 |     return atoi(s, 10);
+      |            ~~~~    ^~
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_stdlib.h:155:6: note: 'atoi' declared here
+  155 | int      atoi(const char *);
+      |          ^    ~~~~~~~~~~~~
+1 error generated.
+make: *** [parse.o] Error 1

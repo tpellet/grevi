@@ -1,0 +1,15 @@
+{
+ "id": "py-recursion",
+ "produced_by": "evals/holdout/make_why_logs.py",
+ "command": [
+  "python3",
+  "tree.py"
+ ],
+ "exit_code": 1,
+ "tool": "Python 3.14.7",
+ "files": [
+  "tree.py"
+ ],
+ "lines": 120,
+ "sha256": "b7b49075ecce1aecad30c6b5b477724e61056199e4c059a0302ad3888d9a2728"
+}

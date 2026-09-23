@@ -1,0 +1,21 @@
+test_punctuation (__main__.SlugTests.test_punctuation) ... FAIL
+test_simple (__main__.SlugTests.test_simple) ... ok
+test_trailing_space (__main__.SlugTests.test_trailing_space) ... ok
+
+======================================================================
+FAIL: test_punctuation (__main__.SlugTests.test_punctuation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/holdout/test_slug.py", line 11, in test_punctuation
+    self.assertEqual(slug("Release, Notes!"), "release-notes")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'release,-notes!' != 'release-notes'
+- release,-notes!
+?        -      -
++ release-notes
+
+
+----------------------------------------------------------------------
+Ran 3 tests in Xs
+
+FAILED (failures=1)

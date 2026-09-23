@@ -1,0 +1,16 @@
+{
+ "id": "rust-missing-version",
+ "produced_by": "evals/holdout/make_why_logs.py",
+ "command": [
+  "cargo",
+  "build"
+ ],
+ "exit_code": 101,
+ "tool": "cargo 1.93.1 (083ac5135 2025-12-15)",
+ "files": [
+  "Cargo.toml",
+  "src/main.rs"
+ ],
+ "lines": 7,
+ "sha256": "61a808e012cdf0db8ddbc2c5c808b1deb604fb96b63a8c52e83a81648db17a8a"
+}

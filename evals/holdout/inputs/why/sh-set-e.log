@@ -1,0 +1,11 @@
+==> checking the working tree
+warning: 2 files are untracked; they will not be packaged
+==> reading the manifest
+note: the manifest declares 3 assets
+==> verifying the checksum file
+  3 entries
+==> verifying every asset
+  alpha.tar.gz (aaa)
+  beta.tar.gz (bbb)
+  gamma.tar.gz (ccc)
+release.sh: assets/gamma.tar.gz is missing; the packaging step never wrote it

@@ -1,0 +1,19 @@
+{
+ "id": "c-compile-error",
+ "produced_by": "evals/holdout/make_why_logs.py",
+ "command": [
+  "/usr/bin/clang",
+  "-Wall",
+  "-Werror",
+  "-o",
+  "count",
+  "count.c"
+ ],
+ "exit_code": 1,
+ "tool": "Apple clang version 21.0.0 (clang-2100.1.1.101)",
+ "files": [
+  "count.c"
+ ],
+ "lines": 7,
+ "sha256": "acf75ebd84cc46ed282d288a318b77666bab297b955d4502531e6059887d1311"
+}

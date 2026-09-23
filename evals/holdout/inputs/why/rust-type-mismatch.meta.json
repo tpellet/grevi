@@ -1,0 +1,16 @@
+{
+ "id": "rust-type-mismatch",
+ "produced_by": "evals/holdout/make_why_logs.py",
+ "command": [
+  "cargo",
+  "build"
+ ],
+ "exit_code": 101,
+ "tool": "cargo 1.93.1 (083ac5135 2025-12-15)",
+ "files": [
+  "Cargo.toml",
+  "src/main.rs"
+ ],
+ "lines": 17,
+ "sha256": "75870b5cc1dc7f368d15e788f8a6c7d817cda18d26061e1799af34524998f068"
+}

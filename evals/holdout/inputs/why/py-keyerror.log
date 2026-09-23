@@ -1,0 +1,14 @@
+rows: 2
+Traceback (most recent call last):
+  File "/tmp/holdout/report.py", line 16, in <module>
+    main()
+    ~~~~^^
+  File "/tmp/holdout/report.py", line 14, in main
+    print("total:", total(data["entries"]))
+                    ~~~~~^^^^^^^^^^^^^^^^^
+  File "/tmp/holdout/report.py", line 9, in total
+    return sum(row["amount"] for row in rows)
+  File "/tmp/holdout/report.py", line 9, in <genexpr>
+    return sum(row["amount"] for row in rows)
+               ~~~^^^^^^^^^^
+KeyError: 'amount'

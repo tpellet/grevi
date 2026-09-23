@@ -1,0 +1,10 @@
+/health -> HEALTH
+/metrics -> METRICS
+Traceback (most recent call last):
+  File "/tmp/holdout/lookup.py", line 11, in <module>
+    dispatch(["/health", "/metrics", "/status"])
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/holdout/lookup.py", line 9, in dispatch
+    print(path, "->", name.upper())
+                      ^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'upper'

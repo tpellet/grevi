@@ -1,0 +1,120 @@
+    return 1 + max(depth(child) for child in node["children"])
+                   ~~~~~^^^^^^^
+  File "/tmp/holdout/tree.py", line 4, in depth
+    return 1 + max(depth(child) for child in node["children"])
+               ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/holdout/tree.py", line 4, in <genexpr>
+    return 1 + max(depth(child) for child in node["children"])
+                   ~~~~~^^^^^^^
+  File "/tmp/holdout/tree.py", line 4, in depth
+    return 1 + max(depth(child) for child in node["children"])
+               ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/holdout/tree.py", line 4, in <genexpr>
+    return 1 + max(depth(child) for child in node["children"])
+                   ~~~~~^^^^^^^
+  File "/tmp/holdout/tree.py", line 4, in depth
+    return 1 + max(depth(child) for child in node["children"])
+               ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/holdout/tree.py", line 4, in <genexpr>
+    return 1 + max(depth(child) for child in node["children"])
+                   ~~~~~^^^^^^^
+  File "/tmp/holdout/tree.py", line 4, in depth
+    return 1 + max(depth(child) for child in node["children"])
+               ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/holdout/tree.py", line 4, in <genexpr>
+    return 1 + max(depth(child) for child in node["children"])
+                   ~~~~~^^^^^^^
+  File "/tmp/holdout/tree.py", line 4, in depth
+    return 1 + max(depth(child) for child in node["children"])
+               ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/holdout/tree.py", line 4, in <genexpr>
+    return 1 + max(depth(child) for child in node["children"])
+                   ~~~~~^^^^^^^
+  File "/tmp/holdout/tree.py", line 4, in depth
+    return 1 + max(depth(child) for child in node["children"])
+               ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/holdout/tree.py", line 4, in <genexpr>
+    return 1 + max(depth(child) for child in node["children"])
+                   ~~~~~^^^^^^^
+  File "/tmp/holdout/tree.py", line 4, in depth
+    return 1 + max(depth(child) for child in node["children"])
+               ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/holdout/tree.py", line 4, in <genexpr>
+    return 1 + max(depth(child) for child in node["children"])
+                   ~~~~~^^^^^^^
+  File "/tmp/holdout/tree.py", line 4, in depth
+    return 1 + max(depth(child) for child in node["children"])
+               ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/holdout/tree.py", line 4, in <genexpr>
+    return 1 + max(depth(child) for child in node["children"])
+                   ~~~~~^^^^^^^
+  File "/tmp/holdout/tree.py", line 4, in depth
+    return 1 + max(depth(child) for child in node["children"])
+               ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/holdout/tree.py", line 4, in <genexpr>
+    return 1 + max(depth(child) for child in node["children"])
+                   ~~~~~^^^^^^^
+  File "/tmp/holdout/tree.py", line 4, in depth
+    return 1 + max(depth(child) for child in node["children"])
+               ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/holdout/tree.py", line 4, in <genexpr>
+    return 1 + max(depth(child) for child in node["children"])
+                   ~~~~~^^^^^^^
+  File "/tmp/holdout/tree.py", line 4, in depth
+    return 1 + max(depth(child) for child in node["children"])
+               ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/holdout/tree.py", line 4, in <genexpr>
+    return 1 + max(depth(child) for child in node["children"])
+                   ~~~~~^^^^^^^
+  File "/tmp/holdout/tree.py", line 4, in depth
+    return 1 + max(depth(child) for child in node["children"])
+               ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/holdout/tree.py", line 4, in <genexpr>
+    return 1 + max(depth(child) for child in node["children"])
+                   ~~~~~^^^^^^^
+  File "/tmp/holdout/tree.py", line 4, in depth
+    return 1 + max(depth(child) for child in node["children"])
+               ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/holdout/tree.py", line 4, in <genexpr>
+    return 1 + max(depth(child) for child in node["children"])
+                   ~~~~~^^^^^^^
+  File "/tmp/holdout/tree.py", line 4, in depth
+    return 1 + max(depth(child) for child in node["children"])
+               ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/holdout/tree.py", line 4, in <genexpr>
+    return 1 + max(depth(child) for child in node["children"])
+                   ~~~~~^^^^^^^
+  File "/tmp/holdout/tree.py", line 4, in depth
+    return 1 + max(depth(child) for child in node["children"])
+               ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/holdout/tree.py", line 4, in <genexpr>
+    return 1 + max(depth(child) for child in node["children"])
+                   ~~~~~^^^^^^^
+  File "/tmp/holdout/tree.py", line 4, in depth
+    return 1 + max(depth(child) for child in node["children"])
+               ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/holdout/tree.py", line 4, in <genexpr>
+    return 1 + max(depth(child) for child in node["children"])
+                   ~~~~~^^^^^^^
+  File "/tmp/holdout/tree.py", line 4, in depth
+    return 1 + max(depth(child) for child in node["children"])
+               ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/holdout/tree.py", line 4, in <genexpr>
+    return 1 + max(depth(child) for child in node["children"])
+                   ~~~~~^^^^^^^
+  File "/tmp/holdout/tree.py", line 4, in depth
+    return 1 + max(depth(child) for child in node["children"])
+               ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/holdout/tree.py", line 4, in <genexpr>
+    return 1 + max(depth(child) for child in node["children"])
+                   ~~~~~^^^^^^^
+  File "/tmp/holdout/tree.py", line 4, in depth
+    return 1 + max(depth(child) for child in node["children"])
+               ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/holdout/tree.py", line 4, in <genexpr>
+    return 1 + max(depth(child) for child in node["children"])
+                   ~~~~~^^^^^^^
+  File "/tmp/holdout/tree.py", line 4, in depth
+    return 1 + max(depth(child) for child in node["children"])
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RecursionError: maximum recursion depth exceeded

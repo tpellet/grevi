@@ -1,0 +1,16 @@
+{
+ "id": "rust-unresolved-import",
+ "produced_by": "evals/holdout/make_why_logs.py",
+ "command": [
+  "cargo",
+  "build"
+ ],
+ "exit_code": 101,
+ "tool": "cargo 1.93.1 (083ac5135 2025-12-15)",
+ "files": [
+  "Cargo.toml",
+  "src/main.rs"
+ ],
+ "lines": 9,
+ "sha256": "30ea48f8326cb783cb56225693a3d51f6452bf38828f545f5a69044b177fc52c"
+}

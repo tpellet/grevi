@@ -1,0 +1,17 @@
+{
+ "id": "rust-overflow-panic",
+ "produced_by": "evals/holdout/make_why_logs.py",
+ "command": [
+  "cargo",
+  "run",
+  "--quiet"
+ ],
+ "exit_code": 101,
+ "tool": "cargo 1.93.1 (083ac5135 2025-12-15)",
+ "files": [
+  "Cargo.toml",
+  "src/main.rs"
+ ],
+ "lines": 6,
+ "sha256": "9f9b19154b55305db63575e96c4e6f851c3a4c60dd2521126b2274993da27321"
+}

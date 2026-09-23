@@ -1,0 +1,16 @@
+{
+ "id": "rust-wrong-arity",
+ "produced_by": "evals/holdout/make_why_logs.py",
+ "command": [
+  "cargo",
+  "build"
+ ],
+ "exit_code": 101,
+ "tool": "cargo 1.93.1 (083ac5135 2025-12-15)",
+ "files": [
+  "Cargo.toml",
+  "src/main.rs"
+ ],
+ "lines": 19,
+ "sha256": "878a05d6f9a22f5f282017e32c873b89ed68c017ee36b1b71388c443e975060c"
+}

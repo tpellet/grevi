@@ -1,0 +1,17 @@
+{
+ "id": "py-keyerror",
+ "produced_by": "evals/holdout/make_why_logs.py",
+ "command": [
+  "python3",
+  "report.py",
+  "data.json"
+ ],
+ "exit_code": 1,
+ "tool": "Python 3.14.7",
+ "files": [
+  "data.json",
+  "report.py"
+ ],
+ "lines": 14,
+ "sha256": "82d4612e81a940e96483044df7cd5eadb843389e337a8b983f3389d6291e44ce"
+}

@@ -1,0 +1,7 @@
+    Updating crates.io index
+error: failed to select a version for the requirement `tinyvec = "=999.0.0"`
+candidate versions found which didn't match: 1.13.3, 1.13.2, 1.13.1, ...
+location searched: crates.io index
+required by package `probe v0.0.0 (/tmp/holdout)`
+if you are looking for the prerelease package it needs to be specified explicitly
+    tinyvec = { version = "1.1.0-alpha.1" }

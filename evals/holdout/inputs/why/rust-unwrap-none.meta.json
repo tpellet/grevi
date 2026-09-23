@@ -1,0 +1,17 @@
+{
+ "id": "rust-unwrap-none",
+ "produced_by": "evals/holdout/make_why_logs.py",
+ "command": [
+  "cargo",
+  "run",
+  "--quiet"
+ ],
+ "exit_code": 101,
+ "tool": "cargo 1.93.1 (083ac5135 2025-12-15)",
+ "files": [
+  "Cargo.toml",
+  "src/main.rs"
+ ],
+ "lines": 6,
+ "sha256": "0bc058ae4ce0cbea7ee32e136572622e4f22f4399169aa8e5e40dca571b072ba"
+}

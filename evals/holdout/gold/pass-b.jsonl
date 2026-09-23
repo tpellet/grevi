@@ -1,0 +1,103 @@
+{"id": "fill-zox-01", "label": "templates/fish.txt", "confidence": "high"}
+{"id": "fill-zox-02", "label": "man/man1/zoxide-remove.1", "confidence": "high"}
+{"id": "fill-zox-03", "label": "src/import/autojump.rs", "confidence": "high"}
+{"id": "fill-zox-04", "label": ".github/workflows/winget.yml", "confidence": "high"}
+{"id": "fill-zox-05", "label": ".github/CODE_OF_CONDUCT.md", "confidence": "high"}
+{"id": "fill-zox-06", "label": "none", "confidence": "high"}
+{"id": "fill-zox-07", "label": "contrib/completions", "confidence": "high"}
+{"id": "fill-zox-08", "label": "ambiguous", "confidence": "medium", "note": "man and man/man1 both hold the manual pages, one directly and one as the parent"}
+{"id": "fill-zox-09", "label": "src/import", "confidence": "high"}
+{"id": "fill-del-01", "label": "src/handlers/merge_conflict.rs", "confidence": "high"}
+{"id": "fill-del-02", "label": "src/handlers/ripgrep_json.rs", "confidence": "high"}
+{"id": "fill-del-03", "label": "src/subcommands/list_syntax_themes.rs", "confidence": "medium", "note": "show_syntax_themes.rs renders them instead of listing them"}
+{"id": "fill-del-04", "label": "src/utils/round_char_boundary.rs", "confidence": "high"}
+{"id": "fill-del-05", "label": "src/wrapping.rs", "confidence": "high"}
+{"id": "fill-del-06", "label": "none", "confidence": "high"}
+{"id": "fill-del-07", "label": "src/features", "confidence": "high"}
+{"id": "fill-del-08", "label": "src/utils/bat", "confidence": "high"}
+{"id": "fill-jst-01", "label": "f550d49", "confidence": "high"}
+{"id": "fill-jst-02", "label": "8159bb6", "confidence": "high"}
+{"id": "fill-jst-03", "label": "7f4ef81", "confidence": "high"}
+{"id": "fill-jst-04", "label": "none", "confidence": "high"}
+{"id": "pick-jst-01", "label": "25", "confidence": "high"}
+{"id": "pick-jst-02", "label": "51", "confidence": "high"}
+{"id": "pick-jst-03", "label": "45", "confidence": "high"}
+{"id": "pick-jst-04", "label": "32", "confidence": "high"}
+{"id": "pick-jst-05", "label": "7", "confidence": "high"}
+{"id": "pick-jst-06", "label": "none", "confidence": "high"}
+{"id": "pick-jst-07", "label": "53", "confidence": "high"}
+{"id": "pick-del-01", "label": "2", "confidence": "high"}
+{"id": "pick-del-02", "label": "ambiguous", "confidence": "medium", "note": "55 says no hunk lengths and 56 says omitted hunk lengths; the phrase fits both"}
+{"id": "pick-del-03", "label": "23", "confidence": "high"}
+{"id": "pick-del-04", "label": "44", "confidence": "high"}
+{"id": "pick-del-05", "label": "ambiguous", "confidence": "high"}
+{"id": "pick-del-06", "label": "none", "confidence": "high"}
+{"id": "pick-zox-01", "label": "69", "confidence": "high"}
+{"id": "pick-zox-02", "label": "23", "confidence": "high"}
+{"id": "pick-zox-03", "label": "57", "confidence": "high"}
+{"id": "pick-zox-04", "label": "33", "confidence": "high"}
+{"id": "pick-zox-05", "label": "5", "confidence": "high"}
+{"id": "pick-zox-06", "label": "15", "confidence": "high"}
+{"id": "pick-zox-07", "label": "none", "confidence": "high"}
+{"id": "why-c-compile-error", "label": [1, 3], "confidence": "high"}
+{"id": "why-c-link-undefined", "label": [1, 3], "confidence": "medium", "note": "lines 4 and 5 are the linker and driver reporting the same miss"}
+{"id": "why-c-warnings-only", "label": "none", "confidence": "high"}
+{"id": "why-make-compile-error", "label": [3, 5], "confidence": "high"}
+{"id": "why-py-attribute-on-none", "label": [7, 10], "confidence": "high"}
+{"id": "why-py-json-decode", "label": [21, 21], "confidence": "medium", "note": "the frames above are inside the json module; only the last line names the fault"}
+{"id": "why-py-keyerror", "label": [11, 14], "confidence": "high"}
+{"id": "why-py-module-not-found", "label": [2, 4], "confidence": "high"}
+{"id": "why-py-recursion", "label": [117, 120], "confidence": "medium"}
+{"id": "why-py-unittest-failure", "label": [9, 12], "confidence": "high"}
+{"id": "why-rust-borrow-conflict", "label": [2, 10], "confidence": "high"}
+{"id": "why-rust-clean-build", "label": "none", "confidence": "high"}
+{"id": "why-rust-index-panic", "label": [4, 5], "confidence": "high"}
+{"id": "why-rust-missing-version", "label": [2, 5], "confidence": "high"}
+{"id": "why-rust-overflow-panic", "label": [4, 5], "confidence": "high"}
+{"id": "why-rust-serde-derive-feature", "label": [14, 24], "confidence": "medium"}
+{"id": "why-rust-test-assert", "label": [13, 16], "confidence": "high"}
+{"id": "why-rust-type-mismatch", "label": [2, 8], "confidence": "high"}
+{"id": "why-rust-unresolved-import", "label": [2, 6], "confidence": "high"}
+{"id": "why-rust-unwrap-none", "label": [4, 5], "confidence": "high"}
+{"id": "why-rust-wrong-arity", "label": [2, 6], "confidence": "high"}
+{"id": "why-sh-set-e", "label": [11, 11], "confidence": "high", "note": "line 10 only echoes the asset name the loop reached"}
+{"id": "filter-zox-01", "label": "keep", "confidence": "high"}
+{"id": "filter-zox-02", "label": "drop", "confidence": "high"}
+{"id": "filter-zox-03", "label": "keep", "confidence": "high"}
+{"id": "filter-zox-04", "label": "keep", "confidence": "high"}
+{"id": "filter-zox-05", "label": "drop", "confidence": "high"}
+{"id": "filter-zox-06", "label": "drop", "confidence": "high"}
+{"id": "filter-zox-07", "label": "keep", "confidence": "high"}
+{"id": "filter-zox-08", "label": "drop", "confidence": "high"}
+{"id": "filter-zox-09", "label": "unsure", "confidence": "medium", "note": "the POSIX template is the fallback for several shells at once"}
+{"id": "filter-jst-01", "label": "drop", "confidence": "high"}
+{"id": "filter-jst-02", "label": "drop", "confidence": "high"}
+{"id": "filter-jst-03", "label": "drop", "confidence": "high"}
+{"id": "filter-jst-04", "label": "keep", "confidence": "high"}
+{"id": "filter-jst-05", "label": "keep", "confidence": "medium", "note": "the subject reads as a fix to the man page, which is documentation"}
+{"id": "filter-jst-06", "label": "drop", "confidence": "medium", "note": "a release commit bumps the version, which is not documentation"}
+{"id": "filter-jst-07", "label": "keep", "confidence": "high"}
+{"id": "filter-jst-08", "label": "keep", "confidence": "high"}
+{"id": "filter-jst-09", "label": "keep", "confidence": "high"}
+{"id": "filter-jst-10", "label": "drop", "confidence": "high"}
+{"id": "filter-zox-10", "label": "drop", "confidence": "high"}
+{"id": "route-ctr-01", "label": "stern", "confidence": "high"}
+{"id": "route-ctr-02", "label": "dive", "confidence": "high"}
+{"id": "route-ctr-03", "label": "skopeo", "confidence": "high"}
+{"id": "route-ctr-04", "label": "trivy", "confidence": "high"}
+{"id": "route-ctr-05", "label": "kubectx", "confidence": "high"}
+{"id": "route-ctr-06", "label": "ambiguous", "confidence": "medium", "note": "kind uses containers, minikube a virtual machine; both run on a laptop"}
+{"id": "route-ctr-07", "label": "none", "confidence": "high"}
+{"id": "route-med-01", "label": "ffmpeg", "confidence": "high"}
+{"id": "route-med-02", "label": "exiftool", "confidence": "high"}
+{"id": "route-med-03", "label": "ffprobe", "confidence": "medium", "note": "its summary names codecs and bitrate outright; mediainfo is the readable report"}
+{"id": "route-med-04", "label": "optipng", "confidence": "high"}
+{"id": "route-med-05", "label": "yt-dlp", "confidence": "high"}
+{"id": "route-med-06", "label": "potrace", "confidence": "high"}
+{"id": "route-med-07", "label": "none", "confidence": "high"}
+{"id": "route-dat-01", "label": "duckdb", "confidence": "high"}
+{"id": "route-dat-02", "label": "csvstat", "confidence": "high"}
+{"id": "route-dat-03", "label": "litestream", "confidence": "high"}
+{"id": "route-dat-04", "label": "sqlfluff", "confidence": "high"}
+{"id": "route-dat-05", "label": "pgloader", "confidence": "high"}
+{"id": "route-dat-06", "label": "none", "confidence": "high"}

@@ -1,0 +1,9 @@
+   Compiling probe v0.0.0 (/tmp/holdout)
+error[E0432]: unresolved import `std::collections::SortedMap`
+ --> src/main.rs:2:5
+  |
+2 | use std::collections::SortedMap;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ no `SortedMap` in `collections`
+
+For more information about this error, try `rustc --explain E0432`.
+error: could not compile `probe` (bin "probe") due to 1 previous error

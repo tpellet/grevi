@@ -1,0 +1,15 @@
+{
+ "id": "py-unittest-failure",
+ "produced_by": "evals/holdout/make_why_logs.py",
+ "command": [
+  "python3",
+  "test_slug.py"
+ ],
+ "exit_code": 1,
+ "tool": "Python 3.14.7",
+ "files": [
+  "test_slug.py"
+ ],
+ "lines": 21,
+ "sha256": "a5f5e7221a921f8f92715eb16e531db2868c4f36a5c0c4e631503a2dc26279d6"
+}

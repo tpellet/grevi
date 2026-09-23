@@ -1,0 +1,13 @@
+   Compiling probe v0.0.0 (/tmp/holdout)
+error[E0502]: cannot borrow `names` as mutable because it is also borrowed as immutable
+ --> src/main.rs:4:5
+  |
+3 |     let first = &names[0];
+  |                  ----- immutable borrow occurs here
+4 |     names.push(String::from("gamma"));
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ mutable borrow occurs here
+5 |     println!("the first entry is {first}");
+  |                                   ----- immutable borrow later used here
+
+For more information about this error, try `rustc --explain E0502`.
+error: could not compile `probe` (bin "probe") due to 1 previous error
