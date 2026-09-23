@@ -111,7 +111,8 @@ Transient 408, 429, 5xx and timeout failures can be retried up to three times. A
 429 is never retried: exit 4, `daily quota of the free backend reached`. Filter batch requests
 honour numeric `Retry-After` through 60 seconds and refuse longer delays; other inference calls
 cap the server delay at ten seconds. Millisecond headers take precedence; HTTP-date values are
-not parsed. There is no overall command deadline. A 413 or 422 returns exit 6,
+not parsed. Every verb runs under one overall deadline, `JEVIFY_DEADLINE` seconds (600 by
+default); see [configuration](configuration.md). A 413 or 422 returns exit 6,
 `api_rejected_request`: narrow evidence before asking again.
 
 `meta.requests` counts inference POST attempts, including failures and retries, excluding health
@@ -172,8 +173,8 @@ requests on this model. A changed model or prompt needs new evidence.
 
 Root-cause accuracy, measured 2026-09-22 at 0.8.1 on TypeSafe `jev-1.13.0`: twenty-one real CI
 logs, 136–300 lines each, hand-labelled cause ranges (`evals/why/corpus.jsonl`); `jevify why -n 3`.
-Zero abstentions, zero errors. Baselines use the first or last line matching the same
-error-signal regex.
+Eighteen cases decided, three abstained (exit 3), zero errors. Baselines use the first or last
+line matching the same error-signal regex.
 
 | Method | hit@1 | hit@3 |
 |:---|---:|---:|
@@ -181,7 +182,11 @@ error-signal regex.
 | first signal match | 4/21 | 10/21 |
 | last signal match | 1/21 | 3/21 |
 
-Every log contains a failure, so the three abstentions are misses. `data.any` has minimum 0.17
+The scorer (`scripts/eval_why.py`) counts a pointed line inside the labelled range whether the
+verb decided or abstained, so 19/21 and 20/21 are where the pointed line fell over all 21 cases,
+not the accuracy of the decided answers. Every log contains a failure, so for a caller reading
+the exit code the three abstentions are misses and at most 18 of 21 are right; the hit@1 over
+the 18 decided cases alone was not recorded in this run. `data.any` has minimum 0.17
 and median 0.77; the abstentions score 0.17, 0.43 and 0.46. Failures include a data race, an
 assertion described as “still exists”, and a lint finding. A quoted failure or library frame can
 also distract selection from the cause. These counts quantify the limits of the measured task.

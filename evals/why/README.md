@@ -6,7 +6,9 @@ go, docker), and one from this repository's own CI. `scripts/eval_why.py` runs
 `jevify why --json -n 3 < <id>.log` on every case in `corpus.jsonl` and scores hit@1 and hit@3
 against the labelled range, next to two regex baselines on the same files.
 
-At jevify 0.8.1 with jev-1.13.0 (2026-09-22): hit@1 19/21, hit@3 20/21.
+At jevify 0.8.1 with jev-1.13.0 (2026-09-22): hit@1 19/21, hit@3 20/21, the pointed line of
+every case counted, three of which were abstentions (exit 3); the figure over the 18 decided
+cases alone was not recorded, and the script prints it as `jevify, decided` on the next run.
 
 The twenty GitHub cases were collected 2026-09-19 as the most recent genuine tool failures on each
 repository's default or PR branches at that date (workflow cancellations, runner infrastructure

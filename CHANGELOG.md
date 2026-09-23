@@ -85,7 +85,9 @@ Changed:
   0.89 accuracy with one false answer fewer.
 - `pick` over a plain listing prefers the entry that is or does what the description names over
   a page that documents it, a test of it or a recording of it, unless the description asks for
-  one of those. On a 36-case set the two-round run goes from 30 to 34 right.
+  one of those. On the 36-case pilot set (`benchmarks/agents/PILOT.md`, 30 of 36 right before
+  the rule), four of the six losses are a documentation page chosen over the file that does the
+  work; the rule addresses those four. The set is not re-measured after the rule.
 
 ## 0.8.3
 
@@ -161,7 +163,7 @@ Fixed:
   runner as the man index; a hung converter leaves the verb to go on without its text.
   `pdftotext` reads the file by path, after the regular-file check, instead of from stdin.
 - `filter` and `label` send at most 60 records per classifier.dev request, the largest keyless
-  request the service accepts: it refuses 75 with HTTP 402 `request_spending_limit` before
+  batch tried (`benchmarks/results.md`): the service refuses 75 with HTTP 402 `request_spending_limit` before
   judging anything, so a keyless run over about 70 records ended exit 4 `api_protocol` with the
   raw body. A 402 is reported as exit 4 `api_unavailable` naming the service code, without
   retry. `capabilities.limits.records_per_request.classifier` is 60.

@@ -59,7 +59,8 @@ Cost per call, from the shapes and the counts above:
 |:---|:---|:---|
 | `is` | 1 per statement | 6,600 (3 statements) to 20,000 (1) |
 | `filter`, `label` | 1 per distinct record; a batch of 60 records is accepted, 75 is refused (HTTP 402) | 20,000 records in total: 333 calls of 60 records, 2,000 calls of 10 |
-| `pick`, `why` | 2 per window of 99 lines, plus 2 for the final round when there is more than one window | 10,000 calls of at most 99 lines; 830 of 1,000 lines; 100 of 9,801 |
+| `pick` | 2 per window of 99 lines, plus 2 for the final round when there is more than one window (one window decides alone) | 10,000 calls of at most 99 lines; 830 of 1,000 lines; 100 of 9,801 |
+| `why` | 2 per window of 99 lines, plus 2 for the final round on every log, a one-window log included | 5,000 calls of at most 99 lines; 830 of 1,000 lines; 100 of 9,801 |
 | `route` | 2 per window of 99 commands, plus 1 per finalist (at most 12) | 380 over a PATH of 1,883 commands; 340 over 2,200 |
 
 Routing does not cost one classification per command on the PATH: a window of 99 commands is
@@ -271,3 +272,67 @@ include whatever run-to-run variation the service has). `add` and `sort` (no cas
 route gold under a PATH that has a translator. The 30 abstention-gold cases are enough to see
 that abstentions are right when they happen, not enough to bound the false-action rate on
 "nothing fits" inputs per verb: 1 to 5 such cases per verb and split.
+
+## The `fill` finals shortcut on a held-out content-phrase set (measured 2026-09-22)
+
+A decisive names round skips the finals of a `file` or `dir` marker when the runner-up name
+is out of play (`RIVAL_RATIO * (none + other names) <= best`). The rule was written against
+phrases from this repository; this set is 33 content phrases nobody read while writing it
+(`evals/fill/finals/`): 24 `file` and 9 `dir` cases over ripgrep `3fce3b5`, fzf `b1be3a8`
+and bat `4987f76`, each scope at most 94 candidates so every case takes the single-window
+path where the rule applies, gold from two annotators (32 of 33 agreed; one adjudicated
+`ambiguous`), three abstention golds. Three binaries ran every case once on both backends,
+`JEVIFY_NO_CACHE=1`, `--dry-run`, Jev 1.13.0 answering every request
+(`scripts/eval_fill_finals.py`): `pre` is 233e946 (0.8.0, the commit before 76e723e: three
+name finalists, a decisive names round skips the finals with no runner-up test), `head` is
+e5048ff (0.9.3: every name with p > 0 reaches the finals, the runner-up rule), and `off` is
+e5048ff with the shortcut removed, so a tier-two marker always runs its finals. `finals ran`
+counts the cases with a second request; `abstentions (right)` counts the abstentions and
+those whose gold was `none` or `ambiguous`.
+
+| Binary | Backend | finals ran | coverage | accuracy | abstentions (right) | false actions | requests |
+|:---|:---|---:|---:|---:|---:|---:|---:|
+| pre 233e946 | classifier.dev | 18 | 0.82 | 0.85 | 6 (3) | 4 | 51 |
+| head e5048ff | classifier.dev | 21 | 0.85 | 0.93 | 5 (3) | 2 | 54 |
+| off (finals always) | classifier.dev | 33 | 0.76 | 0.96 | 8 (3) | 1 | 66 |
+| pre 233e946 | TypeSafe | 15 | 0.88 | 0.86 | 4 (2) | 4 | 48 |
+| head e5048ff | TypeSafe | 18 | 0.82 | 0.89 | 6 (3) | 3 | 51 |
+| off (finals always) | TypeSafe | 33 | 0.76 | 0.92 | 8 (3) | 2 | 66 |
+
+Against 233e946, the rule at `head` lowers the false actions (4 to 2 on classifier.dev, 4 to
+3 on TypeSafe) and sends three more cases per backend to the finals, so the requests rise by
+three. The runner-up test is what catches them: "the mapping that assigns a syntax to the
+files git reads" wins the names round as `src/syntax_mapping.rs` at 0.60 with the field in
+play, and the finals choose `50-git.toml`; at 233e946 the same names round decided alone and
+was wrong.
+
+The rule itself is measured by `head` against `off`: it fires on 12 cases on classifier.dev
+and 15 on TypeSafe, saving one request each (18% and 23% of the requests the set costs with
+the finals always on). On one of those cases per backend the one-sided names round is wrong
+and the finals would have abstained: "wraps long lines at the terminal width" chose
+`src/wrapping.rs` at 0.72 (names 0.72, next 0.03, NONE 0.12), a file that only declares the
+`WrappingMode` enum while the wrapping is in `src/printer.rs`; "starts the pager and
+negotiates its arguments" chose `src/pager.rs` at 0.66 (names 0.66, next 0.10, NONE 0.06),
+which only picks the pager while `src/output.rs` starts it. Both are files named for the
+concept the phrase describes and holding something else: the exact case the rule assumes a
+one-sided names round rules out, and it does not. On the other side, "the homebrew
+packaging" is right on names alone (`pkg/brew` 0.78 and 0.91) and abstains on both backends
+when the finals read the directory. So the shortcut buys one request per fire at the price
+of one confident wrong file per 12 to 15 fires, and gains one right directory the finals
+would have lost; the finals always on end with the fewest false actions (1 and 2, both of
+them cases the shortcut did not touch) and the lowest coverage (0.76).
+
+The premise of the rule, that names alone cannot select a wrong file for a content phrase
+when the runner-up is out of play, fails on this set at about one fire in thirteen, on both
+backends, with a name decoy each time. The numbers do not support the bead's own criterion
+either way: false actions fell against 233e946 and requests rose. What they say is a cost
+trade, one request against a 7 to 8% false-action rate on the cases the rule decides alone,
+and `fill` is the verb where a wrong selection reaches a command. That decision belongs to a
+bead of its own (hunch-ng2 files it); nothing in `src/` changed for this measurement.
+
+The remaining misses are the finals' own and the rule does not touch them: TypeSafe reads
+"the parallel directory walker" as `crates/ignore/examples/walk.rs` (0.74, over
+`src/walk.rs`) and "emits one JSON object per line" as `crates/printer/src/jsont.rs` (0.64,
+the type definitions, over `json.rs`), on `head` and `off` alike; classifier.dev abstains on
+both. Not measured: repeatability (one run per case and backend), lists wider than one
+window, and phrases about names, which the rule was designed for and this set leaves out.

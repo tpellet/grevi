@@ -235,9 +235,10 @@ decision{verb, backend, model{requested, answering}, threshold, gates[{best, nex
 `model.requested` is the model the request names; it is null on classifier, which chooses its
 own. `model.answering` is the model the service reported, `unknown` when it did not say; the two
 stay apart. `threshold` is the one threshold every gate is compared to. `gates` holds one entry
-per decision, in decision order: `fill` one per marker, `is` one per statement, `filter` and
-`label` one per judged record, `add` one per hunk, `sort` one per file, `pick`, `why` and `route`
-one. `best` and `next` are the two top Choice probabilities, `none` is P(NONE) of that Choice,
+per decision, in decision order: `fill` one per marker (the `flag` and `one` markers first, then
+the listing markers, each group in marker order, so a listing marker written before a `flag`
+marker gets its gate after it), `is` one per statement, `filter` and `label` one per judged
+record, `add` one per hunk, `sort` one per file, `pick`, `why` and `route` one. `best` and `next` are the two top Choice probabilities, `none` is P(NONE) of that Choice,
 `any` is the Noul: the absolute score of a selection, or the whole answer of a yes/no question
 (`is`, `add`, a `flag` marker). `filter` asks a three-way Choice and fills three scores: `any`
 is P(the record says the statement holds), `fails` is P(the record says it does not hold) and

@@ -69,6 +69,7 @@ skipped = sorted(p.name for p in WHY.glob("*.log") if p.stem not in ids)
 for name in skipped:
     print(f"skipped (not in {MANIFEST.name}): {name}", file=sys.stderr)
 hit = {"jevify": [0, 0], "first SIGNAL match": [0, 0], "last SIGNAL match": [0, 0]}  # name -> [hit@1, hit@3]
+decided = [0, 0]  # jevify hit@1 and hit@3 over the decided cases only (exit 0): what a caller acting on the exit code gets
 errors = 0; abstained = 0; anys = []; cost = 0.0; cost_unknown = 0; rows = []
 Path("evals/out").mkdir(exist_ok=True)
 def score(name, pointed, lo, hi):
@@ -95,7 +96,11 @@ for cid, log, lo, hi in cases:
         errors += 1; print(f"error exit {v['exit_code']}: {v['error']['kind']} for {log.name}", file=sys.stderr)
     abstained += v["exit_code"] == 3
     pointed = [c["line"] for c in d.get("causes") or []]
+    # The table scores the pointed line of every case, abstentions included: recall of the pointer.
     score("jevify", pointed, lo, hi)
+    if v["exit_code"] == 0:
+        decided[0] += bool(pointed) and lo <= pointed[0] <= hi
+        decided[1] += any(lo <= p <= hi for p in pointed[:3])
     if "any" in d and d["any"] is not None: anys.append(d["any"])
     # A token count the backend left unknown makes cost_usd null: count it as unknown, never a crash.
     c = (v.get("meta") or {}).get("cost_usd")
@@ -108,6 +113,8 @@ print(f"why: {n} cases  skipped {len(skipped)}  abstained {abstained}  errors {e
 print(f"{'method':<20} {'hit@1':>8} {'hit@3':>8}")
 for name, (h1, h3) in hit.items():
     print(f"{name:<20} {h1:>5}/{n:<3}{h3:>5}/{n:<3}")
+# Every log holds a failure, so an abstention is a miss for the exit code: the decided figure is what the caller gets.
+print(f"{'jevify, decided':<20} {decided[0]:>5}/{n - abstained - errors:<3}{decided[1]:>5}/{n - abstained - errors:<3}  (exit 0 cases; an abstention is a miss)")
 if anys:
     # Every case holds a failure, so this is where found cases' absolute Noul sits against the 0.5 knob.
     print(f"data.any over {len(anys)} answered cases: min {min(anys):.2f}  median {statistics.median(anys):.2f}  (threshold {v['meta']['threshold']})")
