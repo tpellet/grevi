@@ -165,8 +165,9 @@ resolve against one snapshot; any abstention prevents the entire execution.
 
 Let W be the backend window: 99 on classifier.dev, 200 on TypeSafe. `fill` keeps three names
 per window in the shortlist round and accepts F = W × floor(W / 3): 3,267 or 13,200 candidates;
-with one window, when the names leave a `branch`, `commit`, `file` or `dir` undecided, every
-name not ruled out reaches the finals with its evidence, up to 24. `pick` and `pick --from`
+with one window, a `file` or `dir` marker always runs its finals, and a `branch` or `commit`
+marker runs them when the names leave it undecided or the runner-up stays in play; every name
+not ruled out reaches the finals with its evidence, up to 24. `pick` and `pick --from`
 accept min(W × W, 20,000): 9,801 or 20,000. They keep three finalists per window when those fit
 W, else two when those fit, else one, always by rank within each window. `one` accepts at most
 W options; more is exit 2. Ordered kinds retain the newest candidates and report coverage;
@@ -255,12 +256,14 @@ in decision order: `fill` one per listing marker, `pick`, `why` and `route` one.
 what the shortlist round computed, with no extra request: `windows` in input order, each with
 every candidate of that window by rank (`ranks[{index, p}]`), its P(NONE) and its Noul;
 `finalists`, the items the finals request held, in its order: the shortlist's picks (`n` per
-window, by rank then by window), widened by `fill` when one window of names leaves a kind with
-richer evidence undecided, joined by the panic lines `why` adds, capped at twelve by `route`;
-empty when one window decided alone; and `n`. `index` is the verb's own number, 1-based: the
-line for `why`, the record for `pick`, the listing position for `pick --from` and `fill`, the
-inventory position for `route`. A candidate below NONE is still listed, so the rank of any
-item, and whether the finals judged it, reads from one run.
+window, by rank then by window), widened by `fill` to every name not ruled out when one window
+of names sends a `file` or `dir` marker to its finals, which it always does, or a `branch` or
+`commit` marker whose names left it undecided or its runner-up in play, joined by the panic
+lines `why` adds, capped at twelve by `route`; empty when one window decided alone; and `n`.
+`index` is the verb's own number, 1-based: the line for `why`, the record for `pick`, the
+listing position for `pick --from` and `fill`, the inventory position for `route`. A candidate
+below NONE is still listed, so the rank of any item, and whether the finals judged it, reads
+from one run.
 
 `meta.requests` counts attempted inference POSTs, including retries and failures, excluding
 health and prewarm GETs. `meta.telemetry` separates `inference_posts`, `health_gets`,

@@ -1,11 +1,13 @@
 # The held-out content-phrase set for `fill`
 
 Thirty-three `fill` cases over the `file` and `dir` kinds whose phrase says what a file or
-directory does, not what it is called. They measure the finals shortcut: a decisive names round
-skips the finals of a tier-two kind when the runner-up name is out of play. No case comes from
-this repository or from a family of `evals/validation/`, and nobody read a case while the rule
-was written: the phrases were written against the three repositories below and labelled
-afterwards.
+directory does, not what it is called. They measure the finals path of `file` and `dir`: a
+`file` or `dir` marker always runs its finals, and the shortcut (a decisive names round with the
+runner-up name out of play decides alone) applies to `branch` and `commit` only, which this set
+does not cover. The held-out measurement is in `benchmarks/results.md` under "The `fill` finals
+always on for `file` and `dir` (measured 2026-09-22)". No case comes from this repository or
+from a family of `evals/validation/`, and nobody read a case while the rule was written: the
+phrases were written against the three repositories below and labelled afterwards.
 
 | File | What it holds |
 |:---|:---|
@@ -15,7 +17,7 @@ afterwards.
 | `gold/disagreements.md` | every case the annotators labelled differently, and how it was resolved |
 
 Every listing fits one window on both backends (at most 94 candidates), so every case takes the
-single-window path where the shortcut applies. Each case runs `--dry-run` with `echo` as the
+single-window path, one names round and one finals. Each case runs `--dry-run` with `echo` as the
 command, inside a clone of the repository at the pin (`scripts/eval_fill_finals.py run`);
 nothing a case describes is executed.
 

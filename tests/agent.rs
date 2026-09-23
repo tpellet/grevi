@@ -271,7 +271,10 @@ fn capabilities_lists_verbs_exit_codes_env() {
     // and the env list say so in the same words.
     assert!(robot_docs.contains("`round_one` is present only under `JEVIFY_DECISION=round_one`"));
     assert!(robot_docs.contains("`finalists`, the items the finals request held, in its order"));
-    assert!(robot_docs.contains("whether the finals judged it, reads from one run"));
+    // Prose the document wraps: compare with the line breaks folded into single spaces, so a
+    // reflow does not fail the test and a changed sentence still does.
+    let flowed = robot_docs.split_whitespace().collect::<Vec<_>>().join(" ");
+    assert!(flowed.contains("whether the finals judged it, reads from one run"));
     let round_one = d["envelope"]["decision"]["round_one"].as_str().unwrap();
     assert!(
         round_one.starts_with("present only under JEVIFY_DECISION=round_one"),

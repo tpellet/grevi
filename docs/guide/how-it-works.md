@@ -51,8 +51,9 @@ window, never by comparing probabilities from separate requests. With W as the b
 when 2 × windows fits W, otherwise one. All finalists enter the final comparison. The first
 24 finalists can receive richer evidence; 24 is not a cap on the comparison pool.
 
-`fill` keeps three names per window in the shortlist round; with one window, when the names
-leave a branch, commit, file or dir undecided, every name with p > 0 reaches the finals with its
+`fill` keeps three names per window in the shortlist round. With one window, a file or dir
+marker always runs its finals, and a branch or commit marker runs them when the names leave it
+undecided or the runner-up stays in play; in the finals every name with p > 0 competes with its
 evidence, up to 24. It accepts F = W × floor(W / 3): 3,267 candidates keyless and 13,200 on
 TypeSafe. `pick` and `pick --from` accept min(W × W, 20,000): 9,801 and
 20,000. Ordered kinds retain the newest candidates and report coverage; unordered overflow is
