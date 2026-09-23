@@ -324,3 +324,71 @@ async fn no_signal_on_stdin_hints_at_stderr() {
     assert_eq!(out.status.code(), Some(3));
     assert!(v["data"]["hint"].as_str().unwrap().contains("2>&1"));
 }
+
+// Keyless, the finals are one classifier.dev request of at most 99 labels plus NONE. Every
+// finalist keeps its slot; the panic lines that finalists bring along fill only the room left.
+#[tokio::test(flavor = "multi_thread")]
+async fn keyless_finals_never_exceed_the_window_when_panic_blocks_would() {
+    let server = common::mock_classifier(FakeJev {
+        choose: |_, s, o| option_containing(s, o, "panicked at"),
+        noul: |_, _| 0.95,
+    })
+    .await;
+    // 14 windows of 99 kept lines: 42 finalists; each window's top pick is a panic header with
+    // a six-line message, so unguarded the finals would hold 42 + 14 * 6 = 126 lines.
+    let windows = 14;
+    let mut lines: Vec<String> = Vec::new();
+    for w in 0..windows {
+        for i in 0..92 {
+            lines.push(format!("error step {w}.{i}"));
+        }
+        lines.push(format!(
+            "thread 'case_{w}' (1) panicked at tests/case.rs:{}:9:",
+            w + 1
+        ));
+        for m in 0..6 {
+            lines.push(format!(
+                "assertion `left == right` failed: case {w} part {m}"
+            ));
+        }
+    }
+    assert_eq!(lines.len(), windows * 99);
+    let input = format!("{}\n", lines.join("\n"));
+    let mut cmd = common::jevify_classifier(&server);
+    let out = tokio::task::spawn_blocking(move || {
+        cmd.args(["--json", "why", "--no-save"])
+            .write_stdin(input)
+            .output()
+            .unwrap()
+    })
+    .await
+    .unwrap();
+    assert_eq!(
+        out.status.code(),
+        Some(0),
+        "{}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let requests = server.received_requests().await.unwrap();
+    assert_eq!(requests.len(), windows + 1);
+    let body: serde_json::Value = serde_json::from_slice(&requests.last().unwrap().body).unwrap();
+    let state: serde_json::Value =
+        serde_json::from_str(body["items"][0].as_str().unwrap()).unwrap();
+    let finals = state["items"].as_array().unwrap();
+    let labels = body["dimensions"]["pick"]["labels"].as_array().unwrap();
+    assert_eq!(finals.len(), 99, "finals must fill the window exactly");
+    assert!(labels.len() <= 100, "{} labels", labels.len());
+    // Every finalist of round one is in the finals, ahead of any panic line.
+    let headers = finals
+        .iter()
+        .filter(|s| {
+            s.as_str()
+                .unwrap()
+                .lines()
+                .next()
+                .unwrap()
+                .contains("panicked at")
+        })
+        .count();
+    assert_eq!(headers, windows, "{finals:?}");
+}

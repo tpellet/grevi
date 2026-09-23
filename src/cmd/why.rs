@@ -253,18 +253,38 @@ pub async fn run(
         // A panic header outranks its own message in round one, where the header names the test
         // and the message stands alone. The finals judge them side by side: a finalist's whole
         // panic block, header and message lines, joins the finals right after it.
+        //
+        // The finals are one request, so they hold at most one window. Round one already keeps
+        // its finalists within it (`Finalists::Auto`: three per window up to a third of the
+        // window, then two, then one; 33 × 3 = 99 keyless, 66 × 3 = 198 with a key; a
+        // 1,000-line log is 11 keyless windows and 33 finalists, or 5 windows and 15). Every
+        // finalist keeps its slot, by rank; the panic lines share only the room left, so a
+        // late finalist is never pushed past the window by an early finalist's message.
+        let size = ctx.backend.window();
         let mut chosen: Vec<usize> = Vec::new();
         for c in &first.finalists {
-            if !chosen.contains(&c.index) {
+            if chosen.len() < size && !chosen.contains(&c.index) {
                 chosen.push(c.index);
             }
-            for i in panic_block(&lines, kept[c.index]) {
-                if chosen.len() >= ctx.backend.window() {
+        }
+        if chosen.len() < first.finalists.len() {
+            eprintln!(
+                "jevify why: finals hold {} of {} finalists",
+                chosen.len(),
+                first.finalists.len()
+            );
+        }
+        let mut room = size - chosen.len();
+        let finalists = chosen.clone();
+        for &f in &finalists {
+            for i in panic_block(&lines, kept[f]) {
+                if room == 0 {
                     break;
                 }
                 if let Ok(k) = kept.binary_search(&i) {
                     if !chosen.contains(&k) {
                         chosen.push(k);
+                        room -= 1;
                     }
                 }
             }
