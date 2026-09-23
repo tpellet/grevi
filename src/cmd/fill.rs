@@ -350,6 +350,7 @@ pub async fn run(
         let prompts = &prompts;
         let env = &env;
         let tier_two = kinds[i].as_ref().is_some_and(|k| k.has_tier_two);
+        let names_may_decide = kinds[i].as_ref().is_some_and(|k| names_may_decide(&k.name));
         let prefix = prefix_of(i).unwrap_or_default();
         async move {
             let Some(first) = first else {
@@ -358,13 +359,21 @@ pub async fn run(
             let mut finalists = first.finalists.clone();
             if first.windows.len() == 1 {
                 let ranking = &first.windows[0];
-                // Names alone cannot refute a content phrase: a decisive Found skips the finals
-                // of a kind with tier-two evidence only when the runner-up name is out of play.
+                // Names alone cannot refute a content phrase. A `file` or `dir` marker always
+                // runs its finals: on the held-out set of `evals/fill/finals/` a decisive
+                // names round with the runner-up out of play still chose a file named for
+                // the concept and holding something else (src/wrapping.rs for code that
+                // lives in src/printer.rs), once per twelve to fifteen fires on each backend,
+                // and fill is the verb whose selection reaches a command. `branch` and
+                // `commit` keep the shortcut, a decisive Found with the runner-up out of play,
+                // because no held-out evidence exists for them yet.
                 if !tier_two
-                    || (matches!(
-                        tournament::decide(ranking, ctx.threshold),
-                        Decision::Found(_)
-                    ) && !runner_up_matches(ranking))
+                    || (names_may_decide
+                        && matches!(
+                            tournament::decide(ranking, ctx.threshold),
+                            Decision::Found(_)
+                        )
+                        && !runner_up_matches(ranking))
                 {
                     return Ok(Some((ranking.clone(), 0, first, vec![])));
                 }
@@ -484,13 +493,22 @@ fn guard_model(ctx: &Config) -> Result<(), JevifyError> {
 /// when the field is in play does a decisive Found on names go on to the finals, where the
 /// excerpts decide; otherwise the one-request path stands and a finalist whose excerpt would
 /// be withheld never competes on its name alone. Read from round one only: no request, no
-/// threshold change, no new ratio.
+/// threshold change, no new ratio. Applied to the kinds `names_may_decide` names.
 fn runner_up_matches(ranking: &Ranking) -> bool {
     let Some(best) = ranking.candidates.first() else {
         return false;
     };
     let field: f64 = ranking.none + ranking.candidates[1..].iter().map(|c| c.p).sum::<f64>();
     RIVAL_RATIO * field > best.p
+}
+
+/// The tier-two kinds whose names round may decide alone, a decisive Found with the runner-up
+/// out of play (`runner_up_matches`): `branch` and `commit`, where no held-out measurement
+/// exists. `file` and `dir` always run their finals: on the 33 held-out content phrases of
+/// `evals/fill/finals/` the shortcut chose a name decoy once per twelve to fifteen fires on
+/// each backend (benchmarks/results.md), and a wrong file reaches the caller's command.
+fn names_may_decide(kind: &str) -> bool {
+    matches!(kind, "branch" | "commit")
 }
 
 fn apply_ranking(state: &mut State, ranking: &Ranking, threshold: f64) {

@@ -1658,7 +1658,7 @@ async fn file_finals_hold_every_name_not_ruled_out_and_skip_an_empty_pool() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn decisive_names_reach_the_finals_only_when_the_runner_up_is_in_play() {
+async fn file_finals_run_after_a_decisive_names_round_with_the_runner_up_out_of_play() {
     let root = work_tree(&[
         "src/input.rs",
         "src/records.rs",
@@ -1670,8 +1670,9 @@ async fn decisive_names_reach_the_finals_only_when_the_runner_up_is_in_play() {
     // records.rs 0.20 with NONE 0.17, a field of 0.37 the winner does not beat twice over, so
     // the runner-up is in play and the finals read the excerpts, where records.rs wins.
     // "name": publish-crates.yml 0.97 over release.sh 0.01 with NONE 0.02, a field of 0.03,
-    // so the runner-up is out of play, one request decides, and the withheld `.github/`
-    // winner never competes on its name alone in a finals.
+    // the runner-up out of play; a `file` marker runs its finals all the same (a name decoy
+    // survives a one-sided names round, `evals/fill/finals/`), and the withheld `.github/`
+    // winner competes on its name with the excerpt of release.sh beside it.
     let server = common::mock(fake().with_probabilities(|_, state, options| {
         if options == ["yes", "no"] {
             return vec![0.9, 0.1];
@@ -1695,11 +1696,12 @@ async fn decisive_names_reach_the_finals_only_when_the_runner_up_is_in_play() {
                     .as_str()
                     .unwrap();
                 if second_round {
-                    if text.contains("records.rs") {
-                        0.9
+                    let winner = if content {
+                        "records.rs"
                     } else {
-                        0.02
-                    }
+                        "publish-crates.yml"
+                    };
+                    if text.contains(winner) { 0.9 } else { 0.02 }
                 } else if content {
                     if text.contains("input.rs") {
                         0.51
@@ -1767,11 +1769,25 @@ async fn decisive_names_reach_the_finals_only_when_the_runner_up_is_in_play() {
         ".github/workflows/publish-crates.yml"
     );
     let requests = server.received_requests().await.unwrap();
-    assert_eq!(requests.len(), 3);
+    assert_eq!(requests.len(), 4);
     let names = String::from_utf8_lossy(&requests[2].body);
     assert!(!names.contains("VISIBLE"), "{names}");
+    let finals: Value = serde_json::from_slice(&requests[3].body).unwrap();
+    let items = finals["state"]["items"].as_array().unwrap();
+    let texts: Vec<_> = items.iter().map(|i| i.as_str().unwrap()).collect();
+    assert_eq!(texts.len(), 2, "{texts:?}");
+    assert!(
+        texts
+            .iter()
+            .any(|t| t.contains("VISIBLE scripts/release.sh")),
+        "{texts:?}"
+    );
+    assert!(
+        !texts.iter().any(|t| t.contains("VISIBLE .github")),
+        "{texts:?}"
+    );
     let stderr = String::from_utf8_lossy(&out.stderr);
-    assert!(!stderr.contains("excerpts withheld"), "{stderr}");
+    assert!(stderr.contains("excerpts withheld: 1"), "{stderr}");
 }
 
 #[tokio::test(flavor = "multi_thread")]

@@ -336,3 +336,39 @@ The remaining misses are the finals' own and the rule does not touch them: TypeS
 the type definitions, over `json.rs`), on `head` and `off` alike; classifier.dev abstains on
 both. Not measured: repeatability (one run per case and backend), lists wider than one
 window, and phrases about names, which the rule was designed for and this set leaves out.
+
+## The `fill` finals always on for `file` and `dir` (measured 2026-09-22)
+
+The decision the section above filed: `file` and `dir` markers always run their finals, and
+the shortcut (a decisive names round with the runner-up out of play decides alone) stays for
+`branch` and `commit`, where no held-out set exists. The same 33 cases ran once per backend
+under the same conditions as above (`--dry-run`, `JEVIFY_NO_CACHE=1`, Jev 1.13.0 answering
+every request on both backends, the clones at their pins, `scripts/eval_fill_finals.py`),
+with the binary `wka`: 0.9.3 at 168bd87 plus this change, which is the `off` binary of the
+section above with the shortcut kept for `branch` and `commit`; every case here is `file`
+or `dir`, so the two binaries take the same path on this set and `wka` against `off` is a
+repeat run of the same rule.
+
+| Binary | Backend | finals ran | coverage | accuracy | abstentions (right) | false actions | requests |
+|:---|:---|---:|---:|---:|---:|---:|---:|
+| wka (finals always) | classifier.dev | 33 | 0.73 | 0.96 | 9 (3) | 1 | 66 |
+| wka (finals always) | TypeSafe | 33 | 0.85 | 0.89 | 5 (3) | 3 | 66 |
+
+Requests are the same as `off` (66, one names round and one finals per case). The decisions
+moved between the two runs of the same rule on 2 cases on classifier.dev and 6 on TypeSafe,
+which is the repeatability the section above listed as not measured. On classifier.dev the
+finals abstained on "reads the input and feeds it to the matcher" (`src/reader.go`, right on
+`off` at 0.81; names 0.08 with NONE 0.79 this time) and everything else held: the one false
+action is `src/pager.rs` for "starts the pager and negotiates its arguments" on both runs,
+`src/wrapping.rs` abstains on both. On TypeSafe the finals decided four cases that `off`
+abstained on, three of them right (`gitignore.rs` 0.56, `pkg/brew` 0.64, `src/ansi.go` 0.60)
+and one wrong: `src/pager.rs` at 0.78 for the pager phrase, which the finals of the `off`
+run had abstained on; and abstained on `crates/core/flags/defs.rs`, right on `off` at 0.50.
+So the pager decoy is not a case the finals rule out: they choose it on classifier.dev on
+both runs and on TypeSafe on one of two, from the names (0.54 to 0.69, next 0.09 to 0.23)
+and an excerpt that picks the pager without starting it. The wrapping decoy the finals
+refuse on every run so far. Against `head` (the shortcut on for every tier-two kind, section
+above), the false actions on this set are 2 to 1 on classifier.dev and 3 to 3 on TypeSafe,
+at 12 to 15 more requests; the one-run figures of the section above (1 and 2) were the
+better end of what two runs show. Not measured: `branch` and `commit`, where the shortcut
+stands.

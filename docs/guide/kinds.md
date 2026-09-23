@@ -31,12 +31,17 @@ jevify fill -- gh run view --log-failed '@{ci-run:the last failed run on main}'
 | `pr`, `issue`, `ci-run`, `stash`, `process`, `container`, `pod` | a recipe: the owning tool's listing | the whole line of the listing |
 | `one`, `flag` | options written in the marker | stdin, or `--context FILE` |
 
-A kind with finalist evidence decides on names alone when the names round is decisive and its
-winner holds at least twice the probability of the rest of the field, the other names and NONE
-together. When the field stays in play, the finals read the excerpts before anything runs,
-which is where a phrase that describes a file's content and not its name is decided; a
-names-only answer to such a phrase can be confident and wrong, and `--dry-run` shows the file
-before anything runs.
+`file` and `dir` always run their finals: the excerpts are read before anything runs, which
+is where a phrase that describes a file's content and not its name is decided. A names-only
+answer to such a phrase can be confident and wrong: on the held-out content phrases of
+`evals/fill/finals/` a decisive names round with the rest of the field out of play still
+chose a file named for the concept and holding something else, once per twelve to fifteen
+such rounds on each backend (`benchmarks/results.md`), and `fill` is the verb whose choice
+reaches a command. `branch` and `commit` decide on names alone when the names round is
+decisive and its winner holds at least twice the probability of the rest of the field, the
+other names and NONE together; when the field stays in play, their finals read the evidence.
+No held-out measurement of that rule exists for those two kinds. `--dry-run` shows the
+choice before anything runs.
 
 `branch` and `commit` are ordered: the lister prints newest first. `pr`, `issue`, `ci-run` and
 `stash` are ordered by their recipe. The others are not.

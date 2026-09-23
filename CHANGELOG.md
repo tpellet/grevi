@@ -4,6 +4,14 @@
 
 Changed:
 
+- `fill` always runs the finals of a `file` or `dir` marker. Before, a decisive names round
+  with the runner-up out of play decided alone; on the 33 held-out content phrases of
+  `evals/fill/finals/` that path chose a file named for the concept and holding something
+  else once per twelve to fifteen fires on each backend, and `fill` is the verb whose choice
+  reaches a command. The set costs 66 requests instead of 51 to 54 (`benchmarks/results.md`).
+  `branch` and `commit` keep the shortcut, since no held-out evidence exists for them; the
+  kinds guide and capabilities say which kinds it applies to.
+
 - `meta.decision.round_one` is opt-in: `JEVIFY_DECISION=round_one` adds it to the envelope of a
   verb that ran a tournament, and an ordinary `--json` envelope carries no such field. It held
   every candidate of every window on every run since 0.9.1, so a 1,000-line `why` or a

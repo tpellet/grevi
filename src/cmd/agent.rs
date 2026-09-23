@@ -148,7 +148,7 @@ pub fn capabilities() -> Outcome {
             "formula": "W = backend window; fill F = W * (W / 3), integer division; pick and pick --from min(W * W, 20000)",
             "typesafe": { "window": 200, "fill": 13200, "pick": 20000, "one_options": 200 },
             "classifier": { "window": 99, "fill": 3267, "pick": 9801, "one_options": 99 },
-            "finalists_per_window": "fill: 3 names per window in the shortlist round; with one window, when the names leave a branch, commit, file or dir undecided, every name with p > 0 reaches the finals with its evidence, up to 24; pick and pick --from: 3 if 3 * windows <= W, else 2 if 2 * windows <= W, else 1; by rank, never cross-request probability",
+            "finalists_per_window": "fill: 3 names per window in the shortlist round; with one window, a file or dir marker always runs its finals, and a branch or commit marker runs them when the names leave it undecided or the runner-up stays in play; for branch, commit, file or dir every name with p > 0 reaches the finals with its evidence, up to 24; pick and pick --from: 3 if 3 * windows <= W, else 2 if 2 * windows <= W, else 1; by rank, never cross-request probability",
             "overflow": "ordered kinds retain newest candidates and report coverage; unordered lists return too_many; one above W options is exit 2"
         },
         "env": [
