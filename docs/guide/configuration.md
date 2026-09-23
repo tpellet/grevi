@@ -62,15 +62,19 @@ Filter batches honour numeric `Retry-After` through 60 seconds and refuse longer
 is sent before a `Retry-After` ends, and the sum of the waits stays under `JEVIFY_DEADLINE`.
 `meta.usage` reports the attempts, successes, waits, cache hits and tokens of the run.
 
-Free calls a day on one IP, from the cost of each verb (measured 2026-09-22 with
-`JEVIFY_CONCURRENCY=4`, [benchmarks/results.md](../../benchmarks/results.md)): `is` costs one
-classification per statement, so 6,600 calls of three statements to 20,000 of one; `filter` and
-`label` cost one per distinct record, so 20,000 records in total, and jevify sends at most 60 records
-per request, the largest keyless request the service accepts (75 is refused with HTTP 402
-`request_spending_limit`, reported as exit 4 `api_unavailable`); `pick` and `why` cost two
-per window of 99 lines plus two for the final round, so 830 calls of 1,000 lines to 10,000 of at
-most 99; `route` costs two per window of 99 commands plus one per finalist, at most 12, so about
-380 calls over a PATH of 1,900 commands. `capabilities.backends` carries the same figures.
+Free calls a day on one IP, computed from the shape of each verb's requests. The per-request
+costs of `is` and `filter` were measured on 2026-09-22 with `JEVIFY_CONCURRENCY=4`; the `pick`,
+`why` and `route` runs of that day never completed (HTTP 502), so their costs are read from
+the requests jevify builds ([benchmarks/results.md](../../benchmarks/results.md)). `is` costs
+one classification per statement, so 6,600 calls of three statements to 20,000 of one;
+`filter` and `label` cost one per distinct record, so 20,000 records in total, and jevify
+sends at most 60 records per request, the largest batch tried (75 is refused with HTTP 402
+`request_spending_limit`, reported as exit 4 `api_unavailable`; 61 to 74 were not tried);
+`pick` costs two per window of 99 lines, plus two for the final round when there is more than
+one window, so 830 calls of 1,000 lines to 10,000 of at most 99; `why` costs the same but
+always runs its final round, so 830 calls of 1,000 lines to 5,000 of at most 99; `route`
+costs two per window of 99 commands plus one per finalist, at most 12, so about 380 calls over
+a PATH of 1,900 commands. `capabilities.backends` carries the same figures.
 
 ## Global flags
 

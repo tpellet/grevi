@@ -261,10 +261,13 @@ Requests go to the backend you chose, with the description and the evidence and 
 included, until you delete it (`--no-save`).
 
 Without a key, one classification is one record under one question, and a day holds 20,000 of
-them per IP. That buys 20,000 records through `filter` or `label`, at most 60 per request. It
-buys 830 to 10,000 `pick` or `why` calls, from 1,000 lines down to 99, and about 380 `route`
-calls over a PATH of 1,900 commands (measured 2026-09-22,
-[benchmarks/results.md](benchmarks/results.md)). A verb takes 20,000 distinct records at most.
+them per IP. That buys 20,000 records through `filter` or `label`, at most 60 per request (the
+largest batch tried; 75 was refused). It buys 830 to 10,000 `pick` calls, from 1,000 lines
+down to 99, 830 to 5,000 `why` calls, and about 380 `route` calls over a PATH of 1,900 commands.
+The quota, the per-request costs and the 60-record batch were measured on 2026-09-22; the calls
+a day are computed from the shape of each verb's requests, since the day's `pick`, `why` and
+`route` runs never completed ([benchmarks/results.md](benchmarks/results.md)). A verb takes
+20,000 distinct records at most.
 `fill` takes 3,267 candidates per marker without a key, and 13,200 with one. A probability is
 the backend's score on this task; the [measurements](docs/guide/how-it-works.md#numbers) say
 where it was checked.

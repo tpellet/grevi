@@ -88,7 +88,7 @@ needed for recovery. Concurrent replacement of source files while sorting is uns
 
 ## Backend limits and handling
 
-`filter` and `label` batch up to 1,000 records per request on classifier.dev, each judged alone. With
+`filter` and `label` batch up to 60 records per request on classifier.dev, each judged alone. With
 TypeSafe, 20 records share one request state; each question names its record, but independence
 is not claimed. A `rate_limit_day` HTTP 429 returns exit 4, `daily quota of the free backend
 reached`, with no retry. Human output already emitted before a later failure can be a prefix.

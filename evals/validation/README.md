@@ -73,8 +73,8 @@ author of any verb and neither seeing the other's labels or any intended answer.
 Claude Sonnet subagent, annotator B a Codex run on gpt-6-astra with a read-only sandbox; both
 worked from the same written instruction sheet. Disagreements were adjudicated afterwards by
 reading the input again; `gold/disagreements.md` lists every one with its resolution. No backend
-and no jevify run took part: the gold is defined by people and their instructions, not by the
-product under test.
+and no jevify run took part: the gold is defined by two language models working from a written
+instruction sheet, and by the adjudication of their disagreements, not by the product under test.
 
 ## What is in the set
 
