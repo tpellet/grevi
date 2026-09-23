@@ -1,0 +1,20 @@
+index-from-HEAD: 15
+short: e59f447
+--- stat ---
+ .beads/issues.jsonl | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- patch (first 400 lines) ---
+diff --git a/.beads/issues.jsonl b/.beads/issues.jsonl
+index 38ed0cd..01c1b13 100644
+--- a/.beads/issues.jsonl
++++ b/.beads/issues.jsonl
+@@ -141,7 +141,7 @@
+ {"id":"hunch-v4r","title":"Document contradictions: deadline sentence, zero abstentions vs three, agents.md route row without ties, unrecorded 34/36, fill gate order","description":"Outcome: the documents agree with each other and with the code on five points that reviewers found contradicting: the …[line truncated at 300 characters]
+ {"id":"hunch-vgt","title":"Register the existing SSH signing key with GitHub","description":"Commits and tag v0.3.4 are SSH-signed, and the tag verifies against an existing public SSH authentication key on the repository owner account. GitHub reports unknown_key because that key is not registered a …[line truncated at 300 characters]
+ {"id":"hunch-vq2","title":"Vision: two sides of a command, fill and the stdin verbs","description":"docs/VISION.md states the direction. Input side: jevify fill -- CMD with @type:'description' markers, typed by kind of thing, @-: for stdin candidates, print by default, --run to execute. Output side …[line truncated at 300 characters]
+-{"id":"hunch-w5q","title":"Release 0.9.3 (lead only): exit-code contract","description":"Release 0.9.3 (lead only): the exit-code contract (README `||` example, route exit 3 on a near tie) and whatever else of round 9 has landed. Write set: Cargo.toml, Cargo.lock, CHANGELOG.md. Procedure as hunch-a …[line truncated at 300 characters]
++{"id":"hunch-w5q","title":"Release 0.9.3 (lead only): exit-code contract","description":"Release 0.9.3 (lead only): the exit-code contract (README `||` example, route exit 3 on a near tie) and whatever else of round 9 has landed. Write set: Cargo.toml, Cargo.lock, CHANGELOG.md. Procedure as hunch-a …[line truncated at 300 characters]
+ {"id":"hunch-wave2-acceptance-non","title":"wave-2 acceptance: live add/sort check, gate, push","description":"Outcome: Wave 2 is verified live and published: `hunch add` and `hunch sort` exercised on real temporary data with the real key, every contract surface (help, capabilities, robot-docs, REA …[line truncated at 300 characters]
+ {"id":"hunch-wx9","title":"why and pick print no record or request count on stderr, unlike filter and label","description":"Found by the hunch-lpp evaluation (jevify 0.7.0, 2026-09-22).\n\nEvidence: docs/VISION.md says \"A verb states its record and request counts before the first request and then  …[line truncated at 300 characters]
+ {"id":"hunch-wxm","title":"fill refuses a marker in argv[0] (tool kind) with a misleading usage message","description":"Found by the hunch-lpp evaluation (jevify 0.7.0, jev-1.13.0, 2026-09-22).\n\nEvidence: a tool marker in argv[0] is refused whenever its description holds a space, which is nearly  …[line truncated at 300 characters]

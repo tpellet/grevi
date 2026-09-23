@@ -1,0 +1,43 @@
+index-from-HEAD: 175
+short: 0e5c240
+--- stat ---
+ docs/guide/verbs.md | 2 +-
+ src/cli.rs          | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+--- patch (first 400 lines) ---
+diff --git a/docs/guide/verbs.md b/docs/guide/verbs.md
+index 92caa52..32b5cb2 100644
+--- a/docs/guide/verbs.md
++++ b/docs/guide/verbs.md
+@@ -199,7 +199,7 @@ It never overwrites a file, never deletes one, and moves within one volume only
+ grevi health
+ ```
+ 
+-Checks the key and TypeSafe reachability. Exit 0 ok, 4 unavailable, 5 auth. Makes no Jev request, so `meta.request_id` stays `null`.
++Names the backend that answers, says whether a key was needed and accepted, and times the reply. Exit 0 ok, 4 unavailable, 5 auth. Makes no Jev request, so `meta.request_id` stays `null`.
+ 
+ ### init
+ 
+diff --git a/src/cli.rs b/src/cli.rs
+index 549373e..9f73058 100644
+--- a/src/cli.rs
++++ b/src/cli.rs
+@@ -26,7 +26,7 @@ pub struct GlobalOpts {
+     /// Decision threshold on calibrated probability
+     #[arg(short = 't', long, global = true, env = "GREVI_THRESHOLD")]
+     pub threshold: Option<f64>,
+-    /// TypeSafe model or alias (default jev-1.13.0; `jev-latest` moves with each release)
++    /// Jev model or alias (default jev-1.13.0; `jev-latest` moves with each release)
+     #[arg(long, global = true, env = "GREVI_MODEL")]
+     pub model: Option<String>,
+     /// Skip the local answer cache
+@@ -125,7 +125,7 @@ pub enum Cmd {
+     Capabilities,
+     /// Agent handbook: guide | commands | exit-codes | examples | privacy
+     RobotDocs { topic: Option<String> },
+-    /// Check the API key and TypeSafe reachability
++    /// Check which backend answers, whether a key is needed, and how fast it replies
+     Health,
+     /// Print shell integration (`,` alias for `grevi run`)
+     Init { shell: Shell },

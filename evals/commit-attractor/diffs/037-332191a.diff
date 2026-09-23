@@ -1,0 +1,126 @@
+index-from-HEAD: 37
+short: 332191a
+--- stat ---
+ src/cmd/pick.rs | 40 ++++++++++++++++++++++++++++++++++++++--
+ tests/pick.rs   | 49 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 87 insertions(+), 2 deletions(-)
+
+--- patch (first 400 lines) ---
+diff --git a/src/cmd/pick.rs b/src/cmd/pick.rs
+index a847d23..22212ee 100644
+--- a/src/cmd/pick.rs
++++ b/src/cmd/pick.rs
+@@ -5,7 +5,7 @@ use crate::jev::client::Client;
+ use crate::records::{self, Split};
+ use crate::source::{self, Scope};
+ use crate::tournament::{Decision, decide};
+-use crate::tournament::{Finalists, Prompts, Ranking, rank, shortlist, window};
++use crate::tournament::{Finalists, Prompts, Ranking, shortlist, window};
+ use std::os::unix::ffi::OsStrExt;
+ 
+ /// 100k lines would be 500 requests: a 429 storm and ~25 s. pick ranks a list, it does not scan.
+@@ -102,7 +102,43 @@ pub async fn run(
+             ranking
+         }
+     } else {
+-        rank(&client, intent, &items, &prompts, None, Finalists::Auto).await?
++        // Round one ranks each window on its own; the gold wins its window. The finals put the
++        // gold next to its siblings (a documentation page, a test, a recording of the same
++        // thing), and a plain listing shows only names, so the finals say which sibling a
++        // description of behaviour means.
++        let finals = Prompts {
++            choose: "Which entry in `items` is the one described by `request`? Several entries may concern the same thing: the entry that is or does what `request` describes beats a page that documents it, a test of it or a recording of it, unless `request` asks for documentation, a test or a recor …[line truncated at 300 characters]
++            none: prompts.none.clone(),
++            any: prompts.any.clone(),
++        };
++        let short = shortlist(&client, intent, &items, &prompts, Finalists::Auto).await?;
++        let windows = short.windows.len();
++        let single = if windows == 1 {
++            short.windows.into_iter().next()
++        } else {
++            None
++        };
++        if let Some(only) = single {
++            only
++        } else if short.finalists.is_empty() {
++            Ranking {
++                candidates: vec![],
++                any: 0.0,
++                none: 1.0,
++                windows,
++                n: short.n,
++            }
++        } else {
++            let pool: Vec<_> = short
++                .finalists
++                .iter()
++                .map(|c| (c.index, items[c.index].clone()))
++                .collect();
++            let mut ranking = window(&client, intent, &pool, &finals).await?;
++            ranking.windows = windows;
++            ranking.n = short.n;
++            ranking
++        }
+     };
+     if ranking.n != 3 {
+         eprintln!("jevify pick: finalists per window: {}", ranking.n);
+diff --git a/tests/pick.rs b/tests/pick.rs
+index 371968a..2f233fc 100644
+--- a/tests/pick.rs
++++ b/tests/pick.rs
+@@ -382,6 +382,55 @@ async fn stdin_pick_keeps_its_non_ratio_rule_and_top_three() {
+     assert_eq!(out.stdout, b"a\nb\nc\n");
+ }
+ 
++#[tokio::test(flavor = "multi_thread")]
++async fn stdin_finals_prefer_the_implementation_to_its_documentation_page() {
++    // Two windows: the docs page wins one, the implementation the other. Round one carries the
++    // plain instruction; the finals carry the sibling rule, and the fake answers the
++    // implementation only when that rule is in the instruction.
++    let server = common::mock(FakeJev {
++        choose: |instructions, s, o| {
++            let items = s["items"].as_array().unwrap();
++            let sibling_rule = instructions.contains("beats a page that documents it");
++            if items.len() == 200 {
++                assert!(!sibling_rule, "round one carries the plain instruction");
++                if s.to_string().contains("docs/examples/weather-agent.md") {
++                    return option_containing(s, o, "docs/examples/weather-agent.md");
++                }
++                return option_containing(s, o, "weather_agent.py");
++            }
++            assert!(sibling_rule, "the finals carry the sibling rule");
++            option_containing(s, o, "weather_agent.py")
++        },
++        noul: |_, _| 0.9,
++    })
++    .await;
++    let mut cmd = common::jevify(&server);
++    let mut input = String::new();
++    for i in 0..400 {
++        match i {
++            10 => input.push_str("docs/examples/weather-agent.md\n"),
++            310 => input.push_str("examples/pydantic_ai_examples/weather_agent.py\n"),
++            _ => input.push_str(&format!("src/file-{i}.py\n")),
++        }
++    }
++    let out = tokio::task::spawn_blocking(move || {
++        cmd.args(["--json", "pick", "the weather example agent"])
++            .write_stdin(input)
++            .output()
++            .unwrap()
++    })
++    .await
++    .unwrap();
++    assert_eq!(out.status.code(), Some(0), "{out:?}");
++    let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
++    assert_eq!(
++        v["data"]["matches"][0]["text"],
++        "examples/pydantic_ai_examples/weather_agent.py"
++    );
++    assert_eq!(v["data"]["matches"][0]["line"], 311);
++    assert_eq!(v["meta"]["requests"], 3, "two windows and one finals: {v}");
++}
++
+ #[tokio::test(flavor = "multi_thread")]
+ async fn files_keep_more_than_24_finalists_and_always_use_round_two() {
+     let server = common::mock(FakeJev {

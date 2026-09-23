@@ -1,0 +1,54 @@
+index-from-HEAD: 145
+short: b6a186f
+--- stat ---
+ CHANGELOG.md | 10 ++++++++++
+ Cargo.lock   |  2 +-
+ Cargo.toml   |  2 +-
+ 3 files changed, 12 insertions(+), 2 deletions(-)
+
+--- patch (first 400 lines) ---
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index dad1434..68750da 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,5 +1,15 @@
+ # Changelog
+ 
++## 0.4.0 — 2026-09-20
++
++Added:
++
++- `pick --files <DIR> "<intent>"`: choose among the files under a directory by what they are about, and print the path. The first round ranks the path names; the second reads the first 2,000 masked characters of at most 24 finalist files. Inside a git work tree `.gitignore` applies. Hidden entries, …[line truncated at 300 characters]
++
++Changed:
++
++- The crate, the library, the binary, the `JEVIFY_*` environment variables, the cache directory, the user agent, the agent skill and the repository are named `jevify`. Install with `cargo install jevify --locked`.
++
+ ## 0.3.4 — 2026-09-20
+ 
+ Changed:
+diff --git a/Cargo.lock b/Cargo.lock
+index b62281a..0dc5029 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -850,7 +850,7 @@ checksum = "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682"
+ 
+ [[package]]
+ name = "jevify"
+-version = "0.3.4"
++version = "0.4.0"
+ dependencies = [
+  "anyhow",
+  "assert_cmd",
+diff --git a/Cargo.toml b/Cargo.toml
+index d158a4c..19b15e2 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -1,6 +1,6 @@
+ [package]
+ name = "jevify"
+-version = "0.3.4"
++version = "0.4.0"
+ edition = "2024"
+ rust-version = "1.87"
+ license = "MIT"

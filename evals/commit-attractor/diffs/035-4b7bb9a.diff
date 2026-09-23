@@ -1,0 +1,61 @@
+index-from-HEAD: 35
+short: 4b7bb9a
+--- stat ---
+ CHANGELOG.md | 17 +++++++++++++++++
+ Cargo.lock   |  2 +-
+ Cargo.toml   |  2 +-
+ 3 files changed, 19 insertions(+), 2 deletions(-)
+
+--- patch (first 400 lines) ---
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 60fedb8..3c112fc 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,5 +1,22 @@
+ # Changelog
+ 
++## 0.9.0
++
++Changed:
++
++- `filter` judges each record three ways: the record says the statement holds, says it does not
++  hold, or does not say. A record that says nothing either way is unsure and kept, not silently
++  dropped. On the adjudicated cases this takes false actions to zero and keeps every record the
++  gold keeps; three to six records per hundred move from dropped to unsure. The threshold and
++  the band do not change, and `meta.decision` carries the probability that the record does not
++  say under `none`.
++- `why` points at the line that carries a panic's message, not at the `panicked at` header: the
++  finals judge a panic header next to its message. The adjudicated `why` cases go from 0.80 to
++  0.89 accuracy with one false answer fewer.
++- `pick` over a plain listing prefers the entry that is or does what the description names over
++  a page that documents it, a test of it or a recording of it, unless the description asks for
++  one of those. On a 36-case set the two-round run goes from 30 to 34 right.
++
+ ## 0.8.3
+ 
+ Added:
+diff --git a/Cargo.lock b/Cargo.lock
+index 05ad2a8..58234b8 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -850,7 +850,7 @@ checksum = "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682"
+ 
+ [[package]]
+ name = "jevify"
+-version = "0.8.3"
++version = "0.9.0"
+ dependencies = [
+  "anyhow",
+  "assert_cmd",
+diff --git a/Cargo.toml b/Cargo.toml
+index 13b68ab..e01f261 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -1,6 +1,6 @@
+ [package]
+ name = "jevify"
+-version = "0.8.3"
++version = "0.9.0"
+ edition = "2024"
+ rust-version = "1.87"
+ license = "MIT"

@@ -1,0 +1,30 @@
+index-from-HEAD: 55
+short: 75012d8
+--- stat ---
+ .beads/issues.jsonl | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+--- patch (first 400 lines) ---
+diff --git a/.beads/issues.jsonl b/.beads/issues.jsonl
+index 5e52ade..e94d858 100644
+--- a/.beads/issues.jsonl
++++ b/.beads/issues.jsonl
+@@ -9,7 +9,8 @@
+ {"id":"hunch-3b5","title":"Docs name the project jevify everywhere","description":"The project, the crate and the command are named `jevify`. Every user-facing document says so, in the present tense, as if no other name ever existed: no \"renamed\", \"formerly\", \"now\", \"new name\", and no menti …[line truncated at 300 characters]
+ {"id":"hunch-3gl","title":"evals/why/README.md is stale: case count, corpus.jsonl, cargo-05 row","description":"Outcome: evals/why/README.md describes the corpus as it is. It still says 'Twenty' cases, does not mention evals/why/corpus.jsonl (the manifest that scripts/eval_why.py now reads: id, sou …[line truncated at 300 characters]
+ {"id":"hunch-3j6","title":"Plan v3: ponytail pass on syntax, Rust design and Jev use","description":"Shrink the two-sides plan: batch endpoint for per-record verbs, exec in fill, model guard, fewer kinds, flags, error kinds and phases. Align docs/VISION.md.","status":"closed","priority":1,"issue_ty …[line truncated at 300 characters]
+-{"id":"hunch-3te","title":"Live coverage of fill, label and filter on both backends (tests/live.rs)","description":"Outcome: tests/live.rs has opt-in live coverage of `fill`, `label` and `filter` on both backends (TypeSafe with a key, classifier.dev without), with the same reporting rule as the res …[line truncated at 300 characters]
++{"id":"hunch-3te","title":"Live coverage of fill, label and filter on both backends (tests/live.rs)","description":"Outcome: tests/live.rs has opt-in live coverage of `fill`, `label` and `filter` on both backends (TypeSafe with a key, classifier.dev without), with the same reporting rule as the res …[line truncated at 300 characters]
++{"id":"hunch-411","title":"Live test live_fill_branch_and_one_per_backend depends on the machine's local branches","description":"Observed 2026-09-22 (hunch-3te): tests/live.rs::live_fill_branch_and_one_per_backend fails on the classifier backend on a checkout that carries stale local branches (her …[line truncated at 300 characters]
+ {"id":"hunch-4gg","title":"Plan v2: language first, kinds as data, latency-first limits","description":"Revise docs/VISION.md and docs/superpowers/plans/2026-09-21-jevify-two-sides.md: output side and shared foundations first, fill through sound windows, flag abstains on unsure, one stdin role, kin …[line truncated at 300 characters]
+ {"id":"hunch-4ow","title":"Orphaned demo assets after the animated SVGs: owner decides delete or keep (demo.gif, demo.cast, demo.tape, demo-record.sh, docs/img/run.svg, docs/img/sort.svg)","description":"Outcome: the owner decides what happens to the orphaned demo assets, and the repository holds n …[line truncated at 300 characters]
+ {"id":"hunch-4z4","title":"Semantic operands: put meaning into the arguments of any command","description":"Vision (owner, 2026-09-20): put meaning into the operands of any command. A command line is head, flags, operands. `run` fills the head by meaning from PATH and man pages. This epic fills ope …[line truncated at 300 characters]
+@@ -47,7 +48,7 @@
+ {"id":"hunch-aej","title":"Flaky unit test: source::tests::runner_discards_partial_output_after_exit_or_inherited_pipe","description":"Observed 2026-09-22 by the hunch-cpo worker: src/source.rs:1367 runner_discards_partial_output_after_exit_or_inherited_pipe failed once in a full cargo test --locke …[line truncated at 300 characters]
+ {"id":"hunch-ag7","title":"Release 0.8.0 (lead only): evaluation fixes","description":"Release 0.8.0 with the fixes filed by the hunch-lpp evaluation: hunch-cpo, hunch-wx9, hunch-wxm, hunch-aej, hunch-b25, hunch-0it, hunch-6jv, hunch-0pq, hunch-bec, hunch-1bs. Write set: Cargo.toml, Cargo.lock, CHA …[line truncated at 300 characters]
+ {"id":"hunch-agent-skill-to6","title":"Agent skill + Claude/Codex marketplace integration","description":"Outcome: a tiny agent skill that teaches Claude Code and Codex agents to use hunch well, installable from this repo as a Claude Code plugin marketplace. Lead-added bead (Thomas, 2026-09-19): \" …[line truncated at 300 characters]
+-{"id":"hunch-akh","title":"Release 0.8.2 (lead only): contract, docs and file finals","description":"Release 0.8.2 with hunch-hd8, hunch-8ar, hunch-1cx and hunch-9hx. Write set: Cargo.toml, Cargo.lock, CHANGELOG.md. Procedure as hunch-ag7.","status":"open","priority":1,"issue_type":"task","created_ …[line truncated at 300 characters]
++{"id":"hunch-akh","title":"Release 0.8.2 (lead only): contract, docs and file finals","description":"Release 0.8.2 with hunch-hd8, hunch-8ar, hunch-1cx and hunch-9hx. Write set: Cargo.toml, Cargo.lock, CHANGELOG.md. Procedure as hunch-ag7.","status":"closed","priority":1,"issue_type":"task","create …[line truncated at 300 characters]
+ {"id":"hunch-b25","title":"fill status line: ambiguous names the wrong rival when NONE decided, and no_match prints an empty field","description":"Found by the hunch-lpp evaluation (jevify 0.7.0, jev-1.13.0, 2026-09-22).\n\nEvidence: when NONE is the close rival, fill reports `ambiguous` and names  …[line truncated at 300 characters]
+ {"id":"hunch-bec","title":"Bound retries and subprocess work with explicit deadlines","description":"Outcome: a verb has one overall deadline with cancellation; retries wait exactly what `Retry-After` says without extra premature requests; usage in `meta` distinguishes attempts, successes, waits, c …[line truncated at 300 characters]
+ {"id":"hunch-bkb","title":"2.4 fill core: resolve markers and become the command","description":"Plan bead: 2.4 — fill core. Epic hunch-7zg. This bead replaces the earlier \"resolving wrapper, proposal only\" design: fill runs the command it resolved.\n\nOutcome: `jevify fill -- CMD ARGS…` resolves …[line truncated at 300 characters]

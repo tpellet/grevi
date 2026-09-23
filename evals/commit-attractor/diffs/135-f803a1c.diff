@@ -1,0 +1,391 @@
+index-from-HEAD: 135
+short: f803a1c
+--- stat ---
+ .beads/issues.jsonl                                |  68 +++++------
+ docs/VISION.md                                     |   7 +-
+ .../plans/2026-09-21-jevify-two-sides.md           | 136 ++++++++++++++++-----
+ 3 files changed, 141 insertions(+), 70 deletions(-)
+
+--- patch (first 400 lines) ---
+diff --git a/.beads/issues.jsonl b/.beads/issues.jsonl
+index 65a117d..6d9ddd8 100644
+--- a/.beads/issues.jsonl
++++ b/.beads/issues.jsonl
+@@ -6,48 +6,48 @@
+ {"id":"hunch-3j6","title":"Plan v3: ponytail pass on syntax, Rust design and Jev use","description":"Shrink the two-sides plan: batch endpoint for per-record verbs, exec in fill, model guard, fewer kinds, flags, error kinds and phases. Align docs/VISION.md.","status":"closed","priority":1,"issue_ty …[line truncated at 300 characters]
+ {"id":"hunch-3te","title":"Extend real-service endpoint regression coverage","description":"Expand the bounded hunch-q3i audit into maintained opt-in live coverage for all six semantic endpoints and utility commands. Acceptance: controlled synthetic and separately licensed real-corpus cases on each …[line truncated at 300 characters]
+ {"id":"hunch-4gg","title":"Plan v2: language first, kinds as data, latency-first limits","description":"Revise docs/VISION.md and docs/superpowers/plans/2026-09-21-jevify-two-sides.md: output side and shared foundations first, fill through sound windows, flag abstains on unsure, one stdin role, kin …[line truncated at 300 characters]
+-{"id":"hunch-4ow","title":"Re-record demo.gif and demo.cast with the current grammar; restore the README reference","description":"Outcome: the binary recordings demo.gif and demo.cast show the current grammar, and README.md references demo.gif again.\n\nContext: demo.gif and demo.cast are recordin …[line truncated at 300 characters]
++{"id":"hunch-4ow","title":"Re-record demo.gif and demo.cast with the current grammar; restore the README reference","description":"Outcome: the binary recordings demo.gif and demo.cast show the current grammar, and README.md references demo.gif again.\n\nContext: demo.gif and demo.cast are recordin …[line truncated at 300 characters]
+ {"id":"hunch-4z4","title":"Semantic operands: put meaning into the arguments of any command","description":"Vision (owner, 2026-09-20): put meaning into the operands of any command. A command line is head, flags, operands. `run` fills the head by meaning from PATH and man pages. This epic fills ope …[line truncated at 300 characters]
+ {"id":"hunch-55y","title":"Design structured record predicates with explicit coverage","description":"Define stable IDs, semantic text, opaque payload, per-record abstention/errors and resumability, then combine batching and independent filtering into one measured record mode. Preserve raw identity …[line truncated at 300 characters]
+ {"id":"hunch-60l","title":"README: voice rewrite, stronger examples, measured agent-harness section","description":"Rewrite README descriptions in plain words, replace examples with ones run live on the keyless backend, add an agent section backed by with/without subagent spot checks. Evidence in b …[line truncated at 300 characters]
+ {"id":"hunch-744","title":"pick --files: find a file by meaning, names first, content for finalists","description":"`grevi pick --files <DIR> \"<description>\"`: the candidates are the regular files under DIR instead of stdin lines, and the match prints as a path usable from the current directory.  …[line truncated at 300 characters]
+-{"id":"hunch-7zg","title":"jevify two sides: the language, fill, kinds, label","description":"Outcome: jevify speaks one language on the two sides of a command. Input side: `fill` resolves '@{kind:description}' markers to real handles and becomes the command. Output side: `why`, `pick`, `filter`, ` …[line truncated at 300 characters]
+-{"id":"hunch-7zg.1","title":"1.0 Language skeleton and grammar cutover (shared files, final Outcome, route signature, -v, --files, init agents)","description":"Plan bead: 1.0 skeleton — language skeleton and grammar cutover. Epic hunch-7zg. This is the serial bead of Phase 1: it alone writes the sh …[line truncated at 300 characters]
+-{"id":"hunch-7zg.10","title":"2.0 fill skeleton: Fill, Pick --from, error kinds, run_cli acts on Outcome.exec, stubs","description":"Plan bead: 2.0 skeleton — fill. Epic hunch-7zg. This is the serial bead of Phase 2: it alone writes the shared files and leaves the tree green so that 2.1, 2.2 (hunch …[line truncated at 300 characters]
+-{"id":"hunch-7zg.11","title":"2.1 Marker lexer: src/marker.rs","description":"Plan bead: 2.1 — marker lexer. Epic hunch-7zg.\n\nOutcome: src/marker.rs is a pure lexer for '@{kind:description}' markers in an argv and the substitution of resolved handles. No I/O.\n\nContext: plan §1 \"Marker grammar\ …[line truncated at 300 characters]
+-{"id":"hunch-7zg.12","title":"2.3 pick --from KIND","description":"Plan bead: 2.3 — `pick --from KIND`. Epic hunch-7zg.\n\nOutcome: `jevify pick --from branch 'the release automation work'` selects among a kind's candidates in place of stdin and prints the handle. It prints and runs nothing.\n\nCon …[line truncated at 300 characters]
+-{"id":"hunch-7zg.13","title":"2.5 Contract: fill and pick --from in documents, capabilities, skill","description":"Plan bead: 2.5 contract — fill and `pick --from` in the documents, capabilities and the skill. Epic hunch-7zg.\n\nOutcome: README, docs/, capabilities, robot-docs, the `init agents` bl …[line truncated at 300 characters]
+-{"id":"hunch-7zg.14","title":"Release 0.6.0 (lead only): fill","description":"Release 0.6.0, after Phase 2. Epic hunch-7zg. THE LEAD DOES THIS BEAD, not a worker: a release publishes to a public repository and to crates.io. A worker that finds this bead ready reports it to the lead and takes nothin …[line truncated at 300 characters]
+-{"id":"hunch-7zg.15","title":"3.1 Recipe engine, shipped recipes (src/kinds.jsonl), user kinds.jsonl","description":"Plan bead: Phase 3, first of four serial beads — the recipe engine, the shipped recipes, the user's kinds.jsonl. Epic hunch-7zg. Phase 3 is serial because every bead writes src/sourc …[line truncated at 300 characters]
+-{"id":"hunch-7zg.16","title":"3.2 Coded kinds: commit, file, dir, tool","description":"Plan bead: Phase 3, second of four serial beads — the coded kinds `commit`, `file`, `dir`, `tool`. Epic hunch-7zg. It continues the work of hunch-q8p in src/source.rs.\n\nOutcome: `'@{commit:…}'`, `'@{file:…}'`,  …[line truncated at 300 characters]
+-{"id":"hunch-7zg.17","title":"3.3 Kinds: contract tests in tests/fill.rs and fill wiring","description":"Plan bead: Phase 3, third of four serial beads — contract tests of the kinds in tests/fill.rs and tests/pick.rs, and the wiring in fill. Epic hunch-7zg.\n\nOutcome: the kinds of hunch-7zg.15 and …[line truncated at 300 characters]
+-{"id":"hunch-7zg.18","title":"3.4 Contract: kinds in documents, docs/guide/kinds.md, capabilities","description":"Plan bead: Phase 3, last of four serial beads — contract: kinds in the documents, docs/guide/kinds.md, capabilities. Epic hunch-7zg. It is the last contract bead of the epic; hunch-60l  …[line truncated at 300 characters]
+-{"id":"hunch-7zg.19","title":"4.0 label skeleton: Label in the shared files, stub src/cmd/label.rs","description":"Plan bead: Phase 4 skeleton — `label` in the shared files. Epic hunch-7zg. Serial bead: it alone writes the shared files for Phase 4.\n\nOutcome: the CLI knows `jevify label a,b,c` and …[line truncated at 300 characters]
+-{"id":"hunch-7zg.2","title":"1.1 Byte records: src/records.rs","description":"Plan bead: 1.1 — byte records. Epic hunch-7zg.\n\nOutcome: src/records.rs is the record model of `pick`, `filter`, `label` and of '@{-:…}', over raw bytes, so a record comes out exactly as it came in. It also holds the on …[line truncated at 300 characters]
+-{"id":"hunch-7zg.20","title":"4.2 Contract: label in documents, capabilities, skill","description":"Plan bead: Phase 4 contract — `label` in the documents, capabilities and the skill. Epic hunch-7zg.\n\nOutcome: the agent-facing contract of the new verb is complete: capabilities(), docs/ROBOT_MODE. …[line truncated at 300 characters]
+-{"id":"hunch-7zg.21","title":"Release 0.7.0 (lead only): kinds and label","description":"Release 0.7.0, after Phase 3 and Phase 4. Epic hunch-7zg. THE LEAD DOES THIS BEAD, not a worker: a release publishes to a public repository and to crates.io. A worker that finds this bead ready reports it to th …[line truncated at 300 characters]
+-{"id":"hunch-7zg.22","title":"1.9 Scripts and recording sources use the new grammar","description":"Plan bead: 1.9 — scripts and recording sources use the new grammar. Epic hunch-7zg.\n\nOutcome: no tracked script and no text source of a recording calls a form that 0.5.0 removed. The binary recordi …[line truncated at 300 characters]
+-{"id":"hunch-7zg.3","title":"1.2 Client::ask_each, parallel chunks, joined models, rate_limit_day, FakeJev vectors","description":"Plan bead: 1.2 — ask_each. Epic hunch-7zg.\n\nOutcome: `Client::ask_each` judges up to 1,000 records per request on classifier.dev, each alone, so per-record verbs send …[line truncated at 300 characters]
+-{"id":"hunch-7zg.4","title":"1.3 Saved input: src/save.rs","description":"Plan bead: 1.3 — saved input. Epic hunch-7zg.\n\nOutcome: src/save.rs writes the full input of a reducing verb to a content-addressed file, so a reduction always leaves a way back.\n\nContext: plan §2.4, §7, §8.5, §9.7. Bead  …[line truncated at 300 characters]
+-{"id":"hunch-7zg.5","title":"1.4 route is print-only: remove execution and the argument pass from run.rs","description":"Plan bead: 1.4 — route is print-only. Epic hunch-7zg.\n\nOutcome: `jevify route 'task'` names the installed tool for a task, with its summary and synopsis, and starts nothing. Ex …[line truncated at 300 characters]
+-{"id":"hunch-7zg.6","title":"1.6 is with several statements and --context FILE","description":"Plan bead: 1.6 — `is` with several statements and --context. Epic hunch-7zg.\n\nOutcome: `jevify is 'a' 'b' 'c'` asks several statements in one request and prints one verdict per line; `--context FILE` ju …[line truncated at 300 characters]
+-{"id":"hunch-7zg.7","title":"1.7 Saved input in why, byte records and --files from stdin in pick","description":"Plan bead: 1.7 — saved input in `why`, byte records in `pick`. Epic hunch-7zg.\n\nOutcome: `pick` prints the chosen record as the bytes it read, with the split modes of the record model, …[line truncated at 300 characters]
+-{"id":"hunch-7zg.8","title":"1.8 Contract: 0.5.0 documents, capabilities, robot-docs, init agents","description":"Plan bead: 1.8 contract, the documents half (the skill half is hunch-sb9). Epic hunch-7zg.\n\nOutcome: README, docs/, the repository's AGENTS.md, capabilities, robot-docs and the `jevif …[line truncated at 300 characters]
+-{"id":"hunch-7zg.9","title":"Release 0.5.0 (lead only): the language, filter, is","description":"Release 0.5.0, after Phase 0 and Phase 1. Epic hunch-7zg. THE LEAD DOES THIS BEAD, not a worker: a release publishes to a public repository and to crates.io. A worker that finds this bead ready reports  …[line truncated at 300 characters]
++{"id":"hunch-7zg","title":"jevify two sides: the language, fill, kinds, label","description":"Outcome: jevify speaks one language on the two sides of a command. Input side: `fill` resolves '@{kind:description}' markers to real handles and becomes the command. Output side: `why`, `pick`, `filter`, ` …[line truncated at 300 characters]
++{"id":"hunch-7zg.1","title":"1.0 Language skeleton and grammar cutover (shared files, final Outcome, route signature, -v, --files, init agents)","description":"Plan bead: 1.0 skeleton — language skeleton and grammar cutover. Epic hunch-7zg. This is the serial bead of Phase 1: it alone writes the sh …[line truncated at 300 characters]
++{"id":"hunch-7zg.10","title":"2.0 fill skeleton: Fill, Pick --from, error kinds, run_cli acts on Outcome.exec, stubs","description":"Plan bead: 2.0 skeleton — fill. Epic hunch-7zg. This is the serial bead of Phase 2: it alone writes the shared files and leaves the tree green so that 2.1, 2.2 (hunch …[line truncated at 300 characters]
++{"id":"hunch-7zg.11","title":"2.1 Marker lexer: src/marker.rs","description":"Plan bead: 2.1 — marker lexer. Epic hunch-7zg.\n\nOutcome: src/marker.rs is a pure lexer for '@{kind:description}' markers in an argv and the substitution of resolved handles. No I/O.\n\nContext: plan §1 \"Marker grammar\ …[line truncated at 300 characters]
++{"id":"hunch-7zg.12","title":"2.3 pick --from KIND","description":"Plan bead: 2.3 — `pick --from KIND`. Epic hunch-7zg.\n\nOutcome: `jevify pick --from branch 'the release automation work'` selects among a kind's candidates in place of stdin and prints the handle. It prints and runs nothing.\n\nCon …[line truncated at 300 characters]
++{"id":"hunch-7zg.13","title":"2.5 Contract: fill and pick --from in documents, capabilities, skill","description":"Plan bead: 2.5 contract — fill and `pick --from` in the documents, capabilities and the skill. Epic hunch-7zg.\n\nOutcome: README, docs/, capabilities, robot-docs, the `init agents` bl …[line truncated at 300 characters]
++{"id":"hunch-7zg.14","title":"Release 0.6.0 (lead only): fill","description":"Release 0.6.0, after Phase 2. Epic hunch-7zg. THE LEAD DOES THIS BEAD, not a worker: a release publishes to a public repository and to crates.io. A worker that finds this bead ready reports it to the lead and takes nothin …[line truncated at 300 characters]
++{"id":"hunch-7zg.15","title":"3.1 Recipe engine, shipped recipes (src/kinds.jsonl), user kinds.jsonl","description":"Plan bead: Phase 3, first of four serial beads — the recipe engine, the shipped recipes, the user's kinds.jsonl. Epic hunch-7zg. Phase 3 is serial because every bead writes src/sourc …[line truncated at 300 characters]
++{"id":"hunch-7zg.16","title":"3.2 Coded kinds: commit, file, dir, tool","description":"Plan bead: Phase 3, second of four serial beads — the coded kinds `commit`, `file`, `dir`, `tool`. Epic hunch-7zg. It continues the work of hunch-q8p in src/source.rs.\n\nOutcome: `'@{commit:…}'`, `'@{file:…}'`,  …[line truncated at 300 characters]
++{"id":"hunch-7zg.17","title":"3.3 Kinds: contract tests in tests/fill.rs and fill wiring","description":"Plan bead: Phase 3, third of four serial beads — contract tests of the kinds in tests/fill.rs and tests/pick.rs, and the wiring in fill. Epic hunch-7zg.\n\nOutcome: the kinds of hunch-7zg.15 and …[line truncated at 300 characters]
++{"id":"hunch-7zg.18","title":"3.4 Contract: kinds in documents, docs/guide/kinds.md, capabilities","description":"Plan bead: Phase 3, last of four serial beads — contract: kinds in the documents, docs/guide/kinds.md, capabilities. Epic hunch-7zg. It is the last contract bead of the epic; hunch-60l  …[line truncated at 300 characters]
++{"id":"hunch-7zg.19","title":"4.0 label skeleton: Label in the shared files, stub src/cmd/label.rs","description":"Plan bead: Phase 4 skeleton — `label` in the shared files. Epic hunch-7zg. Serial bead: it alone writes the shared files for Phase 4.\n\nOutcome: the CLI knows `jevify label a,b,c` and …[line truncated at 300 characters]
++{"id":"hunch-7zg.2","title":"1.1 Byte records: src/records.rs","description":"Plan bead: 1.1 — byte records. Epic hunch-7zg.\n\nOutcome: src/records.rs is the record model of `pick`, `filter`, `label` and of '@{-:…}', over raw bytes, so a record comes out exactly as it came in. It also holds the on …[line truncated at 300 characters]
++{"id":"hunch-7zg.20","title":"4.2 Contract: label in documents, capabilities, skill","description":"Plan bead: Phase 4 contract — `label` in the documents, capabilities and the skill. Epic hunch-7zg.\n\nOutcome: the agent-facing contract of the new verb is complete: capabilities(), docs/ROBOT_MODE. …[line truncated at 300 characters]
++{"id":"hunch-7zg.21","title":"Release 0.7.0 (lead only): kinds and label","description":"Release 0.7.0, after Phase 3 and Phase 4. Epic hunch-7zg. THE LEAD DOES THIS BEAD, not a worker: a release publishes to a public repository and to crates.io. A worker that finds this bead ready reports it to th …[line truncated at 300 characters]
++{"id":"hunch-7zg.22","title":"1.9 Scripts and recording sources use the new grammar","description":"Plan bead: 1.9 — scripts and recording sources use the new grammar. Epic hunch-7zg.\n\nOutcome: no tracked script and no text source of a recording calls a form that 0.5.0 removed. The binary recordi …[line truncated at 300 characters]
++{"id":"hunch-7zg.3","title":"1.2 Client::ask_each, parallel chunks, joined models, rate_limit_day, FakeJev vectors","description":"Plan bead: 1.2 — ask_each. Epic hunch-7zg.\n\nOutcome: `Client::ask_each` judges up to 1,000 records per request on classifier.dev, each alone, so per-record verbs send …[line truncated at 300 characters]
++{"id":"hunch-7zg.4","title":"1.3 Saved input: src/save.rs","description":"Plan bead: 1.3 — saved input. Epic hunch-7zg.\n\nOutcome: src/save.rs writes the full input of a reducing verb to a content-addressed file, so a reduction always leaves a way back.\n\nContext: plan §2.4, §7, §8.5, §9.7. Bead  …[line truncated at 300 characters]
++{"id":"hunch-7zg.5","title":"1.4 route is print-only: remove execution and the argument pass from run.rs","description":"Plan bead: 1.4 — route is print-only. Epic hunch-7zg.\n\nOutcome: `jevify route 'task'` names the installed tool for a task, with its summary and synopsis, and starts nothing. Ex …[line truncated at 300 characters]
++{"id":"hunch-7zg.6","title":"1.6 is with several statements and --context FILE","description":"Plan bead: 1.6 — `is` with several statements and --context. Epic hunch-7zg.\n\nOutcome: `jevify is 'a' 'b' 'c'` asks several statements in one request and prints one verdict per line; `--context FILE` ju …[line truncated at 300 characters]
++{"id":"hunch-7zg.7","title":"1.7 Saved input in why, byte records and --files from stdin in pick","description":"Plan bead: 1.7 — saved input in `why`, byte records in `pick`. Epic hunch-7zg.\n\nOutcome: `pick` prints the chosen record as the bytes it read, with the split modes of the record model, …[line truncated at 300 characters]
++{"id":"hunch-7zg.8","title":"1.8 Contract: 0.5.0 documents, capabilities, robot-docs, init agents","description":"Plan bead: 1.8 contract, the documents half (the skill half is hunch-sb9). Epic hunch-7zg.\n\nOutcome: README, docs/, the repository's AGENTS.md, capabilities, robot-docs and the `jevif …[line truncated at 300 characters]
++{"id":"hunch-7zg.9","title":"Release 0.5.0 (lead only): the language, filter, is","description":"Release 0.5.0, after Phase 0 and Phase 1. Epic hunch-7zg. THE LEAD DOES THIS BEAD, not a worker: a release publishes to a public repository and to crates.io. A worker that finds this bead ready reports  …[line truncated at 300 characters]
+ {"id":"hunch-8ay","title":"Enforce Jev protocol, request and cache boundaries","description":"Reconciled review: validate all decision-bearing API fields; prevent malformed labels and missing dimensions; enforce classifier field and option limits without silently dropping candidates; isolate endpoi …[line truncated at 300 characters]
+ {"id":"hunch-agent-skill-to6","title":"Agent skill + Claude/Codex marketplace integration","description":"Outcome: a tiny agent skill that teaches Claude Code and Codex agents to use hunch well, installable from this repo as a Claude Code plugin marketplace. Lead-added bead (Thomas, 2026-09-19): \" …[line truncated at 300 characters]
+-{"id":"hunch-bec","title":"Bound retries and subprocess work with explicit deadlines","description":"Outcome: a verb has one overall deadline with cancellation; retries wait exactly what `Retry-After` says without extra premature requests; usage in `meta` distinguishes attempts, successes, waits, c …[line truncated at 300 characters]
+-{"id":"hunch-bkb","title":"2.4 fill core: resolve markers and become the command","description":"Plan bead: 2.4 — fill core. Epic hunch-7zg. This bead replaces the earlier \"resolving wrapper, proposal only\" design: fill runs the command it resolved.\n\nOutcome: `jevify fill -- CMD ARGS…` resolves …[line truncated at 300 characters]
++{"id":"hunch-bec","title":"Bound retries and subprocess work with explicit deadlines","description":"Outcome: a verb has one overall deadline with cancellation; retries wait exactly what `Retry-After` says without extra premature requests; usage in `meta` distinguishes attempts, successes, waits, c …[line truncated at 300 characters]
++{"id":"hunch-bkb","title":"2.4 fill core: resolve markers and become the command","description":"Plan bead: 2.4 — fill core. Epic hunch-7zg. This bead replaces the earlier \"resolving wrapper, proposal only\" design: fill runs the command it resolved.\n\nOutcome: `jevify fill -- CMD ARGS…` resolves …[line truncated at 300 characters]
+ {"id":"hunch-bvw","title":"Implement minimal release automation and publish 0.3.4","description":"Reuse successful exact-commit branch CI before signing a release tag. Validate package and cargo-dist plan in CI, publish crates from the generated release workflow using Trusted Publishing, retain loc …[line truncated at 300 characters]
+-{"id":"hunch-bx6","title":"1.5 filter and the scorer: print every record for which a statement is true","description":"Plan bead: 1.5 — filter and the scorer. Epic hunch-7zg.\n\nOutcome: `CMD | jevify filter 'statement'` prints every record of its input for which the statement is true, byte for byt …[line truncated at 300 characters]
++{"id":"hunch-bx6","title":"1.5 filter and the scorer: print every record for which a statement is true","description":"Plan bead: 1.5 — filter and the scorer. Epic hunch-7zg.\n\nOutcome: `CMD | jevify filter 'statement'` prints every record of its input for which the statement is true, byte for byt …[line truncated at 300 characters]
+ {"id":"hunch-classifier-fallback-41x","title":"classifier.dev fallback when there is no TypeSafe key","description":"Outcome: grevi works with no TypeSafe key, by using classifier.dev as a second backend. Lead-added bead (Thomas, 2026-09-19): \"have an additional bead to have classifier dev as an a …[line truncated at 300 characters]
+-{"id":"hunch-ed1","title":"Phase 0: JEVIFY_BASE_URL is https and host-bound; the key never follows it elsewhere","description":"Plan bead: Phase 0 — base URL. Epic hunch-7zg.\n\nOutcome: JEVIFY_BASE_URL can no longer send the bearer token and the evidence to an arbitrary host. Today src/config.rs a …[line truncated at 300 characters]
++{"id":"hunch-ed1","title":"Phase 0: JEVIFY_BASE_URL is https and host-bound; the key never follows it elsewhere","description":"Plan bead: Phase 0 — base URL. Epic hunch-7zg.\n\nOutcome: JEVIFY_BASE_URL can no longer send the bearer token and the evidence to an arbitrary host. Today src/config.rs a …[line truncated at 300 characters]
+ {"id":"hunch-eil","title":"classifier.dev scores 9/20 on the run args spot check, TypeSafe 12/20","description":"Measured during hunch-classifier-fallback-41x (commit 2fd203d): the two backends tie on every eval except the 20-case argument spot check, where classifier.dev picks the right tool 9/20  …[line truncated at 300 characters]
+-{"id":"hunch-ep4","title":"Specify filesystem containment and crash recovery boundaries","description":"After atomic no-replace/journal fixes, audit parent/source path replacement, open-dir anchored no-follow operations, identity matching, crash and disk-full recovery, unsupported filesystem behavi …[line truncated at 300 characters]
++{"id":"hunch-ep4","title":"Specify filesystem containment and crash recovery boundaries","description":"After atomic no-replace/journal fixes, audit parent/source path replacement, open-dir anchored no-follow operations, identity matching, crash and disk-full recovery, unsupported filesystem behavi …[line truncated at 300 characters]
+ {"id":"hunch-evl","title":"Implement paired agent harness and run diagnostic pilot","description":"Implement optional-grevi A/B and identical-candidate selector comparisons from benchmarks/agents/EXPERIMENT.md. Fresh sessions, balanced schedule, immutable attempts, full usage/cost and outcomes, bud …[line truncated at 300 characters]
+ {"id":"hunch-fo1","title":"Require trusted publishing after owner approval","description":"The v0.3.4 release publishes through crates.io Trusted Publishing using release.yml as the caller workflow. The Require trusted publishing for all new versions setting remains disabled. Obtain explicit owner  …[line truncated at 300 characters]
+ {"id":"hunch-gjf","title":"Validate useful command recipes before expanding execution","description":"Extend fail-closed run execution through small explicit command schemas with operand roles, arity, exclusions, effects, source provenance and exact executable outcome checks. Existing generic propo …[line truncated at 300 characters]
+-{"id":"hunch-glz","title":"Keyless backend: measure the daily quota per verb and document it","description":"Outcome: the documents and `capabilities` state, from a recorded measurement, what the free keyless backend (classifier.dev) allows in a day: how many classifications each verb costs, and so …[line truncated at 300 characters]
++{"id":"hunch-glz","title":"Keyless backend: measure the daily quota per verb and document it","description":"Outcome: the documents and `capabilities` state, from a recorded measurement, what the free keyless backend (classifier.dev) allows in a day: how many classifications each verb costs, and so …[line truncated at 300 characters]
+ {"id":"hunch-hjp","title":"Instrument complete experiment and backend attempt telemetry","description":"Implement measurement prerequisites in benchmarks/agents/EXPERIMENT.md section 6. Distinguish physical attempts, successes, retries, prewarm/health, rounds, stage candidates, actual gate scores,  …[line truncated at 300 characters]
+ {"id":"hunch-k6s","title":"Decide the execution policy for user-written commands with resolved operands","description":"Owner decision needed. The governing plan (docs/superpowers/plans/2026-09-18-hunch-v0.md, Constraints and decisions; Task R3) keeps unvalidated command grammar a proposal, and `ru …[line truncated at 300 characters]
+ {"id":"hunch-launch-tweet-mtr","title":"Draft launch tweet","description":"Outcome: A launch tweet draft for the hunch CLI, 2–3 variants plus an optional 3-tweet thread, written in Thomas's voice and unslop-audited, saved in the PRIVATE launch folder /Users/tpellet/Projects/hunch-launch/tweet.md (a …[line truncated at 300 characters]
+@@ -58,14 +58,14 @@
+ {"id":"hunch-o88","title":"Define backend-specific calibration and decision metadata","description":"Measure TypeSafe Noul and classifier binary Choice independently by verb/prompt/model; include abstentions and false-action loss. Keep requested and resolved model identities distinct, unknown usage …[line truncated at 300 characters]
+ {"id":"hunch-oki","title":"Design rigorous per-endpoint agent A/B evaluation protocol","description":"Deliver preregisterable paired experiment design for every grevi endpoint, grounded in existing evidence, with causal estimands, gold standards, telemetry, power, analysis, claim gates and hardenin …[line truncated at 300 characters]
+ {"id":"hunch-q3i","title":"Audit grevi real end-to-end endpoint coverage","description":"Run bounded live e2e checks using the e2e-pipeline-validator skill; report reproducible endpoint coverage, failures and untested paths without claiming exhaustive correctness.","status":"closed","priority":1,"i …[line truncated at 300 characters]
+-{"id":"hunch-q8p","title":"2.2 Kinds - and branch: src/source.rs, the lister runner, the registry","description":"Plan bead: 2.2, the source half — the kinds `-` and `branch` in src/source.rs (the pool-rule half of 2.2 is hunch-zxz, which writes src/tournament.rs). Epic hunch-7zg. This bead replace …[line truncated at 300 characters]
+-{"id":"hunch-qxn","title":"4.1 label: tag each stdin record with one of the caller's labels","description":"Plan bead: Phase 4 — `label`. Epic hunch-7zg.\n\nOutcome: `CMD | jevify label a,b,c` prints each record of its input with one of the caller's labels, as `LABEL<TAB>RECORD`, so `cut`, `sort` a …[line truncated at 300 characters]
++{"id":"hunch-q8p","title":"2.2 Kinds - and branch: src/source.rs, the lister runner, the registry","description":"Plan bead: 2.2, the source half — the kinds `-` and `branch` in src/source.rs (the pool-rule half of 2.2 is hunch-zxz, which writes src/tournament.rs). Epic hunch-7zg. This bead replace …[line truncated at 300 characters]
++{"id":"hunch-qxn","title":"4.1 label: tag each stdin record with one of the caller's labels","description":"Plan bead: Phase 4 — `label`. Epic hunch-7zg.\n\nOutcome: `CMD | jevify label a,b,c` prints each record of its input with one of the caller's labels, as `LABEL<TAB>RECORD`, so `cut`, `sort` a …[line truncated at 300 characters]
+ {"id":"hunch-readme-docs-m6t","title":"README polish and user guide","description":"Outcome: a professional, clear README and a small set of user docs in the repo, so the GitHub page explains hunch as well as the best project READMEs do. Lead-added bead (Thomas, 2026-09-19): \"Have a Fable pass on  …[line truncated at 300 characters]
+ {"id":"hunch-rename-grevi-lfb","title":"Rename hunch to grevi everywhere","description":"Outcome: the project is `grevi` everywhere — crate, library, binary, env vars, cache dir, user agent, messages, tests, docs, skill, demo — and the renamed binary is proven to work live. Lead-added bead (Thomas, …[line truncated at 300 characters]
+ {"id":"hunch-ric","title":"Build independent endpoint task families and blinded outcome gold","description":"Implement sections 4-5 of benchmarks/agents/EXPERIMENT.md. Six semantic endpoints and utility panels; independent dev/calibration/pilot/test source families, provenance, no-match/ambiguous c …[line truncated at 300 characters]
+ {"id":"hunch-rust-practices-8yv","title":"Rust best practices: tooling, tests, clean CI/CD","description":"Outcome: hunch follows current Rust tooling, testing and CI/CD best practice, so CI is clean, reproducible and easy to extend with GitHub Actions: a pinned toolchain file, an MSRV check, locke …[line truncated at 300 characters]
+ {"id":"hunch-s18","title":"Power and preregister sealed per-endpoint confirmation","description":"After pilot simulate clustered power and spend for fixed N; freeze model/backend/build/cache, claim family and margins per benchmarks/agents/EXPERIMENT.md. Acceptance: sealed independent families, no o …[line truncated at 300 characters]
+-{"id":"hunch-sb9","title":"1.8 Contract: the skill teaches the 0.5.0 language","description":"Plan bead: 1.8 contract, the skill half (the documents half is hunch-7zg.8). Epic hunch-7zg.\n\nOutcome: the skill teaches a Claude agent the language of 0.5.0: the situations that call for the output verb …[line truncated at 300 characters]
++{"id":"hunch-sb9","title":"1.8 Contract: the skill teaches the 0.5.0 language","description":"Plan bead: 1.8 contract, the skill half (the documents half is hunch-7zg.8). Epic hunch-7zg.\n\nOutcome: the skill teaches a Claude agent the language of 0.5.0: the situations that call for the output verb …[line truncated at 300 characters]
+ {"id":"hunch-secret-pii-audit-8ha","title":"Secret, private-info and PII audit before release","description":"Outcome: Before v0 is tagged and released, the public repo `tpellet/hunch` is audited end to end for secrets, private information and PII: a full-history gitleaks scan, a manual review of e …[line truncated at 300 characters]
+ {"id":"hunch-sgr","title":"Make sort moves and recovery enforce no-overwrite","description":"Reconciled review: atomic no-replace on macOS/Linux for apply and undo; unique durable encoded journals with absolute paths; preserve partial progress and undo failures; skip symlink source and destination  …[line truncated at 300 characters]
+ {"id":"hunch-task-01-scaffold-p8n","title":"Task 1: scaffold, exit codes, envelope, CLI skeleton, full dispatch, CI","description":"Outcome: The `hunch` crate exists (lib + bin) with the exit-code contract, `HunchError` kinds/hints/examples, the machine envelope (json/jsonl/toon), the complete clap …[line truncated at 300 characters]
+@@ -100,4 +100,4 @@
+ {"id":"hunch-yd5","title":"Plugin source ./ makes a local install copy the whole repo, target/ included","description":"claude plugin marketplace add <local checkout> then plugin install grevi@grevi copies the plugin source into the plugin cache. marketplace.json has source ./, so the copy is the w …[line truncated at 300 characters]
+ {"id":"hunch-yox","title":"Plan evidence-complete semantic decisions and validated recipes","description":"Write reconciled follow-up implementation plan in existing governing plan: candidate survival, backend calibration and model identity, command recipes, complete action evidence, filesystem thr …[line truncated at 300 characters]
+ {"id":"hunch-zss","title":"Evaluate run for agents on tools the model cannot know","description":"The pilot in benchmarks/agents/ only needed tools a frontier model knows by name, so it could not show whether run helps an agent. Test the case it is built for. Design: a scratch bin directory on PATH …[line truncated at 300 characters]
+-{"id":"hunch-zxz","title":"2.2 Pool rule: one finalists rule (3, 2, 1 by rank) for every caller of tournament::rank","description":"Plan bead: 2.2, the pool-rule half — src/tournament.rs (the source half of 2.2 is hunch-q8p, which writes src/source.rs). Epic hunch-7zg. This bead replaces the earlie …[line truncated at 300 characters]
++{"id":"hunch-zxz","title":"2.2 Pool rule: one finalists rule (3, 2, 1 by rank) for every caller of tournament::rank","description":"Plan bead: 2.2, the pool-rule half — src/tournament.rs (the source half of 2.2 is hunch-q8p, which writes src/source.rs). Epic hunch-7zg. This bead replaces the earlie …[line truncated at 300 characters]
+diff --git a/docs/VISION.md b/docs/VISION.md
+index c34c95b..5973d8f 100644
+--- a/docs/VISION.md
++++ b/docs/VISION.md
+@@ -161,9 +161,10 @@ runs. A list with no kind is a pipe into `'@{-:…}'`, shaped by `sed`, `cut` or
+ - Code handles order, counts and dates before the model is asked. "The newest branch" is a sort.
+ 
+ **The run.** `fill` becomes the command, as `env` and `nice` do: it replaces itself with the
+-resolved argument list, with no shell and no process in between. `--dry-run` prints the command
+-on one line, quoted so that bash, zsh and dash read it back exactly, and runs nothing. The
+-printed line is the command that a run executes.
++resolved argument list, with no shell and no process in between. `--dry-run` prints the command,
++quoted so that bash, zsh and dash read it back exactly, and runs nothing. It is one line unless
++an argument holds a newline, which stays inside its single quotes. What it prints is the command
++that a run executes.
+ 
+ - The caller's own permission system decides what may run; jevify is not a permission system.
+ - The command owns its output, its signals, its terminal and its exit code. jevify writes to
+diff --git a/docs/superpowers/plans/2026-09-21-jevify-two-sides.md b/docs/superpowers/plans/2026-09-21-jevify-two-sides.md
+index 401ec0e..2f7ba37 100644
+--- a/docs/superpowers/plans/2026-09-21-jevify-two-sides.md
++++ b/docs/superpowers/plans/2026-09-21-jevify-two-sides.md
+@@ -60,7 +60,7 @@ Marker grammar:
+ 
+ ```
+ marker  := "@{" KIND ":" BODY "}"
+-KIND    := "-" | [a-z][a-z-]*            registered kinds only
++KIND    := "-" | [a-z][a-z-]*            the lexer keeps no registry; `fill` validates the name
+ BODY    := bytes up to the first unescaped "}"; "\}" is a literal "}"
+ one     := "@{one:" OPT ("|" OPT)* ":" QUESTION "}"      escapes \: \| \}
+ flag    := "@{flag:" FLAGTEXT ":" QUESTION "}"           whole argv element; FLAGTEXT starts with "-"
+@@ -70,8 +70,13 @@ escape  := "@@{"  →  literal "@{"
+ - One wrapping pair of `'…'` or `"…"` around BODY is dropped. A newline in BODY becomes a space.
+ - Escapes are decoded once. Substituted text is never lexed again, so a handle that holds `@{`
+   stays literal.
+-- Exit 2, nothing runs: unknown kind (the error names the nearest kind and lists the kinds),
+-  `@{word:` with no closing `}`, empty BODY, BODY that is not UTF-8, `flag` embedded in a larger
++- **The lexer keeps no registry.** `marker::parse` knows the syntax of `-`, `one` and `flag`
++  and returns every other syntactically valid kind as a named kind with its span. `fill`
++  validates the names before any other I/O, against the coded kinds, the shipped recipes and,
++  from Phase 3 and only when a name is in neither, the user's `kinds.jsonl`. An unknown name
++  is exit 2, nothing runs: the error names the nearest kind, lists the kinds, and shows the
++  `@@{` spelling for a literal.
++- Exit 2 from the lexer, nothing runs: `@{word:` with no closing `}`, empty BODY, BODY that is not UTF-8, `flag` embedded in a larger
+   argument, zero markers, a `one` with fewer than two options or a repeated option, a marker in
+   `argv[0]`, and stdin with two roles (a `-` marker without `--candidates FILE` next to a `one`
+   or `flag` marker without `--context FILE`).
+@@ -80,8 +85,8 @@ escape  := "@@{"  →  literal "@{"
+   command as separate arguments".
+ - `@{` followed by anything that is not `KIND:` is literal (`@{u}`, `HEAD@{2}`, `@{1 day ago}`).
+   `KIND:` is a syntactic test: the Python format string `{user}@{host:>8}` holds `@{host:`,
+-  which is a marker with an unknown kind. It is exit 2, not a literal, and the message shows
+-  the `@@{` spelling: `'{user}@@{host:>8}'`.
++  which the lexer returns as a marker of the named kind `host`. `fill` finds no such kind: it
++  is exit 2, not a literal, and the message shows the `@@{` spelling: `'{user}@@{host:>8}'`.
+ - Every other byte of every argument passes through unchanged. Argv is `OsString` end to end.
+ - After `--` every token belongs to the command, a second `--` included.
+ 
+@@ -91,9 +96,9 @@ New files:
+ 
+ | File | Contents | Tests |
+ |:---|:---|:---|
+-| `src/marker.rs` | Pure lexer: `parse(&[OsString]) -> Result<Vec<Arg>, MarkerError>`; `substitute`. No I/O. | inline table tests |
++| `src/marker.rs` | Pure lexer: `parse(&[OsString]) -> Result<Vec<Arg>, MarkerError>`; `substitute`. No I/O and no registry: it knows the syntax of `-`, `one` and `flag` and returns every other valid kind as a named kind with its span. The unknown-kind error belongs to `fill`. | inline table tests  …[line truncated at 300 characters]
+ | `src/records.rs` | The record model of `pick`, `filter`, `label` and of `@{-:…}`, over raw bytes. `Record { handle, evidence: String, raw: Range<usize> }` indexes one input buffer. It also holds the one withholding policy for excerpts (2.2), which `--files` applies on every verb. | inline |
+-| `src/source.rs` | `enumerate(kind, scope, limit, env) -> Listing { records, total, omitted, ordered }`: the coded kinds and the recipe engine (2.2). Listers run an argv, never a shell, under one deadline. `env` is the injected environment: `PATH`, the configuration directory, the deadline. | inli …[line truncated at 300 characters]
++| `src/source.rs` | `enumerate(kind, scope, limit, env) -> Listing { records, total, omitted, ordered }`, tier-one evidence only, and `enrich(kind, handles) -> Vec<String>`, tier-two evidence for the given finalists only: the coded kinds and the recipe engine (2.2). Listers run an argv, never a she …[line truncated at 300 characters]
+ | `src/kinds.jsonl` | The shipped recipes, one JSON object per line, compiled in with `include_str!`. | the recipe table test |
+ | `src/cmd/fill.rs` | lex → read inputs → enumerate → resolve → substitute → print or `exec`. | `tests/fill.rs` |
+ | `src/cmd/filter.rs`, `src/cmd/label.rs` | Per-record verbs; the scorer of 2.3 lives in `filter.rs`. | `tests/filter.rs`, `tests/label.rs` |
+@@ -143,12 +148,18 @@ The status line names `n` when it is not 3: `finalists per window: 2`. `tests/to
+ proves it on the classifier backend with 4,000 items (41 windows, `n = 2`, 82 finalists in one
+ finals request) and with 9,802 items (`too_many`, no request).
+ 
+-1. **Lex and validate** the whole argv and the options before any I/O. A machine format without
++1. **Lex and validate** the whole argv and the options before any I/O. The lexer returns named
++   kinds; `fill` checks each name against the coded kinds and the shipped recipes (from Phase
++   3 also the user's `kinds.jsonl`, read only when a name is in neither): an unknown name is
++   exit 2 with the nearest kind and the `@@{` spelling. A machine format without
+    `--dry-run` is exit 2. A literal `argv[0]` that is not on the PATH is exit 6 `cannot_run`.
+ 2. **Read inputs.** `-` reads `--candidates FILE` or stdin. `one` and `flag` read
+    `--context FILE` or stdin. stdin is read once, on the blocking pool, up to 64 MiB. A required
+    stdin that is a terminal is exit 6 `stdin_is_tty`. A context above the evidence budget is
+-   exit 3 `insufficient_evidence` with no request, as `is` does (`src/cmd/is.rs:21-31`).
++   exit 3 `insufficient_evidence` with no request. The behaviour is that of `is`
++   (`src/cmd/is.rs:21-31`); the word is not: `insufficient_evidence` is a reason of `fill`
++   only, and `is` keeps its `data.reason` sentence ("input exceeds the evidence budget; whole
++   input not judged", `src/cmd/is.rs:28`).
+ 3. **Enumerate** each distinct `(kind, prefix)` once, in parallel. A lister that fails or passes
+    its deadline is killed, and the call is exit 6 `lister_failed` with a bounded tail of the
+    tool's stderr. Then, per marker:
+@@ -181,7 +192,16 @@ finals request) and with 9,802 items (`too_many`, no request).
+    - Finalist evidence needs no callback. A caller with tier-two evidence makes two calls:
+      `tournament::shortlist` for round 1 (`src/tournament.rs:149`), then it fetches the
+      evidence of the finalists itself (async, inside `spawn_blocking`, after the withholding
+-     check), then `tournament::window` for the finals. `fill`, `pick --from` and `pick --files`
++     check), then `tournament::window` for the finals. `shortlist` returns, per window, the
++     full `Ranking` (candidates, `any`, `none`); today `:149-167` keeps the candidates only.
++     With one window the caller decides from that `Ranking` with no second request
++     (`tests/tournament.rs`: decisive, low `any`, dominant `NONE`, each with exactly one
++     request).
++   - Enumeration is tier-one only. `source::enrich(kind, handles) -> Vec<String>` (async; git
++     or file reads on the blocking pool; the withholding function first for path kinds)
++     returns tier-two evidence for the given finalists only. `fill` and `pick --from` call it
++     after `shortlist`. Test: a fake `git` records its invocations, and no tier-two command
++     runs for a non-finalist. `fill`, `pick --from` and `pick --files`
+      all use this shape. `rank` stays for callers with no tier two (stdin `pick`, `why`).
+    - `decide` (the ratio, `ambiguous`) serves `fill` and `pick --from` only. stdin `pick` keeps
+      its found rule (`any ≥ threshold` and best > `NONE`, `src/cmd/pick.rs:83-88`) and its
+@@ -215,8 +235,11 @@ finals request) and with 9,802 items (`too_many`, no request).
+    UTF-8 reaches the command unchanged. A path handle is relative to the prefix it was listed under, so
+    `'src/@{file:…}'` becomes `src/cmd/add.rs`. A path handle that opens its argument and
+    starts with `-` gets `./`. A `flag` that is left out removes its whole argv element.
+-8. **`--dry-run`:** print the quoted command on stdout, one line, through `output::shell_quote`;
+-   exit 0. Quoting works on bytes, so an argument that is not UTF-8 prints and reads back
++8. **`--dry-run`:** print one command on stdout through `output::shell_quote`; exit 0. It is
++   one physical line unless an argument holds a newline; such an argument is single-quoted
++   with its newline kept, which bash, zsh and dash read back exactly. Status lines on stderr
++   escape a newline in a handle or an argument as `\n`, so each status line stays one line
++   with its prefix. Quoting works on bytes, so an argument that is not UTF-8 prints and reads back
+    exactly. With a machine format the envelope carries `data.argv`; an argv that is not UTF-8
+    is exit 6 `cannot_run` there, because JSON cannot hold it.
+ 9. **Run.** Print the evidence lines and `jevify fill: exec <quoted command>` on stderr, flush,
+@@ -246,6 +269,12 @@ finals request) and with 9,802 items (`too_many`, no request).
+      shows one bin target, `jevify`.
+    - After an `exec` line, the exit code belongs to the command. Without one, the last line is
+      `jevify fill: not run: <reason>` and the code is 2 to 6.
++   - That holds for every error of `fill`. When the verb is `fill`, `run_cli` writes each
++     error (clap, configuration, dispatch, a failed `exec`) as
++     `jevify fill: not run: <kind>: <message>`; the hint follows as a second `jevify fill:`
++     line unless `-q`. `report_error` writes `error`, `hint` and `try` lines today
++     (`src/lib.rs:196-205`) and keeps them for the other verbs. Machine envelopes keep their
++     shape. Bead 2.0 owns this rendering.
+    - `fill -q` prints only `not run:` lines. `jevify fill -q -- CMD 2>&1 | jevify why` then
+      reads the command's output alone, and a `not run:` line is the true cause, which `why`
+      may point at. Output verbs have no special case for `fill`.
+@@ -371,9 +400,12 @@ outside the record model (§1 rule 1): it takes no split option and keeps its ou
+ - **Splitting**, exactly one of: lines (default), `-0`, `--para`. Two together is exit 2.
+ - **`--files`** is a boolean on `pick`, `filter` and `label`: the record is a path and the
+   evidence is its first lines, so `fd -0 | jevify filter -0 --files '…'` works. The order is
+-  fixed: the withholding function of 2.2 runs first; a relative path is then resolved against
+-  the working directory, because `sort::excerpt` needs an absolute normalized path
+-  (`src/cmd/sort.rs:46-47`); every excerpt read runs inside `spawn_blocking`, because
++  fixed: the withholding function of 2.2 runs first; the path is then resolved, because
++  `sort::excerpt` needs an absolute normalized path (`src/cmd/sort.rs:46-47`): join it with
++  the working directory, drop `.` components lexically, canonicalize the parent directory
++  only, and append the final component unfollowed; a final symlink is withheld and counted
++  (inline tests: `./a.txt`, `a/../b.txt`, a directory reached through a symlinked ancestor,
++  which a macOS temporary directory is); every excerpt read runs inside `spawn_blocking`, because
+   `excerpt` reads files and may start `pdftotext`. `pick --files` keeps its two stages: path
+   names first, excerpts for the finalists.
+ - **A machine format and a record that is not UTF-8.** The envelope carries the record's
+@@ -458,11 +490,15 @@ The scorer (`filter`, `label`):
+   (classifier.dev OpenAPI). It is never retried: exit 4, message "daily quota of the free
+   backend reached"; the printed records are a correct prefix and the last line says
+   `answered 3000 of 3120`. `rate_limit_minute` and every other 429 are retried after
+-  `Retry-After` (`src/jev/client.rs:418-422`). For `ask_each` the cap on one wait is 60 s (it
+-  is 10 s today, `retry_after`, `src/jev/client.rs:442-451`), because a minute limit needs a
+-  minute. A 429 whose `Retry-After` exceeds the 60 s cap is not retried, and the message
+-  names the limit from the body's `code` (`rate_limit_hour` included). The FakeJev quota
+-  responder returns exactly that status and body.
++  `Retry-After` (`src/jev/client.rs:418-422`). In `ask_each` a `Retry-After` up
++  to 60 s is honoured as given, because a minute limit needs a minute; above 60 s the request
++  is not retried: exit 4 after one request, and the message names the limit from the body's
++  `code` (`rate_limit_hour` included). Tests go through the wait-decision function, not by
++  sleeping: 30 s, 60 s, 61 s, 3600 s. `ask` keeps its 10 s cap (`retry_after`,
++  `src/jev/client.rs:442-451`). The quota error is `JevifyError::Unavailable(message)`: no
++  new variant, and `src/exit.rs` does not change for it. The body is already read at
++  `src/jev/client.rs:383`; its `code` is parsed before the 429 arm (`:418-422`). The FakeJev
++  quota responder returns exactly that status and body.
+ - **The ceiling** is 20,000 distinct records, a day of the free backend: exit 6 `too_many`, and
+   the message says to narrow with `grep` or `head`. There is no flag to raise it.
+ - **`filter` flags:** `-v` keeps the records where the statement is false, `-c` prints the
+@@ -473,8 +509,10 @@ The scorer (`filter`, `label`):
+ ### 2.4 The saved input
+ 
+ `why` and `filter` write the full input, as the bytes they read, to
+-`<save dir>/outputs/<blake3-16>.log` before the first request, and print `full output: PATH` as
+-their last stderr line. Only these two save. stdin `pick` saves nothing: it returns one record
++`<save dir>/outputs/<blake3-16>.log` before the first request, and name the path in one final
++status line, as the vision shows: `jevify filter: kept 31 of 10074, 2 unsure, full output: PATH`
++(or `…, full output: not saved (<reason>)`); `why` ends with `jevify why: full output: PATH`.
++Only these two save. stdin `pick` saves nothing: it returns one record
+ of a list the caller can list again. `label` saves nothing: every record comes out.
+ 
+ - The name is the content hash: no slot, no index file, no lock. The write goes through a
+@@ -497,8 +535,18 @@ manifests, then the version bump and the release through `bash scripts/release.s
+ 
+ - **A contract bead waits for the behaviour it documents**, so it never closes before the
+   status lines it quotes exist. The "After" columns below say which beads.
+-- **The tracker.** Workers change bead state with `br` only and never stage `.beads/`. The
+-  lead exports (`br sync --flush-only`) and commits `.beads/` between waves.
++- **The tracker.** Workers change bead state with `br update` only and never stage `.beads/`.
++  The lead exports (`br sync --flush-only`) and commits `.beads/` between waves.
++- **The gate is divided.** Workers run in a sandbox that cannot bind 127.0.0.1 or reach
++  `~/.ssh`. The worker runs `cargo fmt --check`, `cargo check --locked --all-targets`,
++  `cargo clippy --locked --all-targets -- -D warnings`,
++  `RUSTDOCFLAGS='-D warnings' cargo doc --locked --no-deps` and `ubs <changed files>`, and
++  tries `cargo test --locked -- --test-threads=1`; when the sandbox blocks the tests it
++  reports them as NOT RUN with the error. The lead then runs the full test gate outside the
++  sandbox, sends failures back to the worker, and only the lead stages, commits (signed),
++  pushes and closes the bead. Workers never run `git add`, `git commit`, `git push` or
++  `br close`. No language feature newer than Rust 1.87 (no let chains): CI runs on Linux with
++  toolchain 1.87.0, and a red CI on a commit is its worker's to fix forward.
+ - **`ubs` on a bead whose changed files are only Markdown or JSON**: run `ubs <changed files>`;
+   when it reports that nothing was scanned, record "ubs: not applicable, nothing scanned" in
+   the bead and validate every JSON file with `jq .`. That is a pass. The rule is in the Rules
+@@ -564,8 +612,25 @@ stays green. Bead 1.7 puts `pick` on the byte records, adds `-0 --files`, the wi
+ function and the relative-path rule of 2.3, and completes those tests in place. `why` gets no
+ `-0`, `--para` or `--files` in the parser.
+ 
+-Until bead 1.6 the `is` of bead 1.0 refuses more than one statement with an input error; it
+-never judges only the first.
++**Interim behaviour of bead 1.0, all with zero requests.** `pick -0` and `pick --para` return
++a "not implemented" input error until 1.7. `why --no-save` parses and is a no-op until 1.7.
++`pick --files` keeps `visible()` (`src/cmd/pick.rs:145`) and applies it to the excerpt read:
++a hidden path is a candidate by name and gets no excerpt, until 1.7 replaces it with the
++withholding function; the moved test pipes the five visible names plus `.env` and asserts
++that no request holds `TOKEN=1099`. The public async excerpt function of the `records.rs`
++stub calls the withholding function, so 1.0 holds no dead code. Bead 1.0 installs and wires
++the final `is` signature, `run(ctx, statements: &[String], context: Option<&Path>)`; the
++refusal of several statements until 1.6 lives in `src/cmd/is.rs` (an input error; it never
++judges only the first), so bead 1.6 never touches dispatch.
++
++**Removed forms get one corrected line.** A pre-scan of `args_os` in `main_exit`, before
++`Cli::try_parse`, maps a first token `run` and a `why … --` to `JevifyError::Usage` with the
++corrected form; the envelope `command` is `jevify` for `run` and `why` for `why`.
++
++**`Exit::ALL`.** Bead 1.0 rewrites its descriptions (`src/exit.rs:22`, `:29`): exit 0 without
++"executed"; exit 7 names only the verbs that still produce it in 0.5.0, or "reserved" when
++none does; the inline test at `:131` follows. Bead 1.8 adds the output of
++`jevify capabilities --json` to its anchored grep targets.
+ 
+ `is 'a' 'b' 'c'`: one Noul per statement in one request (21 statements are two requests on
+ classifier, one on TypeSafe); exit 1 when any is no, else 3 when
+@@ -624,8 +689,9 @@ three markers; the sh helper receives the exact argv, a non-UTF-8 handle include
+ `flag` and an answer from another model run nothing (a sentinel file proves it), and so does
+ an answer whose `meta.model` has one part that is not Jev; `F + 1` lines are `too_many` with
+ no request; 250 lines resolve in two rounds and the finals hold three finalists of every
+-window; on the classifier backend 4,000 items give `n = 2` in one finals request and 9,802
+-items are `too_many` with no request, for `pick` and for `pick --from`; `why` with
++window; on the classifier backend 4,000 items give `n = 2` in one finals request; 9,802
++candidates of an unordered list (stdin `pick`, an unordered kind) are `too_many` with no
++request, and an ordered kind (`pick --from branch`) keeps its newest 9,801 and says so; `why` with
+ `MAX_KEEP` lines resolves with `n = 2`; a `one` with `W` options resolves and with `W + 1` is
+ exit 2; several failed markers report the first in argv order and list all in
+ `data.markers[]`; `cargo metadata` shows one bin target, `jevify`.
+@@ -719,10 +785,13 @@ Each item was cut on purpose and names what brings it back.
+ - `marker.rs` table: every literal (`@{u}`, `@{-1}`, `HEAD@{2}`, `stash@{0}`, `@{1 day ago}`,
+   `@types/node`, `user@host:path`, PowerShell `@{k='v'}`), prefix,
+   suffix, flag value, two markers in one argument, `\}`, quotes stripped once, unterminated,
+-  unknown kind with suggestion, empty body, a marker in `argv[0]`, a non-UTF-8 literal,
+-  `one` and `flag`, substituted text that holds `@{`, stdin with two roles. Python
+-  `{user}@{host:>8}` is in the error rows: unknown kind `host`, exit 2, and the message shows
+-  `'{user}@@{host:>8}'`; `{user}@@{host:>8}` is in the literal rows.
++  empty body, a marker in `argv[0]`, a non-UTF-8 literal, `one` and `flag`, substituted text
++  that holds `@{`, stdin with two roles. The table has no unknown-kind row: `@{widget:x}` and
++  Python `{user}@{host:>8}` lex as named kinds (`widget`, `host`) with their spans, and
++  `{user}@@{host:>8}` is in the literal rows. The unknown-kind check and its tests are in
++  `tests/fill.rs`: `host` is exit 2 before any other I/O (no lister runs, no request), with the
++  nearest kind and `'{user}@@{host:>8}'`. Phase 3 extends the same check to user recipes with
++  no change to `src/marker.rs`.
+ - `FakeJev` gives the winner 0.9 and spreads 0.1 (`tests/common/mod.rs:26-31`), so no tie and
+   no `ambiguous` path can be written today. Bead 1.2 adds a probability vector per question,
+   the batch responder, a named model per dimension, and the quota responder (HTTP 429 with
+@@ -896,7 +965,8 @@ Nothing rations requests. What bounds a verb is time: two rounds, the client sem
+ 12. The removal of `run`'s flags in bead 1.0 rewrites seven tests of `tests/run_args.rs` and
+     `tests/run_route.rs` to exit-2 and print-only assertions. It is the approved removal of
+     `run`, not a weakened test.
+-13. `rate_limit_day` is never retried; one wait of `ask_each` is capped at 60 s.
++13. `rate_limit_day` is never retried; `ask_each` honours a `Retry-After` up to 60 s as given
++    and does not retry above it.
+ 14. `{user}@{host:>8}` is an unknown kind, exit 2; the literal is spelled `@@{`.
+ 15. A handle is an `OsString`. A record that is not UTF-8 is `text`, `lossy: true` and
+     `ordinal` under a machine format; no base64.

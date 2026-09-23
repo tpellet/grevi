@@ -1,0 +1,19 @@
+index-from-HEAD: 195
+short: 85bcc29
+--- stat ---
+ README.md | 2 ++
+ 1 file changed, 2 insertions(+)
+
+--- patch (first 400 lines) ---
+diff --git a/README.md b/README.md
+index 8fcf951..d04ded5 100644
+--- a/README.md
++++ b/README.md
+@@ -1,5 +1,7 @@
+ # hunch
+ 
++**Point at the right line, file or tool from your shell, and hear "nothing fits" when nothing does.**
++
+ hunch is the semantic toolkit for your shell: small, composable commands that bring judgment to ordinary Unix pipelines. Pick a filename from a description, find the error that broke a build, check whether an email asks for a refund, or match a request to an installed tool. Powered by TypeSafe’s Je …[line truncated at 300 characters]
+ 
+ [![CI](https://github.com/tpellet/hunch/actions/workflows/ci.yml/badge.svg)](https://github.com/tpellet/hunch/actions/workflows/ci.yml)

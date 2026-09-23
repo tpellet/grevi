@@ -1,0 +1,20 @@
+index-from-HEAD: 65
+short: 6425eec
+--- stat ---
+ .beads/issues.jsonl | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- patch (first 400 lines) ---
+diff --git a/.beads/issues.jsonl b/.beads/issues.jsonl
+index 2b42400..e8b1ded 100644
+--- a/.beads/issues.jsonl
++++ b/.beads/issues.jsonl
+@@ -12,7 +12,7 @@
+ {"id":"hunch-4ow","title":"Re-record demo.gif and demo.cast with the current grammar; restore the README reference","description":"Outcome: the binary recordings demo.gif and demo.cast show the current grammar, and README.md references demo.gif again.\n\nContext: demo.gif and demo.cast are recordin …[line truncated at 300 characters]
+ {"id":"hunch-4z4","title":"Semantic operands: put meaning into the arguments of any command","description":"Vision (owner, 2026-09-20): put meaning into the operands of any command. A command line is head, flags, operands. `run` fills the head by meaning from PATH and man pages. This epic fills ope …[line truncated at 300 characters]
+ {"id":"hunch-55y","title":"Design structured record predicates with explicit coverage","description":"Define stable IDs, semantic text, opaque payload, per-record abstention/errors and resumability, then combine batching and independent filtering into one measured record mode. Preserve raw identity …[line truncated at 300 characters]
+-{"id":"hunch-60l","title":"README: voice rewrite, stronger examples, measured agent-harness section","description":"Rewrite README descriptions in plain words, replace examples with ones run live on the keyless backend, add an agent section backed by with/without subagent spot checks. Evidence in b …[line truncated at 300 characters]
++{"id":"hunch-60l","title":"README: voice rewrite, stronger examples, measured agent-harness section","description":"Rewrite README descriptions in plain words, replace examples with ones run live on the keyless backend, add an agent section backed by with/without subagent spot checks. Evidence in b …[line truncated at 300 characters]
+ {"id":"hunch-6jv","title":"dir kind: finalists carry no content evidence, so content descriptions abstain","description":"Found by the hunch-lpp evaluation (jevify 0.7.0, jev-1.13.0, 2026-09-22).\n\nEvidence: the dir kind sends only the directory path, so a description of what a directory holds is  …[line truncated at 300 characters]
+ {"id":"hunch-744","title":"pick --files: find a file by meaning, names first, content for finalists","description":"`grevi pick --files <DIR> \"<description>\"`: the candidates are the regular files under DIR instead of stdin lines, and the match prints as a path usable from the current directory.  …[line truncated at 300 characters]
+ {"id":"hunch-7zg","title":"jevify two sides: the language, fill, kinds, label","description":"Outcome: jevify speaks one language on the two sides of a command. Input side: `fill` resolves '@{kind:description}' markers to real handles and becomes the command. Output side: `why`, `pick`, `filter`, ` …[line truncated at 300 characters]

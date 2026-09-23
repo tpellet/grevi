@@ -1,0 +1,419 @@
+index-from-HEAD: 5
+short: 168bd87
+--- stat ---
+ evals/fill/finals/README.md                        |  34 ++++
+ evals/fill/finals/cases.jsonl                      |  33 ++++
+ evals/fill/finals/gold/disagreements.md            |  16 ++
+ evals/fill/finals/gold/gold.jsonl                  |  33 ++++
+ evals/fill/finals/inputs/bat-dir-src.txt           |  11 ++
+ evals/fill/finals/inputs/bat-file-src.txt          |  94 +++++++++++
+ evals/fill/finals/inputs/fzf-dir-root.txt          |  16 ++
+ evals/fill/finals/inputs/fzf-file-src.txt          |  92 +++++++++++
+ evals/fill/finals/inputs/ripgrep-dir-root.txt      |  59 +++++++
+ .../finals/inputs/ripgrep-file-crates-core.txt     |  30 ++++
+ .../finals/inputs/ripgrep-file-crates-ignore.txt   |  19 +++
+ .../finals/inputs/ripgrep-file-crates-printer.txt  |  17 ++
+ scripts/eval_fill_finals.py                        | 182 +++++++++++++++++++++
+ 13 files changed, 636 insertions(+)
+
+--- patch (first 400 lines) ---
+diff --git a/evals/fill/finals/README.md b/evals/fill/finals/README.md
+new file mode 100644
+index 0000000..ee4370a
+--- /dev/null
++++ b/evals/fill/finals/README.md
+@@ -0,0 +1,34 @@
++# The held-out content-phrase set for `fill`
++
++Thirty-three `fill` cases over the `file` and `dir` kinds whose phrase says what a file or
++directory does, not what it is called. They measure the finals shortcut: a decisive names round
++skips the finals of a tier-two kind when the runner-up name is out of play. No case comes from
++this repository or from a family of `evals/validation/`, and nobody read a case while the rule
++was written: the phrases were written against the three repositories below and labelled
++afterwards.
++
++| File | What it holds |
++|:---|:---|
++| `cases.jsonl` | the manifest a run reads: `id`, `kind`, the repository with its `source`, `pin` and `license`, the literal `prefix` that narrows the listing, the `phrase`, the `argv` after `jevify`, the frozen candidate `listing` with its `sha256` and its `candidates` count. It carries no answer  …[line truncated at 300 characters]
++| `inputs/*.txt` | the candidate listings, one per repository and scope: `git ls-files` under the prefix at the pin, and for `dir` the directories those files are in |
++| `gold/gold.jsonl` | the gold: `id`, `gold`, both annotators' labels, and the ground of adjudication where they differed |
++| `gold/disagreements.md` | every case the annotators labelled differently, and how it was resolved |
++
++Every listing fits one window on both backends (at most 94 candidates), so every case takes the
++single-window path where the shortcut applies. Each case runs `--dry-run` with `echo` as the
++command, inside a clone of the repository at the pin (`scripts/eval_fill_finals.py run`);
++nothing a case describes is executed.
++
++| Repository | Pin | Licence | Scopes |
++|:---|:---|:---|:---|
++| github.com/BurntSushi/ripgrep | `3fce3b5` | MIT OR Unlicense | `crates/core/`, `crates/ignore/`, `crates/printer/` (file); the whole tree (dir) |
++| github.com/junegunn/fzf | `b1be3a8` | MIT | `src/` (file); the whole tree (dir) |
++| github.com/sharkdp/bat | `4987f76` | MIT OR Apache-2.0 | `src/` (file and dir) |
++
++The answer space is a path from the listing, `none` when no candidate fits, or `ambiguous`
++when two fit equally. Two annotators labelled every case independently from the listing and the
++clone, working from `evals/validation/annotator-instructions.md`; annotator A is a Claude Sonnet
++subagent and annotator B a Claude Opus subagent, neither of them the author of the phrases, and
++no jevify run took part in the gold. `scripts/eval_fill_finals.py score` reports, per run and
++backend, how often the finals ran, coverage, accuracy on the decided cases, abstentions and how
++many of them were right, false actions, and the total number of requests.
+diff --git a/evals/fill/finals/cases.jsonl b/evals/fill/finals/cases.jsonl
+new file mode 100644
+index 0000000..207b5a3
+--- /dev/null
++++ b/evals/fill/finals/cases.jsonl
+@@ -0,0 +1,33 @@
++{"id": "finals-file-01", "kind": "file", "repo": "ripgrep", "source": "https://github.com/BurntSushi/ripgrep", "pin": "3fce3b5bb0236da2df6d99672afb8a719642eca7", "license": "MIT OR Unlicense", "prefix": "crates/core/", "phrase": "where the process exit code is decided and the top-level search loop  …[line truncated at 300 characters]
++{"id": "finals-file-02", "kind": "file", "repo": "ripgrep", "source": "https://github.com/BurntSushi/ripgrep", "pin": "3fce3b5bb0236da2df6d99672afb8a719642eca7", "license": "MIT OR Unlicense", "prefix": "crates/core/", "phrase": "the code that reads a configuration file of default flags", "argv": [ …[line truncated at 300 characters]
++{"id": "finals-file-03", "kind": "file", "repo": "ripgrep", "source": "https://github.com/BurntSushi/ripgrep", "pin": "3fce3b5bb0236da2df6d99672afb8a719642eca7", "license": "MIT OR Unlicense", "prefix": "crates/core/", "phrase": "prints the version, including the CPU features and PCRE2 support comp …[line truncated at 300 characters]
++{"id": "finals-file-04", "kind": "file", "repo": "ripgrep", "source": "https://github.com/BurntSushi/ripgrep", "pin": "3fce3b5bb0236da2df6d99672afb8a719642eca7", "license": "MIT OR Unlicense", "prefix": "crates/core/", "phrase": "the definition of every command-line flag with its help text", "argv" …[line truncated at 300 characters]
++{"id": "finals-file-05", "kind": "file", "repo": "ripgrep", "source": "https://github.com/BurntSushi/ripgrep", "pin": "3fce3b5bb0236da2df6d99672afb8a719642eca7", "license": "MIT OR Unlicense", "prefix": "crates/core/", "phrase": "logs messages at a chosen verbosity level to stderr", "argv": ["fill" …[line truncated at 300 characters]
++{"id": "finals-file-06", "kind": "file", "repo": "ripgrep", "source": "https://github.com/BurntSushi/ripgrep", "pin": "3fce3b5bb0236da2df6d99672afb8a719642eca7", "license": "MIT OR Unlicense", "prefix": "crates/core/", "phrase": "what a search reads from: a file, stdin or a memory map", "argv": ["f …[line truncated at 300 characters]
++{"id": "finals-file-07", "kind": "file", "repo": "ripgrep", "source": "https://github.com/BurntSushi/ripgrep", "pin": "3fce3b5bb0236da2df6d99672afb8a719642eca7", "license": "MIT OR Unlicense", "prefix": "crates/ignore/", "phrase": "parses a gitignore file into glob rules", "argv": ["fill", "--dry-r …[line truncated at 300 characters]
++{"id": "finals-file-08", "kind": "file", "repo": "ripgrep", "source": "https://github.com/BurntSushi/ripgrep", "pin": "3fce3b5bb0236da2df6d99672afb8a719642eca7", "license": "MIT OR Unlicense", "prefix": "crates/ignore/", "phrase": "the parallel directory walker", "argv": ["fill", "--dry-run", "--js …[line truncated at 300 characters]
++{"id": "finals-file-09", "kind": "file", "repo": "ripgrep", "source": "https://github.com/BurntSushi/ripgrep", "pin": "3fce3b5bb0236da2df6d99672afb8a719642eca7", "license": "MIT OR Unlicense", "prefix": "crates/ignore/", "phrase": "the built-in table of file type names and their globs", "argv": ["f …[line truncated at 300 characters]
++{"id": "finals-file-10", "kind": "file", "repo": "ripgrep", "source": "https://github.com/BurntSushi/ripgrep", "pin": "3fce3b5bb0236da2df6d99672afb8a719642eca7", "license": "MIT OR Unlicense", "prefix": "crates/printer/", "phrase": "emits one JSON object per line for matches, begin and end events", …[line truncated at 300 characters]
++{"id": "finals-file-11", "kind": "file", "repo": "ripgrep", "source": "https://github.com/BurntSushi/ripgrep", "pin": "3fce3b5bb0236da2df6d99672afb8a719642eca7", "license": "MIT OR Unlicense", "prefix": "crates/printer/", "phrase": "the terminal hyperlink formats for editors and file managers", "ar …[line truncated at 300 characters]
++{"id": "finals-file-12", "kind": "file", "repo": "ripgrep", "source": "https://github.com/BurntSushi/ripgrep", "pin": "3fce3b5bb0236da2df6d99672afb8a719642eca7", "license": "MIT OR Unlicense", "prefix": "crates/printer/", "phrase": "counts the bytes written through a writer", "argv": ["fill", "--dr …[line truncated at 300 characters]
++{"id": "finals-dir-01", "kind": "dir", "repo": "ripgrep", "source": "https://github.com/BurntSushi/ripgrep", "pin": "3fce3b5bb0236da2df6d99672afb8a719642eca7", "license": "MIT OR Unlicense", "prefix": "", "phrase": "where the fuzzing targets live", "argv": ["fill", "--dry-run", "--json", "--", "ech …[line truncated at 300 characters]
++{"id": "finals-dir-02", "kind": "dir", "repo": "ripgrep", "source": "https://github.com/BurntSushi/ripgrep", "pin": "3fce3b5bb0236da2df6d99672afb8a719642eca7", "license": "MIT OR Unlicense", "prefix": "", "phrase": "the homebrew packaging", "argv": ["fill", "--dry-run", "--json", "--", "echo", "@{d …[line truncated at 300 characters]
++{"id": "finals-dir-03", "kind": "dir", "repo": "ripgrep", "source": "https://github.com/BurntSushi/ripgrep", "pin": "3fce3b5bb0236da2df6d99672afb8a719642eca7", "license": "MIT OR Unlicense", "prefix": "", "phrase": "the crate that turns gitignore rules into a directory walk", "argv": ["fill", "--dr …[line truncated at 300 characters]
++{"id": "finals-dir-04", "kind": "dir", "repo": "ripgrep", "source": "https://github.com/BurntSushi/ripgrep", "pin": "3fce3b5bb0236da2df6d99672afb8a719642eca7", "license": "MIT OR Unlicense", "prefix": "", "phrase": "the docker image definition", "argv": ["fill", "--dry-run", "--json", "--", "echo", …[line truncated at 300 characters]
++{"id": "finals-file-13", "kind": "file", "repo": "fzf", "source": "https://github.com/junegunn/fzf", "pin": "b1be3a8be1b833ce5b92fbbac11637643d60a046", "license": "MIT", "prefix": "src/", "phrase": "the fuzzy matching algorithm", "argv": ["fill", "--dry-run", "--json", "--", "echo", "src/@{file:the …[line truncated at 300 characters]
++{"id": "finals-file-14", "kind": "file", "repo": "fzf", "source": "https://github.com/junegunn/fzf", "pin": "b1be3a8be1b833ce5b92fbbac11637643d60a046", "license": "MIT", "prefix": "src/", "phrase": "reads candidate lines from stdin or from a command", "argv": ["fill", "--dry-run", "--json", "--", " …[line truncated at 300 characters]
++{"id": "finals-file-15", "kind": "file", "repo": "fzf", "source": "https://github.com/junegunn/fzf", "pin": "b1be3a8be1b833ce5b92fbbac11637643d60a046", "license": "MIT", "prefix": "src/", "phrase": "records the query history across sessions", "argv": ["fill", "--dry-run", "--json", "--", "echo", "s …[line truncated at 300 characters]
++{"id": "finals-file-16", "kind": "file", "repo": "fzf", "source": "https://github.com/junegunn/fzf", "pin": "b1be3a8be1b833ce5b92fbbac11637643d60a046", "license": "MIT", "prefix": "src/", "phrase": "turns ANSI escape sequences into colored items", "argv": ["fill", "--dry-run", "--json", "--", "echo …[line truncated at 300 characters]
++{"id": "finals-file-17", "kind": "file", "repo": "fzf", "source": "https://github.com/junegunn/fzf", "pin": "b1be3a8be1b833ce5b92fbbac11637643d60a046", "license": "MIT", "prefix": "src/", "phrase": "merges the results of several chunk matchers into one ordered list", "argv": ["fill", "--dry-run", " …[line truncated at 300 characters]
++{"id": "finals-file-18", "kind": "file", "repo": "fzf", "source": "https://github.com/junegunn/fzf", "pin": "b1be3a8be1b833ce5b92fbbac11637643d60a046", "license": "MIT", "prefix": "src/", "phrase": "the listener that accepts actions from outside the process", "argv": ["fill", "--dry-run", "--json", …[line truncated at 300 characters]
++{"id": "finals-dir-05", "kind": "dir", "repo": "fzf", "source": "https://github.com/junegunn/fzf", "pin": "b1be3a8be1b833ce5b92fbbac11637643d60a046", "license": "MIT", "prefix": "", "phrase": "shell integration scripts for bash, zsh and fish", "argv": ["fill", "--dry-run", "--json", "--", "echo", " …[line truncated at 300 characters]
++{"id": "finals-dir-06", "kind": "dir", "repo": "fzf", "source": "https://github.com/junegunn/fzf", "pin": "b1be3a8be1b833ce5b92fbbac11637643d60a046", "license": "MIT", "prefix": "", "phrase": "the vim plugin", "argv": ["fill", "--dry-run", "--json", "--", "echo", "@{dir:the vim plugin}"], "listing" …[line truncated at 300 characters]
++{"id": "finals-dir-07", "kind": "dir", "repo": "fzf", "source": "https://github.com/junegunn/fzf", "pin": "b1be3a8be1b833ce5b92fbbac11637643d60a046", "license": "MIT", "prefix": "", "phrase": "the terminal user interface renderers", "argv": ["fill", "--dry-run", "--json", "--", "echo", "@{dir:the t …[line truncated at 300 characters]
++{"id": "finals-dir-08", "kind": "dir", "repo": "fzf", "source": "https://github.com/junegunn/fzf", "pin": "b1be3a8be1b833ce5b92fbbac11637643d60a046", "license": "MIT", "prefix": "", "phrase": "the windows installer", "argv": ["fill", "--dry-run", "--json", "--", "echo", "@{dir:the windows installer …[line truncated at 300 characters]
++{"id": "finals-file-19", "kind": "file", "repo": "bat", "source": "https://github.com/sharkdp/bat", "pin": "4987f76709aae3a1c4db723c53874c9ddcb0c4fd", "license": "MIT OR Apache-2.0", "prefix": "src/", "phrase": "reads the added, removed and modified lines from git for the gutter", "argv": ["fill",  …[line truncated at 300 characters]
++{"id": "finals-file-20", "kind": "file", "repo": "bat", "source": "https://github.com/sharkdp/bat", "pin": "4987f76709aae3a1c4db723c53874c9ddcb0c4fd", "license": "MIT OR Apache-2.0", "prefix": "src/", "phrase": "starts the pager and negotiates its arguments", "argv": ["fill", "--dry-run", "--json", …[line truncated at 300 characters]
++{"id": "finals-file-21", "kind": "file", "repo": "bat", "source": "https://github.com/sharkdp/bat", "pin": "4987f76709aae3a1c4db723c53874c9ddcb0c4fd", "license": "MIT OR Apache-2.0", "prefix": "src/", "phrase": "parses a range of lines given on the command line", "argv": ["fill", "--dry-run", "--js …[line truncated at 300 characters]
++{"id": "finals-file-22", "kind": "file", "repo": "bat", "source": "https://github.com/sharkdp/bat", "pin": "4987f76709aae3a1c4db723c53874c9ddcb0c4fd", "license": "MIT OR Apache-2.0", "prefix": "src/", "phrase": "the mapping that assigns a syntax to the files git reads: ignore, attributes, config",  …[line truncated at 300 characters]
++{"id": "finals-file-23", "kind": "file", "repo": "bat", "source": "https://github.com/sharkdp/bat", "pin": "4987f76709aae3a1c4db723c53874c9ddcb0c4fd", "license": "MIT OR Apache-2.0", "prefix": "src/", "phrase": "the code that locates the user's configuration file and cache directory", "argv": ["fil …[line truncated at 300 characters]
++{"id": "finals-file-24", "kind": "file", "repo": "bat", "source": "https://github.com/sharkdp/bat", "pin": "4987f76709aae3a1c4db723c53874c9ddcb0c4fd", "license": "MIT OR Apache-2.0", "prefix": "src/", "phrase": "wraps long lines at the terminal width", "argv": ["fill", "--dry-run", "--json", "--",  …[line truncated at 300 characters]
++{"id": "finals-dir-09", "kind": "dir", "repo": "bat", "source": "https://github.com/sharkdp/bat", "pin": "4987f76709aae3a1c4db723c53874c9ddcb0c4fd", "license": "MIT OR Apache-2.0", "prefix": "src/", "phrase": "where the built-in syntax mapping rules for linux-only files live", "argv": ["fill", "--d …[line truncated at 300 characters]
+diff --git a/evals/fill/finals/gold/disagreements.md b/evals/fill/finals/gold/disagreements.md
+new file mode 100644
+index 0000000..da6de93
+--- /dev/null
++++ b/evals/fill/finals/gold/disagreements.md
+@@ -0,0 +1,16 @@
++# Adjudicated disagreements
++
++The two annotators gave the same label on 32 of the 33 cases. Two labels were `none`
++(`finals-dir-04`: ripgrep has no Dockerfile; `finals-dir-08`: fzf's Windows installer is a root
++file, not a listed directory), agreed by both.
++
++| Case | Annotator A | Annotator B | Gold | Ground |
++|:---|:---|:---|:---|:---|
++| `finals-file-06` "what a search reads from: a file, stdin or a memory map" | `crates/core/haystack.rs` | `crates/core/search.rs` | `ambiguous` | The phrase names the thing a search reads from, which is what `haystack.rs` defines ("a haystack represents something we want to search", with `is_stdin …[line truncated at 300 characters]
++
++Annotator B marked four other labels medium confidence and gave the reason; annotator A gave the
++same label on each, so they stand: `finals-file-20` `src/output.rs` (spawns the pager and
++rewrites its arguments; `pager.rs` only picks which pager), `finals-file-23`
++`src/bin/bat/directories.rs` (the only file touching the cache directory), `finals-file-24`
++`src/printer.rs` (`wrapping.rs` is only the `WrappingMode` enum; the wrapping at the terminal
++width is in the printer).
+diff --git a/evals/fill/finals/gold/gold.jsonl b/evals/fill/finals/gold/gold.jsonl
+new file mode 100644
+index 0000000..423419a
+--- /dev/null
++++ b/evals/fill/finals/gold/gold.jsonl
+@@ -0,0 +1,33 @@
++{"id": "finals-file-01", "gold": "crates/core/main.rs", "annotator_a": "crates/core/main.rs", "annotator_b": "crates/core/main.rs", "adjudicated": false}
++{"id": "finals-file-02", "gold": "crates/core/flags/config.rs", "annotator_a": "crates/core/flags/config.rs", "annotator_b": "crates/core/flags/config.rs", "adjudicated": false}
++{"id": "finals-file-03", "gold": "crates/core/flags/doc/version.rs", "annotator_a": "crates/core/flags/doc/version.rs", "annotator_b": "crates/core/flags/doc/version.rs", "adjudicated": false}
++{"id": "finals-file-04", "gold": "crates/core/flags/defs.rs", "annotator_a": "crates/core/flags/defs.rs", "annotator_b": "crates/core/flags/defs.rs", "adjudicated": false}
++{"id": "finals-file-05", "gold": "crates/core/logger.rs", "annotator_a": "crates/core/logger.rs", "annotator_b": "crates/core/logger.rs", "adjudicated": false}
++{"id": "finals-file-06", "gold": "ambiguous", "annotator_a": "crates/core/haystack.rs", "annotator_b": "crates/core/search.rs", "adjudicated": true, "ground": "the phrase names the thing a search reads from (haystack.rs: \"something we want to search\") and enumerates how it is read (search.rs: sea …[line truncated at 300 characters]
++{"id": "finals-file-07", "gold": "crates/ignore/src/gitignore.rs", "annotator_a": "crates/ignore/src/gitignore.rs", "annotator_b": "crates/ignore/src/gitignore.rs", "adjudicated": false}
++{"id": "finals-file-08", "gold": "crates/ignore/src/walk.rs", "annotator_a": "crates/ignore/src/walk.rs", "annotator_b": "crates/ignore/src/walk.rs", "adjudicated": false}
++{"id": "finals-file-09", "gold": "crates/ignore/src/default_types.rs", "annotator_a": "crates/ignore/src/default_types.rs", "annotator_b": "crates/ignore/src/default_types.rs", "adjudicated": false}
++{"id": "finals-file-10", "gold": "crates/printer/src/json.rs", "annotator_a": "crates/printer/src/json.rs", "annotator_b": "crates/printer/src/json.rs", "adjudicated": false}
++{"id": "finals-file-11", "gold": "crates/printer/src/hyperlink/aliases.rs", "annotator_a": "crates/printer/src/hyperlink/aliases.rs", "annotator_b": "crates/printer/src/hyperlink/aliases.rs", "adjudicated": false}
++{"id": "finals-file-12", "gold": "crates/printer/src/counter.rs", "annotator_a": "crates/printer/src/counter.rs", "annotator_b": "crates/printer/src/counter.rs", "adjudicated": false}
++{"id": "finals-dir-01", "gold": "fuzz/fuzz_targets", "annotator_a": "fuzz/fuzz_targets", "annotator_b": "fuzz/fuzz_targets", "adjudicated": false}
++{"id": "finals-dir-02", "gold": "pkg/brew", "annotator_a": "pkg/brew", "annotator_b": "pkg/brew", "adjudicated": false}
++{"id": "finals-dir-03", "gold": "crates/ignore", "annotator_a": "crates/ignore", "annotator_b": "crates/ignore", "adjudicated": false}
++{"id": "finals-dir-04", "gold": "none", "annotator_a": "none", "annotator_b": "none", "adjudicated": false}
++{"id": "finals-file-13", "gold": "src/algo/algo.go", "annotator_a": "src/algo/algo.go", "annotator_b": "src/algo/algo.go", "adjudicated": false}
++{"id": "finals-file-14", "gold": "src/reader.go", "annotator_a": "src/reader.go", "annotator_b": "src/reader.go", "adjudicated": false}
++{"id": "finals-file-15", "gold": "src/history.go", "annotator_a": "src/history.go", "annotator_b": "src/history.go", "adjudicated": false}
++{"id": "finals-file-16", "gold": "src/ansi.go", "annotator_a": "src/ansi.go", "annotator_b": "src/ansi.go", "adjudicated": false}
++{"id": "finals-file-17", "gold": "src/merger.go", "annotator_a": "src/merger.go", "annotator_b": "src/merger.go", "adjudicated": false}
++{"id": "finals-file-18", "gold": "src/server.go", "annotator_a": "src/server.go", "annotator_b": "src/server.go", "adjudicated": false}
++{"id": "finals-dir-05", "gold": "shell", "annotator_a": "shell", "annotator_b": "shell", "adjudicated": false}
++{"id": "finals-dir-06", "gold": "plugin", "annotator_a": "plugin", "annotator_b": "plugin", "adjudicated": false}
++{"id": "finals-dir-07", "gold": "src/tui", "annotator_a": "src/tui", "annotator_b": "src/tui", "adjudicated": false}
++{"id": "finals-dir-08", "gold": "none", "annotator_a": "none", "annotator_b": "none", "adjudicated": false}
++{"id": "finals-file-19", "gold": "src/diff.rs", "annotator_a": "src/diff.rs", "annotator_b": "src/diff.rs", "adjudicated": false}
++{"id": "finals-file-20", "gold": "src/output.rs", "annotator_a": "src/output.rs", "annotator_b": "src/output.rs", "adjudicated": false}
++{"id": "finals-file-21", "gold": "src/line_range.rs", "annotator_a": "src/line_range.rs", "annotator_b": "src/line_range.rs", "adjudicated": false}
++{"id": "finals-file-22", "gold": "src/syntax_mapping/builtins/common/50-git.toml", "annotator_a": "src/syntax_mapping/builtins/common/50-git.toml", "annotator_b": "src/syntax_mapping/builtins/common/50-git.toml", "adjudicated": false}
++{"id": "finals-file-23", "gold": "src/bin/bat/directories.rs", "annotator_a": "src/bin/bat/directories.rs", "annotator_b": "src/bin/bat/directories.rs", "adjudicated": false}
++{"id": "finals-file-24", "gold": "src/printer.rs", "annotator_a": "src/printer.rs", "annotator_b": "src/printer.rs", "adjudicated": false}
++{"id": "finals-dir-09", "gold": "src/syntax_mapping/builtins/linux", "annotator_a": "src/syntax_mapping/builtins/linux", "annotator_b": "src/syntax_mapping/builtins/linux", "adjudicated": false}
+diff --git a/evals/fill/finals/inputs/bat-dir-src.txt b/evals/fill/finals/inputs/bat-dir-src.txt
+new file mode 100644
+index 0000000..97d9505
+--- /dev/null
++++ b/evals/fill/finals/inputs/bat-dir-src.txt
+@@ -0,0 +1,11 @@
++src/assets
++src/assets/build_assets
++src/bin/bat
++src/syntax_mapping
++src/syntax_mapping/builtins
++src/syntax_mapping/builtins/bsd-family
++src/syntax_mapping/builtins/common
++src/syntax_mapping/builtins/linux
++src/syntax_mapping/builtins/macos
++src/syntax_mapping/builtins/unix-family
++src/syntax_mapping/builtins/windows
+diff --git a/evals/fill/finals/inputs/bat-file-src.txt b/evals/fill/finals/inputs/bat-file-src.txt
+new file mode 100644
+index 0000000..c4df36b
+--- /dev/null
++++ b/evals/fill/finals/inputs/bat-file-src.txt
+@@ -0,0 +1,94 @@
++src/assets.rs
++src/assets/assets_metadata.rs
++src/assets/build_assets.rs
++src/assets/build_assets/acknowledgements.rs
++src/assets/lazy_theme_set.rs
++src/assets/serialized_syntax_set.rs
++src/bin/bat/app.rs
++src/bin/bat/assets.rs
++src/bin/bat/clap_app.rs
++src/bin/bat/completions.rs
++src/bin/bat/config.rs
++src/bin/bat/directories.rs
++src/bin/bat/input.rs
++src/bin/bat/main.rs
++src/config.rs
++src/controller.rs
++src/decorations.rs
++src/diff.rs
++src/error.rs
++src/input.rs
++src/less.rs
++src/lessopen.rs
++src/lib.rs
++src/line_range.rs
++src/macros.rs
++src/nonprintable_notation.rs
++src/output.rs
++src/pager.rs
++src/paging.rs
++src/preprocessor.rs
++src/pretty_printer.rs
++src/printer.rs
++src/style.rs
++src/syntax_mapping.rs
++src/syntax_mapping/builtin.rs
++src/syntax_mapping/builtins/README.md
++src/syntax_mapping/builtins/bsd-family/.gitkeep
++src/syntax_mapping/builtins/bsd-family/50-os-release.toml
++src/syntax_mapping/builtins/common/.gitkeep
++src/syntax_mapping/builtins/common/50-apache.toml
++src/syntax_mapping/builtins/common/50-aws-credentials.toml
++src/syntax_mapping/builtins/common/50-bat.toml
++src/syntax_mapping/builtins/common/50-bazel.toml
++src/syntax_mapping/builtins/common/50-citation.toml
++src/syntax_mapping/builtins/common/50-container.toml
++src/syntax_mapping/builtins/common/50-cpp.toml
++src/syntax_mapping/builtins/common/50-diff.toml
++src/syntax_mapping/builtins/common/50-dotnet-xml.toml
++src/syntax_mapping/builtins/common/50-f-sharp.toml
++src/syntax_mapping/builtins/common/50-gcloud-cli-config.toml
++src/syntax_mapping/builtins/common/50-git.toml
++src/syntax_mapping/builtins/common/50-json.toml
++src/syntax_mapping/builtins/common/50-just.toml
++src/syntax_mapping/builtins/common/50-markdown.toml
++src/syntax_mapping/builtins/common/50-mill.toml
++src/syntax_mapping/builtins/common/50-nginx.toml
++src/syntax_mapping/builtins/common/50-nix.toml
++src/syntax_mapping/builtins/common/50-nmap.toml
++src/syntax_mapping/builtins/common/50-proxy-auto-config.toml
++src/syntax_mapping/builtins/common/50-ron.toml
++src/syntax_mapping/builtins/common/50-sarif.toml
++src/syntax_mapping/builtins/common/50-ssh.toml
++src/syntax_mapping/builtins/common/90-ignore-files.toml
++src/syntax_mapping/builtins/common/99-unset-ambiguous-extensions.toml
++src/syntax_mapping/builtins/common/99-unset-ambiguous-filenames.toml
++src/syntax_mapping/builtins/common/xonsh.toml
++src/syntax_mapping/builtins/linux/.gitkeep
++src/syntax_mapping/builtins/linux/50-containers.toml
++src/syntax_mapping/builtins/linux/50-dnf.toml
++src/syntax_mapping/builtins/linux/50-flatpak.toml
++src/syntax_mapping/builtins/linux/50-kubernetes.toml
++src/syntax_mapping/builtins/linux/50-os-release.toml
++src/syntax_mapping/builtins/linux/50-pacman.toml
++src/syntax_mapping/builtins/linux/50-paru.toml
++src/syntax_mapping/builtins/linux/50-podman-quadlet.toml
++src/syntax_mapping/builtins/linux/50-systemd.toml
++src/syntax_mapping/builtins/macos/.gitkeep
++src/syntax_mapping/builtins/unix-family/.gitkeep
++src/syntax_mapping/builtins/unix-family/50-apache.toml
++src/syntax_mapping/builtins/unix-family/50-certbot.toml
++src/syntax_mapping/builtins/unix-family/50-fish-shell.toml
++src/syntax_mapping/builtins/unix-family/50-ghostty.toml
++src/syntax_mapping/builtins/unix-family/50-korn-shell.toml
++src/syntax_mapping/builtins/unix-family/50-mail-spool.toml
++src/syntax_mapping/builtins/unix-family/50-nginx.toml
++src/syntax_mapping/builtins/unix-family/50-shell.toml
++src/syntax_mapping/builtins/unix-family/50-syslog.toml
++src/syntax_mapping/builtins/unix-family/50-wireguard.toml
++src/syntax_mapping/builtins/windows/.gitkeep
++src/syntax_mapping/ignored_suffixes.rs
++src/terminal.rs
++src/theme.rs
++src/vscreen.rs
++src/wrapping.rs
+diff --git a/evals/fill/finals/inputs/fzf-dir-root.txt b/evals/fill/finals/inputs/fzf-dir-root.txt
+new file mode 100644
+index 0000000..f8aa440
+--- /dev/null
++++ b/evals/fill/finals/inputs/fzf-dir-root.txt
+@@ -0,0 +1,16 @@
++.github
++.github/ISSUE_TEMPLATE
++.github/workflows
++bin
++doc
++man/man1
++plugin
++shell
++src
++src/algo
++src/protector
++src/tui
++src/util
++test
++test/lib
++test/vim
+diff --git a/evals/fill/finals/inputs/fzf-file-src.txt b/evals/fill/finals/inputs/fzf-file-src.txt
+new file mode 100644
+index 0000000..e383db3
+--- /dev/null
++++ b/evals/fill/finals/inputs/fzf-file-src.txt
+@@ -0,0 +1,92 @@
++src/LICENSE
++src/actiontype_string.go
++src/algo/SIMD.md
++src/algo/algo.go
++src/algo/algo_test.go
++src/algo/fastpath_equiv_test.go
++src/algo/indexbyte2_amd64.go
++src/algo/indexbyte2_amd64.s
++src/algo/indexbyte2_arm64.go
++src/algo/indexbyte2_arm64.s
++src/algo/indexbyte2_other.go
++src/algo/indexbyte2_test.go
++src/algo/normalize.go
++src/algo/runeindex_others.go
++src/algo/runeindex_ref.go
++src/algo/runeindex_x86.go
++src/algo/runeprefilter_test.go
++src/ansi.go
++src/ansi_test.go
++src/cache.go
++src/cache_test.go
++src/chunklist.go
++src/chunklist_test.go
++src/constants.go
++src/core.go
++src/functions.go
++src/history.go
++src/history_test.go
++src/item.go
++src/item_test.go
++src/matcher.go
++src/merger.go
++src/merger_test.go
++src/options.go
++src/options_no_pprof.go
++src/options_pprof.go
++src/options_pprof_test.go
++src/options_test.go
++src/pattern.go
++src/pattern_test.go
++src/protector/protector.go
++src/protector/protector_openbsd.go
++src/proxy.go
++src/proxy_test.go
++src/proxy_unix.go
++src/proxy_windows.go
++src/reader.go
++src/reader_test.go
++src/result.go
++src/result_others.go
++src/result_test.go
++src/result_x86.go
++src/server.go
++src/terminal.go
++src/terminal_test.go
++src/terminal_unix.go
++src/terminal_windows.go
++src/tmux.go
++src/tmux_test.go
++src/tokenizer.go
++src/tokenizer_test.go
++src/tui/dummy.go
++src/tui/eventtype_string.go
++src/tui/light.go
++src/tui/light_escape_test.go
++src/tui/light_query_test.go
++src/tui/light_test.go
++src/tui/light_unix.go
++src/tui/light_windows.go
++src/tui/tcell.go
++src/tui/tcell_test.go
++src/tui/ttyname_unix.go
++src/tui/ttyname_windows.go
++src/tui/tui.go
++src/tui/tui_test.go
++src/util/atexit.go
++src/util/atexit_test.go
++src/util/atomicbool.go
++src/util/atomicbool_test.go
++src/util/chars.go
++src/util/chars_test.go
++src/util/concurrent_set.go
++src/util/eventbox.go
++src/util/eventbox_test.go
++src/util/slab.go
++src/util/util.go
++src/util/util_test.go
++src/util/util_unix.go
++src/util/util_windows.go
++src/winpty.go
++src/winpty_windows.go
++src/zellij.go
+diff --git a/evals/fill/finals/inputs/ripgrep-dir-root.txt b/evals/fill/finals/inputs/ripgrep-dir-root.txt
+new file mode 100644
+index 0000000..c3d8041
+--- /dev/null
++++ b/evals/fill/finals/inputs/ripgrep-dir-root.txt
+@@ -0,0 +1,59 @@
++.cargo
++.github
++.github/ISSUE_TEMPLATE
++.github/workflows
++benchsuite
++benchsuite/runs/2016-09-17-ubuntu1604-ec2
++benchsuite/runs/2016-09-20-ubuntu1604-ec2
++benchsuite/runs/2016-09-22-archlinux-cheetah
++benchsuite/runs/2016-12-24-archlinux-cheetah
++benchsuite/runs/2016-12-24-archlinux-cheetah-glibc-jemalloc
++benchsuite/runs/2016-12-24-archlinux-cheetah-glibc-system
++benchsuite/runs/2016-12-24-archlinux-cheetah-musl-jemalloc
++benchsuite/runs/2016-12-24-archlinux-cheetah-musl-system
++benchsuite/runs/2016-12-30-archlinux-cheetah
++benchsuite/runs/2018-01-08-archlinux-cheetah
++benchsuite/runs/2020-10-14-archlinux-frink
++benchsuite/runs/2022-12-16-archlinux-duff

@@ -376,3 +376,40 @@ above), the false actions on this set are 2 to 1 on classifier.dev and 3 to 3 on
 at 12 to 15 more requests; the one-run figures of the section above (1 and 2) were the
 better end of what two runs show. Not measured: `branch` and `commit`, where the shortcut
 stands.
+
+## The `commit` kind over this repository's 248 commits (measured 2026-09-22)
+
+jevify 0.9.3 built from `cd49bcf` with `cargo build --locked` (debug), answering model
+`jev-1.13.0` on both backends, `JEVIFY_NO_CACHE=1`, `JEVIFY_DECISION=round_one`, every case
+`--dry-run`. The set, the descriptions, the runs and the method are `evals/commit-attractor/`;
+each description was written from its target's diff with `git show --format=`, which prints no
+commit message, and no description was changed after a run.
+
+| Set | Backend | cases | decided | right first | wrong | abstained | target in the finals | windows | requests/case |
+|:---|:---|---:|---:|---:|---:|---:|---:|---:|---:|
+| `commit` | classifier.dev | 27 | 13 | 11 | 2 | 14 | 21 | 3 | 4 |
+| `commit` | TypeSafe | 27 | 19 | 14 | 5 | 8 | 23 | 2 | 3 |
+| `branch` (control) | classifier.dev | 14 | 12 | 12 | 0 | 2 | — | 1 | 1 to 2 |
+| `branch` (control) | TypeSafe | 14 | 12 | 12 | 0 | 2 | — | 1 | 1 to 2 |
+
+No commit is an attractor. Every wrong answer is a different commit on both backends
+(classifier.dev `dadfe99`, `1128d46`; TypeSafe `cb0547f`, `f0e3c91`, `62680bc`, `1128d46`,
+`7855eb0`), and `332191a` is returned for exactly one description on each backend, the one
+written from its own diff, at 0.74 and 0.91, held over three repeats (0.66, 0.62, 0.81 and
+0.85, 0.85, 0.63).
+
+Recall by the window the target falls in is 4 of 12, 7 of 10 and 0 of 5 on classifier.dev, and
+14 of 22 and 0 of 5 on TypeSafe: the oldest window is 0 on both. Of the classifier.dev cases
+whose target reached the finals, 11 are right, 9 abstain and 1 is wrong, so the keyless failure
+is an abstention with the right commit in the finals, not a wrong commit.
+
+Pool size against evidence, on the seven cases whose target is among the newest 60 commits, with
+the evidence held to one `sha<TAB>subject` line per commit (the `-` kind, no finals round):
+classifier.dev 2 of 7 at pool 60 and 2 of 7 at pool 248, TypeSafe 4 of 7 and 2 of 7. The same
+seven cases under the `commit` kind, whose finals add the body and the changed paths, are 4 of 7
+and 5 of 7. The finals round, not the pool size, is what makes the kind work.
+
+A description fitting no commit: `ports the user interface to Android` abstains on both backends.
+`rewrote everything in Go`, which `docs/demo/examples.sh` runs as its nothing-fits
+demonstration, abstains on classifier.dev and returns `041e6d1` on TypeSafe in four runs of four,
+at 0.72, 0.52, 0.71 and 0.73 against none 0.20 to 0.26.

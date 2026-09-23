@@ -1,0 +1,56 @@
+index-from-HEAD: 95
+short: f757afb
+--- stat ---
+ CHANGELOG.md | 11 +++++++++++
+ Cargo.lock   |  2 +-
+ Cargo.toml   |  2 +-
+ 3 files changed, 13 insertions(+), 2 deletions(-)
+
+--- patch (first 400 lines) ---
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 9ade6ff..10a66b5 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -23,6 +23,17 @@ Added:
+   the recipe fields and rules, the withheld path patterns and `JEVIFY_CONFIG_DIR`. The guide
+   gains `docs/guide/kinds.md`.
+ 
++Changed:
++
++- File excerpts drop imports, blank lines and license headers, and keep doc comments. For a
++  kind with tier-two evidence, a no-match over names alone gets a second round with excerpts.
++
++Known limits:
++
++- `file` resolves phrases that match a path, and abstains on phrases that describe only a
++  file's content (measured 2026-09-22 on jev-1.13.0: "stages hunks" does not reach
++  `src/cmd/add.rs`).
++
+ ## 0.6.0
+ 
+ Added:
+diff --git a/Cargo.lock b/Cargo.lock
+index 2234bb0..722de01 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -850,7 +850,7 @@ checksum = "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682"
+ 
+ [[package]]
+ name = "jevify"
+-version = "0.6.0"
++version = "0.7.0"
+ dependencies = [
+  "anyhow",
+  "assert_cmd",
+diff --git a/Cargo.toml b/Cargo.toml
+index 8c9edf1..3e8a751 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -1,6 +1,6 @@
+ [package]
+ name = "jevify"
+-version = "0.6.0"
++version = "0.7.0"
+ edition = "2024"
+ rust-version = "1.87"
+ license = "MIT"

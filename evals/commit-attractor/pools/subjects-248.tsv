@@ -1,0 +1,248 @@
+cd49bcf72db3a170ba3e3e01af224970bebb445b	docs: every measured figure comes from the file that produced it (hunch-34c)
+0f3702cd20b381d8ef9e6e90d3e81cb9afc45d6e	test: a source-held-out set for the 0.9.x behaviours (hunch-hwt)
+8ecc95e0525c5fb0e0ba9330b2b7d29da72ec351	docs: the guides state the fill finals rule the code applies (hunch-cpv)
+0756af0fc390fef398e4197d9bb3ee1652962422	fix: file and dir markers always read their finalists (hunch-wka)
+168bd87fe31eb3c860e4e2db5f6d02c40131f1a4	test: held-out evidence for the fill finals shortcut (hunch-ng2)
+d8262e780792ae0c0f703301eb09ee9c439bba18	docs: the guides stop contradicting the code (hunch-v4r)
+e5048ff20c76a7178ff87aa404305006028174e0	chore: beads after the round 9 P2 wave two
+e4aa382ab9653bdd0256f2be96ec9acb24e1eb2e	fix: the deadline counts from the verb's start (hunch-yhr)
+663b6ab659f98ecff6152d55569178d9f4be9c95	feat: round one is opt-in and reports the finals as sent (hunch-68n)
+9876afc634488973c0297e5bc1a7619d3bd73ff8	docs: say what was measured and what was derived (hunch-d35)
+07d773e342cd5c292ca2ff4b51bbd4179df3f0e0	chore: beads after the round 9 P2 wave
+612fe0c7aca7758f400934eabc6d2c32747edd50	fix: a prefixed branch marker matches remote refs only (hunch-gp6)
+f7985c648ed24b7a5d805847981d073338367172	fix: the why finals never exceed the backend window (hunch-4v2)
+840924a49afc438f2435858fbabdde389d38b308	fix: a dropped record's no can be read from the gate (hunch-ytv)
+e59f447da9d2aed3e840dbb93b67ab0c65b09630	chore: close release 0.9.3 (hunch-w5q)
+38fa0ac6150b45c2055213ce52a81950b60bfd5d	chore: beads after review round 9 (hunch-w5q)
+9258d1b422b8b4136724e72e4087c82b4fbfe318	chore: release 0.9.3 (hunch-w5q)
+317cbf74ad0e688e014922e5a675adfeec9d76c4	fix: route abstains when two commands are too close (hunch-1zs)
+ed37bd67fbc7b5857b54155d6fd2edecf234f8bb	chore: close release 0.9.2 (hunch-qce)
+89cf5894ea69a8c42734e5683c7b2fc16caf6043	chore: beads before release 0.9.2 (hunch-qce)
+a674c4fbfc0104f8718996ab597cc3802d07ad9f	chore: release 0.9.2 (hunch-qce)
+f6c6f4ece87bd71c16b7c44bba710a97db97a25a	docs: the branch marker's two forms (hunch-zhh)
+3f61bf7dc6c46cb175411055aef5e525be6e26c4	fix: a literal prefix scopes the branch kind (hunch-x4w)
+f0e3c91412c69d28ad015e61dbc882c9c1d89668	fix: a file jevify cannot read is never judged by its name (hunch-3fj)
+cc6e91bc0bbcbaff3d02bad82a0335444e775bb2	chore: beads after the enforced pilot (hunch-iu8)
+6f5a27f2e432634d655f897c41aef779a3c68ae9	docs: the paired pilot repeated under enforced isolation (hunch-iu8)
+4279c06c07ef12950abfdb6809d8f205f0f8fb7f	chore: close release 0.9.1 (hunch-6ru)
+a7b145c169b55c911f990c128f6d716b838d45e4	chore: beads before release 0.9.1 (hunch-6ru)
+14a17388d2f3c31b3a36ff855d5ed398b0c05673	chore: release 0.9.1 (hunch-6ru)
+3977d705620180160dbe52bff26b4be77f8114f4	feat: route records its round one too (hunch-psu)
+dda818e89341bf14d0796fb1623eb48876f6320c	feat: the envelope carries round one of every tournament (hunch-8b3)
+40e21648325f7753199a0a4d297914281c2ed7aa	feat: route names the tools that tie with its answer (hunch-xfa)
+314686d7c00132a5db5c3a7912ecbb96261957d1	chore: close release 0.9.0 (hunch-c65)
+362521303122ad7506732900bb9868223958c0be	chore: beads before release 0.9.0 (hunch-c65)
+4b7bb9a295ffa067fda6f96020396c66256c42cb	chore: release 0.9.0 (hunch-c65)
+70a171eeb2429e4af5c2e7f2aa258bd0ec8b6e08	feat: filter keeps a record that says nothing either way (hunch-63r)
+332191a1639f5dc784e976fe4d404ee9a564e272	fix: pick prefers the thing to its documentation page (hunch-93l)
+fdfbdb6dac91db91df46b29d51df881e4eca2fe1	fix: why points at the panic message, not its header (hunch-n35)
+20123dfb5d6d44f02aaa537d6a328e284ae7ed34	docs: the paired agent pilot and what it measures (hunch-evl)
+7acfb10c409e59b1044199c6d048c8bc7e948815	chore: beads after the paired pilot (hunch-evl)
+a4984da3bb2b5924a969d71de3491e390d6072d3	chore: beads after hunch-o88
+8a6f56ba09741164c030f7f950a672c320dcf3c2	test: the frozen set measured on both backends (hunch-o88)
+38b8b5c606bb28fc8e9af17ba9e9b9901beca4e3	chore: beads after hunch-ric
+aa3752475b0ec5f4d03dd3146cc078686f37e1ad	test: an adjudicated validation set for every verb (hunch-ric)
+737cc684a73279574932ab4b48a407ff0a6e9470	chore: close release 0.8.3 (hunch-e67)
+66a0f4a2a4784367d252e859452f3c9f297f1cfa	chore: beads before release 0.8.3 (hunch-e67)
+b0bc94abf931e51ebc397c5b029a3adf0ebc0b66	chore: release 0.8.3 (hunch-e67)
+5bdc60deaa23781c6a8bffeca67161c54f081fa9	test: the live ci-run case reads a recorded listing (hunch-ynp)
+d8d0bc70d35289bbe857e80c43dabba3a45dfbb1	chore: beads after review round 8 wave (hunch-ep4)
+cb6866784f18ab701305387d1a6aa47f3a772655	test: the sort failure matrix, with crash and disk-full evidence (hunch-ep4)
+9f9c04d462cf2b8d0fb9e3ad65c5154db070f2fb	test: the live branch case lists its own refs (hunch-411)
+dda3831b6cf28fc0619432efbc594014cd1c4166	docs: the why corpus README matches the manifest (hunch-3gl)
+5162c8a35d903e56d095b51777a3326967fbeb72	chore: beads after hunch-qag
+7855eb05ecbd1475791da802e5f307bf8d603625	feat: every envelope carries its decision metadata (hunch-qag)
+75012d854da3b6ed733c4b473d29d7bf1d5d96f2	chore: beads after 0.8.2 and live coverage (hunch-3te)
+a58b23b5206a0eb2c1c27403cd9d707770e5f90c	test: live coverage of fill, label and filter (hunch-3te)
+564d5cfa889e7652e1daf87581ca5f91fd295cc9	chore: beads before release 0.8.2 (hunch-akh)
+5329d654ca80f3fd945802d9dc43390ce629548d	chore: release 0.8.2 (hunch-akh)
+c761bab893fa62a9c5d86805863c9c535fef0328	fix: a one-sided names round keeps its single request (hunch-8ar)
+0ca264dd9ce6574fbe9a8017c35ab5ba529e06d4	chore: beads after review round 8 fixes (hunch-9hx)
+9b2757d3e0a5409699911051090ccef2b922e9d4	docs: README written around the reader's problem (hunch-9hx)
+cb0547ff99b43d404cf7de365824cfa809fc65fa	fix: contract and documents match the code after 0.8.1 (hunch-hd8)
+d31eabc939f33feb9aa56cc8014a434f7e3ef231	fix: the why eval scores a manifest, not every log it finds (hunch-1cx)
+e326a393d0b19c12b422dc7264e125b8bc99a6cd	chore: beads after adversarial review round 8 (hunch-hd8)
+6425eec226f8ce7feefe3c7cbb62398867c34615	chore: beads note on README overlap (hunch-60l)
+bd471af7540af75a5c588155a62fc047670fd821	chore: close release 0.8.1 (hunch-dt7)
+0b7d557ee749ca2c64de29bcb36cd8b887a0d9cb	chore: beads before release 0.8.1 (hunch-dt7)
+5acb09e0c862f4d1dbc26051b62be67ea8d9c2b1	chore: release 0.8.1 (hunch-dt7)
+76e723ef99d2ba7143cfad630786d545600b79c1	fix: file finals read every name not ruled out (hunch-u7s)
+233e946992bdbed64275a3803e0815aba13ff6a1	fix: why points at the failing step, not a loud passing one (hunch-s2k)
+e43e7ad4cc2807827ed3ac1c1c8e973f9bfd1a3f	fix: a remote-only branch is named by its short name (hunch-emc)
+4fd24fb056c92f50b47bc3048571ec75e7f8cc6e	fix: fill --dry-run says would run, not exec (hunch-r2t)
+5db0671bdbe4d750f6bb1097664ecc4bfc8582ef	chore: close release 0.8.0 (hunch-ag7)
+b6451081d8fd79a072e3b38c8b8d69d277831942	chore: beads after hunch-dlh draft (hunch-dlh)
+4d7c3bd292d4d1fc3891f6113f1276fbd0baac67	docs: README leads with live use cases and animations (hunch-dlh)
+9423073f5e0cdbf8b5af8c87fb5d0f13eaebd836	chore: beads after hunch-p8k (hunch-ag7)
+5216db8ca26fbd1e574a389f51439df3a35a7a30	test: dir tier-two expectation follows the fixture (hunch-p8k)
+2996c1f76cd2190d501d98c50a6ba05281483c31	chore: beads before release 0.8.0 (hunch-ag7)
+dcb06230b507d6b6a0f6b69112cdcbd215983702	chore: release 0.8.0 (hunch-ag7)
+c5dda08f648bd437dcc780067fabd5f6329a1707	chore: deadline in capabilities, faster flow tests (hunch-1bs)
+7e70a39081b6a01efc5ca34e1c74cf227b93afac	feat: one deadline per verb, usage in meta (hunch-bec)
+79c3450344f181d300eeaec83d2345922edbc72f	docs: init agents pairs situations with commands (hunch-0pq)
+d4e9c131fd039d3a91e786ac22a02d1a0fb7bbce	chore: beads after evaluation fixes (hunch-lpp)
+b9e3143102ddee293499799b6c1ec6306f27b524	feat: dir finalists carry their children's names (hunch-6jv)
+7bcf70cd91fc3d9e306d60ea0436a02983be3d6f	fix: keyless batches of at most 60 records, 402 named (hunch-0it)
+a91fae2aacafa67ab43558181805950835521251	fix: fill's abstention line names the deciding rival (hunch-b25)
+68bafb30af8ca38d001d18cdc8b2a6ed06b24874	fix: a marker in argv[0] names pick --from tool (hunch-wxm)
+a3df8ef3768a17bb5b61578424854589d86c5568	test: lister runner pipe test bound by its holder (hunch-aej)
+f1d4aa603fa61c62898e033d6ff81173e4c34904	feat: why and pick state their counts on stderr (hunch-wx9)
+9cf8269b3b87c1e58b990f2ce7672ad98a85684c	test: doc examples run in their own repository (hunch-cpo)
+57948bad4d39784a1eb746bc0f100cdc78c8a8ed	chore: beads after evaluation and hunch-glz (hunch-lpp)
+fbd314e44b61bde69df08b9f4148e5e703ec7dc7	docs: keyless quota per verb, measured (hunch-glz)
+522762e364d4f01348702142bab7e841e36d0af0	chore: close release 0.7.0 and epic (hunch-7zg.21)
+07bcbb4eb10613bda1abfd951451bdaedb2b9b87	chore: beads after hunch-con (hunch-7zg)
+f757afb52cf6ecdb5e94751d60ef8c046d3a4b2a	chore: release 0.7.0 (hunch-7zg.21)
+f676b251ce685d6d8120403f0d9e0f7d36ef04c0	fix: file excerpts carry meaning, round two after no_match (hunch-con)
+9ddf5d8ccf639cac97cb4f79898d2f2840e155d1	chore: beads after Phase 3 and 4 (hunch-7zg)
+1c9f91bc3fdff4aede15d248c1144a51959c5962	docs: kinds in capabilities, documents and skill (hunch-7zg.18)
+107b83b5592113f955a7e7a6db5c837133591878	feat: fill and pick --from resolve every kind (hunch-7zg.17)
+d3db4891915f9c56995fce9b1cd1292db304e1ab	chore: beads after hunch-qxn, .16, .20 (hunch-7zg)
+f1d266ed571a64bcde0d060ddd5fea99090f7964	docs: label in capabilities, documents and skill (hunch-7zg.20)
+15b75a13803111e7efa7cfe67dde34a07dea2418	feat: coded kinds commit, file, dir, tool (hunch-7zg.16)
+3ec58c30779b66e587b0c36b0a44195a4932c8de	feat: label tags each stdin record with one label (hunch-qxn)
+01a7eaa4211fb529641a27c41de89edd5591fdcd	chore: beads after hunch-7zg.15 and .19, new hunch-dlh (hunch-7zg)
+11bf017605c5d4c63fe11bb29bb1aea957150703	feat: recipe engine, shipped recipes, user kinds.jsonl (hunch-7zg.15)
+34bc8d575c3625c339f0b3f24dec013f2019da7b	feat: label skeleton, parser and capabilities entry (hunch-7zg.19)
+02b18fb5427b54cd490970b6abd97be813a1cd09	docs: apply review round 7 to Phase 3 and 4 beads (hunch-7zg)
+9270370dcc391a7be59e0f9519ac2cb1fb68666f	docs: handoff after release 0.6.0 (hunch-7zg)
+0e278192c6bc6c0033247a56bfd4243092fbc7ab	chore: release 0.6.0 (hunch-7zg.14)
+94fa25e9627752e3686d7baa2a75bf0f5e4d7b8f	docs: the input side, fill and pick --from, in every document (hunch-7zg.13)
+14845c9dfa8a38fdc58415dc8522f9588f47fc7f	feat: pick --from KIND selects among a kind's candidates (hunch-7zg.12)
+58419762f15fef827b475fa3e008f3f612f32817	feat: fill resolves markers and becomes the command (hunch-bkb)
+c5c485cef701c8ab73a5b9616ec54bdcd9ee8366	feat: the - and branch kinds with a bounded lister runner (hunch-q8p)
+23230aa59a8444acf126097910dd10746a63fc18	feat: finalists by rank across windows, never by cross-request probability (hunch-zxz)
+f96854a8c42d4e2da99bc4d43abd39abbe4b350f	feat: marker lexer for @{kind:description} (hunch-7zg.11)
+82fd78f4cf54d408cd6cd8a8056965af6cd8e764	feat: fill skeleton, exec hand-over and pick --from parsing (hunch-7zg.10)
+c95970dd191a8a16ad0d86a3c3d8c056a18aceee	fix: an answer with no model name is never counted as Jev (hunch-7zg.23)
+312727cfa65a5ac95bfde54fe32fe6af4a265183	docs: Phase 2 beads checked against the 0.5.0 code (hunch-7zg)
+17aba70b9eea629977c4af0568a0592f9ac70261	chore: tracker state after release 0.5.0 (hunch-7zg.9)
+0a507a66cf7b7a61aa5d8f44619d02d5a5eb6a7a	chore: release 0.5.0 (hunch-7zg.9)
+6204056162384dcbd072900b473d21412a903f85	chore: scripts and demo sources use the route and stdin grammar (hunch-7zg.22)
+4527e331dd9261e1f071e2b61b2cceb489070fbd	docs: AGENTS.md keeps the live key location for agents (hunch-7zg.8)
+b534a98535a8b4db5f8e08d3c5c0415fa1d6c997	docs: README, guide and init agents for the output side (hunch-7zg.8)
+464ec6b83dbe5b80436c488adba1f2f85971c30d	docs: the skill teaches the output-side language (hunch-sb9)
+82588ff307c8fe689f8a868b735ab8fe538c3e65	feat: byte records in pick, saved input in why (hunch-7zg.7)
+69f2eb193491b4b226aec9fd41cba3312ab31350	feat: filter keeps the records where a statement holds (hunch-bx6)
+e95182ebc87aabb72eeb94d9c7162c4d97a72290	feat: is takes several statements and --context (hunch-7zg.6)
+1e2976c991ea8f623c2469689c7739eace0937c5	feat: content-addressed saved input (hunch-7zg.4)
+47b1d862a1fae3f4c26d7588438789ff6b587156	feat: route prints the tool and starts nothing (hunch-7zg.5)
+cd7a274b5cdcf013d2b64e206351d2d0f7a6cb73	feat: per-record batch requests and model provenance (hunch-7zg.3)
+5cfdf5034ba579c4ec27216e65112fe546900e26	feat: byte records with split modes and withheld excerpts (hunch-7zg.2)
+1408a9d07ced420c03cfa81cc2c695ca2d59ddf6	feat: grammar cutover and language skeleton (hunch-7zg.1)
+ad4446d02e33f0931dec47044a2c10f68a6619a7	fix: bind the base URL to the backend host, no redirects (hunch-ed1)
+6a932f1d6f2449caae81d6ea71806e784f5971cb	docs: plan and bead graph after review round 4 (hunch-7zg)
+f803a1cec4f2780126b34f7d1d7cf9d8d50783ee	docs: plan and bead graph after review round 3 (hunch-7zg)
+fdf3985e6e8fe1de8a0c891500bffbc749736064	docs: plan and bead graph after review round 2 (hunch-7zg)
+1f580a4a57551b0b9da5480d86a96e57aa6d4ddc	docs: plan and bead graph after review round 1 (hunch-7zg)
+955965f360621ab18ac006f0f045638984021368	docs: plan details ask_each, exec, flow and the recipe engine (hunch-3j6)
+053ecd9a7ff6967bf92bc81773b433b2337ebcf9	docs: simplify the plan; batch requests, exec in fill, model guard (hunch-3j6)
+14da11b55786abff29c86660e080954b5367c918	docs: language first, windows for fill, kinds as recipes (hunch-4gg)
+1128d467c93df7d0760969c0cb3e6bdb804270a2	docs: implementation plan for the two sides of a command (hunch-vq2)
+e06b764824d802d485fc7a36807f092928354472	docs: vision covers every listable argument, run by default, route (hunch-vq2)
+4896efac26a864fbcca184c7cc1748852824a890	docs: vision states the marker, the candidates and the run contract (hunch-vq2)
+3595987b670e87195b5af3e36088fce2c6e4dd50	docs: vision, fill on the input side and stdin verbs on the output side (hunch-vq2)
+b6a186fb1e10ba8071356dec759d26e60fa70841	chore: release 0.4.0
+ce73d433f14fe3c6a78ef59320d7715679648eb9	refactor: crate, binary and environment are named jevify (hunch-1ks)
+7b96e3b2857294db758b553d6c6fdac65c5d8832	docs: name the project jevify (hunch-3b5)
+dadfe995e2f25f05475325fa42b8463df41c37c3	feat: pick --files finds a file by meaning (hunch-744)
+d1af0db6f6206a4a4b291c7fc6f60a13ac9f6fa3	chore: record release verification (hunch-bvw)
+9deccd02792b3d0a471a04e37bb61ff5b87838c4	chore: normalize release tracker metadata (hunch-bvw)
+e683856db4ab646e0ffa0e5b8aa4e90ad477d471	test: harden synthetic gold grader (hunch-ric)
+f40dcd894d2bcee935d045d49d95e707fbe347d0	chore: automate verified releases (hunch-bvw)
+a3e3a55bbf8b05b4fe24c003887d12e34845c3cd	test: harden agent evaluation harness (hunch-evl)
+2170db82490081f81af442bc485f5262f9e71b86	feat: add complete attempt telemetry (hunch-hjp)
+0ade38807786b4af14f2433838ccdaf0a4fd831d	test: lock redaction evidence boundary (hunch-2v2)
+231958bd6a59f89cde524ad18132d223429f747a	fix: cap classifier sort labels (hunch-v3r)
+a02eb7a63589774e43d7649f88059c912bbbdbc9	docs: point launch drafts at grevi-launch folder
+1d266609465e39589af15521927d36cd01c69b23	fix: enforce decision and action boundaries (hunch-8ay)
+efa57fb8833f43cdf6be8953df1b4bfecd32551d	chore: dependabot ignores the hand-pinned toolchain and cargo-dist's actions
+59e3f2a360b3cee2c13ed396144b01c0d7129b41	docs: credits for TypeSafe AI, classifier.dev and Jeffrey Emanuel
+a4c5af8bf401097463e3dde25a7a804d6b2216f3	chore: release 0.3.2
+a625a45e69516c346645bfff1e49163e373e344e	docs: credit Jev from TypeSafe AI under the tagline (hunch-60l)
+8c6a9efb7ae2b0b6e68b7a5d9c436ffc3b94d647	docs: README opens with what grevi is, a command table and a links row (hunch-60l)
+1446265de08408ec15eb5aeea321d113ad6935fc	docs: define agent evaluation protocol and audit (hunch-oki)
+2b1038be172286809db3e6fd3973d04703e87999	docs: AGENTS.md bans meta and retrospective language in docs
+edda64b4704824bdf1c1405a49359f6e49dabdca	docs: README and guide state what grevi does, without metalanguage (hunch-60l)
+27d72faff719b85f6cbc5a37d09a70fa0eae487c	docs: animations show the grevi command for the whole loop (hunch-60l)
+063069d21e8024fbbb3f6734c7a77739c82ace88	chore: close plugin bead, file run evaluation and quota beads
+4421ba22c8d8cef5629eec3fe1b5299898cf25c9	docs: guide describes the current state, not its history (hunch-60l)
+47dc9ca395d60dc3b412c8638c1d3c6a463d1e8d	chore: release 0.3.1
+ee9eaed7194f6e6098435c71f7d4673c0918a7cf	feat: help and capabilities an agent can use without guessing (hunch-60l)
+4c39b8403a3f8561467103c4b305248138b71fd9	docs: run and sort animations, plain guide, plugin in its own directory (hunch-60l, hunch-yd5)
+f2fe1a3d27a81bbd9f50d4e2611dca0df4c69954	docs: agent section leads with the measured cases (hunch-60l)
+36fd6789dac5e71b1c734461c895f9e08a9bdc99	docs: plain verb descriptions, tested examples, agent spot checks (hunch-60l)
+0e5c2403876a9b25e6cc811ac4b145b704deddbf	fix: help text says which backend health checks
+f3719b13edf8875bd634fb4c21de93d530dce493	chore: file bead for classifier args gap (hunch-eil)
+cd71dcc211345959ecae32c27fa391d0af9b74ee	chore: release 0.3.0
+e0794007954e095102bfb81f7d8083e13c40e224	Revise README to streamline introduction
+2fd203d0823258cbba433f726b58a7d92aea5cfb	feat: keyless classifier.dev backend (hunch-classifier-fallback-41x)
+c089936d796d2783d6727ebb56f1af0d0f96a3fe	docs: restore bead IDs and launch path the rename overwrote
+f9852119a8d7517c367b9640e033ee390dd3e183	docs: 0.2.0 is released, all six verbs ship
+52dc0291aaea4d7d4fedf5e7e9d238b21ec05640	chore: release 0.2.0 on crates.io
+441703a6dcd133eb06563484d5cd0d486222605a	refactor: rename hunch to grevi (hunch-rename-grevi-lfb)
+4b6492f48e3a346f4572fe642e67f476c4b298d0	chore: add rename and classifier.dev beads
+d80dd8cc8cd38ee75328d8d51012880a6ed6d6a9	feat: agent skill and plugin marketplace (hunch-agent-skill-to6)
+501f19a1f52eaad5b1760a522e1f2288d156bb4b	chore: add agent skill bead
+4172ce9cc5b44b0cd661d00348d0e80a3ab3404f	docs: README polish and user guide (hunch-readme-docs-m6t)
+bf817b24f31dc4718f5ad40e93f8bb589836fbd1	chore: add README polish and user guide bead
+97c11bd19cf1a55f821c8d7e149d3b97b4a45f4d	fix: neutral empty-input message for add, sort and why
+4cc2b08e9d74049ef5af38dd5d83db7455c37f08	perf: prewarm the connection in run only (hunch-n2h)
+7ccb18fd60ecfdd04d2fc714d99791a1e33a63aa	fix: add-specific hint for clean-tree empty input (hunch-mr7)
+c1a835fda911222baadc74c704881dd935a430c0	chore: file add clean-tree hint follow-up
+e9bbe2336d3a237aa31a6caf559a882b5592c261	docs: changelog for wave-2 verbs (hunch-wave2-acceptance-non)
+cae7fd2046377a652358dc872943d95d13cad77a	feat: add hunch sort with dry-run and undo (hunch-task-15-sort-s0w)
+85bcc2971b09e49f8d382e751b1603555b8896ec	docs: add a one-line pitch above the intro
+82a06b629fc2dd97c3f876359d62a05003d2a115	chore: close launch tweet bead (hunch-launch-tweet-mtr)
+edc4a072ba95c50fb3164e8205d50208f2995d12	feat: add hunch add to stage hunks by topic (hunch-task-14-add-4ht)
+e5b7070e7c0d270678ffbbea00e4f67ad5dc1a61	Enhance README with hunch toolkit description
+526809b55e9e31d71a2607caafea0869cb6cd550	chore: v0 accepted and published (hunch-v0-acceptance-xp2)
+75359c8277528e6a739359a2d530d1c90004d582	docs: fix README install command (hunch-v0-acceptance-xp2)
+3fe7e7ca2da05c0da6fa9eb61791871ed1d89e7d	docs: allow parallel agents in the shared checkout
+564240eca75f6fa84a20239c75914847b933b346	chore: secret and PII audit before release (hunch-secret-pii-audit-8ha)
+b4925eed34cac8b15277b4423c81808ddc8a2725	fix: demo cast temp path (hunch-secret-pii-audit-8ha)
+5849e745ec419b6228c07a3d615681d659c25d54	docs: add demo recording (hunch-task-13c-demo-jk1)
+c8b391fd3ac57d570a4e54efe08252a83ccc0a5b	docs: spell out the no-prompt rule in AGENTS.md
+c5983390b1fc1cebb2d340ecf289afc965ccc6e9	chore: add release pipeline (hunch-task-16-release-ont)
+d94b6b0d874df2d26eb990cbe772e593ec8292d1	chore: run release bead alongside the demo
+1567f9b28aec1690bb1303de416b9933d79bcb5d	docs: add measured eval numbers (hunch-task-13d-live-evals-ptt)
+57905cfd661d8b73bbaf31029b90ee0803f35124	chore: run 13c and 13d in parallel
+c1c8d79870cf3aeb6a468ece76f39621fb50d0b2	docs: README, changelog, privacy review (hunch-task-13b-readme-4vz)
+3f85aaec7d79bead4e9e4ee7769bd131e214442d	chore: harden CI and Rust tooling (hunch-rust-practices-8yv)
+f403a7210e4de9875eb3c8590ba69c139acaacfc	perf: benchmarks and prewarm decision (hunch-task-12-benchmarks-usu)
+c420c38da98ed33538d578c9ed3f32df82f0bab2	test: add eval data and scripts (hunch-task-13a-eval-data-0s3)
+ca4e6cf2a6efab2c5b26f2b8e278a7738d579460	feat: run flags, guard, exec, init (hunch-task-10-run-args-exec-d9a)
+346aa03f06559f709384833d8aa66d53ff9aee95	chore: close beads 08, 09, 11; rewire deps for parallel run
+c52a6883063adfde78e8428ab4e1aa14bce4fd33	chore: close beads 07, 09, 11 after integration
+a5f599aebdbf09a670faabf5bacdf91d25d1fd41	feat: add capabilities, docs, health (hunch-task-11-agent-surface-eig)
+47c818eba24ae4b35e4a049adaa73db4ac95be39	feat: hunch run routing and abstention (hunch-task-09-run-routing-gdz)
+895900173372d1bfd3819f1c44ec38402eb18338	feat: add hunch why root-cause pointer (hunch-task-07-why-os6)
+46d42f7c8929afd885104a3271a8ca6d0b370183	chore: add Rust best-practices bead before release
+c6162ec176cd73123925e9188f2104890d8d18d5	feat: tool inventory, man pages (hunch-task-08-inventory-manpage-izn)
+2b0f3cfa00bbcb5b73747de0a5df7f9a21cf0547	feat: add hunch pick (hunch-task-06-pick-urq)
+5128f33fc4f9b2d18ea54a5930fd3189f1ed9651	feat: add hunch is predicate (hunch-task-05-is-4x9)
+62680bc7533f722bb3b3005f30babcbb1f7f9668	feat: stdin reader and tournament (hunch-task-04-input-tournament-ll1)
+be994f281f1464a753b502b9629365e9cc0fef46	feat: add Jev client, retries, cache (hunch-task-03-jev-client-n04)
+62e52a0f43c898293932d81f66b46fa24a4bb01a	docs: align spec defaults with the plan (model pin, concurrency 8)
+acccda8a3528c8b20e26184cdc9c6b21e8684536	feat: config and Jev wire types (hunch-task-02-config-jev-types-0u4)
+cc970fcc1d470bd333ab7ac80b80e6b654043527	fix: make ubs pass on cli_basics (hunch-task-01-scaffold-p8n)
+041e6d1e3dda2cb5693a00499b24505a4a954b85	feat: scaffold hunch CLI and dispatch (hunch-task-01-scaffold-p8n)
+29b69ce5695d0c35fdcc3e0fed7da0a889767017	chore: apply review pass 6 minors
+450860f081f9040608b03774b7322da87f474a27	chore: refine beads after review pass 5 and Jev laws
+7b4d002935033fef135d5ba020a5db1ff6a8bc93	docs: README voice, private launch drafts, pre-push audit
+2d550290faebfef7dccddd4bc15a3d229f9d6ec3	chore: refine beads after review pass 4
+c5bd1e7be1880996650e3b99e17437b9181c48e9	docs: fold TypeSafe docs lessons into plan and beads
+38a0d240eeafe22f3cf2a1426b2a3b79a97a996b	docs: fold TypeSafe SDK lessons into plan and beads
+a8f8837d07114b169d251fe6f822b92d79bcdfa4	docs: drop AGENTS.md rules the global file already covers
+fcd1028d3b2402aa40affc27a0cccf6e58118a5a	chore: refine beads after review pass 3
+5c22fe1c0ed00e6e8210ea53f9437d53b58162c4	docs: add unattended-run rule to AGENTS.md
+106eae8c3329c903b531ae957352938809e0930c	chore: refine beads after review pass 2
+17c5792f070dadf5633b139d04f7681136f313df	chore: refine beads after review pass 1
+9aee7381a7cda9b6ebcb400c3acc279da8a1c768	chore: transcribe hunch v0 plan into beads
+a4d86c1401135264d48120d37ab5ff35528739a0	docs: finalize hunch v0 plan after four review rounds
+ae029a87e8fd3dac393fea6aacf6b85d293e9d3e	docs: merge round-3 reviews into hunch v0 plan
+dcf42d7efbf39c772f7e10a50fd7cb2a6cabd25a	docs: merge round-2 reviews into hunch v0 plan
+1ff4533c5f65d8e1a347f3892fb516c7a7beb4a1	docs: merge round-1 reviews into hunch v0 plan
+f94eb69e1195d9281a7de89cad2958321a94e432	chore: preserve prototype eval data and router probe
+14e4d3e0d72d74bf6808d5cd042cdd2ceea2875a	chore: add repo AGENTS.md and initialize beads
+f34c887af8291df9bd22bdeb7297453a88ab1b12	docs: add hunch v0 design spec and implementation plan

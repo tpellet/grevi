@@ -1,0 +1,23 @@
+index-from-HEAD: 165
+short: 2b1038b
+--- stat ---
+ AGENTS.md | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+--- patch (first 400 lines) ---
+diff --git a/AGENTS.md b/AGENTS.md
+index 2b85869..cc32d9e 100644
+--- a/AGENTS.md
++++ b/AGENTS.md
+@@ -94,6 +94,11 @@ and never go into bead fields or commit messages. User-facing docs say
+ or personal tooling. Commit bodies stay technical: no `Co-Authored-By`, no `Claude-Session:`
+ trailer. Global rule: `~/.claude/AGENTS.md` "Public Repositories — Push With Care".
+ 
++**Docs state what grevi does, in the present tense, as if it was always so.** No meta language
++(sentences about the document or how its content was made: "captured on", "excerpts", "this guide
++is") and no retrospective language ("now", "since 0.x", "new in", "ships", "release state"). Dates
++and conditions belong only next to a measurement; history belongs in `CHANGELOG.md`.
++
+ **Live API key.** Point grevi at the key with
+ `TYPESAFE_API_KEY_FILE=$HOME/.ssh/typesafe-ai-key` in the command's environment — grevi reads
+ it, you never do. Never echo the variable or the key. Live commands need the sandbox disabled

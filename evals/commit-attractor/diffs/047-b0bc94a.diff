@@ -1,0 +1,62 @@
+index-from-HEAD: 47
+short: b0bc94a
+--- stat ---
+ CHANGELOG.md | 11 ++++++++++-
+ Cargo.lock   |  2 +-
+ Cargo.toml   |  2 +-
+ 3 files changed, 12 insertions(+), 3 deletions(-)
+
+--- patch (first 400 lines) ---
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 2fe3a77..60fedb8 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,6 +1,6 @@
+ # Changelog
+ 
+-## Unreleased
++## 0.8.3
+ 
+ Added:
+ 
+@@ -10,6 +10,15 @@ Added:
+   `any`, as the verb uses them; one entry per marker, statement, record, hunk, file or pick).
+   Existing fields keep their names; no threshold or calibration change.
+ 
++Changed:
++
++- The `sort` section of the verbs guide holds the filesystem failure matrix for macOS and Linux,
++  per condition and per operation, and the tests cover a crash at each journal step, an ENOSPC
++  intent write and an undo over the journal a crashed apply leaves behind.
++- Opt-in live tests cover `fill` per kind, `label` and `filter` on both backends, from recorded
++  fixtures, and report SKIPPED when a key is missing or the free backend answers with another
++  model.
++
+ ## 0.8.2
+ 
+ Fixed:
+diff --git a/Cargo.lock b/Cargo.lock
+index 9e64756..05ad2a8 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -850,7 +850,7 @@ checksum = "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682"
+ 
+ [[package]]
+ name = "jevify"
+-version = "0.8.2"
++version = "0.8.3"
+ dependencies = [
+  "anyhow",
+  "assert_cmd",
+diff --git a/Cargo.toml b/Cargo.toml
+index 00816fe..13b68ab 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -1,6 +1,6 @@
+ [package]
+ name = "jevify"
+-version = "0.8.2"
++version = "0.8.3"
+ edition = "2024"
+ rust-version = "1.87"
+ license = "MIT"

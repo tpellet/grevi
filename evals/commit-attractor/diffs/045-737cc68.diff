@@ -1,0 +1,29 @@
+index-from-HEAD: 45
+short: 737cc68
+--- stat ---
+ .beads/issues.jsonl | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+--- patch (first 400 lines) ---
+diff --git a/.beads/issues.jsonl b/.beads/issues.jsonl
+index a4a17f3..a189850 100644
+--- a/.beads/issues.jsonl
++++ b/.beads/issues.jsonl
+@@ -59,7 +59,7 @@
+ {"id":"hunch-cpo","title":"CI fails on every release tag: a fill doc-example test needs branches that a tag checkout lacks","description":"Found by the hunch-lpp evaluation (jevify 0.7.0, 2026-09-22).\n\nEvidence: the CI run on the v0.7.0 tag failed (run 35736209634), and so did the one on the v0.6 …[line truncated at 300 characters]
+ {"id":"hunch-dlh","title":"Rework README and docs: use cases, live demos, simpler examples, owner's voice","description":"Outcome: a first-time reader of README.md understands in 30 seconds what jevify does, why they want it, and how to try it. The documents read as Thomas wrote them: plain, concre …[line truncated at 300 characters]
+ {"id":"hunch-dt7","title":"Release 0.8.1 (lead only): re-evaluation fixes","description":"Release 0.8.1 with hunch-r2t, hunch-emc, hunch-s2k, hunch-u7s. Write set: Cargo.toml, Cargo.lock, CHANGELOG.md. Procedure as hunch-ag7.","status":"closed","priority":1,"issue_type":"task","created_at":"2026-09 …[line truncated at 300 characters]
+-{"id":"hunch-e67","title":"Release 0.8.3 (lead only): decision metadata, live coverage, failure matrix","description":"Release 0.8.3 with hunch-qag, hunch-3te, hunch-411, hunch-ynp, hunch-ep4, hunch-3gl. Write set: Cargo.toml, Cargo.lock, CHANGELOG.md. Procedure as hunch-ag7.","status":"open","prio …[line truncated at 300 characters]
++{"id":"hunch-e67","title":"Release 0.8.3 (lead only): decision metadata, live coverage, failure matrix","description":"Release 0.8.3 with hunch-qag, hunch-3te, hunch-411, hunch-ynp, hunch-ep4, hunch-3gl. Write set: Cargo.toml, Cargo.lock, CHANGELOG.md. Procedure as hunch-ag7.","status":"closed","pr …[line truncated at 300 characters]
+ {"id":"hunch-ed1","title":"Phase 0: JEVIFY_BASE_URL is https and host-bound; the key never follows it elsewhere","description":"Plan bead: Phase 0 — base URL. Epic hunch-7zg.\n\nOutcome: JEVIFY_BASE_URL can no longer send the bearer token and the evidence to an arbitrary host. Today src/config.rs a …[line truncated at 300 characters]
+ {"id":"hunch-eil","title":"classifier.dev scores 9/20 on the run args spot check, TypeSafe 12/20","description":"Measured during hunch-classifier-fallback-41x (commit 2fd203d): the two backends tie on every eval except the 20-case argument spot check, where classifier.dev picks the right tool 9/20  …[line truncated at 300 characters]
+ {"id":"hunch-emc","title":"fill branch: remote-only branch resolves to origin/<name>, which git switch refuses","description":"Outcome: `jevify fill -- git switch '@{branch:...}'` substitutes a name that `git switch` accepts. When the only match is a remote-tracking branch, the handle is the short  …[line truncated at 300 characters]
+@@ -86,7 +86,7 @@
+ {"id":"hunch-r2t","title":"fill --dry-run prints 'exec ...' on stderr although nothing ran","description":"Outcome: `jevify fill --dry-run` never prints a status line that says the command ran. The last stderr line of a dry run reads as a preview (for example `jevify fill: would run 'git' 'switch'  …[line truncated at 300 characters]
+ {"id":"hunch-readme-docs-m6t","title":"README polish and user guide","description":"Outcome: a professional, clear README and a small set of user docs in the repo, so the GitHub page explains hunch as well as the best project READMEs do. Lead-added bead (Thomas, 2026-09-19): \"Have a Fable pass on  …[line truncated at 300 characters]
+ {"id":"hunch-rename-grevi-lfb","title":"Rename hunch to grevi everywhere","description":"Outcome: the project is `grevi` everywhere — crate, library, binary, env vars, cache dir, user agent, messages, tests, docs, skill, demo — and the renamed binary is proven to work live. Lead-added bead (Thomas, …[line truncated at 300 characters]
+-{"id":"hunch-ric","title":"Independent task families and adjudicated hidden gold for the current verbs (validation set for hunch-o88)","description":"Outcome: a frozen, adjudicated validation set for the verbs jevify has today (`fill` per kind, `pick`, `pick --from`, `why`, `filter`, `label`, `is`, …[line truncated at 300 characters]
++{"id":"hunch-ric","title":"Independent task families and adjudicated hidden gold for the current verbs (validation set for hunch-o88)","description":"Outcome: a frozen, adjudicated validation set for the verbs jevify has today (`fill` per kind, `pick`, `pick --from`, `why`, `filter`, `label`, `is`, …[line truncated at 300 characters]
+ {"id":"hunch-rust-practices-8yv","title":"Rust best practices: tooling, tests, clean CI/CD","description":"Outcome: hunch follows current Rust tooling, testing and CI/CD best practice, so CI is clean, reproducible and easy to extend with GitHub Actions: a pinned toolchain file, an MSRV check, locke …[line truncated at 300 characters]
+ {"id":"hunch-s18","title":"Power and preregister sealed per-endpoint confirmation","description":"After pilot simulate clustered power and spend for fixed N; freeze model/backend/build/cache, claim family and margins per benchmarks/agents/EXPERIMENT.md. Acceptance: sealed independent families, no o …[line truncated at 300 characters]
+ {"id":"hunch-s2k","title":"why: error-looking lines from passing steps outrank the failing test on two real CI logs","description":"Outcome: `jevify why` on a real test or CI log points at the line of the failing test (the panic, the `--- FAIL`, the race report), not at an error-looking line that a …[line truncated at 300 characters]

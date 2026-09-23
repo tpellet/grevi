@@ -1,0 +1,408 @@
+index-from-HEAD: 245
+short: 1ff4533
+--- stat ---
+ AGENTS.md                                     |    2 +-
+ docs/superpowers/plans/2026-09-18-hunch-v0.md | 1819 ++++++++++++++++++-------
+ 2 files changed, 1348 insertions(+), 473 deletions(-)
+
+--- patch (first 400 lines) ---
+diff --git a/AGENTS.md b/AGENTS.md
+index 1370773..f74ad3f 100644
+--- a/AGENTS.md
++++ b/AGENTS.md
+@@ -33,7 +33,7 @@ calibrated threshold · Unix-first human output, one machine envelope · safe by
+ 
+ ## Toolchain (Rust & Cargo)
+ 
+-- Cargo only. Edition 2024, stable toolchain (rustc ≥ 1.85; local 1.93). (asupersync)
++- Cargo only. Edition 2024, stable toolchain (rustc ≥ 1.87 for `std::io::pipe`; local 1.93). (asupersync)
+ - `#![deny(unsafe_code)]` in `src/lib.rs`. Tests may use `unsafe { std::env::set_var(..) }`
+   only inside `tests/` (edition 2024 marks it unsafe) and must run single-threaded.
+ - Dependencies: explicit versions, minimal set, prefer std. Adding a crate needs a one-line
+diff --git a/docs/superpowers/plans/2026-09-18-hunch-v0.md b/docs/superpowers/plans/2026-09-18-hunch-v0.md
+index 77a7d9a..bc44084 100644
+--- a/docs/superpowers/plans/2026-09-18-hunch-v0.md
++++ b/docs/superpowers/plans/2026-09-18-hunch-v0.md
+@@ -2,28 +2,37 @@
+ 
+ > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+ 
+-**Goal:** Ship `hunch`, a fast Rust CLI whose verbs `pick`, `why`, `run`, `is` point at the right thing among real things using TypeSafe's Jev model, with an agent-first interface (JSON/TOON envelope, capabilities, robot-docs, stable exit codes), then `add` and `sort` in wave 2.
++**Goal:** Ship `hunch`, a fast Rust CLI whose verbs `pick`, `why`, `run`, `is` point at the right thing among real things using TypeSafe's Jev model, with an agent-first interface (JSON/TOON envelope, capabilities, robot-docs, stable exit codes). v0 is tagged, pushed and public before wave 2 (`add` …[line truncated at 300 characters]
++
++**Launch cut line:** v0 = Tasks 1–13d and 16. Then a hard cut: v0 is public (pushed to the public GitHub repo with a tagged release built by CI if feasible, else a documented `cargo install --git`) before Task 14 starts. If time runs out inside v0, cut in this order and say so in the README: Homebr …[line truncated at 300 characters]
++
++**Preflight (done by the lead, 2026-09-19):** a signed commit and push from an agent session works with the sandbox disabled; the live key file `$HOME/.ssh/typesafe-ai-key` exists and hunch can read it through `TYPESAFE_API_KEY_FILE`. No user-dependent step precedes Task 1.
+ 
+ **Architecture:** One crate (`hunch`, lib + bin). A small `jev` client (reqwest, one endpoint, retries, disk cache, concurrency semaphore) feeds a generic `tournament` that ranks up to any number of items with ≤ 2 rounds of parallel Choice/Noul calls. Each verb is a thin module that prepares items  …[line truncated at 300 characters]
+ 
+-**Tech Stack:** Rust 1.93 (edition 2024), tokio (current-thread), reqwest 0.13, clap 4.6 (derive, env), serde/serde_json, thiserror 2, blake3 1.8, regex, directories 6, futures, owo-colors 4, toon-format 0.5 (`default-features = false`). Tests: assert_cmd, predicates, wiremock 0.6, tempfile. Toolin …[line truncated at 300 characters]
++**Tech Stack:** Rust 1.93 (edition 2024, `rust-version = "1.87"` for `std::io::pipe`), tokio (current-thread), reqwest 0.13, clap 4.6 (derive, env), serde/serde_json, thiserror 2, blake3 1.8, regex, directories 6, futures, owo-colors 4, toon-format 0.5 (`default-features = false`). Tests: assert_cm …[line truncated at 300 characters]
+ 
+ **Spec:** `docs/superpowers/specs/2026-09-18-hunch-v0-design.md`
+ 
++**Verified code:** every Rust block in this plan (Tasks 1–11 and 14–15, plus the Task 1 stub state on its own) was transcribed into a throwaway crate against the pinned crate versions and passed `cargo fmt --check`, `cargo check --all-targets`, `cargo clippy --all-targets -- -D warnings` and `cargo …[line truncated at 300 characters]
++
+ ## Global Constraints
+ 
+ - Binary name `hunch`; crates.io publication disabled (`publish = false`) — the name is taken.
+-- Point, never generate: every token printed as a result comes from stdin, the machine, a tool's help/man text, or the user's request.
+-- At most two sequential rounds of parallel Jev calls per verb (args for `run` add one more request, answered speculatively in one call).
+-- Choice questions carry ≤ 200 item options plus `NONE` (API limit 255). State + longest question ≤ 32k tokens.
+-- Concurrency cap default 16; retry 429/5xx/timeouts up to 3 times honoring `retry-after`, exponential backoff from 250 ms.
+-- Default threshold 0.5; `is` unsure band default 0.15 (yes ≥ 0.65, no < 0.35).
+-- Exit codes: 0 ok, 1 no, 2 usage, 3 abstain, 4 unavailable, 5 auth, 6 input, 7 child failed, 130 interrupted/declined.
+-- Env: `TYPESAFE_API_KEY`, `TYPESAFE_API_KEY_FILE`, `HUNCH_BASE_URL` (default `https://api.typesafe.ai`), `HUNCH_MODEL` (default `jev-latest`), `HUNCH_THRESHOLD`, `HUNCH_CONCURRENCY`, `HUNCH_CACHE_DIR`, `HUNCH_NO_CACHE`, `HUNCH_PRICE_PER_MTOK` (0.042), `HUNCH_NO_PREWARM`.
+-- Human mode: results on stdout only (pipe-friendly), diagnostics/probabilities on stderr. Machine mode (`--json` = `--format json`, also `jsonl`, `toon`): exactly one envelope on stdout, nothing else.
+-- Safety: `run` executes only after a `/dev/tty` confirmation or `--yes`; with `--json` it executes only with `--exec --yes`; never through a shell (argv only). `add` touches the index only. `sort` is dry-run unless `--apply`, never overwrites, never deletes.
+-- Agents working on this repo must NOT read `~/.ssh/*`. Live tests read `TYPESAFE_API_KEY` from the environment that Thomas exports; if absent, live tests are skipped (`#[ignore]` + env check).
+-- Quality gate before every commit: `cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test -- --test-threads=1` and `ubs <changed files>`. Commit messages: semantic prefix, < 72 chars first line, no `Co-Authored-By`. Commits are signed (repo config `commit.gpgsign=true`); nev …[line truncated at 300 characters]
++- Point, never generate: every token printed as a result comes from stdin, the machine, a tool's man page, or the user's request.
++- At most two sequential rounds of parallel Jev calls per verb. `run` is the documented exception: route windows → absolute fit Nouls → one argument request, three rounds; it never adds a Choice finals round (Task 9) and renders man pages concurrently, never in series.
++- Choice questions carry ≤ 200 item options plus `NONE` (API limit 255). Every window's items share a 60,000-character budget (each item clipped to 200–2,000 chars) so state + question stays under 32k tokens whatever the line lengths. Text is passed through `input::redact` (obvious secrets → `[REDA …[line truncated at 300 characters]
++- Concurrency cap default 8 (16 in flight at ~0.4 s is ~40 req/s, twice what 1,200/min allows); retry 408/429/5xx (incl. 529 overloaded)/timeouts up to 3 times honoring `retry-after`, exponential backoff from 250 ms. HTTP 422 (request validation, in practice state too large) is an input error (exit …[line truncated at 300 characters]
++- Default threshold 0.5; `is` unsure band default 0.15 (yes ≥ 0.65, no < 0.35), valid range 0..=0.5.
++- Exit codes: 0 ok, 1 no, 2 usage, 3 abstain, 4 unavailable, 5 auth, 6 input, 7 child failed, 130 interrupted/declined. A clap usage error under `--json`/`--robot`/`--format` is still exactly one envelope (`error.kind = "usage"`).
++- Env: `TYPESAFE_API_KEY`, `TYPESAFE_API_KEY_FILE` (read lazily, only by verbs that need a key, so a bad path never breaks `capabilities`/`init`/`robot-docs`), `HUNCH_BASE_URL` (default `https://api.typesafe.ai`), `HUNCH_MODEL` (default **`jev-1.13.0`**, pinned: the 0.5 threshold was calibrated on  …[line truncated at 300 characters]
++- Human mode: results on stdout only (pipe-friendly), diagnostics/probabilities on stderr. Machine mode (`--json` = `--format json`, also `jsonl`, `toon`): exactly one envelope on stdout, nothing else — an executed child's stdout is redirected to stderr.
++- Safety: `run` executes only after a `/dev/tty` confirmation or `--yes` (no TTY and no `--yes` → the command is printed, never run); with `--json` it executes only with `--exec --yes`; never through a shell (argv only). Tools on the never-execute list (`rm`, `rmdir`, `dd`, `mkfs*`, `newfs*`, `fdis …[line truncated at 300 characters]
++- Live key: tests, benchmarks and evals run with `TYPESAFE_API_KEY_FILE=$HOME/.ssh/typesafe-ai-key` in the command's environment — hunch reads the file; agents never read, print, copy or echo it. Live tests are `#[ignore]` and, when neither `TYPESAFE_API_KEY` nor `TYPESAFE_API_KEY_FILE` is set, pri …[line truncated at 300 characters]
++- Sandbox: the quality gate (wiremock binds 127.0.0.1, which the Claude Code sandbox denies with `Failed to bind an OS port for a mock server: ... Operation not permitted`) and every `git commit` / `git push` (SSH signing needs `~/.ssh`) run with the sandbox disabled. Never `#[ignore]`, weaken or d …[line truncated at 300 characters]
++- Quality gate before every commit (run outside the sandbox): `cargo fmt && cargo fmt --check && cargo check --all-targets && cargo clippy --all-targets -- -D warnings && cargo test -- --test-threads=1` and `ubs <changed files>`. The code blocks below are not all rustfmt-formatted: run `cargo fmt`  …[line truncated at 300 characters]
++- Runtime: tokio current-thread only. Local work that blocks (stdin, inventory, `man`) runs via `tokio::task::spawn_blocking` or `std::thread::scope` so the runtime keeps driving in-flight HTTP (prewarm, parallel requests). This is the runtime's blocking pool, not a second executor.
++- Execution is strictly serial: one agent, one task at a time, in one shared checkout on `main`. Task 1 writes the complete `cli.rs`, the full module tree, `cmd/mod.rs` and the full `dispatch` match, every verb calling a stub that already has its final signature; later tasks replace stub bodies onl …[line truncated at 300 characters]
+ - macOS and Linux only for v0.
+ 
+ ---
+@@ -33,48 +42,52 @@
+ ```
+ Cargo.toml                    crate metadata, deps, [profile.release] tuned
+ src/main.rs                   thin: hunch::main_exit()
+-src/lib.rs                    module tree, runtime, dispatch, rendering of Outcome/errors
+-src/cli.rs                    clap definitions: Cli, GlobalOpts, Cmd, Shell
++src/lib.rs                    module tree, runtime, full dispatch (complete from Task 1), rendering of Outcome/errors
++src/cli.rs                    clap definitions: Cli, GlobalOpts, Cmd (wave-2 verbs hidden), Shell
+ src/exit.rs                   Exit codes + HunchError (kind, hint, example)
+-src/config.rs                 Config from env + flags; API key loading
+-src/output.rs                 Format, Meta, Envelope, emit()
+-src/input.rs                  stdin reading, ANSI stripping, caps
++src/config.rs                 Config from env + flags; lazy API key loading
++src/output.rs                 Format, Meta, Envelope, render()
++src/input.rs                  stdin reading, ANSI stripping, secret redaction, caps
+ src/jev/mod.rs                wire types: Question, NoulCriteria, Questions, Response, Answer, Usage
+ src/jev/client.rs             Client: ask(), prewarm(), Stats
+-src/jev/cache.rs              DiskCache (blake3-keyed JSON files)
+-src/tournament.rs             rank(): windows of 200 + NONE, finalists round, Ranking/Candidate
+-src/cmd/mod.rs                Outcome type + pub mods
++src/jev/cache.rs              DiskCache (blake3-keyed JSON files, 7-day TTL)
++src/tournament.rs             rank()/shortlist(): windows of 200 + NONE with a byte budget, finalists round, Ranking/Candidate
++src/cmd/mod.rs                Outcome type, confirm_tty(), pub mods (complete from Task 1)
+ src/cmd/is.rs                 `hunch is`
+ src/cmd/pick.rs               `hunch pick`
+-src/cmd/why.rs                `hunch why` (prefilter + tournament + context)
+-src/cmd/run.rs                `hunch run` (route + args + confirm + exec)
++src/cmd/why.rs                `hunch why` (prefilter + tournament + context; `-- <cmd>` capture)
++src/cmd/run.rs                `hunch run` (route + args + never-execute list + confirm + exec)
+ src/cmd/agent.rs              capabilities, robot-docs, health, init
+-src/inventory.rs              installed tools with one-line descriptions, cached
+-src/manpage.rs                man DESCRIPTION/OPTIONS excerpts, --help probe, flag parsing
++src/inventory.rs              installed tools with one-line descriptions (+ undocumented ones by name), cached
++src/manpage.rs                man DESCRIPTION/OPTIONS excerpts, flag parsing (no --help probing)
+ src/args.rs                   argument pointing for `run`
+-src/cmd/add.rs                (wave 2) `hunch add`
+-src/cmd/sort.rs               (wave 2) `hunch sort`
+-src/gitdiff.rs                (wave 2) hunk parsing + patch assembly
+-tests/common/mod.rs           FakeJev responder for wiremock, cmd() helper
+-tests/*.rs                    per-verb contract tests; tests/live.rs (#[ignore])
+-evals/                        run_intents.json, nl2bash_sample.json, why/ cases
+-scripts/eval_run.py           uv script: run eval + BM25 baseline
+-scripts/eval_why.py           uv script: why hit@1/@3
++src/cmd/add.rs                (wave 2; hidden stub from Task 1, real in Task 14) `hunch add`
++src/cmd/sort.rs               (wave 2; hidden stub from Task 1, real in Task 15) `hunch sort`
++src/gitdiff.rs                (wave 2; stub from Task 1, real in Task 14) hunk parsing + patch assembly
++tests/common/mod.rs           FakeJev responder for wiremock, hunch() and config() helpers
++tests/*.rs                    per-verb contract tests; tests/live.rs (#[ignore], skip without a key)
++evals/prototype/              committed prototype data: intents.json, eval_nl2bash_out.json, eval_intents_out.json, eval_nl2bash_report.txt, router.py, args_probe.py
++evals/                        run_intents.json, nl2bash_sample.json, inventory.json (frozen), why/ cases
++scripts/eval_run.py           uv script: run eval + BM25 baseline + reliability table
++scripts/eval_why.py           uv script: why hit@1/@3 + regex baselines
++benchmarks/                   bench.sh, fixtures/, results.md, README.md
+ docs/ROBOT_MODE.md            agent handbook (also embedded in `robot-docs`)
+-README.md AGENTS.md PRIVACY.md CHANGELOG.md LICENSE
++README.md PRIVACY.md CHANGELOG.md LICENSE   (AGENTS.md already exists and is binding: never overwritten)
+ demo.tape                     vhs recording script
+-.github/workflows/ci.yml      fmt, clippy, test on macOS + Linux
++.github/workflows/ci.yml      fmt, check, clippy, test on macOS + Linux
+ ```
+ 
+ ---
+ 
+-### Task 1: Scaffold, exit codes, envelope, CLI skeleton, CI
++### Task 1: Scaffold, exit codes, envelope, CLI skeleton, full dispatch, CI
+ 
+ **Files:**
+-- Create: `Cargo.toml`, `src/main.rs`, `src/lib.rs`, `src/cli.rs`, `src/exit.rs`, `src/output.rs`, `src/cmd/mod.rs`, `.gitignore`, `LICENSE` (MIT, "Thomas Pellet"), `.github/workflows/ci.yml`, `tests/cli_basics.rs`
++- Create: `Cargo.toml`, `src/main.rs`, `src/lib.rs`, `src/cli.rs`, `src/exit.rs`, `src/output.rs`, `src/cmd/mod.rs`, stub files for every module (`src/config.rs`, `src/input.rs`, `src/tournament.rs`, `src/inventory.rs`, `src/manpage.rs`, `src/args.rs`, `src/gitdiff.rs`, `src/jev/mod.rs`, `src/cmd/{ …[line truncated at 300 characters]
++- (Already done by the lead: repo `AGENTS.md` says `rustc ≥ 1.87`. Do not edit AGENTS.md.)
+ 
+ **Interfaces:**
+-- Produces: `hunch::main_exit() -> i32`; `Exit` (`code()`); `HunchError` (`exit()`, `kind()`, `hint()`, `example()`); `Format`; `Meta`; `Envelope<T>`; `emit(format, &Envelope<T>)`; `cmd::Outcome { exit: Exit, data: serde_json::Value, human: String }`; `cli::{Cli, GlobalOpts, Cmd, Shell}`.
++- Produces: `hunch::main_exit() -> i32`; `Exit` (`code()`); `HunchError` (`exit()`, `kind()`, `hint()`, `example()`); `Format`; `Meta`; `Envelope<T>`; `render(format, &Envelope)`; `cmd::Outcome { exit: Exit, data: serde_json::Value, human: String }`; `cmd::confirm_tty(prompt) -> Result<Option<bool> …[line truncated at 300 characters]
++- This task is the only one that ever writes `src/lib.rs`, `src/cli.rs` and `src/cmd/mod.rs` in v0 (Tasks 14–15 later flip one `hide = true` each in `cli.rs`). Every later task replaces the body of a stub function whose signature is fixed here.
+ 
+ - [ ] **Step 1: Cargo.toml**
+ 
+@@ -83,7 +96,7 @@ demo.tape                     vhs recording script
+ name = "hunch"
+ version = "0.1.0"
+ edition = "2024"
+-rust-version = "1.85"
++rust-version = "1.87"
+ license = "MIT"
+ description = "Point at the right thing: pick, why, run and is by meaning — fast CLI on TypeSafe Jev"
+ repository = "https://github.com/tpellet/hunch"
+@@ -101,7 +114,7 @@ reqwest = { version = "0.13", features = ["json"] }
+ serde = { version = "1", features = ["derive"] }
+ serde_json = "1"
+ thiserror = "2"
+-tokio = { version = "1.53", features = ["rt", "macros", "time", "sync", "fs", "process", "io-util"] }
++tokio = { version = "1.53", features = ["rt", "macros", "time", "sync"] }
+ toon-format = { version = "0.5", default-features = false }
+ 
+ [dev-dependencies]
+@@ -117,7 +130,7 @@ codegen-units = 1
+ strip = true
+ ```
+ 
+-After `cargo build`, run `cargo tree -e features -i reqwest` and confirm a rustls TLS backend is active (reqwest 0.13 changed defaults; if native-tls is selected, switch to `default-features = false, features = ["json", "rustls", "http2", "charset"]` using the feature names shown by `cargo tree`/do …[line truncated at 300 characters]
++`rust-version = "1.87"` is the floor for `std::io::pipe` (Task 7's `why -- <cmd>`); the local toolchain is 1.93. reqwest 0.13.5's default features are `default-tls = ["rustls"]` (rustls + aws-lc-rs + rustls-platform-verifier), `charset`, `http2`, `system-proxy` — no TLS feature change is needed. aw …[line truncated at 300 characters]
+ 
+ - [ ] **Step 2: `src/exit.rs`**
+ 
+@@ -202,10 +215,10 @@ impl HunchError {
+     }
+     pub fn hint(&self) -> &'static str {
+         match self {
+-            Self::MissingKey => "export your key in your shell profile; hunch never prints it",
++            Self::MissingKey => "create a key at https://console.typesafe.ai/settings/keys and export it in your shell profile; hunch never prints it",
+             Self::BadKey(_) => "check the key in the TypeSafe console; `hunch health` verifies it",
+             Self::Unavailable(_) => "retry later, or lower HUNCH_CONCURRENCY if rate limited",
+-            Self::Protocol(_) => "pin a model with --model jev-1.13.0 and report the issue",
++            Self::Protocol(_) => "the TypeSafe API may have changed; run `hunch health` and report the issue with `hunch --version`",
+             Self::EmptyInput(_) => "pipe text into hunch",
+             Self::InputTooLarge(_) => "filter the input first, e.g. with rg or tail",
+             Self::Input(_) => "check the input path and encoding",
+@@ -279,7 +292,9 @@ pub fn render(format: Format, env: &Envelope) -> anyhow::Result<String> {
+ }
+ ```
+ 
+-- [ ] **Step 4: `src/cli.rs` (all verbs declared now so `--help` and capabilities are stable; wave-2 verbs return a usage error until Tasks 14–15)**
++- [ ] **Step 4: `src/cli.rs` — every verb declared now, final flags, wave-2 verbs hidden**
++
++`Run` uses `num_args = 1..`, not `trailing_var_arg`: the latter captures everything after the first word "as if the user had used `--`", so `hunch run burn a dvd --dry-run --json` would route the intent "burn a dvd --dry-run --json" in human mode (verified with clap 4.6.7; the regression test is in …[line truncated at 300 characters]
+ 
+ ```rust
+ use crate::output::Format;
+@@ -290,7 +305,7 @@ use clap::{Args, Parser, Subcommand, ValueEnum};
+     name = "hunch",
+     version,
+     about = "Point at the right thing among real things — by meaning, with calibrated confidence.",
+-    after_help = "Examples:\n  ls ~/Downloads | hunch pick \"last month's electricity bill\"\n  cargo build 2>&1 | hunch why\n  hunch run \"burn a dvd from this iso\"\n  hunch is \"asks for a refund\" < mail.txt && ./refund\n\nAgents: hunch capabilities --json | hunch robot-docs"
++    after_help = "Examples:\n  ls ~/Downloads | hunch pick \"last month's electricity bill\"\n  cargo build 2>&1 | hunch why\n  hunch why -- cargo build\n  hunch run \"burn a dvd from this iso\"\n  hunch is \"asks for a refund\" < mail.txt && ./refund\n\nAgents: hunch capabilities --json | hunch ro …[line truncated at 300 characters]
+ )]
+ pub struct Cli {
+     #[command(flatten)]
+@@ -310,7 +325,7 @@ pub struct GlobalOpts {
+     /// Decision threshold on calibrated probability
+     #[arg(short = 't', long, global = true, env = "HUNCH_THRESHOLD")]
+     pub threshold: Option<f64>,
+-    /// TypeSafe model or alias (pin a version for stable thresholds)
++    /// TypeSafe model or alias (default jev-1.13.0; `jev-latest` moves with each release)
+     #[arg(long, global = true, env = "HUNCH_MODEL")]
+     pub model: Option<String>,
+     /// Skip the local answer cache
+@@ -332,24 +347,28 @@ pub enum Cmd {
+     /// Print the stdin line(s) that match an intent (exit 3 if none fits)
+     Pick {
+         intent: String,
+-        /// Print the top N matches that pass the threshold
++        /// Print up to N matches, each ranked above "nothing fits"
+         #[arg(short = 'n', long, default_value_t = 1)]
+         top: usize,
+         /// Print 1-based line numbers instead of lines
+         #[arg(long)]
+         index: bool,
+     },
+-    /// Point at the root-cause line in failing output read from stdin
++    /// Point at the root-cause line in failing output (stdin, or `-- <cmd>` to run and capture it)
+     Why {
+         /// Lines of context around the root cause
+         #[arg(short = 'C', long, default_value_t = 3)]
+         context: usize,
+         #[arg(short = 'n', long, default_value_t = 1)]
+         top: usize,
++        /// Run this command and read its stdout+stderr instead of stdin: `hunch why -- cargo build`
++        #[arg(last = true)]
++        cmd: Vec<String>,
+     },
+-    /// Route an intent to an installed tool, point at flags from its help, run on confirm
++    /// Route an intent to an installed tool, point at flags from its man page, run on confirm
+     Run {
+-        #[arg(required = true, trailing_var_arg = true)]
++        /// The request; flags may follow it (`hunch run burn a dvd --dry-run`)
++        #[arg(required = true, num_args = 1..)]
+         intent: Vec<String>,
+         /// Run without asking
+         #[arg(short, long)]
+@@ -357,7 +376,7 @@ pub enum Cmd {
+         /// Allow execution in machine mode (requires --yes)
+         #[arg(long)]
+         exec: bool,
+-        /// Only route; never execute
++        /// Only route and propose; never execute
+         #[arg(long)]
+         dry_run: bool,
+         /// Route only; do not point at flags or files
+@@ -367,11 +386,12 @@ pub enum Cmd {
+     /// Exit 0 if stdin satisfies the condition, 1 if not, 3 if unsure
+     Is {
+         condition: String,
+-        /// Unsure band around the threshold
++        /// Unsure band around the threshold (0..=0.5)
+         #[arg(long, default_value_t = 0.15)]
+         band: f64,
+     },
+-    /// Stage only the git hunks about a topic (wave 2)
++    /// Stage only the git hunks about a topic (wave 2; hidden until Task 14 lands)
++    #[command(hide = true)]
+     Add {
+         topic: String,
+         #[arg(short, long)]
+@@ -379,7 +399,8 @@ pub enum Cmd {
+         #[arg(long)]
+         dry_run: bool,
+     },
+-    /// Propose moving files into existing folders by meaning (wave 2; dry-run by default)
++    /// Propose moving files into existing folders by meaning (wave 2; hidden until Task 15 lands)
++    #[command(hide = true)]
+     Sort {
+         dir: std::path::PathBuf,
+         #[arg(long)]
+@@ -406,16 +427,18 @@ pub enum Shell {
+ }
+ ```
+ 
+-- [ ] **Step 5: `src/cmd/mod.rs`, `src/lib.rs`, `src/main.rs`**
++- [ ] **Step 5: `src/cmd/mod.rs`, the stubs, `src/lib.rs`, `src/main.rs`**
+ 
+-`src/cmd/mod.rs`:
++`src/cmd/mod.rs` (final; never edited again):
+ ```rust
+-use crate::exit::Exit;
++use crate::exit::{Exit, HunchError};
+ 
++pub mod add;
+ pub mod agent;
+ pub mod is;
+ pub mod pick;
+ pub mod run;
++pub mod sort;
+ pub mod why;
+ 
+ /// Result of a verb: exit code, machine data, and the exact human stdout text.
+@@ -424,17 +447,171 @@ pub struct Outcome {
+     pub data: serde_json::Value,
+     pub human: String,
+ }
++
++/// Asks on /dev/tty so it works when stdout is piped. `Ok(None)` means there is no TTY
++/// (never act); `Ok(Some(false))` means the user declined. Shared by `run` and `add`.
++pub fn confirm_tty(prompt: &str) -> Result<Option<bool>, HunchError> {
++    use std::io::{BufRead, Write};
++    let Ok(tty) = std::fs::OpenOptions::new().read(true).write(true).open("/dev/tty") else {
++        return Ok(None);
++    };
++    let mut w = &tty;
++    let _ = write!(w, "{prompt}");
++    let _ = w.flush();
++    let mut line = String::new();
++    std::io::BufReader::new(&tty).read_line(&mut line).map_err(|e| HunchError::Input(e.to_string()))?;
++    Ok(Some(matches!(line.trim(), "y" | "Y" | "yes")))
++}
++```
++
++Stub verbs — each file contains exactly this until its task replaces the body. Every parameter is consumed with `let _ = (...)` so clippy stays clean:
++
++`src/cmd/is.rs`:
++```rust
++use crate::cmd::Outcome;
++use crate::config::Config;
++use crate::exit::HunchError;
++
++/// Task 1 stub with the final signature; Task 5 replaces the body.
++pub async fn run(ctx: &Config, condition: &str, band: f64) -> Result<Outcome, HunchError> {
++    let _ = (ctx, condition, band);
++    Err(HunchError::Usage("not implemented yet".into()))
++}
++```
++`src/cmd/pick.rs`:
++```rust
++use crate::cmd::Outcome;
++use crate::config::Config;
++use crate::exit::HunchError;
++
++/// Task 1 stub with the final signature; Task 6 replaces the body.
++pub async fn run(ctx: &Config, intent: &str, top: usize, index: bool) -> Result<Outcome, HunchError> {
++    let _ = (ctx, intent, top, index);
++    Err(HunchError::Usage("not implemented yet".into()))
++}
++```
++`src/cmd/why.rs`:
++```rust
++use crate::cmd::Outcome;
++use crate::config::Config;
++use crate::exit::HunchError;
++
++/// Task 1 stub with the final signature; Task 7 replaces the body.
++pub async fn run(ctx: &Config, context: usize, top: usize, cmd: &[String]) -> Result<Outcome, HunchError> {
++    let _ = (ctx, context, top, cmd);
++    Err(HunchError::Usage("not implemented yet".into()))
++}
++```
++`src/cmd/run.rs`:
++```rust
++use crate::cmd::Outcome;
++use crate::config::Config;
++use crate::exit::HunchError;
++
++pub struct RunFlags {
++    pub yes: bool,
++    pub exec: bool,
++    pub dry_run: bool,
++    pub no_args: bool,
++    pub machine: bool,
++}
++
++/// Task 1 stub with the final signature; Task 9 replaces the body (Task 10 extends it).
++pub async fn run(ctx: &Config, intent: &str, flags: RunFlags) -> Result<Outcome, HunchError> {
++    let _ = (ctx, intent, flags.yes, flags.exec, flags.dry_run, flags.no_args, flags.machine);
++    Err(HunchError::Usage("not implemented yet".into()))
++}
++```
++`src/cmd/agent.rs`:
++```rust
++use crate::cli::Shell;
++use crate::cmd::Outcome;
++use crate::config::Config;
++use crate::exit::{Exit, HunchError};
++
++/// Task 1 stubs with the final signatures; Task 10 fills `init`, Task 11 the rest.
++fn stub() -> Outcome {
++    Outcome { exit: Exit::Usage, data: serde_json::Value::Null, human: String::new() }
++}
++pub fn capabilities() -> Outcome {
++    stub()
++}
++pub fn robot_docs(topic: Option<&str>) -> Result<Outcome, HunchError> {
++    let _ = topic;
++    Err(HunchError::Usage("not implemented yet".into()))

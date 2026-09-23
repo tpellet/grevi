@@ -1,0 +1,413 @@
+index-from-HEAD: 125
+short: 82588ff
+--- stat ---
+ .beads/issues.jsonl |   4 +-
+ src/cmd/pick.rs     | 147 ++++++++++++++++++--------------------
+ src/cmd/why.rs      |  36 +++++++++-
+ src/tournament.rs   |   2 +-
+ tests/cli_basics.rs |  15 ++--
+ tests/pick.rs       | 202 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/why.rs        |  89 +++++++++++++++++++++++
+ 7 files changed, 402 insertions(+), 93 deletions(-)
+
+--- patch (first 400 lines) ---
+diff --git a/.beads/issues.jsonl b/.beads/issues.jsonl
+index 1151bb2..fdc328e 100644
+--- a/.beads/issues.jsonl
++++ b/.beads/issues.jsonl
+@@ -31,7 +31,7 @@
+ {"id":"hunch-7zg.4","title":"1.3 Saved input: src/save.rs","description":"Plan bead: 1.3 — saved input. Epic hunch-7zg.\n\nOutcome: src/save.rs writes the full input of a reducing verb to a content-addressed file, so a reduction always leaves a way back.\n\nContext: plan §2.4, §7, §8.5, §9.7. Bead  …[line truncated at 300 characters]
+ {"id":"hunch-7zg.5","title":"1.4 route is print-only: remove execution and the argument pass from run.rs","description":"Plan bead: 1.4 — route is print-only. Epic hunch-7zg.\n\nOutcome: `jevify route 'task'` names the installed tool for a task, with its summary and synopsis, and starts nothing. Ex …[line truncated at 300 characters]
+ {"id":"hunch-7zg.6","title":"1.6 is with several statements and --context FILE","description":"Plan bead: 1.6 — `is` with several statements and --context. Epic hunch-7zg.\n\nOutcome: `jevify is 'a' 'b' 'c'` asks several statements in one request and prints one verdict per line; `--context FILE` ju …[line truncated at 300 characters]
+-{"id":"hunch-7zg.7","title":"1.7 Saved input in why, byte records and --files from stdin in pick","description":"Plan bead: 1.7 — saved input in `why`, byte records in `pick`. Epic hunch-7zg.\n\nOutcome: `pick` prints the chosen record as the bytes it read, with the split modes of the record model, …[line truncated at 300 characters]
++{"id":"hunch-7zg.7","title":"1.7 Saved input in why, byte records and --files from stdin in pick","description":"Plan bead: 1.7 — saved input in `why`, byte records in `pick`. Epic hunch-7zg.\n\nOutcome: `pick` prints the chosen record as the bytes it read, with the split modes of the record model, …[line truncated at 300 characters]
+ {"id":"hunch-7zg.8","title":"1.8 Contract: 0.5.0 documents, capabilities, robot-docs, init agents","description":"Plan bead: 1.8 contract, the documents half (the skill half is hunch-sb9). Epic hunch-7zg.\n\nOutcome: README, docs/, the repository's AGENTS.md, capabilities, robot-docs and the `jevif …[line truncated at 300 characters]
+ {"id":"hunch-7zg.9","title":"Release 0.5.0 (lead only): the language, filter, is","description":"Release 0.5.0, after Phase 0 and Phase 1. Epic hunch-7zg. THE LEAD DOES THIS BEAD, not a worker: a release publishes to a public repository and to crates.io. A worker that finds this bead ready reports  …[line truncated at 300 characters]
+ {"id":"hunch-8ay","title":"Enforce Jev protocol, request and cache boundaries","description":"Reconciled review: validate all decision-bearing API fields; prevent malformed labels and missing dimensions; enforce classifier field and option limits without silently dropping candidates; isolate endpoi …[line truncated at 300 characters]
+@@ -39,7 +39,7 @@
+ {"id":"hunch-bec","title":"Bound retries and subprocess work with explicit deadlines","description":"Outcome: a verb has one overall deadline with cancellation; retries wait exactly what `Retry-After` says without extra premature requests; usage in `meta` distinguishes attempts, successes, waits, c …[line truncated at 300 characters]
+ {"id":"hunch-bkb","title":"2.4 fill core: resolve markers and become the command","description":"Plan bead: 2.4 — fill core. Epic hunch-7zg. This bead replaces the earlier \"resolving wrapper, proposal only\" design: fill runs the command it resolved.\n\nOutcome: `jevify fill -- CMD ARGS…` resolves …[line truncated at 300 characters]
+ {"id":"hunch-bvw","title":"Implement minimal release automation and publish 0.3.4","description":"Reuse successful exact-commit branch CI before signing a release tag. Validate package and cargo-dist plan in CI, publish crates from the generated release workflow using Trusted Publishing, retain loc …[line truncated at 300 characters]
+-{"id":"hunch-bx6","title":"1.5 filter and the scorer: print every record for which a statement is true","description":"Plan bead: 1.5 — filter and the scorer. Epic hunch-7zg.\n\nOutcome: `CMD | jevify filter 'statement'` prints every record of its input for which the statement is true, byte for byt …[line truncated at 300 characters]
++{"id":"hunch-bx6","title":"1.5 filter and the scorer: print every record for which a statement is true","description":"Plan bead: 1.5 — filter and the scorer. Epic hunch-7zg.\n\nOutcome: `CMD | jevify filter 'statement'` prints every record of its input for which the statement is true, byte for byt …[line truncated at 300 characters]
+ {"id":"hunch-classifier-fallback-41x","title":"classifier.dev fallback when there is no TypeSafe key","description":"Outcome: grevi works with no TypeSafe key, by using classifier.dev as a second backend. Lead-added bead (Thomas, 2026-09-19): \"have an additional bead to have classifier dev as an a …[line truncated at 300 characters]
+ {"id":"hunch-ed1","title":"Phase 0: JEVIFY_BASE_URL is https and host-bound; the key never follows it elsewhere","description":"Plan bead: Phase 0 — base URL. Epic hunch-7zg.\n\nOutcome: JEVIFY_BASE_URL can no longer send the bearer token and the evidence to an arbitrary host. Today src/config.rs a …[line truncated at 300 characters]
+ {"id":"hunch-eil","title":"classifier.dev scores 9/20 on the run args spot check, TypeSafe 12/20","description":"Measured during hunch-classifier-fallback-41x (commit 2fd203d): the two backends tie on every eval except the 20-case argument spot check, where classifier.dev picks the right tool 9/20  …[line truncated at 300 characters]
+diff --git a/src/cmd/pick.rs b/src/cmd/pick.rs
+index d83e015..04ae6a8 100644
+--- a/src/cmd/pick.rs
++++ b/src/cmd/pick.rs
+@@ -2,12 +2,12 @@ use crate::cmd::Outcome;
+ use crate::config::Config;
+ use crate::exit::{Exit, JevifyError};
+ use crate::jev::client::Client;
+-use crate::records::Split;
+-use crate::tournament::{Prompts, rank};
+-use std::path::Path;
++use crate::records::{self, Split};
++use crate::tournament::{Prompts, Ranking, rank, shortlist, window};
+ 
+ /// 100k lines would be 500 requests: a 429 storm and ~25 s. pick ranks a list, it does not scan.
+ pub const MAX_LINES: usize = 20_000;
++const MAX_FINALISTS: usize = 24;
+ 
+ pub async fn run(
+     ctx: &Config,
+@@ -25,20 +25,18 @@ pub async fn run(
+             "--index numbers stdin lines; with --files the match is a path".into(),
+         ));
+     }
+-    if split != Split::Lines {
+-        return Err(JevifyError::Input(
+-            "pick split mode: not implemented".into(),
+-        ));
+-    }
+     let client = Client::new(ctx)?;
+-    let lines = crate::input::read_stdin_async().await?;
++    let bytes = tokio::task::spawn_blocking(crate::input::read_stdin_bytes)
++        .await
++        .map_err(|e| JevifyError::Input(e.to_string()))??;
++    let records = records::parse(&bytes, split)?;
++    if records.is_empty() {
++        return Err(JevifyError::EmptyInput("stdin was empty"));
++    }
+     // Blank lines never leave the machine: as empty items they would take window slots and tokens.
+     // A repeated line is sent once (the first occurrence keeps its line number): two identical
+     // items split the Choice mass between them.
+-    let mut seen = std::collections::HashSet::new();
+-    let kept: Vec<usize> = (0..lines.len())
+-        .filter(|&i| !lines[i].trim().is_empty() && seen.insert(lines[i].trim()))
+-        .collect();
++    let (kept, _) = records::distinct(&bytes, &records);
+     if kept.len() > MAX_LINES {
+         return Err(JevifyError::InputTooLarge(if files {
+             format!("more than {MAX_LINES} files; narrow the input list")
+@@ -46,7 +44,7 @@ pub async fn run(
+             format!("more than {MAX_LINES} lines; filter first (rg, head) or split the list")
+         }));
+     }
+-    let items: Vec<String> = kept.iter().map(|&i| lines[i].clone()).collect();
++    let items: Vec<String> = kept.iter().map(|&i| records[i].evidence.clone()).collect();
+     let prompts = if files {
+         Prompts {
+             choose: "Each entry in `items` is a file: its path, and for some entries the beginning of its content. Which file is the one described by `request`? Choose NONE if no file matches.".into(),
+@@ -60,67 +58,81 @@ pub async fn run(
+             any: "Is at least one entry in `items` the thing described by `request`?".into(),
+         }
+     };
+-    // Round one ranks path names only. Content leaves the machine for the finalists alone (at
+-    // most 24 files). The reads block between the two rounds, when no request is in flight.
+-    let with_content = |k: usize| {
+-        let excerpt = if visible(&items[k]) {
+-            std::thread::scope(|scope| {
+-                scope
+-                    .spawn(|| {
+-                        let path = Path::new(&items[k]);
+-                        let parent = path
+-                            .parent()
+-                            .filter(|p| !p.as_os_str().is_empty())
+-                            .unwrap_or(Path::new("."));
+-                        match (parent.canonicalize(), path.file_name()) {
+-                            (Ok(parent), Some(name)) => {
+-                                crate::cmd::sort::excerpt(&parent.join(name))
+-                            }
+-                            _ => String::new(),
+-                        }
+-                    })
+-                    .join()
+-                    .unwrap_or_default()
+-            })
++    let ranking = if files {
++        let mut pool = shortlist(&client, intent, &items, &prompts, 3).await?;
++        pool.retain(|candidate| candidate.p > 0.0);
++        pool.truncate(MAX_FINALISTS);
++        if pool.is_empty() {
++            Ranking {
++                candidates: vec![],
++                any: 0.0,
++                none: 1.0,
++            }
+         } else {
+-            String::new()
+-        };
+-        format!("{}\n{excerpt}", items[k])
++            let mut finalists: Vec<_> = pool
++                .iter()
++                .map(|c| records[kept[c.index]].clone())
++                .collect();
++            let cwd = std::env::current_dir().map_err(|e| JevifyError::Input(e.to_string()))?;
++            let withheld = records::excerpts(&mut finalists, &cwd).await?;
++            eprintln!("jevify pick: excerpts withheld: {withheld}");
++            let finals: Vec<_> = pool
++                .iter()
++                .zip(finalists)
++                .map(|(c, r)| (c.index, r.evidence))
++                .collect();
++            window(&client, intent, &finals, &prompts).await?
++        }
++    } else {
++        rank(&client, intent, &items, &prompts, None).await?
+     };
+-    let finalist_text: Option<&(dyn Fn(usize) -> String + Sync)> =
+-        files.then_some(&with_content as _);
+-    let ranking = rank(&client, intent, &items, &prompts, finalist_text).await?;
+     // Found only if the absolute Noul agrees and the best line beats NONE in the Choice.
+     let found = ranking.any >= ctx.threshold
+         && ranking
+             .candidates
+             .first()
+             .is_some_and(|c| c.p > ranking.none);
+-    let matches: Vec<_> = if found {
++    let mut selected: Vec<_> = if found {
+         ranking
+             .candidates
+             .iter()
+             .filter(|c| c.p > ranking.none)
+             .take(top)
+-            .map(|c| {
+-                let i = kept[c.index];
+-                let text = lines[i].clone();
+-                serde_json::json!({ "line": i + 1, "text": text, "p": c.p })
+-            })
+             .collect()
+     } else {
+         vec![]
+     };
+-    let human: String = matches
+-        .iter()
+-        .map(|m| {
+-            if index {
+-                format!("{}\n", m["line"])
+-            } else {
+-                format!("{}\n", m["text"].as_str().unwrap_or_default())
++    selected.sort_by_key(|candidate| candidate.index);
++    let mut human = Vec::new();
++    let mut matches = Vec::new();
++    for candidate in selected {
++        let i = kept[candidate.index];
++        let record = &records[i];
++        let ordinal = match split {
++            Split::Para => i + 1,
++            Split::Lines | Split::Nul => {
++                let delimiter = if split == Split::Nul { 0 } else { b'\n' };
++                bytes[..record.raw.start]
++                    .iter()
++                    .filter(|&&b| b == delimiter)
++                    .count()
++                    + 1
+             }
+-        })
+-        .collect();
++        };
++        let mut value = records::envelope(&bytes, record, ordinal);
++        // Keep the established text field for UTF-8 handles; lossy records use the raw helper.
++        if let Some(text) = record.handle.to_str() {
++            value["text"] = text.into();
++        }
++        value["line"] = ordinal.into();
++        value["p"] = candidate.p.into();
++        matches.push(value);
++        if index {
++            human.extend_from_slice(format!("{ordinal}\n").as_bytes());
++        } else {
++            human.extend_from_slice(&bytes[record.raw.clone()]);
++        }
++    }
+     Ok(Outcome {
+         exit: if matches.is_empty() {
+             Exit::Abstain
+@@ -128,26 +140,7 @@ pub async fn run(
+             Exit::Ok
+         },
+         data: serde_json::json!({ "matches": matches, "any": ranking.any, "source": if files { "files" } else { "stdin" } }),
+-        human: human.into_bytes(),
++        human,
+         exec: None,
+     })
+ }
+-
+-/// Hidden paths remain candidates by name but receive no excerpt.
+-fn visible(rel: &str) -> bool {
+-    !rel.split('/').any(|c| c.starts_with('.'))
+-}
+-
+-#[cfg(test)]
+-mod tests {
+-    use super::*;
+-
+-    #[test]
+-    fn hidden_components_receive_no_excerpt() {
+-        assert!(visible("src/cmd/pick.rs"));
+-        assert!(visible("notes.v2.txt"));
+-        assert!(!visible(".env"));
+-        assert!(!visible("config/.secrets/key.txt"));
+-        assert!(!visible(".git/config"));
+-    }
+-}
+diff --git a/src/cmd/why.rs b/src/cmd/why.rs
+index 57d401e..4f826bb 100644
+--- a/src/cmd/why.rs
++++ b/src/cmd/why.rs
+@@ -54,13 +54,43 @@ pub async fn run(
+     ctx: &Config,
+     context: usize,
+     top: usize,
+-    _no_save: bool,
++    no_save: bool,
+ ) -> Result<Outcome, JevifyError> {
+     if top == 0 {
+         return Err(JevifyError::Usage("-n must be at least 1".into()));
+     }
+     let client = Client::new(ctx)?;
+-    let lines = crate::input::read_stdin_async().await?;
++    let directory = (!no_save)
++        .then(|| crate::config::save_dir(std::env::var("JEVIFY_CACHE_DIR").ok().as_deref()))
++        .flatten();
++    let (lines, saved) = tokio::task::spawn_blocking(move || {
++        let bytes = crate::input::read_stdin_bytes()?;
++        let saved = crate::save::save(&bytes, directory.as_deref());
++        let lines = crate::input::split_lines(&String::from_utf8_lossy(&bytes));
++        Ok::<_, JevifyError>((lines, saved))
++    })
++    .await
++    .map_err(|e| JevifyError::Input(e.to_string()))??;
++    let complete = saved.is_ok();
++    let saved_input = match saved {
++        Ok(path) => {
++            eprintln!(
++                "jevify why: full output: {}",
++                path.to_string_lossy().replace(['\r', '\n'], " ")
++            );
++            Some(path)
++        }
++        Err(reason) => {
++            eprintln!(
++                "jevify why: full output: not saved ({})",
++                reason.replace(['\r', '\n'], " ")
++            );
++            None
++        }
++    };
++    if lines.iter().all(|line| line.trim().is_empty()) {
++        return Err(JevifyError::EmptyInput("stdin was empty"));
++    }
+     let kept = prefilter(&lines);
+     let no_signal = !kept.iter().any(|&i| SIGNAL.is_match(&lines[i]));
+     let items: Vec<String> = kept
+@@ -139,7 +169,7 @@ pub async fn run(
+         } else {
+             Exit::Ok
+         },
+-        data: serde_json::json!({ "causes": causes, "any": ranking.any, "considered": kept.len(), "total": lines.len(), "hint": hint }),
++        data: serde_json::json!({ "causes": causes, "any": ranking.any, "considered": kept.len(), "total": lines.len(), "hint": hint, "saved_input": saved_input, "complete": complete }),
+         human: human.into_bytes(),
+         exec: None,
+     })
+diff --git a/src/tournament.rs b/src/tournament.rs
+index 56c911d..92d8ca9 100644
+--- a/src/tournament.rs
++++ b/src/tournament.rs
+@@ -52,7 +52,7 @@ fn id(i: usize) -> String {
+     format!("L{i:03}")
+ }
+ 
+-async fn window(
++pub(crate) async fn window(
+     client: &Client,
+     request: &str,
+     items: &[(usize, String)],
+diff --git a/tests/cli_basics.rs b/tests/cli_basics.rs
+index c63197d..76a87a8 100644
+--- a/tests/cli_basics.rs
++++ b/tests/cli_basics.rs
+@@ -287,7 +287,7 @@ fn clap_errors_preserve_non_utf8_args_and_stop_format_scanning_at_double_dash()
+ }
+ 
+ #[tokio::test(flavor = "multi_thread")]
+-async fn interim_refusals_make_no_requests() {
++async fn record_forms_are_implemented_and_ask_the_backend() {
+     let server = common::mock(common::FakeJev {
+         choose: |_, _, _| "NONE".into(),
+         noul: |_, _| 0.9,
+@@ -309,17 +309,12 @@ async fn interim_refusals_make_no_requests() {
+         })
+         .await
+         .unwrap();
+-        assert_eq!(out.status.code(), Some(6));
++        assert_ne!(out.status.code(), Some(6));
+         let value: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+-        assert!(
+-            value["error"]["message"]
+-                .as_str()
+-                .unwrap()
+-                .contains("not implemented")
+-        );
+-        assert_eq!(value["meta"]["requests"], 0);
++        assert!(value["error"].is_null());
++        assert_ne!(value["meta"]["requests"], 0);
+     }
+-    assert!(server.received_requests().await.unwrap().is_empty());
++    assert!(!server.received_requests().await.unwrap().is_empty());
+ }
+ 
+ #[test]
+diff --git a/tests/pick.rs b/tests/pick.rs
+index cdadb29..27225a4 100644
+--- a/tests/pick.rs
++++ b/tests/pick.rs
+@@ -23,6 +23,208 @@ async fn malformed_choice_labels_return_a_protocol_envelope() {
+ }
+ use common::{FakeJev, option_containing};
+ 
++#[tokio::test(flavor = "multi_thread")]
++async fn selected_records_preserve_bytes_and_split_terminators() {
++    let server = common::mock(FakeJev {
++        choose: |_, s, o| option_containing(s, o, "invoice"),
++        noul: |_, _| 0.9,
++    })
++    .await;
++    for (flag, input, expected) in [
++        (
++            None,
++            b"other\n\x1b[31minvoice\x1b[0m\n".as_slice(),
++            b"\x1b[31minvoice\x1b[0m\n".as_slice(),
++        ),
++        (None, b"other\r\ninvoice\r\n", b"invoice\r\n"),
++        (None, b"other\ninvoice\xff\n", b"invoice\xff\n"),
++        (None, b"other\ninvoice", b"invoice"),
++        (Some("-0"), b"other\0invoice\0", b"invoice\0"),
++        (
++            Some("--para"),
++            b"other\n\ninvoice\ncontinued\n\n",
++            b"invoice\ncontinued\n\n",
++        ),
++    ] {
++        let mut cmd = common::jevify(&server);
++        cmd.args(["pick", "bill"]);
++        if let Some(flag) = flag {
++            cmd.arg(flag);
++        }
++        let out = tokio::task::spawn_blocking(move || cmd.write_stdin(input).output().unwrap())
++            .await
++            .unwrap();
++        assert_eq!(out.status.code(), Some(0));
++        assert_eq!(out.stdout, expected);
++    }
++    let mut cmd = common::jevify(&server);
++    let out = tokio::task::spawn_blocking(move || {
++        cmd.args(["--json", "pick", "bill"])
++            .write_stdin(b"other\ninvoice\xff\n".as_slice())
++            .output()
++            .unwrap()
++    })
++    .await
++    .unwrap();
++    let value: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
++    assert_eq!(value["data"]["matches"][0]["text"], "invoice\u{fffd}\n");
++    assert_eq!(value["data"]["matches"][0]["lossy"], true);
++    assert_eq!(value["data"]["matches"][0]["ordinal"], 2);
++}
++
++#[tokio::test(flavor = "multi_thread")]
++async fn three_best_index_blank_limit_and_no_saved_input() {
++    let server = common::mock(

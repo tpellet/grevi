@@ -1,0 +1,400 @@
+index-from-HEAD: 85
+short: 7bcf70c
+--- stat ---
+ CHANGELOG.md                |  8 ++++++++
+ docs/ROBOT_MODE.md          |  2 +-
+ docs/guide/configuration.md |  7 ++++---
+ src/cmd/agent.rs            |  8 ++++----
+ src/cmd/filter.rs           | 15 ++++++---------
+ src/jev/classifier.rs       |  8 +++++++-
+ src/jev/client.rs           | 27 +++++++++++++++++++++++----
+ tests/agent.rs              |  2 +-
+ tests/classifier.rs         |  9 ++++++---
+ tests/filter.rs             | 36 ++++++++++++++++++++++++++++++------
+ tests/label.rs              | 13 +++++++------
+ 11 files changed, 97 insertions(+), 38 deletions(-)
+
+--- patch (first 400 lines) ---
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 6d021ea..eea42b2 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -2,6 +2,14 @@
+ 
+ ## Unreleased
+ 
++Fixed:
++
++- `filter` and `label` send at most 60 records per classifier.dev request, the largest keyless
++  request the service accepts: it refuses 75 with HTTP 402 `request_spending_limit` before
++  judging anything, so a keyless run over about 70 records ended exit 4 `api_protocol` with the
++  raw body. A 402 is reported as exit 4 `api_unavailable` naming the service code, without
++  retry. `capabilities.limits.records_per_request.classifier` is 60.
++
+ Changed:
+ 
+ - The keyless quota is measured per verb against the service's own accounting: one
+diff --git a/docs/ROBOT_MODE.md b/docs/ROBOT_MODE.md
+index bfb07fe..c23e088 100644
+--- a/docs/ROBOT_MODE.md
++++ b/docs/ROBOT_MODE.md
+@@ -251,7 +251,7 @@ system. Output verbs start no user command. The caller authorizes `add` staging
+ `is` abstains on oversized context; `add` rejects oversized hunks and complete batches before
+ staging. A higher threshold cannot validate missing evidence or grant permission.
+ 
+-`filter` and `label` batch up to 1,000 records on classifier.dev, each judged alone. On TypeSafe
++`filter` and `label` batch up to 60 records on classifier.dev, each judged alone. On TypeSafe
+ 20 records share a request state and each question names its record; independence is not claimed.
+ `p` is a backend score. Calibration needs task- and backend-specific evidence; ranks past the
+ third are candidates without a reliability claim. Text can influence the model with embedded
+diff --git a/docs/guide/configuration.md b/docs/guide/configuration.md
+index cd60c99..2eb1bd8 100644
+--- a/docs/guide/configuration.md
++++ b/docs/guide/configuration.md
+@@ -48,7 +48,7 @@ The free service has tighter limits and maps TypeSafe Nouls to binary Choice que
+ | tournament window | 200 | 99 + NONE |
+ | input per request | 32,000 tokens | 32,000 UTF-16 code units |
+ | questions per request | bounded by request evidence | 20 dimensions (jevify splits bigger asks) |
+-| records per `filter` request | 20 sharing one state | up to 1,000, each judged alone |
++| records per `filter` request | 20 sharing one state | up to 60, each judged alone (the keyless spending limit refuses 75 with HTTP 402) |
+ | rate limit | 1,200 requests/min | 3,000 classifications/min, 20,000/day, per IP; one classification is one record under one question |
+ | `meta.input_tokens`, `meta.cost_usd` | complete reported input tokens or null, estimated input cost or null | tokens may be null; cost is 0 at the default zero service price |
+ 
+@@ -62,8 +62,9 @@ Filter batches honour numeric `Retry-After` through 60 seconds and refuse longer
+ Free calls a day on one IP, from the cost of each verb (measured 2026-09-22 with
+ `JEVIFY_CONCURRENCY=4`, [benchmarks/results.md](../../benchmarks/results.md)): `is` costs one
+ classification per statement, so 6,600 calls of three statements to 20,000 of one; `filter` and
+-`label` cost one per distinct record, so 20,000 records in total, and the service accepts a call
+-of 60 records and refuses one of 75 (HTTP 402 `request_spending_limit`); `pick` and `why` cost two
++`label` cost one per distinct record, so 20,000 records in total, and jevify sends at most 60 records
++per request, the largest keyless request the service accepts (75 is refused with HTTP 402
++`request_spending_limit`, reported as exit 4 `api_unavailable`); `pick` and `why` cost two
+ per window of 99 lines plus two for the final round, so 830 calls of 1,000 lines to 10,000 of at
+ most 99; `route` costs two per window of 99 commands plus one per finalist, at most 12, so about
+ 380 calls over a PATH of 1,900 commands. `capabilities.backends` carries the same figures.
+diff --git a/src/cmd/agent.rs b/src/cmd/agent.rs
+index 52ae930..d606037 100644
+--- a/src/cmd/agent.rs
++++ b/src/cmd/agent.rs
+@@ -43,7 +43,7 @@ fn kinds() -> (Vec<serde_json::Value>, Option<String>) {
+                     "ordered": false,
+                 }),
+                 "dir" => serde_json::json!({
+-                    "evidence": "directory path; a literal prefix ending in / narrows the walk",
++                    "evidence": "directory path; finalists add the names of their first children, withheld for the patterns of withheld; a literal prefix ending in / narrows the walk",
+                     "ordered": false,
+                 }),
+                 "tool" => serde_json::json!({
+@@ -85,8 +85,8 @@ pub fn capabilities() -> Outcome {
+     // classification is one record under one question, 20,000 a day per IP.
+     let keyless_cost = serde_json::json!({
+         "is": "1 per statement",
+-        "filter": "1 per distinct record; a call of 60 records is accepted, 75 is refused with HTTP 402 request_spending_limit",
+-        "label": "1 per distinct record; a call of 60 records is accepted, 75 is refused with HTTP 402 request_spending_limit",
++        "filter": "1 per distinct record; jevify sends at most 60 records per request, the largest keyless request the service accepts (75 is refused with HTTP 402 request_spending_limit)",
++        "label": "1 per distinct record; jevify sends at most 60 records per request, the largest keyless request the service accepts (75 is refused with HTTP 402 request_spending_limit)",
+         "pick": "2 per window of 99 lines, plus 2 for the final round",
+         "why": "2 per window of 99 lines, plus 2 for the final round",
+         "route": "2 per window of 99 commands, plus 1 per finalist, at most 12"
+@@ -164,7 +164,7 @@ pub fn capabilities() -> Outcome {
+             { "name": "JEVIFY_INVENTORY_FILE", "meaning": "JSON array of {name, summary} replacing the PATH inventory (tests, evals)" },
+             { "name": "JEVIFY_CNF", "meaning": "enable the command-not-found hook from `jevify init`" }
+         ],
+-        "limits": { "choice_options": 255, "window": crate::tournament::WINDOW, "state_tokens": 32000, "request_tokens": 64000, "requests_per_minute": 1200, "tokens_per_second": 250000, "stdin_bytes": crate::input::MAX_BYTES, "pick_lines": crate::cmd::pick::MAX_LINES, "distinct_records": 20000, "re …[line truncated at 300 characters]
++        "limits": { "choice_options": 255, "window": crate::tournament::WINDOW, "state_tokens": 32000, "request_tokens": 64000, "requests_per_minute": 1200, "tokens_per_second": 250000, "stdin_bytes": crate::input::MAX_BYTES, "pick_lines": crate::cmd::pick::MAX_LINES, "distinct_records": 20000, "re …[line truncated at 300 characters]
+         "saved_inputs": { "verbs": ["why", "filter"], "directory": "JEVIFY_CACHE_DIR/outputs, or the platform cache directory/jevify/outputs", "filename": "<blake3-16>.log", "contents": "raw input bytes, secrets included", "retention": "never pruned", "disable": "--no-save (independent of --no-cach …[line truncated at 300 characters]
+         "backends": [
+             { "name": "typesafe", "key": "required", "model": "Jev", "window": Backend::Typesafe.window(), "choice_options": 255, "state_chars": "32k tokens", "requests_per_minute": 1200, "meta": "input_tokens is null unless every inference attempt reports usage; cost_usd estimates input-token cost …[line truncated at 300 characters]
+diff --git a/src/cmd/filter.rs b/src/cmd/filter.rs
+index 68ae99d..bc8db26 100644
+--- a/src/cmd/filter.rs
++++ b/src/cmd/filter.rs
+@@ -1,6 +1,6 @@
+ use crate::{
+     cmd::Outcome,
+-    config::{Backend, Config},
++    config::Config,
+     exit::{Exit, JevifyError},
+     jev::{Question, Questions, Response, client::Client},
+     records::{self, Split},
+@@ -183,12 +183,7 @@ fn selected(verdict: &str, invert: bool, strict: bool) -> bool {
+     }
+ }
+ 
+-pub(crate) fn batch_size(backend: Backend, questions: usize) -> usize {
+-    match backend {
+-        Backend::Classifier => (1_000 / questions.max(1)).max(1),
+-        Backend::Typesafe => 20,
+-    }
+-}
++pub(crate) use crate::jev::client::batch_size;
+ 
+ /// Delivers batches in record order. Returning false cancels pending requests.
+ pub(crate) async fn score(
+@@ -228,6 +223,7 @@ pub(crate) fn write_record(
+ #[cfg(test)]
+ mod tests {
+     use super::*;
++    use crate::config::Backend;
+ 
+     #[test]
+     fn selection_keeps_doubt_in_both_directions_unless_strict() {
+@@ -238,8 +234,9 @@ mod tests {
+                 assert_eq!(selected("unsure", invert, strict), !strict);
+             }
+         }
+-        assert_eq!(batch_size(Backend::Classifier, 1), 1000);
+-        assert_eq!(batch_size(Backend::Classifier, 20), 50);
++        assert_eq!(batch_size(Backend::Classifier, 1), 60);
++        assert_eq!(batch_size(Backend::Classifier, 20), 3);
++        assert_eq!(batch_size(Backend::Classifier, 61), 1);
+         assert_eq!(batch_size(Backend::Typesafe, 1), 20);
+     }
+ }
+diff --git a/src/jev/classifier.rs b/src/jev/classifier.rs
+index 7c0bc67..34176af 100644
+--- a/src/jev/classifier.rs
++++ b/src/jev/classifier.rs
+@@ -28,6 +28,12 @@ pub const MAX_DIMENSIONS: usize = 20;
+ pub const MAX_LABELS: usize = 100;
+ /// UTF-16 code units per input (the service applies JavaScript `string.length`).
+ pub const MAX_INPUT_CHARS: usize = 32_000;
++/// Decisions (`items × dimensions`) the service accepts in one request.
++pub const MAX_DECISIONS: usize = 1_000;
++/// Decisions jevify sends in one keyless request. The service's spending limit refuses a
++/// bigger free request with HTTP 402 `request_spending_limit` before judging anything: measured
++/// 2026-09-22, a request of 60 records under one question is accepted and one of 75 refused.
++pub const KEYLESS_DECISIONS: usize = 60;
+ /// UTF-16 code units per dimension's `instructions`.
+ const MAX_INSTRUCTIONS_CHARS: usize = 4_000;
+ /// The two labels a Noul becomes when its criteria cannot be labels themselves.
+@@ -139,7 +145,7 @@ pub fn request_body(
+             "classifier requires 1..=20 dimensions".into(),
+         ));
+     }
+-    if items.len() > 1_000 / questions.len() {
++    if items.len() > MAX_DECISIONS / questions.len() {
+         return Err(JevifyError::InputTooLarge(
+             "classifier requires at most 1000 decisions".into(),
+         ));
+diff --git a/src/jev/client.rs b/src/jev/client.rs
+index 3e09032..abdd417 100644
+--- a/src/jev/client.rs
++++ b/src/jev/client.rs
+@@ -277,10 +277,7 @@ impl Client {
+         records: &'a [String],
+         questions: &'a Questions,
+     ) -> impl futures::Stream<Item = Result<(usize, Vec<Response>), JevifyError>> + 'a {
+-        let size = match self.backend {
+-            Backend::Classifier => (1_000 / questions.len().max(1)).max(1),
+-            Backend::Typesafe => 20,
+-        };
++        let size = batch_size(self.backend, questions.len());
+         records
+             .chunks(size)
+             .enumerate()
+@@ -524,6 +521,18 @@ impl Client {
+                     return Ok(body);
+                 }
+                 401 | 403 => return Err(JevifyError::BadKey(status)),
++                // classifier.dev's spending limit: the free request is too big for the service
++                // to judge at all. Not retried; the batch size keeps jevify under it.
++                402 => {
++                    let text = String::from_utf8_lossy(&body);
++                    if rid.is_some() {
++                        *self.stats.request_id.lock().unwrap() = rid;
++                    }
++                    return Err(JevifyError::Unavailable(format!(
++                        "HTTP 402: the service refused the request's size without a key ({})",
++                        rejection_message(&text)
++                    )));
++                }
+                 _ if body_rejected => {
+                     let text = String::from_utf8_lossy(&body);
+                     if rid.is_some() {
+@@ -564,6 +573,16 @@ impl Client {
+     }
+ }
+ 
++/// Records per `ask_each` request. classifier.dev takes no key, so every request stays under
++/// its keyless spending limit ([`classifier::KEYLESS_DECISIONS`] decisions); TypeSafe shares
++/// one state between 20 records.
++pub fn batch_size(backend: Backend, questions: usize) -> usize {
++    match backend {
++        Backend::Classifier => (classifier::KEYLESS_DECISIONS / questions.max(1)).max(1),
++        Backend::Typesafe => 20,
++    }
++}
++
+ /// The wait the server asked for: `retry-after-ms` (milliseconds) beats `retry-after` (whole
+ /// seconds; an HTTP-date is ignored). `None` means use the backoff.
+ fn retry_after(headers: &reqwest::header::HeaderMap) -> Option<Duration> {
+diff --git a/tests/agent.rs b/tests/agent.rs
+index 472e927..60c5b6f 100644
+--- a/tests/agent.rs
++++ b/tests/agent.rs
+@@ -218,7 +218,7 @@ fn capabilities_lists_verbs_exit_codes_env() {
+             .unwrap()
+             .contains("benchmarks/results.md")
+     );
+-    assert_eq!(d["limits"]["records_per_request"]["classifier"], 1_000);
++    assert_eq!(d["limits"]["records_per_request"]["classifier"], 60);
+     assert_eq!(d["limits"]["records_per_request"]["typesafe"], 20);
+     assert_eq!(
+         d["saved_inputs"]["verbs"],
+diff --git a/tests/classifier.rs b/tests/classifier.rs
+index ad48aa7..bdf2463 100644
+--- a/tests/classifier.rs
++++ b/tests/classifier.rs
+@@ -72,8 +72,10 @@ async fn missing_dimension_model_reaches_the_output_envelope() {
+ #[tokio::test]
+ async fn each_batches_by_decision_count_and_returns_every_record_in_order() {
+     use futures::TryStreamExt;
+-    for (count, dimensions, sizes) in [(2500, 1, vec![1000, 1000, 500]), (1000, 2, vec![500, 500])]
+-    {
++    for (count, dimensions, sizes) in [
++        (2500, 1, [vec![60; 41], vec![40]].concat()),
++        (100, 2, vec![30, 30, 30, 10]),
++    ] {
+         let server = common::mock_classifier(FakeJev {
+             choose: |_, _, _| "NONE".into(),
+             noul: |_, state| state.as_str().unwrap().parse::<f64>().unwrap() / 2500.0,
+@@ -219,7 +221,8 @@ async fn batches_and_question_chunks_are_concurrent_and_obey_the_semaphore() {
+         let qs: Questions = (0..if each { 1 } else { 45 })
+             .map(|i| (format!("q{i}"), Question::noul("Is it?")))
+             .collect();
+-        let records = vec!["record".into(); 2500];
++        // Three requests either way: 45 questions over 20 dimensions, or 180 records in 60s.
++        let records = vec!["record".into(); if each { 180 } else { 2500 }];
+         let operation = async {
+             if each {
+                 let _: Vec<_> = client.ask_each(&records, &qs).try_collect().await.unwrap();
+diff --git a/tests/filter.rs b/tests/filter.rs
+index 9f4a4c5..7fe5a46 100644
+--- a/tests/filter.rs
++++ b/tests/filter.rs
+@@ -186,9 +186,9 @@ async fn bytes_splits_order_and_judge_once() {
+ #[tokio::test]
+ async fn batch_boundaries_and_ceiling() {
+     for (classifier, count, expected) in [
+-        (true, 2500, 3),
++        (true, 2500, 42),
+         (false, 41, 3),
+-        (true, 20_000, 20),
++        (true, 20_000, 334),
+         (true, 20_001, 0),
+     ] {
+         let server = if classifier {
+@@ -377,7 +377,7 @@ impl Respond for Batches {
+         self.requests.fetch_add(1, Ordering::SeqCst);
+         let body: Value = serde_json::from_slice(&request.body).unwrap();
+         let first = body["items"][0].as_str().unwrap();
+-        if first == "record 1000" {
++        if first == "record 1020" {
+             if let Some((code, wait)) = self.quota {
+                 let attempt = self.quota_requests.fetch_add(1, Ordering::SeqCst);
+                 if code != "rate_limit_minute" || attempt == 0 {
+@@ -453,6 +453,30 @@ fn input(count: usize) -> String {
+     (0..count).map(|i| format!("record {i}\n")).collect()
+ }
+ 
++#[tokio::test]
++async fn spending_limit_is_named_and_not_retried() {
++    let server = MockServer::start().await;
++    Mock::given(method("POST"))
++        .and(path("/v1/classify"))
++        .respond_with(ResponseTemplate::new(402).set_body_json(serde_json::json!({
++            "error": "request exceeds the free spending limit", "code": "request_spending_limit"
++        })))
++        .mount(&server)
++        .await;
++    let out = common::jevify_classifier(&server)
++        .args(["filter", "x", "--json"])
++        .write_stdin(input(70))
++        .output()
++        .unwrap();
++    let value = envelope(&out, 4);
++    assert_eq!(value["error"]["kind"], "api_unavailable");
++    let message = value["error"]["message"].as_str().unwrap();
++    assert!(message.contains("HTTP 402"), "{message}");
++    assert!(message.contains("request_spending_limit"), "{message}");
++    assert!(message.contains("answered 0 of 70"), "{message}");
++    assert_eq!(server.received_requests().await.unwrap().len(), 2);
++}
++
+ #[tokio::test]
+ async fn quota_keeps_a_prefix_and_minute_limit_retries() {
+     for (code, wait, expected) in [
+@@ -479,7 +503,7 @@ async fn quota_keeps_a_prefix_and_minute_limit_retries() {
+                 if expected == 4 {
+                     assert_eq!(value["error"]["kind"], "api_unavailable");
+                     let message = value["error"]["message"].as_str().unwrap();
+-                    assert!(message.contains("answered 1000 of 2500"));
++                    assert!(message.contains("answered 1020 of 2500"));
+                     assert!(message.contains(if code == "rate_limit_day" {
+                         "daily quota of the free backend reached"
+                     } else {
+@@ -491,14 +515,14 @@ async fn quota_keeps_a_prefix_and_minute_limit_retries() {
+             } else {
+                 assert_eq!(
+                     out.stdout,
+-                    input(if expected == 4 { 1000 } else { 2500 }).as_bytes()
++                    input(if expected == 4 { 1020 } else { 2500 }).as_bytes()
+                 );
+             }
+             let stderr = String::from_utf8_lossy(&out.stderr);
+             if expected == 4 {
+                 assert_eq!(responder.quota_requests.load(Ordering::SeqCst), 1);
+                 if !machine {
+-                    let status = stderr.find("jevify filter: answered 1000 of 2500").unwrap();
++                    let status = stderr.find("jevify filter: answered 1020 of 2500").unwrap();
+                     let error = stderr
+                         .find(if code == "rate_limit_day" {
+                             "daily quota of the free backend reached"
+diff --git a/tests/label.rs b/tests/label.rs
+index c797445..237190a 100644
+--- a/tests/label.rs
++++ b/tests/label.rs
+@@ -335,7 +335,7 @@ fn input(count: usize) -> String {
+ 
+ #[tokio::test]
+ async fn batch_boundaries_ceiling_and_duplicates_judged_once() {
+-    for (count, expected) in [(2500, 3), (20_001, 0)] {
++    for (count, expected) in [(2500, 42), (20_001, 0)] {
+         let server = common::mock_classifier(fake()).await;
+         let out = common::jevify_classifier(&server)
+             .args(["label", "bug,feature", "--json"])
+@@ -474,7 +474,7 @@ impl Respond for Batches {
+         self.requests.fetch_add(1, Ordering::SeqCst);
+         let body: Value = serde_json::from_slice(&request.body).unwrap();
+         let first = body["items"][0].as_str().unwrap();
+-        if first == "record 1000" {
++        if first == "record 1020" {
+             if let Some(code) = self.quota {
+                 return FakeJev::quota(code, 1);
+             }
+@@ -523,19 +523,20 @@ async fn daily_quota_keeps_the_answered_prefix() {
+             let value = envelope(&out, 4);
+             assert_eq!(value["error"]["kind"], "api_unavailable");
+             let message = value["error"]["message"].as_str().unwrap();
+-            assert!(message.contains("answered 1000 of 2500"), "{message}");
++            assert!(message.contains("answered 1020 of 2500"), "{message}");
+             assert!(message.contains("daily quota of the free backend reached"));
+         } else {
+             assert_eq!(out.status.code(), Some(4), "{stderr}");
+-            assert_eq!(out.stdout, labelled(1000).as_bytes());
+-            let status = stderr.find("jevify label: answered 1000 of 2500").unwrap();
++            assert_eq!(out.stdout, labelled(1020).as_bytes());
++            let status = stderr.find("jevify label: answered 1020 of 2500").unwrap();
+             let error = stderr
+                 .find("daily quota of the free backend reached")
+                 .unwrap();
+             assert!(status < error);
+         }
+         let requests = responder.requests.load(Ordering::SeqCst);
+-        assert!((2..=3).contains(&requests), "{requests}");
++        // The 18th request (records 1020..1079) meets the quota; a 19th may be in flight.
++        assert!((18..=19).contains(&requests), "{requests}");
+     }
+ }
+ 

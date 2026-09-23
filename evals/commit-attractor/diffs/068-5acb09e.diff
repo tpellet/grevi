@@ -1,0 +1,59 @@
+index-from-HEAD: 68
+short: 5acb09e
+--- stat ---
+ CHANGELOG.md | 15 +++++++++++++++
+ Cargo.lock   |  2 +-
+ Cargo.toml   |  2 +-
+ 3 files changed, 17 insertions(+), 2 deletions(-)
+
+--- patch (first 400 lines) ---
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 76e0ce5..7a70e35 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,5 +1,20 @@
+ # Changelog
+ 
++## 0.8.1
++
++Fixed:
++
++- `fill --dry-run` ends its stderr with `would run …` instead of `exec …`; only a real run
++  prints `exec`.
++- `fill` and `pick --from branch` name a branch that exists only on one remote by its short name
++  (`ticket/TPE-791`), which `git switch` accepts, instead of `origin/ticket/TPE-791`; the ref
++  stays in the evidence.
++- `why` shows each finalist next to the nearest failure statement and asks for the failing
++  step's own line rather than the first loud one; `data.any` is taken over both rounds.
++- A `file` or `dir` marker whose names round is undecided sends every name not ruled out to the
++  finals (up to 24), not the top three, so a content phrase whose file ranks low on its name
++  reaches the excerpt round instead of losing to a related sibling.
++
+ ## 0.8.0
+ 
+ Added:
+diff --git a/Cargo.lock b/Cargo.lock
+index cb3caca..75e3d0f 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -850,7 +850,7 @@ checksum = "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682"
+ 
+ [[package]]
+ name = "jevify"
+-version = "0.8.0"
++version = "0.8.1"
+ dependencies = [
+  "anyhow",
+  "assert_cmd",
+diff --git a/Cargo.toml b/Cargo.toml
+index 11d3291..4919ac3 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -1,6 +1,6 @@
+ [package]
+ name = "jevify"
+-version = "0.8.0"
++version = "0.8.1"
+ edition = "2024"
+ rust-version = "1.87"
+ license = "MIT"

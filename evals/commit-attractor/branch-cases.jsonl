@@ -1,0 +1,14 @@
+{"id": "branch-06", "kind": "branch", "target": "wt/bead-06", "description": "the branch whose tip reworks the stdin picker and its tests"}
+{"id": "branch-07", "kind": "branch", "target": "wt/bead-07", "description": "the branch whose tip fills in the root-cause verb and its tests"}
+{"id": "branch-08", "kind": "branch", "target": "wt/bead-08", "description": "the branch whose tip implements the tool inventory and the manual-page reader"}
+{"id": "branch-09", "kind": "branch", "target": "wt/bead-09", "description": "the branch whose tip implements routing to an installed tool and its abstention"}
+{"id": "branch-10", "kind": "branch", "target": "wt/bead-10", "description": "the branch whose tip adds argument building for a routed command"}
+{"id": "branch-11", "kind": "branch", "target": "wt/bead-11", "description": "the branch whose tip adds the privacy page and the machine-facing capabilities surface"}
+{"id": "branch-12", "kind": "branch", "target": "wt/bead-12", "description": "the branch whose tip is about speed: prewarming and recorded benchmark numbers"}
+{"id": "branch-13a", "kind": "branch", "target": "wt/bead-13a", "description": "the branch whose tip adds evaluation logs with expected answers and the scripts that score them"}
+{"id": "branch-13b", "kind": "branch", "target": "wt/bead-13b", "description": "the branch whose tip writes the front page and the change log from scratch"}
+{"id": "branch-13c", "kind": "branch", "target": "wt/bead-13c", "description": "the branch whose tip adds a terminal recording with its tape and the fixture files it plays over"}
+{"id": "branch-13d", "kind": "branch", "target": "wt/bead-13d", "description": "the branch whose tip only extends the front page by about fifty lines"}
+{"id": "branch-16", "kind": "branch", "target": "wt/bead-16", "description": "the branch whose tip adds the release workflow and the packaging configuration"}
+{"id": "branch-rust", "kind": "branch", "target": "wt/bead-rust", "description": "the branch whose tip pins the toolchain and adds dependency auditing and update automation"}
+{"id": "branch-main", "kind": "branch", "target": "main", "description": "the branch whose tip corrects measured figures in the guide pages so each matches the file that produced it"}
