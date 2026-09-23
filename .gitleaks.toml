@@ -11,6 +11,9 @@ regexes = [
   '''\$HOME/\.ssh/typesafe-ai-key''',
 ]
 paths = [
+  # A manifest of sha256 digests of the held-out inputs; each value is the file's own digest,
+  # verified against the file. High entropy, no secret.
+  '''^evals/holdout/inputs\.sha256\.json$''',
   '''^evals/prototype/eval_nl2bash_out\.json$''',
   '''^evals/prototype/eval_intents_out\.json$''',
 ]

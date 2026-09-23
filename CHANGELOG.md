@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.10.0 - 2026-09-22
+
 Changed:
 
 - `fill` always runs the finals of a `file` or `dir` marker. Before, a decisive names round
@@ -32,6 +34,41 @@ Changed:
 - benchmarks/results.md labels the three-way `filter` figures as development-set: the three
   wordings were chosen on the 40 cases of both splits, so the validation split is spent for
   `filter`. The 0.9.0 entry below gives the rate as 3 to 6 of the 40 cases.
+
+Documents:
+
+- Every measured figure in the guides is re-derived from the file that produced it, or deleted
+  where no file holds it. The routing table reads 34 of 39 author-written requests and 34 of 120
+  NL2Bash, with one abstention, dated to the run and the version that produced it; the root-cause
+  table reads 18 of 21 at rank one and none abstained. Per-verb token estimates and a
+  routing-plus-root-cause dollar total are gone: no file in `evals/` or `benchmarks/` held them.
+  The measured PATH is 1,883 commands, not 1,900.
+
+- Three README demonstrations showed answers the binary no longer gives. The commit demo named a
+  commit that did not match its description; it is replaced by a piped-candidate `fill` over
+  thirty commits that resolves at 0.99. The two-candidate demo abstained about two runs in three;
+  a longer description resolves it on ten runs of ten across both backends. The nothing-fits
+  demonstration returned a commit on TypeSafe in four runs of four; it now asks for something a
+  command-line program cannot hold, and NONE reaches 1.00. `docs/img/fill.svg` is redrawn to the
+  command that ships.
+
+- What the threshold decides is stated once, in `docs/guide/how-it-works.md`, and linked rather
+  than repeated. It gates P(anything matches); the winner is chosen by a factor-of-two ratio
+  against the runner-up and P(NONE), so a marker can resolve on a candidate whose own probability
+  sits below the threshold. Three documents and one capability string said otherwise.
+
+Measured:
+
+- `evals/holdout/` holds 103 source-held-out cases over `fill`, `pick`, `why`, `filter` and
+  `route`, from repositories, logs and inventories used nowhere else, with the gold apart from
+  what a run reads. Both labelling passes are one reader, which the set states rather than
+  claiming two annotators.
+
+- The `commit` kind, measured over this repository's 248 commits with descriptions written from
+  each target's diff: 11 of 27 right first keyless, 14 of 27 on TypeSafe, against a `branch`
+  control of 12 of 14 on both. No commit is an attractor. The failures cluster in the oldest
+  window, 0 of 5 on both backends, and the keyless failure mode is abstention with the right
+  commit already in the finals.
 
 ## 0.9.3
 
