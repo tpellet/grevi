@@ -134,7 +134,7 @@ Look at it; never `eval` it.
 
 ```sh
 jevify fill --dry-run -- git switch '@{branch:the auth refactor}'
-printf 'retry_backoff\nparse_header\n' | jevify fill --dry-run -- cargo test '@{-:the retry test}'
+printf 'retry_backoff\nparse_header\n' | jevify fill --dry-run -- cargo test '@{-:the test that retries a failed request}'
 ```
 
 Three families of value exist. Things a tool can list: `branch`, `commit`, `file`, `dir`,

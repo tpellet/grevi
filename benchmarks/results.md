@@ -80,7 +80,7 @@ calibration and validation splits, gold held apart from the manifest; hunch-ric)
 envelope are under `evals/out/validation/` (not committed). Every decision and score below is
 read from `meta.decision` of the envelope, never parsed from a status line. Environment-pinned
 cases ran inside shallow clones of the four named repositories at their pinned commits; every
-`route` case had its required tools on the PATH of the runner (a macOS dev machine, 1,900
+`route` case had its required tools on the PATH of the runner (a macOS dev machine, 1,883
 commands, `spit` and `json_pp` among them).
 
 Backends: TypeSafe with a key (`requested` jev-1.13.0, `answering` jev-1.13.0 on all 153

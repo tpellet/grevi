@@ -42,7 +42,7 @@ Write the git command you would write anyway, and put a marker where the hash go
 listing in, and `'@{-:what it did}'` chooses from it; `--field 1` says which column of each
 line holds the value to substitute.
 
-![jevify fill turns a description of a commit into the real commit, then runs git show on it](docs/img/fill.svg)
+![jevify fill turns a description of a commit into the real commit and prints the git command it resolved](docs/img/fill.svg)
 
 ```console
 $ git log --oneline -30 | jevify fill --field 1 --dry-run -- git show --stat --format=%s '@{-:made route abstain when two commands are too close}'
@@ -63,8 +63,8 @@ The marker works wherever a tool can list the candidates, and jevify runs that l
 command instead of running it.
 
 ```console
-$ printf 'retry_backoff\nparse_header\n' | jevify fill --dry-run -- cargo test '@{-:the retry test}'
-jevify fill: - retry_backoff 0.73 (next 0.02, none 0.25) retry_backoff; candidates 2, windows 1; model jev-1.13.0
+$ printf 'retry_backoff\nparse_header\n' | jevify fill --dry-run -- cargo test '@{-:the test that retries a failed request}'
+jevify fill: - retry_backoff 0.98 (next 0.00, none 0.02) retry_backoff; candidates 2, windows 1; model jev-1.13.0
 jevify fill: would run 'cargo' 'test' 'retry_backoff'
 'cargo' 'test' 'retry_backoff'
 ```

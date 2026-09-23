@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 470" width="960" height="470" role="img" aria-labelledby="t d">
-  <title id="t">jevify fill turns a description of a commit into the real commit, then runs git show on it</title>
-  <desc id="d">The command jevify fill -- git show --stat --format=%s with the marker @{commit:stopped sending the free backend batches it refuses} is typed. The 171 commits of the branch scroll by. jevify lists them with git log, judges the marker's description against every subject, and keeps commit 7bcf70c, "fix: keyless batches of at most 60 records, 402 named", with probability 0.93; the next best commit scores 0.04 and "none of them" 0.02. jevify replaces itself with git show --stat --format=%s 7bcf70c, and git prints the subject and the 11 changed files. Output of jevify 0.8.0 on Jev 1.13.0.</desc>
+  <title id="t">jevify fill turns a description of a commit into the real commit, and prints the git command it resolved</title>
+  <desc id="d">The command git log --oneline -30 piped into jevify fill --field 1 --dry-run -- git show --stat --format=%s, with the marker @{-:made route abstain when two commands are too close}, is typed. The 30 commits of the listing scroll by. jevify judges the marker's description against every line, takes column 1 of the winner as the handle, and keeps commit 317cbf7, "fix: route abstains when two commands are too close", with probability 0.99; the next best line scores 0.00 and "none of them" 0.01. The dry run prints git show --stat --format=%s 317cbf7 instead of running it. Output of jevify 0.9.3 on Jev 1.13.0, keyless backend, 2026-09-22.</desc>
   <style>
     text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size: 15px; fill: #e6edf3; }
     .dim { fill: #7d8590; }
@@ -11,23 +11,22 @@
     .bar { fill: #30363d; transform-box: fill-box; transform-origin: left center; }
     .barwin { fill: #3fb950; transform-box: fill-box; transform-origin: left center; }
     .a { animation-duration: 16s; animation-iteration-count: infinite; animation-timing-function: ease-out; }
-    #cover1 { animation: type1 16s steps(40) infinite; }
-    #cover2 { animation: type2 16s steps(60) infinite; }
+    #cover1 { animation: type1 16s steps(69) infinite; }
+    #cover2 { animation: type2 16s steps(76) infinite; }
     #stream { animation: scroll 16s linear infinite; }
     #left { animation-name: left; } #how { animation-name: how; }
     #r1 { animation-name: r1; } #r2 { animation-name: r2; } #r3 { animation-name: r3; }
-    #b1 { animation-name: b1; } #b2 { animation-name: b2; } #b3 { animation-name: b3; }
+    #b1 { animation-name: b1; } #b3 { animation-name: b3; }
     #hl { animation-name: hl; } #exec { animation-name: exec; } #git { animation-name: git; } #all { animation-name: all; }
-    @keyframes type1 { 0% { transform: translateX(0); } 7%, 100% { transform: translateX(420px); } }
-    @keyframes type2 { 0%, 7% { transform: translateX(0); } 15%, 100% { transform: translateX(640px); } }
-    @keyframes scroll { from { transform: translateY(0); } to { transform: translateY(-560px); } }
+    @keyframes type1 { 0% { transform: translateX(0); } 7%, 100% { transform: translateX(640px); } }
+    @keyframes type2 { 0%, 7% { transform: translateX(0); } 15%, 100% { transform: translateX(690px); } }
+    @keyframes scroll { from { transform: translateY(0); } to { transform: translateY(-600px); } }
     @keyframes left { 0%, 15% { opacity: 0; } 18%, 100% { opacity: 1; } }
     @keyframes how { 0%, 22% { opacity: 0; } 25%, 100% { opacity: 1; } }
     @keyframes r1 { 0%, 32% { opacity: 0; } 35%, 100% { opacity: 1; } }
     @keyframes r2 { 0%, 36% { opacity: 0; } 39%, 100% { opacity: 1; } }
     @keyframes r3 { 0%, 40% { opacity: 0; } 43%, 100% { opacity: 1; } }
     @keyframes b1 { 0%, 34% { transform: scaleX(0); } 42%, 100% { transform: scaleX(1); } }
-    @keyframes b2 { 0%, 38% { transform: scaleX(0); } 46%, 100% { transform: scaleX(1); } }
     @keyframes b3 { 0%, 42% { transform: scaleX(0); } 50%, 100% { transform: scaleX(1); } }
     @keyframes hl { 0%, 50% { opacity: 0; } 54%, 100% { opacity: 1; } }
     @keyframes exec { 0%, 58% { opacity: 0; } 62%, 100% { opacity: 1; } }
@@ -45,91 +44,90 @@
 
   <rect width="960" height="470" rx="10" fill="#0d1117"/>
   <g id="all" class="a">
-    <text x="24" y="40"><tspan class="dim">$ </tspan>jevify fill -- git show --stat --format=%s \</text>
-    <rect id="cover1" x="42" y="22" width="440" height="26" fill="#0d1117"/>
-    <text x="24" y="64">    <tspan class="mark">'@{commit:stopped sending the free backend batches it refuses}'</tspan></text>
-    <rect id="cover2" x="60" y="46" width="660" height="26" fill="#0d1117"/>
+    <text x="24" y="40"><tspan class="dim">$ </tspan>git log --oneline -30 | jevify fill --field 1 --dry-run -- git show \</text>
+    <rect id="cover1" x="42" y="22" width="660" height="26" fill="#0d1117"/>
+    <text x="24" y="64">    --stat --format=%s <tspan class="mark">'@{-:made route abstain when two commands are too close}'</tspan></text>
+    <rect id="cover2" x="60" y="46" width="700" height="26" fill="#0d1117"/>
 
     <g id="left" class="a">
-      <text x="24" y="104" class="label">171 COMMITS ON THE BRANCH, FROM git log</text>
+      <text x="24" y="104" class="label">THE 30 LINES ON STDIN, FROM git log</text>
       <g clip-path="url(#col)">
         <g id="stream" class="dim small">
-          <text x="24" y="134">2996c1f chore: beads before release 0.8.0</text>
-          <text x="24" y="154">dcb0623 chore: release 0.8.0</text>
-          <text x="24" y="174">c5dda08 chore: deadline in capabilities</text>
-          <text x="24" y="194">7e70a39 feat: one deadline per verb</text>
-          <text x="24" y="214">79c3450 docs: init agents pairs situations</text>
-          <text x="24" y="234">d4e9c13 chore: beads after evaluation fixes</text>
-          <text x="24" y="254">b9e3143 feat: dir finalists carry names</text>
-          <text x="24" y="274">7bcf70c fix: keyless batches of at most 60</text>
-          <text x="24" y="294">a91fae2 fix: fill's abstention line names</text>
-          <text x="24" y="314">68bafb3 fix: a marker in argv[0] names tool</text>
-          <text x="24" y="334">a3df8ef test: lister runner pipe test</text>
-          <text x="24" y="354">f1d4aa6 feat: why and pick state counts</text>
-          <text x="24" y="374">9cf8269 test: doc examples run in own repo</text>
-          <text x="24" y="394">57948ba chore: beads after evaluation</text>
-          <text x="24" y="414">fbd314e docs: keyless quota per verb</text>
-          <text x="24" y="434">522762e chore: close release 0.7.0</text>
-          <text x="24" y="454">07bcbb4 chore: beads after hunch-con</text>
-          <text x="24" y="474">f757afb chore: release 0.7.0</text>
-          <text x="24" y="494">f676b25 fix: file excerpts carry meaning</text>
-          <text x="24" y="514">9ddf5d8 chore: beads after Phase 3 and 4</text>
-          <text x="24" y="534">1c9f91b docs: kinds in capabilities</text>
-          <text x="24" y="554">107b83b feat: fill and pick --from resolve</text>
-          <text x="24" y="574">d3db489 chore: beads after hunch-qxn</text>
-          <text x="24" y="594">f1d266e docs: label in capabilities</text>
-          <text x="24" y="614">15b75a1 feat: coded kinds commit, file, dir</text>
-          <text x="24" y="634">3ec58c3 feat: label tags each stdin record</text>
-          <text x="24" y="654">01a7eaa chore: beads after hunch-7zg.15</text>
-          <text x="24" y="674">11bf017 feat: recipe engine, shipped recipes</text>
-          <text x="24" y="694">2996c1f chore: beads before release 0.8.0</text>
-          <text x="24" y="714">dcb0623 chore: release 0.8.0</text>
-          <text x="24" y="734">c5dda08 chore: deadline in capabilities</text>
-          <text x="24" y="754">7e70a39 feat: one deadline per verb</text>
-          <text x="24" y="774">79c3450 docs: init agents pairs situations</text>
-          <text x="24" y="794">d4e9c13 chore: beads after evaluation fixes</text>
-          <text x="24" y="814">b9e3143 feat: dir finalists carry names</text>
-          <text x="24" y="834">7bcf70c fix: keyless batches of at most 60</text>
-          <text x="24" y="854">a91fae2 fix: fill's abstention line names</text>
-          <text x="24" y="874">68bafb3 fix: a marker in argv[0] names tool</text>
+          <text x="24" y="134">67ac2e7 docs: the demo shows a right answer</text>
+          <text x="24" y="154">14fd88e test: the commit kind over the history</text>
+          <text x="24" y="174">cd49bcf docs: every figure from its own file</text>
+          <text x="24" y="194">0f3702c test: a source-held-out set for 0.9.x</text>
+          <text x="24" y="214">8ecc95e docs: the guides state the fill rule</text>
+          <text x="24" y="234">0756af0 fix: file and dir read their finals</text>
+          <text x="24" y="254">168bd87 test: held-out evidence for finals</text>
+          <text x="24" y="274">d8262e7 docs: the guides stop contradicting</text>
+          <text x="24" y="294">e5048ff chore: beads after round 9 wave two</text>
+          <text x="24" y="314">e4aa382 fix: the deadline counts from the start</text>
+          <text x="24" y="334">663b6ab feat: round one is opt-in</text>
+          <text x="24" y="354">9876afc docs: measured and derived</text>
+          <text x="24" y="374">07d773e chore: beads after the round 9 wave</text>
+          <text x="24" y="394">612fe0c fix: a prefixed branch marker</text>
+          <text x="24" y="414">f7985c6 fix: why finals stay inside the window</text>
+          <text x="24" y="434">840924a fix: a dropped record's no</text>
+          <text x="24" y="454">e59f447 chore: close release 0.9.3</text>
+          <text x="24" y="474">38fa0ac chore: beads after review round 9</text>
+          <text x="24" y="494">9258d1b chore: release 0.9.3</text>
+          <text x="24" y="514">317cbf7 fix: route abstains when two commands</text>
+          <text x="24" y="534">ed37bd6 chore: close release 0.9.2</text>
+          <text x="24" y="554">89cf589 chore: beads before release 0.9.2</text>
+          <text x="24" y="574">a674c4f chore: release 0.9.2</text>
+          <text x="24" y="594">f6c6f4e docs: the branch marker's two forms</text>
+          <text x="24" y="614">3f61bf7 fix: a literal prefix scopes the branch</text>
+          <text x="24" y="634">f0e3c91 fix: a file jevify cannot read</text>
+          <text x="24" y="654">cc6e91b chore: beads after the enforced pilot</text>
+          <text x="24" y="674">6f5a27f docs: the paired pilot repeated</text>
+          <text x="24" y="694">4279c06 chore: close release 0.9.1</text>
+          <text x="24" y="714">a7b145c chore: beads before release 0.9.1</text>
+          <text x="24" y="734">67ac2e7 docs: the demo shows a right answer</text>
+          <text x="24" y="754">14fd88e test: the commit kind over the history</text>
+          <text x="24" y="774">cd49bcf docs: every figure from its own file</text>
+          <text x="24" y="794">0f3702c test: a source-held-out set for 0.9.x</text>
+          <text x="24" y="814">8ecc95e docs: the guides state the fill rule</text>
+          <text x="24" y="834">0756af0 fix: file and dir read their finals</text>
+          <text x="24" y="854">168bd87 test: held-out evidence for finals</text>
+          <text x="24" y="874">d8262e7 docs: the guides stop contradicting</text>
+          <text x="24" y="894">e5048ff chore: beads after round 9 wave two</text>
         </g>
       </g>
       <rect x="24" y="116" width="300" height="200" fill="url(#fade)"/>
     </g>
 
     <g id="how" class="a">
-      <text x="360" y="104" class="label">THE MARKER NAMES A KIND; THE KIND LISTS WHAT EXISTS</text>
-      <text x="360" y="130" class="small"><tspan class="mark">@{commit:</tspan><tspan>…</tspan><tspan class="mark">}</tspan><tspan class="dim">  candidates: git log; evidence: subject, body, paths</tspan></text>
-      <text x="360" y="152" class="small dim">every subject judged against the description; "none" is an option</text>
+      <text x="360" y="104" class="label">THE LINES ARE THE CANDIDATES; A COLUMN IS THE HANDLE</text>
+      <text x="360" y="130" class="small"><tspan class="mark">@{-:</tspan><tspan>…</tspan><tspan class="mark">}</tspan><tspan class="dim">  candidates: the lines on stdin; </tspan><tspan>--field 1</tspan><tspan class="dim"> names the handle</tspan></text>
+      <text x="360" y="152" class="small dim">every line judged against the description; "none of them" is an option</text>
     </g>
 
     <rect id="hl" class="a" x="350" y="176" width="586" height="34" rx="6" fill="#3fb950" fill-opacity=".13" stroke="#3fb950" stroke-opacity=".55"/>
     <g id="r1" class="a">
-      <text x="362" y="198" class="win">7bcf70c</text>
-      <rect x="440" y="187" width="80" height="12" rx="3" class="barwin a" id="b1"/>
-      <text x="532" y="198" class="win">0.93</text>
-      <text x="582" y="198" class="small">fix: keyless batches of at most 60 rec…</text>
+      <text x="362" y="198" class="win">317cbf7</text>
+      <rect x="440" y="187" width="79" height="12" rx="3" class="barwin a" id="b1"/>
+      <text x="532" y="198" class="win">0.99</text>
+      <text x="582" y="198" class="small">fix: route abstains when two commands a…</text>
     </g>
     <g id="r2" class="a">
       <text x="362" y="238" class="dim">next best</text>
-      <rect x="440" y="227" width="4" height="12" rx="3" class="bar a" id="b2"/>
-      <text x="532" y="238" class="dim">0.04</text>
+      <text x="532" y="238" class="dim">0.00</text>
     </g>
     <g id="r3" class="a">
       <text x="362" y="278" class="dim">none of them</text>
-      <rect x="440" y="267" width="2" height="12" rx="3" class="bar a" id="b3"/>
-      <text x="532" y="278" class="dim">0.02</text>
+      <rect x="440" y="267" width="2" height="12" rx="1" class="bar a" id="b3"/>
+      <text x="532" y="278" class="dim">0.01</text>
     </g>
 
     <g id="exec" class="a">
       <line x1="24" y1="330" x2="936" y2="330" stroke="#21262d"/>
-      <text x="24" y="356" class="small dim">jevify fill: exec 'git' 'show' '--stat' '--format=%s' '7bcf70cd91fc3d9e306d60ea0436a02983be3d6f'</text>
+      <text x="24" y="356" class="small dim">jevify fill: would run 'git' 'show' '--stat' '--format=%s' '317cbf7'</text>
     </g>
     <g id="git" class="a">
-      <text x="24" y="384">fix: keyless batches of at most 60 records, 402 named (hunch-0it)</text>
-      <text x="24" y="408" class="dim small"> src/cmd/filter.rs            | 15 ++++++---------</text>
-      <text x="24" y="428" class="dim small"> src/jev/client.rs            | 27 +++++++++++++++++++++++----</text>
-      <text x="24" y="448" class="dim small"> 11 files changed, 97 insertions(+), 38 deletions(-)      <tspan class="win">git ran; jevify is gone</tspan></text>
+      <text x="24" y="390">'git' 'show' '--stat' '--format=%s' '317cbf7'</text>
+      <text x="24" y="418" class="dim small">candidates 30, windows 1, one request, 0.4 s, threshold 0.5</text>
+      <text x="24" y="440" class="dim small">without --dry-run jevify becomes this command, and git owns the output <tspan class="win">and the exit code</tspan></text>
     </g>
   </g>
 </svg>
