@@ -111,6 +111,21 @@ jevify filter: 10 records, 10 distinct, 1 requests
 jevify filter: kept 2 of 10, 0 unsure, full output: ~/Library/Caches/jevify/outputs/c85c7cb6f33fc1f7.log
 ```
 
+Each line gets one of three answers, not two: the statement holds, it does not hold, or the line
+does not say. `filter` keeps the lines where the statement holds and the lines that do not say,
+and `--strict` keeps only the lines where it holds. That is why the status line counts the
+unsure ones: an extra line costs you a glance, a dropped line can cost you the answer.
+
+```console
+$ printf 'build started\nerror: connection timed out\nbuild stopped\n' | jevify filter --strict 'reports a network failure'
+jevify filter: 3 records, 3 distinct, 1 requests
+error: connection timed out
+jevify filter: kept 1 of 3, 2 unsure, full output: ~/Library/Caches/jevify/outputs/bd58efb6741c3dbd.log
+```
+
+Without `--strict` that command keeps all three lines: `build started` and `build stopped` say
+nothing either way about a network failure, so they are unsure, not a no.
+
 `filter` saves its whole input and prints the path, with the count of what it kept and what it
 was unsure about, so you can check what it dropped.
 
@@ -160,7 +175,7 @@ how long it took.
 Three commands to start with:
 
 ```sh
-printf 'build started\nerror: connection timed out\nbuild stopped\n' | jevify filter 'reports a network failure'
+printf 'build started\nerror: connection timed out\nbuild stopped\n' | jevify filter --strict 'reports a network failure'
 git ls-files | jevify pick --files 'where the command-line flags are defined'
 jevify route 'keep my mac awake for an hour'
 ```

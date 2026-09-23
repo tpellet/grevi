@@ -39,7 +39,9 @@ jevify add --json --dry-run 'the token expiry fix'
 
 `jq`, `cut`, `grep`, `head` and another jevify verb can consume selected records. `pick` and
 `filter` preserve their exact bytes and input order; `label` prints `LABEL<TAB>RECORD` with the
-record unchanged after the tab. Check a `pick` call's exit before using its output as an
+record unchanged after the tab. `filter` keeps the records where the statement holds and the
+records that do not say, so its output carries the unsure ones and `U unsure` on the status line
+counts them; `--strict` keeps only the records where the statement holds. Check a `pick` call's exit before using its output as an
 argument; unchecked substitution can turn abstention into an empty argument.
 
 ## Verbs and data

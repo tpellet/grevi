@@ -43,7 +43,7 @@ is() {
     show "cargo build 2>&1 | jevify is 'the build failed' || echo 'build is fine'"
 }
 try() {
-    show "printf 'build started\nerror: connection timed out\nbuild stopped\n' | jevify filter 'reports a network failure'"
+    show "printf 'build started\nerror: connection timed out\nbuild stopped\n' | jevify filter --strict 'reports a network failure'"
     show "git ls-files | jevify pick --files 'where the command-line flags are defined'"
     show "jevify route 'keep my mac awake for an hour'"
 }

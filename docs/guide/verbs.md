@@ -178,6 +178,12 @@ fd -0 -e txt | jevify filter -0 --files 'asks for a refund'
 `filter '<statement>' [-v] [-c] [--strict] [-0 | --para] [--files] [--no-save]` judges each
 distinct record and prints matching records, retaining repeated occurrences and input order.
 
+Each record gets one of three answers, not two: the statement holds, it does not hold, or the
+record does not say. `filter` keeps the records where the statement holds and the records that
+do not say, and `--strict` keeps only the records where it holds. A record that says nothing
+either way is unsure in both directions, so `-v` keeps it too, and the status line's `U unsure`
+is the count of records the statement never reached.
+
 | Flag | Meaning |
 |:---|:---|
 | `-v` | invert yes/no selection |

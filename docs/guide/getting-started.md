@@ -69,6 +69,22 @@ jevify pick: candidates 8, windows 1
 con_edison_electric_bill_august.pdf
 ```
 
+Each record gets one of three answers, not two: the statement holds, it does not hold, or the
+record does not say. `filter` keeps the records where the statement holds and the records that
+do not say, and `--strict` keeps only the records where it holds. On lines with nothing to judge
+the difference is the whole output:
+
+```console
+$ printf 'build started\nerror: connection timed out\nbuild stopped\n' | jevify filter --strict 'reports a network failure'
+jevify filter: 3 records, 3 distinct, 1 requests
+error: connection timed out
+jevify filter: kept 1 of 3, 2 unsure, full output: ~/Library/Caches/jevify/outputs/bd58efb6741c3dbd.log
+```
+
+Drop `--strict` and all three lines come back: `build started` and `build stopped` say nothing
+either way about a network failure, so they are unsure, not a no. The status line counts them,
+so `2 unsure` is the warning that the question did not reach two of the records.
+
 Put a bucket in front of each line, then count the buckets with `cut`, `sort` and `uniq`:
 
 ```console
