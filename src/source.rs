@@ -685,8 +685,10 @@ fn run_lister_blocking(argv: &[OsString], env: &Env, cap: usize) -> Result<Vec<u
 /// name of a remote-only branch by their DWIM rule, but no other git command does, and no one
 /// spelling satisfies both (`git switch origin/x` refuses a remote ref). jevify does not parse
 /// the command, so the caller says which by the literal it writes: `origin/@{branch:x}` lists
-/// the refs of that remote by the rest of their name, and the argument becomes the ref
-/// (`origin/ticket/TPE-791`), which every command that takes a revision resolves.
+/// the refs under `refs/remotes/origin/` by the rest of their name, and the argument becomes
+/// the ref (`origin/ticket/TPE-791`), which every command that takes a revision resolves. A
+/// local branch named `origin/x` is not under that prefix; a prefix with no remote ref under
+/// it fails and names the remotes that exist.
 fn branches(prefix: Option<&Path>, limit: usize, env: &Env) -> Result<Listing, JevifyError> {
     let bytes = run_lister_blocking(&BRANCH_ARGV.map(OsString::from), env, OUTPUT_CAP)?;
     let mut refs = Vec::new();
@@ -721,16 +723,35 @@ fn branches(prefix: Option<&Path>, limit: usize, env: &Env) -> Result<Listing, J
         raw: 0..0,
     };
     if let Some(prefix) = prefix.map(|p| p.as_os_str().as_bytes()) {
-        let records = refs
+        // Remote refs only: a local branch named `origin/x` lives under `refs/heads/` and is
+        // not what `origin/` names.
+        let records: Vec<_> = refs
             .iter()
             .filter_map(|(name, subject, timestamp)| {
-                let shown = name
-                    .strip_prefix(b"refs/heads/")
-                    .or_else(|| name.strip_prefix(b"refs/remotes/"))?;
+                let shown = name.strip_prefix(b"refs/remotes/")?;
                 let handle = shown.strip_prefix(prefix)?;
                 (!handle.is_empty()).then(|| record(handle, shown, subject, *timestamp))
             })
             .collect();
+        if records.is_empty() {
+            let mut remotes: Vec<_> = refs
+                .iter()
+                .filter_map(|(name, _, _)| name.strip_prefix(b"refs/remotes/"))
+                .filter_map(|remote| remote.iter().position(|b| *b == b'/').map(|i| &remote[..i]))
+                .map(|remote| String::from_utf8_lossy(remote).into_owned())
+                .collect();
+            remotes.sort();
+            remotes.dedup();
+            return Err(JevifyError::lister_failed(format!(
+                "prefix {} names no remote ref; remotes: {}",
+                String::from_utf8_lossy(prefix),
+                if remotes.is_empty() {
+                    "none".to_owned()
+                } else {
+                    remotes.join(", ")
+                }
+            )));
+        }
         return Ok(listing(records, 0, true, limit));
     }
     let locals: HashSet<_> = refs
@@ -1346,6 +1367,8 @@ mod tests {
         for (name, commit) in [
             ("refs/heads/older", &commits[1]),
             ("refs/heads/middle", &commits[3]),
+            // A local branch whose name looks like a remote ref.
+            ("refs/heads/origin/x", &commits[2]),
             ("refs/remotes/origin/remote-only", &commits[4]),
             ("refs/remotes/upstream/ancient", &commits[0]),
             ("refs/remotes/origin/ancient", &commits[0]),
@@ -1366,7 +1389,7 @@ mod tests {
         let result = enumerate("branch", Scope::Prefix(None), 3, &env)
             .await
             .unwrap();
-        assert_eq!((result.total, result.omitted, result.ordered), (6, 0, true));
+        assert_eq!((result.total, result.omitted, result.ordered), (7, 0, true));
         assert_eq!(
             result
                 .records
@@ -1406,8 +1429,12 @@ mod tests {
             "{handles:?}"
         );
         assert!(!handles.contains(OsStr::new("ancient")), "{handles:?}");
+        // The bare marker lists the local `origin/x` by its name, next to the remote-only `y`.
+        assert!(handles.contains(OsStr::new("origin/x")), "{handles:?}");
+        assert!(handles.contains(OsStr::new("remote-only")), "{handles:?}");
         // A literal prefix names a remote: its refs, by the rest of their name, unfolded, so
-        // the argument `origin/<handle>` is a rev that `git log` resolves.
+        // the argument `origin/<handle>` is a rev that `git log` resolves. The local branch
+        // `origin/x` is not under `refs/remotes/origin/` and stays out.
         let origin = enumerate("branch", Scope::Prefix(Some("origin/".into())), 10, &env)
             .await
             .unwrap();
@@ -1430,10 +1457,31 @@ mod tests {
             "{}",
             origin.records[2].evidence
         );
+        // A prefix under which no remote ref lives fails and names the remotes that exist.
         let none = enumerate("branch", Scope::Prefix(Some("nothing/".into())), 10, &env)
             .await
-            .unwrap();
-        assert!(none.records.is_empty());
+            .unwrap_err();
+        assert_eq!(none.kind(), "lister_failed");
+        assert_eq!(
+            none.to_string(),
+            "prefix nothing/ names no remote ref; remotes: origin, upstream"
+        );
+        // A deeper prefix is a literal under `refs/remotes/`.
+        let deep = enumerate(
+            "branch",
+            Scope::Prefix(Some("origin/remote-".into())),
+            10,
+            &env,
+        )
+        .await
+        .unwrap();
+        assert_eq!(
+            deep.records
+                .iter()
+                .map(|r| r.handle.as_os_str())
+                .collect::<Vec<_>>(),
+            [OsStr::new("only")]
+        );
         let (prefixed, withheld) = enrich_in(
             "branch",
             Path::new("origin/"),

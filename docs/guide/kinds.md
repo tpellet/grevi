@@ -24,7 +24,7 @@ jevify fill -- gh run view --log-failed '@{ci-run:the last failed run on main}'
 | Kind | Candidates | Evidence |
 |:---|:---|:---|
 | `-` | records on stdin, or `--candidates FILE` | the whole record; `--key` or `--field` names the handle inside it |
-| `branch` | local and remote refs | name, last commit subject, age; a remote ref folds into its local twin, and a branch that exists only on one remote is its short name (`ticket/TPE-791`, which `git switch` accepts), with the ref in its evidence. A literal prefix (`'origin/@{branch:…}'`) lists that remote's refs and puts the qualified ref (`origin/ticket/TPE-791`) in the argument, which `git log`, `git rev-parse` and every other revision-taking command resolve |
+| `branch` | local and remote refs | name, last commit subject, age; a remote ref folds into its local twin, and a branch that exists only on one remote is its short name (`ticket/TPE-791`), with the ref in its evidence. A literal prefix (`'origin/@{branch:…}'`) scopes the listing to that remote's refs; which form to write is under [Coded kinds and recipe kinds](#coded-kinds-and-recipe-kinds) |
 | `commit` | the log of the current branch | subject; finalists add body and changed paths |
 | `file`, `dir` | tracked and untracked files that are not ignored, hidden ones included | path; `file` finalists add first lines, `dir` finalists the names of their first children |
 | `tool` | the commands on the PATH, for `route` and `pick --from tool` | name and one-line manual summary |
@@ -45,11 +45,15 @@ before anything runs.
 
 Two kinds of kind exist. A coded kind needs logic: `branch` folds a remote ref into its local
 twin, names a remote-only branch by its short name unless two remotes track it, skips
-symbolic refs, and takes a literal prefix as its scope: the bare marker is for a command that
-takes a branch name (`git switch '@{branch:the allergy model}'` runs `git switch
-ticket/TPE-791`), the prefixed marker for a command that takes a revision (`git log -1
-'origin/@{branch:the allergy model}'` runs `git log -1 origin/ticket/TPE-791`, since git
-resolves a remote-only branch as a revision only under its remote); `commit` runs `git log` and `git rev-list --count` at the same
+symbolic refs, and takes a literal prefix as its scope. The marker has two forms, and the
+command decides between them: the bare marker for a command that takes a branch name (`git
+switch '@{branch:the allergy model}'` runs `git switch ticket/TPE-791`, a short name that
+`git switch` and `git checkout` resolve to the remote-only branch), the prefixed marker for a
+command that takes a revision (`git log -1 'origin/@{branch:the allergy model}'` runs `git log
+-1 origin/ticket/TPE-791`, since git resolves a remote-only branch as a revision only under
+its remote). The prefix matches remote refs only: a local branch named `origin/x` is listed by
+the bare marker, not under `origin/`, and a prefix under which no remote ref lives fails (exit
+6) and names the remotes that exist; `commit` runs `git log` and `git rev-list --count` at the same
 time so the total is exact; `file` and `dir` walk the tree, honour a literal prefix and withhold
 the excerpts and listings of secret or hidden paths; `tool` reads the PATH and the man index
 once and caches the inventory under `JEVIFY_CACHE_DIR`. `-` is the coded form of every list a

@@ -767,6 +767,76 @@ async fn remote_only_branch_substitutes_the_short_name_that_git_switch_accepts()
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn remote_prefix_lists_remote_refs_only_and_the_bare_marker_lists_both() {
+    let server = common::mock(fake()).await;
+    // A local branch named `origin/x` next to the remote-only `origin/y`.
+    let dir = refs_fixture(
+        b"refs/heads/origin/x\0\x001700000001\0local work\0\nrefs/remotes/origin/y\0\x001700000000\0remote work\0\n",
+    );
+    let out = run(
+        fixture_command(&server, &dir),
+        &[
+            "fill",
+            "--dry-run",
+            "--json",
+            "--",
+            "git",
+            "log",
+            "origin/@{branch:x}",
+        ],
+        "",
+    );
+    let value = envelope(&out, 0);
+    assert_eq!(value["data"]["markers"][0]["candidates"], 1);
+    assert_eq!(
+        value["data"]["argv"],
+        serde_json::json!(["git", "log", "origin/y"])
+    );
+    let out = run(
+        fixture_command(&server, &dir),
+        &[
+            "fill",
+            "--dry-run",
+            "--json",
+            "--",
+            "git",
+            "switch",
+            "@{branch:x}",
+        ],
+        "",
+    );
+    let value = envelope(&out, 0);
+    assert_eq!(value["data"]["markers"][0]["candidates"], 2);
+    // Newest first: the local `origin/x` wins the fake's first-option pick.
+    assert_eq!(
+        value["data"]["argv"],
+        serde_json::json!(["git", "switch", "origin/x"])
+    );
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert!(stderr.contains("origin/x — local work"), "{stderr}");
+    // A prefix that names no remote fails with the remotes that exist.
+    let out = run(
+        fixture_command(&server, &dir),
+        &[
+            "fill",
+            "--dry-run",
+            "--json",
+            "--",
+            "git",
+            "log",
+            "nothing/@{branch:x}",
+        ],
+        "",
+    );
+    let value = envelope(&out, 6);
+    assert_eq!(value["error"]["kind"], "lister_failed");
+    assert_eq!(
+        value["error"]["message"],
+        "prefix nothing/ names no remote ref; remotes: origin"
+    );
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn remote_prefix_substitutes_the_ref_that_git_log_resolves() {
     let server = common::mock(fake()).await;
     // The local-only branch is not on the remote: the prefix scopes the listing to one ref.
