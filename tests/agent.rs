@@ -251,11 +251,11 @@ fn capabilities_lists_verbs_exit_codes_env() {
     let decision = d["envelope"]["decision"]["fields"].as_str().unwrap();
     assert_eq!(
         decision,
-        "decision{verb,backend,model{requested,answering},threshold,gates[{best,next,none,any}],round_one[{windows[{ranks[{index,p}],none,any}],finalists[],n}]}"
+        "decision{verb,backend,model{requested,answering},threshold,gates[{best,next,none,any,fails}],round_one[{windows[{ranks[{index,p}],none,any}],finalists[],n}]}"
     );
     let robot_docs = include_str!("../docs/ROBOT_MODE.md");
     assert!(robot_docs.contains(
-        "decision{verb, backend, model{requested, answering}, threshold, gates[{best, next, none, any}],\n         round_one[{windows[{ranks[{index, p}], none, any}], finalists[], n}]}"
+        "decision{verb, backend, model{requested, answering}, threshold, gates[{best, next, none, any, fails}],\n         round_one[{windows[{ranks[{index, p}], none, any}], finalists[], n}]}"
     ));
     for field in [
         "verb",

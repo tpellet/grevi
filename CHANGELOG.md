@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+Changed:
+
+- `filter` gates carry `fails`, P(the record says the statement does not hold), next to `any`
+  (P(holds)) and `none` (P(does not say)), so a dropped record's "no" can be reconstructed
+  from `meta.decision.gates`. `fails` is null on every other verb. The guides state the
+  one-sided verdict rule as the code applies it: yes at P(holds) ≥ threshold + 0.15, no at
+  P(does not hold) ≥ the same mark (0.65 by default), unsure otherwise; there is no lower
+  bound at threshold minus 0.15.
+- benchmarks/results.md labels the three-way `filter` figures as development-set: the three
+  wordings were chosen on the 40 cases of both splits, so the validation split is spent for
+  `filter`. The 0.9.0 entry below gives the rate as 3 to 6 of the 40 cases.
+
 ## 0.9.3
 
 Changed:
@@ -49,8 +63,10 @@ Changed:
 
 - `filter` judges each record three ways: the record says the statement holds, says it does not
   hold, or does not say. A record that says nothing either way is unsure and kept, not silently
-  dropped. On the adjudicated cases this takes false actions to zero and keeps every record the
-  gold keeps; three to six records per hundred move from dropped to unsure. The threshold and
+  dropped. On the 40 adjudicated `filter` cases this takes false actions to zero and keeps
+  every record the gold keeps; 3 (TypeSafe) to 6 (classifier.dev) of the 19 gold drops, 16%
+  to 32% of them, move from dropped to unsure. The three wordings were compared on both
+  splits, so these are development-set figures, not a held-out validation. The threshold and
   the band do not change, and `meta.decision` carries the probability that the record does not
   say under `none`.
 - `why` points at the line that carries a panic's message, not at the `panicked at` header: the

@@ -228,7 +228,7 @@ TypeSafe defaults to `jev-1.13.0`; classifier chooses its model and rejects expl
 `meta.decision` is what every decision of the verb was made with, in one structure:
 
 ```text
-decision{verb, backend, model{requested, answering}, threshold, gates[{best, next, none, any}],
+decision{verb, backend, model{requested, answering}, threshold, gates[{best, next, none, any, fails}],
          round_one[{windows[{ranks[{index, p}], none, any}], finalists[], n}]}
 ```
 
@@ -239,7 +239,11 @@ per decision, in decision order: `fill` one per marker, `is` one per statement, 
 `label` one per judged record, `add` one per hunk, `sort` one per file, `pick`, `why` and `route`
 one. `best` and `next` are the two top Choice probabilities, `none` is P(NONE) of that Choice,
 `any` is the Noul: the absolute score of a selection, or the whole answer of a yes/no question
-(`is`, `filter`, `add`, a `flag` marker). A score the verb does not use is null. The scores are
+(`is`, `add`, a `flag` marker). `filter` asks a three-way Choice and fills three scores: `any`
+is P(the record says the statement holds), `fails` is P(the record says it does not hold) and
+`none` is P(the record does not say); a record is a yes at `any` ≥ threshold + 0.15, a no at
+`fails` ≥ the same mark (0.65 by default), unsure otherwise, so a dropped record's "no" can be
+read back from its gate. A score the verb does not use is null. The scores are
 the backend's own and are not a calibration; a threshold set for one backend and task says
 nothing about another.
 

@@ -18,6 +18,7 @@ pub(crate) fn gate_of(ranking: &crate::tournament::Ranking) -> crate::output::Ga
         next: ranking.candidates.get(1).map(|c| c.p),
         none: Some(ranking.none),
         any: Some(ranking.any),
+        fails: None,
     }
 }
 

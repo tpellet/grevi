@@ -470,6 +470,7 @@ pub async fn run(
             next: None,
             none: Some(*none),
             any: Some(*any),
+            fails: None,
         });
         let Some(d) = c
             .strip_prefix('D')

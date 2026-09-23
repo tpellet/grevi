@@ -184,7 +184,9 @@ event:
 on one case each, which is not evidence. The calibration split has no `unsure` gold for
 `filter` (both annotators decided all 20 records), so the four `filter` false actions of the
 validation split have no calibration counterpart and the band stays where it is. The
-validation split is scored once and is not used to choose anything.
+validation split is scored once and is not used to choose anything, with one exception: the
+three-way `filter` wording below was chosen on the cases of both splits, so for `filter` the
+validation split is spent and its figures are development-set figures.
 
 ### `route` with the tie margin (measured 2026-09-22)
 
@@ -213,14 +215,20 @@ TypeSafe); the next widest is 0.19. Scored per split, both backends: validation 
 accuracy 0.67 on the decided cases, abstention 0.50, 1 false action (`spit` for the translation
 case, as above); calibration coverage 0.67, accuracy 1.00, abstention 0.33, 0 false actions.
 
-### `filter` asked three ways (measured 2026-09-22)
+### `filter` asked three ways (measured 2026-09-22, development set)
+
+Every figure in this section is a development-set figure. The three wordings compared here
+were chosen on the 40 `filter` cases of both splits together, so the validation split is not
+an independent check of the wording in place and its independence for `filter` is spent; a
+fresh held-out set is the next step. "Zero false actions" below is the count on the set the
+wording was chosen on, not a held-out result.
 
 The run above asked `filter` a yes/no Noul, which reads "the record does not say" as a
 confident no. `filter` asks a three-way Choice instead: the record says the statement holds,
 the record says it does not hold, or the record does not say; a record is kept at
 P(holds) ≥ 0.65, dropped at P(does not hold) ≥ 0.65 and unsure otherwise. Same binary
 otherwise, same set, same backends, `JEVIFY_NO_CACHE=1`, the 40 `filter` cases of both
-splits, one run per backend:
+splits (the development set), one run per backend:
 
 | Gold | n | TypeSafe, Noul | TypeSafe, three-way | classifier.dev, Noul | classifier.dev, three-way |
 |:---|---:|:---|:---|:---|:---|
@@ -228,9 +236,9 @@ splits, one run per backend:
 | drop | 19 | 19 drop | 16 drop, 3 unsure | 19 drop | 13 drop, 6 unsure |
 | unsure | 4 | 4 drop | 4 unsure | 4 drop | 4 unsure |
 
-Scored: TypeSafe cov 0.82 / acc 1.00 / abst 0.17 / false 0; classifier.dev 0.75 / 1.00 / 0.25 /
-0 (Noul: 1.00 / 0.90 / 0.00 / 4 on both). The four `Merge branch 'pr-NNN'` records score
-P(does not say) 0.96–0.99 (TypeSafe) and 1.00 (classifier.dev). The kept records score
+Scored on the development set: TypeSafe cov 0.82 / acc 1.00 / abst 0.17 / false 0;
+classifier.dev 0.75 / 1.00 / 0.25 / 0 (Noul: 1.00 / 0.90 / 0.00 / 4 on both). The four
+`Merge branch 'pr-NNN'` records score P(does not say) 0.96–0.99 (TypeSafe) and 1.00 (classifier.dev). The kept records score
 P(holds) 0.79 and up (TypeSafe) and 0.81 and up (classifier.dev); the dropped ones
 P(does not hold) 0.83 and up and 0.67 and up, with P(holds) at most 0.03 and 0.02. The new
 abstentions are `Merge pull request #NNN from cli/<branch>` subjects under "the change is a
@@ -238,8 +246,8 @@ bug fix" (`filter-cal-cli-x-01`, `-02`, `-04`, adjudicated `drop` from one `drop
 `unsure` annotation) at P(does not say) 0.78–0.95 on TypeSafe, and on classifier.dev those
 three plus `filter-cal-cli-x-03`, `filter-cal-cli-07` and `filter-val-ruff-04`, decided
 records whose P(does not hold) stops at 0.31–0.60. Every abstention keeps its record, so the
-cost of the change is three to six extra records to glance at over 40, against four silent
-drops before it.
+cost of the change is 3 (TypeSafe) to 6 (classifier.dev) extra records to glance at over the
+40 cases, 16% to 32% of the 19 gold drops, against four silent drops before it.
 
 Two other wordings of the three options were measured on the same set before this one. One
 named the third option only as "nothing in the record decides it either way" and sent 6

@@ -13,9 +13,12 @@ rank candidates relative to their options. A separate yes/no fit score gates the
 Their calibration is not assumed interchangeable, and a score does not authorize an action.
 
 `is` has an unsure band (`--band`, default 0.15): yes at or above threshold plus band, no below
-threshold minus band, unsure between. `filter` uses the same verdict boundaries with a fixed
-0.15 band, retaining unsure records unless `--strict` drops them. `filter -v` inverts yes/no
-selection and still retains unsure records by default.
+threshold minus band, unsure between. `filter` asks a three-way Choice (the record says the
+statement holds, says it does not hold, does not say) and its rule is one-sided with a fixed
+0.15 band: yes at P(holds) ≥ threshold + 0.15, no at P(does not hold) ≥ the same mark, unsure
+otherwise; nothing is compared to threshold minus 0.15. By default the mark is 0.5 + 0.15 =
+0.65 on either side. Unsure records are retained unless `--strict` drops them. `filter -v`
+inverts yes/no selection and still retains unsure records by default.
 
 One `is` statement prints nothing; several print `VERDICT<TAB>STATEMENT` lines. The aggregate
 exit is 0 for all yes, 1 for any no, and 3 otherwise. Oversized context abstains before inference

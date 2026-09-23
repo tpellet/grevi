@@ -114,9 +114,11 @@ pub async fn run(
         for response in batch {
             let scores = response.probs("filter")?;
             let (p, fails, silent) = (scores[HOLDS], scores[FAILS], scores[SILENT]);
+            // The three sides of the Choice, so a "no" can be read back from the envelope.
             ctx.stats.gate(crate::output::Gate {
                 any: Some(p),
                 none: Some(silent),
+                fails: Some(fails),
                 ..Default::default()
             });
             let verdict = verdict(p, fails, ctx.threshold, 0.15);
@@ -234,8 +236,9 @@ pub(crate) fn question(statement: &str) -> Question {
     )
 }
 
-/// yes when the statement holds at or above `threshold + band`, no when it fails at or above
-/// the same mark, unsure otherwise: below the mark on both sides, or mostly unstated.
+/// One-sided: yes when P(holds) is at or above `threshold + band`, no when P(fails) is at or
+/// above the same mark, unsure otherwise: below the mark on both sides, or mostly unstated.
+/// Nothing is compared to `threshold - band`; the default mark is 0.5 + 0.15 = 0.65.
 pub(crate) fn verdict(holds: f64, fails: f64, threshold: f64, band: f64) -> &'static str {
     let mark = (threshold + band).min(1.0);
     if holds >= mark {

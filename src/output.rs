@@ -122,14 +122,17 @@ pub struct Usage {
 
 /// The scores of one decision at the gate, as the verb uses them: `best` and `next` are the two
 /// top Choice probabilities, `none` is P(NONE) of that Choice, `any` is the Noul (the absolute
-/// score of a selection, or the whole answer of a yes/no question). A score the verb does not
-/// use is null. Compared to `threshold` as the code compares them, without a calibration.
+/// score of a selection, or the whole answer of a yes/no question), `fails` is P(the record
+/// says the statement does not hold) of `filter`'s three-way Choice, the side that produces a
+/// "no". A score the verb does not use is null. Compared to `threshold` as the code compares
+/// them, without a calibration.
 #[derive(Serialize, Default, Debug, Clone, PartialEq)]
 pub struct Gate {
     pub best: Option<f64>,
     pub next: Option<f64>,
     pub none: Option<f64>,
     pub any: Option<f64>,
+    pub fails: Option<f64>,
 }
 
 impl Gate {
@@ -313,7 +316,7 @@ mod tests {
         let v = serde_json::to_value(Gate::noul(0.7)).unwrap();
         assert_eq!(
             v,
-            serde_json::json!({ "best": null, "next": null, "none": null, "any": 0.7 })
+            serde_json::json!({ "best": null, "next": null, "none": null, "any": 0.7, "fails": null })
         );
     }
     #[test]

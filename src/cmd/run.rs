@@ -119,6 +119,7 @@ pub async fn route(
         next: fits.get(1).map(|(_, p)| *p),
         none: None,
         any: None,
+        fails: None,
     });
     let tool = (fit >= ctx.threshold).then(|| tools[best].clone());
     let ties = if tool.is_some() {

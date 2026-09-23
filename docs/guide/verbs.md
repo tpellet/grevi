@@ -187,8 +187,11 @@ distinct record and prints matching records, retaining repeated occurrences and 
 | `--files` | stdin paths with eligible file excerpts as evidence |
 | `--no-save` | skip saving raw input |
 
-Exit 0 kept some, 1 kept none, 3 every record unsure. A fixed band of 0.15 around the threshold
-defines unsure. Hidden or secret-looking paths and symlink files receive no excerpt.
+Exit 0 kept some, 1 kept none, 3 every record unsure. The verdict is one-sided: a record is a
+yes when P(holds) reaches the threshold plus a fixed band of 0.15, a no when P(does not hold)
+reaches that same mark, and unsure otherwise; with the default threshold of 0.5 the mark is
+0.65 on either side, and nothing is compared to the threshold minus the band. Hidden or
+secret-looking paths and symlink files receive no excerpt.
 Up to 60 records per classifier request are judged independently; TypeSafe batches 20 records
 in shared state. The ceiling is 20,000 distinct records (`too_many`, exit 6).
 

@@ -34,7 +34,7 @@ fn decision(v: &Value, verb: &str, backend: &str) -> Vec<Value> {
     assert!(d["round_one"].is_array(), "{v}");
     let gates = d["gates"].as_array().unwrap().clone();
     for gate in &gates {
-        for score in ["best", "next", "none", "any"] {
+        for score in ["best", "next", "none", "any", "fails"] {
             assert!(gate[score].is_null() || gate[score].is_number(), "{v}");
         }
     }
@@ -42,7 +42,7 @@ fn decision(v: &Value, verb: &str, backend: &str) -> Vec<Value> {
 }
 
 fn noul_gate(p: f64) -> Value {
-    serde_json::json!({ "best": null, "next": null, "none": null, "any": p })
+    serde_json::json!({ "best": null, "next": null, "none": null, "any": p, "fails": null })
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -109,18 +109,34 @@ async fn filter_records_one_three_way_gate_per_judged_record() {
     .await
     .unwrap();
     let v = envelope(&out);
-    // A duplicate record is judged once: three gates for four records. `any` is P(holds) and
-    // `none` is P(the record does not say); the fake gives 0.9 to its pick and 0.05 to the rest.
+    // A duplicate record is judged once: three gates for four records. `any` is P(holds),
+    // `fails` is P(does not hold) and `none` is P(the record does not say); the fake gives 0.9
+    // to its pick and 0.05 to the rest.
     let gates = decision(&v, "filter", "classifier");
     assert_eq!(gates.len(), 3, "{v}");
-    for (gate, (holds, silent)) in gates.iter().zip([(0.9, 0.05), (0.05, 0.05), (0.05, 0.9)]) {
+    let sides = [(0.9, 0.05, 0.05), (0.05, 0.9, 0.05), (0.05, 0.05, 0.9)];
+    for (gate, (holds, fails, silent)) in gates.iter().zip(sides) {
         assert!((gate["any"].as_f64().unwrap() - holds).abs() < 1e-9, "{v}");
+        assert!(
+            (gate["fails"].as_f64().unwrap() - fails).abs() < 1e-9,
+            "{v}"
+        );
         assert!(
             (gate["none"].as_f64().unwrap() - silent).abs() < 1e-9,
             "{v}"
         );
         assert!(gate["best"].is_null() && gate["next"].is_null(), "{v}");
     }
+    // The second record is the dropped one: its gate carries the `fails` that produced the
+    // "no" (0.9, above the 0.5 + 0.15 mark), and the record is absent from the kept subset.
+    assert!(gates[1]["fails"].as_f64().unwrap() >= 0.65, "{v}");
+    let kept: Vec<&str> = v["data"]["records"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|r| r["text"].as_str().unwrap())
+        .collect();
+    assert_eq!(kept, ["yes\n", "yes\n", "silent\n"], "{v}");
     assert_eq!(v["data"]["kept"], 3, "{v}");
     assert_eq!(v["data"]["unsure"], 1, "{v}");
 }
