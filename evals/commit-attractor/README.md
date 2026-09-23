@@ -131,8 +131,10 @@ makes the kind work.
 `rewrote everything in Go` and `ports the user interface to Android` fit nothing in this history.
 Keyless abstains on both (`ambiguous`, then `no_match`). TypeSafe abstains on the second and
 answers the first with `041e6d1` ("feat: scaffold hunch CLI and dispatch") in four runs of four,
-at 0.72, 0.52, 0.71 and 0.73 against none 0.20–0.26. `docs/demo/examples.sh` runs that exact
-description as its nothing-fits demonstration.
+at 0.72, 0.52, 0.71 and 0.73 against none 0.20–0.26. A scaffolding commit does create a whole
+program at once in one language, so the first description was matchable and the demonstration
+was asking the wrong question. `docs/demo/examples.sh` now runs the second one, which holds none
+at 1.00 on TypeSafe in all four runs (`nothing-fits/`).
 
 ## The finding
 

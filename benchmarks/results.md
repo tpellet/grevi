@@ -409,7 +409,8 @@ classifier.dev 2 of 7 at pool 60 and 2 of 7 at pool 248, TypeSafe 4 of 7 and 2 o
 seven cases under the `commit` kind, whose finals add the body and the changed paths, are 4 of 7
 and 5 of 7. The finals round, not the pool size, is what makes the kind work.
 
-A description fitting no commit: `ports the user interface to Android` abstains on both backends.
-`rewrote everything in Go`, which `docs/demo/examples.sh` runs as its nothing-fits
-demonstration, abstains on classifier.dev and returns `041e6d1` on TypeSafe in four runs of four,
-at 0.72, 0.52, 0.71 and 0.73 against none 0.20 to 0.26.
+A description fitting no commit: `ports the user interface to Android` abstains on both backends,
+and `docs/demo/examples.sh` runs it as its nothing-fits demonstration. The phrase that demo used
+before, `rewrote everything in Go`, abstains on classifier.dev but returns `041e6d1` on TypeSafe
+in four runs of four, at 0.72, 0.52, 0.71 and 0.73 against none 0.20 to 0.26: a scaffolding
+commit does create a whole program at once in one language, so the description was matchable.

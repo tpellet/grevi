@@ -126,7 +126,7 @@ and `complete=false`. Compare `why.considered` with `why.total` separately for s
 jevify fill --dry-run -- git switch '@{branch:the auth refactor}'
 jevify fill --dry-run -- git revert '@{commit:made folder moves atomic}'
 jevify fill --dry-run -- cat 'src/@{file:parses the marker}'
-printf 'retry_backoff\nparse_header\n' | jevify fill --dry-run -- cargo test '@{-:the retry test}'
+printf 'retry_backoff\nparse_header\n' | jevify fill --dry-run -- cargo test '@{-:the test that retries a failed request}'
 printf 'A crash with no reproduction steps.\n' | jevify fill --dry-run -- printf '%s\n' \
   '@{one:bug|feature|docs:what kind of report is this}' '@{flag:--draft:the report lacks steps to reproduce}'
 jevify pick --from branch 'the auth refactor'

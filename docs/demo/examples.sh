@@ -36,7 +36,7 @@ label() {
 nothing_fits() {
     show "jevify pick \"last month's electricity bill\" < $DEMO/downloads.txt"
     show "jevify pick 'the tax return' < $DEMO/downloads.txt"
-    show "jevify fill --dry-run -- git show '@{commit:rewrote everything in Go}'"
+    show "jevify fill --dry-run -- git show '@{commit:ports the user interface to Android}'"
 }
 is() {
     show "jevify is 'asks for a refund' < $DEMO/mail.txt && echo refund"

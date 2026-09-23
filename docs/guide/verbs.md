@@ -31,7 +31,7 @@ relative selection ranks.
 
 ```sh
 jevify fill --dry-run -- git switch '@{branch:the auth refactor}'
-printf 'retry_backoff\nparse_header\n' | jevify fill --dry-run -- cargo test '@{-:the retry test}'
+printf 'retry_backoff\nparse_header\n' | jevify fill --dry-run -- cargo test '@{-:the test that retries a failed request}'
 printf 'A crash with no reproduction steps.\n' | jevify fill --dry-run -- printf '%s\n' \
   '@{one:bug|feature|docs:what kind of report is this}' '@{flag:--draft:the report lacks steps to reproduce}'
 ```
@@ -48,7 +48,7 @@ requires `--dry-run` and returns `argv`, `reason`, and
 | Family | Marker argument | Source |
 |:---|:---|:---|
 | existing things | `'@{branch:the auth refactor}'`, `'@{commit:made folder moves atomic}'`, `'src/@{file:parses the marker}'`, `'@{pod:the payment worker}'` | a lister per kind: `branch`, `commit`, `file`, `dir`, `tool`, and the recipes `pr`, `issue`, `ci-run`, `stash`, `process`, `container`, `pod` |
-| supplied records | `'@{-:the retry test}'` | stdin or `--candidates FILE` |
+| supplied records | `'@{-:the test that retries a failed request}'` | stdin or `--candidates FILE` |
 | caller options | `'@{one:bug\|feature\|docs:what kind of report is this}'` | options in the marker, judged against context |
 | caller options | `'@{flag:--draft:the report lacks steps to reproduce}'` | yes keeps, no removes, unsure abstains |
 
@@ -67,7 +67,7 @@ handle, while the complete record is evidence. The default split is lines; `-0` 
 records and `--para` paragraphs.
 
 The whole marker argument is single-quoted, including any prefix or suffix, for example
-`'--value=@{-:the retry test}'`. An apostrophe is `'\''`; marker escapes are `\}`, `\:` and
+`'--value=@{-:the test that retries a failed request}'`. An apostrophe is `'\''`; marker escapes are `\}`, `\:` and
 `\|`. Options of `one` are separated by `|` before the question's `:`. `flag` is a whole
 argument. Unknown kinds, unclosed markers and no marker are usage errors, exit 2.
 `@@{word:` spells literal `@{word:`. `'{user}@{host:>8}'` is an unknown kind;
@@ -151,7 +151,7 @@ Check the selection's exit code before passing its output as a command argument.
 ```sh
 jevify pick --from branch 'the auth refactor'
 jevify pick --from commit 'made folder moves atomic'
-printf 'retry_backoff\nparse_header\n' | jevify pick 'the retry test'
+printf 'retry_backoff\nparse_header\n' | jevify pick 'the test that retries a failed request'
 ```
 
 `pick --from KIND '<intent>' [-n N]` prints handles of any kind of [Kinds](kinds.md) except
