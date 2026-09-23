@@ -356,7 +356,8 @@ async fn keyless_finals_never_exceed_the_window_when_panic_blocks_would() {
     let input = format!("{}\n", lines.join("\n"));
     let mut cmd = common::jevify_classifier(&server);
     let out = tokio::task::spawn_blocking(move || {
-        cmd.args(["--json", "why", "--no-save"])
+        cmd.env("JEVIFY_DECISION", "round_one")
+            .args(["--json", "why", "--no-save"])
             .write_stdin(input)
             .output()
             .unwrap()
@@ -371,6 +372,34 @@ async fn keyless_finals_never_exceed_the_window_when_panic_blocks_would() {
     );
     let requests = server.received_requests().await.unwrap();
     assert_eq!(requests.len(), windows + 1);
+    // `round_one.finalists` is the finals as sent, panic lines included: the line numbers of
+    // the finals request, in its order, not the 42 the shortlist kept.
+    let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+    let rounds = v["meta"]["decision"]["round_one"].as_array().unwrap();
+    assert_eq!(rounds.len(), 1, "{v}");
+    assert_eq!(rounds[0]["windows"].as_array().unwrap().len(), windows);
+    let recorded: Vec<u64> = rounds[0]["finalists"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|i| i.as_u64().unwrap())
+        .collect();
+    let body: serde_json::Value = serde_json::from_slice(&requests.last().unwrap().body).unwrap();
+    let state: serde_json::Value =
+        serde_json::from_str(body["items"][0].as_str().unwrap()).unwrap();
+    let sent: Vec<u64> = state["items"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|s| {
+            let text = s.as_str().unwrap();
+            let after = &text[text.find("] line ").unwrap() + "] line ".len()..];
+            after[..after.find(':').unwrap()].parse().unwrap()
+        })
+        .collect();
+    assert_eq!(recorded, sent);
+    assert_eq!(recorded.len(), 99);
+    assert!(recorded.len() > windows * 3, "the panic lines are in");
     let body: serde_json::Value = serde_json::from_slice(&requests.last().unwrap().body).unwrap();
     let state: serde_json::Value =
         serde_json::from_str(body["items"][0].as_str().unwrap()).unwrap();

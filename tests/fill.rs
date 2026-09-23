@@ -1581,7 +1581,7 @@ async fn file_finals_hold_every_name_not_ruled_out_and_skip_an_empty_pool() {
     }))
     .await;
     let mut cmd = common::jevify(&server);
-    cmd.current_dir(&root);
+    cmd.current_dir(&root).env("JEVIFY_DECISION", "round_one");
     let out = run(
         cmd,
         &[
@@ -1594,12 +1594,41 @@ async fn file_finals_hold_every_name_not_ruled_out_and_skip_an_empty_pool() {
         ],
         "",
     );
-    assert_eq!(envelope(&out, 0)["data"]["argv"][1], "src/cmd/add.rs");
+    let value = envelope(&out, 0);
+    assert_eq!(value["data"]["argv"][1], "src/cmd/add.rs");
     let requests = server.received_requests().await.unwrap();
     assert_eq!(requests.len(), 2);
     let finals: Value = serde_json::from_slice(&requests[1].body).unwrap();
     let items = finals["state"]["items"].as_array().unwrap();
     assert_eq!(items.len(), 5, "{items:?}");
+    // `round_one.finalists` is the widened finals as sent, by listing position: each finals
+    // item's path is the round-one item at that position, and the shortlist's three are fewer.
+    let round_one: Value = serde_json::from_slice(&requests[0].body).unwrap();
+    let names: Vec<&str> = round_one["state"]["items"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|i| &i.as_str().unwrap()[i.as_str().unwrap().find(' ').unwrap() + 1..])
+        .collect();
+    let sent: Vec<u64> = items
+        .iter()
+        .map(|i| {
+            let text = i.as_str().unwrap();
+            let path = text[text.find(' ').unwrap() + 1..].lines().next().unwrap();
+            names.iter().position(|n| *n == path).unwrap() as u64 + 1
+        })
+        .collect();
+    let rounds = value["meta"]["decision"]["round_one"].as_array().unwrap();
+    assert_eq!(rounds.len(), 1, "{value}");
+    let recorded: Vec<u64> = rounds[0]["finalists"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|i| i.as_u64().unwrap())
+        .collect();
+    assert_eq!(recorded, sent, "{value}");
+    assert_eq!(recorded.len(), 5);
+    assert_eq!(rounds[0]["n"], 3);
     let texts: Vec<_> = items.iter().map(|i| i.as_str().unwrap()).collect();
     assert!(
         texts

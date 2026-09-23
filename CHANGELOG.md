@@ -4,6 +4,17 @@
 
 Changed:
 
+- `meta.decision.round_one` is opt-in: `JEVIFY_DECISION=round_one` adds it to the envelope of a
+  verb that ran a tournament, and an ordinary `--json` envelope carries no such field. It held
+  every candidate of every window on every run since 0.9.1, so a 1,000-line `why` or a
+  1,900-command `route` paid for it whether or not anyone read it. Its `finalists` now lists the
+  items the finals request actually held, in its order: `fill` records them after widening a
+  single window of names to every candidate with p > 0, `why` after adding the panic lines a
+  finalist brings along, `route` after capping the pool at twelve; one window that decided alone
+  leaves it empty. Before, it listed the shortlist's picks taken before those steps, so "whether
+  it reached the finals" could not be read from it. Capabilities mark the field `round_one?` and
+  list `JEVIFY_DECISION`. Exit codes and every other field name are unchanged.
+
 - `filter` gates carry `fails`, P(the record says the statement does not hold), next to `any`
   (P(holds)) and `none` (P(does not say)), so a dropped record's "no" can be reconstructed
   from `meta.decision.gates`. `fails` is null on every other verb. The guides state the

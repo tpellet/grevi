@@ -27,6 +27,7 @@ async fn routes_to_the_tool() {
     let dir = tempfile::tempdir().unwrap();
     let mut c = common::jevify(&server);
     c.env("JEVIFY_INVENTORY_FILE", inv(&dir));
+    c.env("JEVIFY_DECISION", "round_one");
     let out = tokio::task::spawn_blocking(move || {
         c.args(["--json", "route", "burn", "a", "dvd"])
             .output()

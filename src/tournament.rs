@@ -91,10 +91,27 @@ pub struct Shortlist {
     pub n: usize,
 }
 
+/// `JEVIFY_DECISION=round_one` asks for `meta.decision.round_one`; without it no tournament
+/// is recorded and the envelope carries no such field.
+pub fn round_one_wanted() -> bool {
+    std::env::var("JEVIFY_DECISION")
+        .is_ok_and(|v| v.split(',').any(|part| part.trim() == "round_one"))
+}
+
 impl Shortlist {
-    /// Surfaces round one in `meta.decision.round_one`; `index` turns an item position into the
+    /// Surfaces round one in `meta.decision.round_one` when it was asked for. `judged` is the
+    /// finals as they were sent, as item positions: the shortlist's own picks, widened or joined
+    /// by a verb, or empty when round one alone decided. `index` turns an item position into the
     /// verb's own number for it (a line, a record, a listing position).
-    pub fn record(&self, stats: &crate::jev::client::Stats, index: impl Fn(usize) -> usize) {
+    pub fn record(
+        &self,
+        stats: &crate::jev::client::Stats,
+        judged: &[usize],
+        index: impl Fn(usize) -> usize,
+    ) {
+        if !round_one_wanted() {
+            return;
+        }
         let candidate = |c: &Candidate| crate::output::RoundOneCandidate {
             index: index(c.index),
             p: c.p,
@@ -109,7 +126,7 @@ impl Shortlist {
                     any: w.any,
                 })
                 .collect(),
-            finalists: self.finalists.iter().map(|c| index(c.index)).collect(),
+            finalists: judged.iter().map(|&i| index(i)).collect(),
             n: self.n,
         });
     }
@@ -198,11 +215,13 @@ pub async fn rank(
     mode: Finalists,
 ) -> Result<Ranking, JevifyError> {
     let first = shortlist(client, request, items, prompts, mode).await?;
-    first.record(client.stats(), |i| i + 1);
     let windows = first.windows.len();
     if windows == 1 && finalist_text.is_none() {
+        first.record(client.stats(), &[], |i| i + 1);
         return Ok(first.windows.into_iter().next().unwrap());
     }
+    let judged: Vec<usize> = first.finalists.iter().map(|c| c.index).collect();
+    first.record(client.stats(), &judged, |i| i + 1);
     if first.finalists.is_empty() {
         return Ok(Ranking {
             candidates: vec![],

@@ -31,7 +31,6 @@ fn decision(v: &Value, verb: &str, backend: &str) -> Vec<Value> {
     }
     assert_eq!(d["model"]["answering"], "jev-fake", "{v}");
     assert_eq!(d["model"]["answering"], v["meta"]["model"], "{v}");
-    assert!(d["round_one"].is_array(), "{v}");
     let gates = d["gates"].as_array().unwrap().clone();
     for gate in &gates {
         for score in ["best", "next", "none", "any", "fails"] {
@@ -63,8 +62,20 @@ async fn is_records_one_noul_gate_per_statement() {
     .unwrap();
     let v = envelope(&out);
     assert_eq!(decision(&v, "is", "typesafe"), vec![noul_gate(0.81)]);
-    // No tournament: a yes/no verb records no round one.
-    assert_eq!(v["meta"]["decision"]["round_one"], serde_json::json!([]));
+    // round_one is opt-in, and a yes/no verb runs no tournament: absent either way.
+    assert!(v["meta"]["decision"].get("round_one").is_none(), "{v}");
+    let mut c = common::jevify(&server);
+    let out = tokio::task::spawn_blocking(move || {
+        c.env("JEVIFY_DECISION", "round_one")
+            .args(["--json", "is", "first"])
+            .write_stdin("text")
+            .output()
+            .unwrap()
+    })
+    .await
+    .unwrap();
+    let v = envelope(&out);
+    assert!(v["meta"]["decision"].get("round_one").is_none(), "{v}");
     let mut c = common::jevify(&server);
     let out = tokio::task::spawn_blocking(move || {
         c.args(["--json", "is", "first", "second"])
@@ -190,8 +201,24 @@ async fn why_and_pick_record_the_ranking_gate() {
         ("pick", vec!["pick", "the root"]),
     ] {
         let mut c = common::jevify(&server);
+        let plain = args.clone();
         let out = tokio::task::spawn_blocking(move || {
             c.arg("--json")
+                .args(plain)
+                .write_stdin("error step\nerror ROOT\nerror other\n")
+                .output()
+                .unwrap()
+        })
+        .await
+        .unwrap();
+        let v = envelope(&out);
+        assert_eq!(v["exit_code"], 0, "{v}");
+        // A default run carries no round_one: the field is opt-in.
+        assert!(v["meta"]["decision"].get("round_one").is_none(), "{v}");
+        let mut c = common::jevify(&server);
+        let out = tokio::task::spawn_blocking(move || {
+            c.env("JEVIFY_DECISION", "round_one")
+                .arg("--json")
                 .args(args)
                 .write_stdin("error step\nerror ROOT\nerror other\n")
                 .output()
@@ -210,7 +237,7 @@ async fn why_and_pick_record_the_ranking_gate() {
         assert!(gates[0]["next"].is_number(), "{v}");
         assert_eq!(gates[0]["any"], 0.95, "{v}");
         // Round one of the one tournament: one window over the three lines, every line ranked
-        // (ROOT, line 2, first), the finalists it kept, and n = 3 per window.
+        // (ROOT, line 2, first), the finals as sent, and n = 3 per window.
         let rounds = v["meta"]["decision"]["round_one"].as_array().unwrap();
         assert_eq!(rounds.len(), 1, "{v}");
         let round = &rounds[0];
@@ -223,8 +250,14 @@ async fn why_and_pick_record_the_ranking_gate() {
         assert!(ranks[0]["p"].as_f64().unwrap() > windows[0]["none"].as_f64().unwrap());
         assert_eq!(windows[0]["any"], 0.95, "{v}");
         let finalists = round["finalists"].as_array().unwrap();
-        assert_eq!(finalists[0], 2, "{v}");
-        assert!(finalists.len() <= 3, "{v}");
+        if verb == "why" {
+            // why always holds a finals; it judged the three lines, ROOT first.
+            assert_eq!(finalists[0], 2, "{v}");
+            assert_eq!(finalists.len(), 3, "{v}");
+        } else {
+            // One window decided pick alone: no finals were judged.
+            assert!(finalists.is_empty(), "{v}");
+        }
     }
 }
 

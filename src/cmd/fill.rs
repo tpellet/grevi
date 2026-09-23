@@ -253,10 +253,6 @@ pub async fn run(
             }
         })
         .collect();
-    // In marker order: the listing rounds ran concurrently, and the envelope keeps decision order.
-    for short in shortlists.iter().flatten() {
-        short.record(&ctx.stats, |i| i + 1);
-    }
     let mut merged: Option<jev::Response> = None;
     for (batch, result) in batches.iter().zip(answers) {
         match result {
@@ -370,7 +366,7 @@ pub async fn run(
                         Decision::Found(_)
                     ) && !runner_up_matches(ranking))
                 {
-                    return Ok(Some((ranking.clone(), 0)));
+                    return Ok(Some((ranking.clone(), 0, first, vec![])));
                 }
                 // The names ranked a content phrase's file low, not out: every candidate the
                 // names did not rule out reaches the finals with its excerpt, as many as the
@@ -384,9 +380,11 @@ pub async fn run(
                     .copied()
                     .collect();
                 if finalists.is_empty() {
-                    return Ok(Some((ranking.clone(), 0)));
+                    return Ok(Some((ranking.clone(), 0, first, vec![])));
                 }
             }
+            // The finals as sent, for `round_one`: widened past the shortlist's picks here.
+            let judged: Vec<usize> = finalists.iter().map(|c| c.index).collect();
             let handles: Vec<_> = finalists
                 .iter()
                 .take(MAX_FINALISTS)
@@ -411,12 +409,14 @@ pub async fn run(
                 .collect();
             let mut ranking = tournament::window(client, &m.description, &items, prompts).await?;
             ranking.windows = first.windows.len();
-            Ok::<_, JevifyError>(Some((ranking, withheld)))
+            Ok::<_, JevifyError>(Some((ranking, withheld, first, judged)))
         }
     }))
     .await;
+    // In marker order: the rounds ran concurrently, and the envelope keeps decision order.
     for (i, ranking) in finals.into_iter().enumerate() {
-        if let Some((ranking, withheld)) = ranking? {
+        if let Some((ranking, withheld, first, judged)) = ranking? {
+            first.record(&ctx.stats, &judged, |i| i + 1);
             states[i].withheld = withheld;
             ctx.stats.gate(super::gate_of(&ranking));
             apply_ranking(&mut states[i], &ranking, ctx.threshold);

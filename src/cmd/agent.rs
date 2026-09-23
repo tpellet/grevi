@@ -82,14 +82,15 @@ pub fn capabilities() -> Outcome {
             serde_json::json!({ "code": e.code(), "name": e, "meaning": meaning })
         })
         .collect();
-    // The keyless quota per verb, from the measurement in benchmarks/results.md: one
-    // classification is one record under one question, 20,000 a day per IP.
+    // The keyless quota per verb: one classification is one record under one question, 20,000
+    // a day per IP. The quota and the `is` and `filter` costs were measured (benchmarks/
+    // results.md); the calls a day are computed from the shape of each verb's requests.
     let keyless_cost = serde_json::json!({
         "is": "1 per statement",
-        "filter": "1 per distinct record; jevify sends at most 60 records per request, the largest keyless request the service accepts (75 is refused with HTTP 402 request_spending_limit)",
-        "label": "1 per distinct record; jevify sends at most 60 records per request, the largest keyless request the service accepts (75 is refused with HTTP 402 request_spending_limit)",
-        "pick": "2 per window of 99 lines, plus 2 for the final round",
-        "why": "2 per window of 99 lines, plus 2 for the final round",
+        "filter": "1 per distinct record; jevify sends at most 60 records per request, the largest batch tried (75 is refused with HTTP 402 request_spending_limit)",
+        "label": "1 per distinct record; jevify sends at most 60 records per request, the largest batch tried (75 is refused with HTTP 402 request_spending_limit)",
+        "pick": "2 per window of 99 lines, plus 2 for the final round when there is more than one window",
+        "why": "2 per window of 99 lines, plus 2 for the final round, which always runs",
         "route": "2 per window of 99 commands, plus 1 per finalist, at most 12"
     });
     let keyless_calls = serde_json::json!({
@@ -97,7 +98,7 @@ pub fn capabilities() -> Outcome {
         "filter": "20,000 records in total: 333 calls of 60 records",
         "label": "20,000 records in total: 333 calls of 60 records",
         "pick": "830 (1,000 lines) to 10,000 (at most 99)",
-        "why": "830 (1,000 lines) to 10,000 (at most 99)",
+        "why": "830 (1,000 lines) to 5,000 (at most 99)",
         "route": "about 380 over a PATH of 1,900 commands"
     });
     let data = serde_json::json!({
@@ -162,6 +163,7 @@ pub fn capabilities() -> Outcome {
             { "name": "JEVIFY_CACHE_DIR", "default": "platform cache dir/jevify" },
             { "name": "JEVIFY_CONFIG_DIR", "default": "platform config dir/jevify", "meaning": "where the user's kinds.jsonl lives; read only for a kind that is neither coded nor shipped" },
             { "name": "JEVIFY_NO_CACHE", "meaning": "disable the answer cache (entries expire after 7 days anyway)" },
+            { "name": "JEVIFY_DECISION", "meaning": "round_one: add meta.decision.round_one, every candidate of every window of round one and the finals as sent, to the envelope of a verb that ran a tournament" },
             { "name": "JEVIFY_PRICE_PER_MTOK", "default": 0.042 },
             { "name": "JEVIFY_INVENTORY_FILE", "meaning": "JSON array of {name, summary} replacing the PATH inventory (tests, evals)" },
             { "name": "JEVIFY_CNF", "meaning": "enable the command-not-found hook from `jevify init`" }
@@ -170,9 +172,9 @@ pub fn capabilities() -> Outcome {
         "saved_inputs": { "verbs": ["why", "filter"], "directory": "JEVIFY_CACHE_DIR/outputs, or the platform cache directory/jevify/outputs", "filename": "<blake3-16>.log", "contents": "raw input bytes, secrets included", "retention": "never pruned", "disable": "--no-save (independent of --no-cache)", "permissions": "directory 0700, file 0600", "incomplete": "failed or skipped save: saved_input null, complete false" },
         "backends": [
             { "name": "typesafe", "key": "required", "model": "Jev", "window": Backend::Typesafe.window(), "choice_options": 255, "state_chars": "32k tokens", "requests_per_minute": 1200, "meta": "input_tokens is null unless every inference attempt reports usage; cost_usd estimates input-token cost at the configured price and is null when that basis is incomplete" },
-            { "name": "classifier", "key": "none", "model": "service-controlled Jev; explicit model overrides unsupported", "decision_semantics": "two-label Choice substitutes for Noul; scores and thresholds are not assumed interchangeable with TypeSafe Noul", "window": Backend::Classifier.window(), "choice_options": crate::jev::classifier::MAX_LABELS, "state_chars": crate::jev::classifier::MAX_INPUT_CHARS, "questions_per_request": crate::jev::classifier::MAX_DIMENSIONS, "classifications_per_minute": 3000, "classifications_per_day": 20000, "classification": "one record under one question, per IP", "cost_per_call": keyless_cost, "calls_per_day": keyless_calls, "measured": "2026-09-22, JEVIFY_CONCURRENCY=4, benchmarks/results.md", "meta": "input_tokens is null when token usage is unavailable; cost_usd is 0 at the default zero service price, with an explicit telemetry.cost_estimate basis" }
+            { "name": "classifier", "key": "none", "model": "service-controlled Jev; explicit model overrides unsupported", "decision_semantics": "two-label Choice substitutes for Noul; scores and thresholds are not assumed interchangeable with TypeSafe Noul", "window": Backend::Classifier.window(), "choice_options": crate::jev::classifier::MAX_LABELS, "state_chars": crate::jev::classifier::MAX_INPUT_CHARS, "questions_per_request": crate::jev::classifier::MAX_DIMENSIONS, "classifications_per_minute": 3000, "classifications_per_day": 20000, "classification": "one record under one question, per IP", "cost_per_call": keyless_cost, "calls_per_day": keyless_calls, "basis": "computed from request shapes; the 20,000 a day quota, the is and filter costs and the 60-record batch measured 2026-09-22 with JEVIFY_CONCURRENCY=4, benchmarks/results.md", "meta": "input_tokens is null when token usage is unavailable; cost_usd is 0 at the default zero service price, with an explicit telemetry.cost_estimate basis" }
         ],
-        "envelope": { "fields": ["ok", "command", "version", "exit_code", "data", "meta{backend,model,elapsed_ms,requests,cache_hits,input_tokens,cost_usd,threshold,request_id,usage,telemetry,decision}", "error{kind,message,hint,example}"], "decision": { "fields": "decision{verb,backend,model{requested,answering},threshold,gates[{best,next,none,any,fails}],round_one[{windows[{ranks[{index,p}],none,any}],finalists[],n}]}", "round_one": "one entry per tournament, in decision order (fill one per listing marker, pick, why and route one): every window of round one in input order with every candidate by rank, its P(NONE) and Noul, and the finalist indices the shortlist kept (n per window, by rank then window) before the finals; index is the verb's own number, 1-based: the line for why, the record for pick, the listing position for pick --from and fill, the inventory position for route", "model": "requested is the model the request names (null on classifier, which chooses its own); answering is what the service reported, unknown when it did not say", "gates": "one entry per decision in decision order: fill one per marker, is one per statement, filter and label one per judged record, add one per hunk, sort one per file, pick, why and route one; best and next are the two top Choice probabilities, none is P(NONE), any is the Noul (the whole answer of a yes/no question), fails is P(the record says the statement does not hold) on filter, the side that produces a no; a score the verb does not use is null", "threshold": "the one threshold every gate is compared to; no calibration is claimed" } },
+        "envelope": { "fields": ["ok", "command", "version", "exit_code", "data", "meta{backend,model,elapsed_ms,requests,cache_hits,input_tokens,cost_usd,threshold,request_id,usage,telemetry,decision}", "error{kind,message,hint,example}"], "decision": { "fields": "decision{verb,backend,model{requested,answering},threshold,gates[{best,next,none,any,fails}],round_one?[{windows[{ranks[{index,p}],none,any}],finalists[],n}]}", "round_one": "present only under JEVIFY_DECISION=round_one, on a verb that ran a tournament; absent otherwise, since it holds every candidate of every window. One entry per tournament, in decision order (fill one per listing marker, pick, why and route one): every window of round one in input order with every candidate by rank, its P(NONE) and Noul; finalists, the items the finals request held, in its order (the shortlist's n per window by rank then window, widened by fill, joined by why's panic lines, capped at 12 by route), empty when one window decided alone; and n. index is the verb's own number, 1-based: the line for why, the record for pick, the listing position for pick --from and fill, the inventory position for route", "model": "requested is the model the request names (null on classifier, which chooses its own); answering is what the service reported, unknown when it did not say", "gates": "one entry per decision in decision order: fill one per marker, is one per statement, filter and label one per judged record, add one per hunk, sort one per file, pick, why and route one; best and next are the two top Choice probabilities, none is P(NONE), any is the Noul (the whole answer of a yes/no question), fails is P(the record says the statement does not hold) on filter, the side that produces a no; a score the verb does not use is null", "threshold": "the one threshold every gate is compared to; no calibration is claimed" } },
         "telemetry": {
             "attempt_groups": ["inference_posts", "health_gets", "prewarm_gets", "semantic_calls"],
             "conservation": "attempted = succeeded + failed + cancelled + in_flight",

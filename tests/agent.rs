@@ -210,7 +210,7 @@ fn capabilities_lists_verbs_exit_codes_env() {
         assert!(classifier["calls_per_day"][verb].is_string(), "{verb}");
     }
     assert!(
-        classifier["measured"]
+        classifier["basis"]
             .as_str()
             .unwrap()
             .contains("benchmarks/results.md")
@@ -251,11 +251,11 @@ fn capabilities_lists_verbs_exit_codes_env() {
     let decision = d["envelope"]["decision"]["fields"].as_str().unwrap();
     assert_eq!(
         decision,
-        "decision{verb,backend,model{requested,answering},threshold,gates[{best,next,none,any,fails}],round_one[{windows[{ranks[{index,p}],none,any}],finalists[],n}]}"
+        "decision{verb,backend,model{requested,answering},threshold,gates[{best,next,none,any,fails}],round_one?[{windows[{ranks[{index,p}],none,any}],finalists[],n}]}"
     );
     let robot_docs = include_str!("../docs/ROBOT_MODE.md");
     assert!(robot_docs.contains(
-        "decision{verb, backend, model{requested, answering}, threshold, gates[{best, next, none, any, fails}],\n         round_one[{windows[{ranks[{index, p}], none, any}], finalists[], n}]}"
+        "decision{verb, backend, model{requested, answering}, threshold, gates[{best, next, none, any, fails}],\n         round_one?[{windows[{ranks[{index, p}], none, any}], finalists[], n}]}"
     ));
     for field in [
         "verb",
@@ -267,8 +267,39 @@ fn capabilities_lists_verbs_exit_codes_env() {
     ] {
         assert!(decision.contains(field), "{field}");
     }
-    assert!(robot_docs.contains("`round_one` holds one entry per tournament"));
-    assert!(d["envelope"]["decision"]["round_one"].is_string());
+    // round_one is opt-in, and its finalists are the finals as sent: capabilities, ROBOT_MODE
+    // and the env list say so in the same words.
+    assert!(robot_docs.contains("`round_one` is present only under `JEVIFY_DECISION=round_one`"));
+    assert!(robot_docs.contains("`finalists`, the items the finals request held, in its order"));
+    assert!(robot_docs.contains("whether the finals judged it, reads from one run"));
+    let round_one = d["envelope"]["decision"]["round_one"].as_str().unwrap();
+    assert!(
+        round_one.starts_with("present only under JEVIFY_DECISION=round_one"),
+        "{round_one}"
+    );
+    assert!(
+        round_one.contains("finalists, the items the finals request held, in its order"),
+        "{round_one}"
+    );
+    for step in [
+        "widened by fill",
+        "why's panic lines",
+        "capped at 12 by route",
+    ] {
+        assert!(round_one.contains(step), "{round_one}");
+    }
+    let decision_env = d["env"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|e| e["name"] == "JEVIFY_DECISION")
+        .unwrap();
+    assert!(
+        decision_env["meaning"]
+            .as_str()
+            .unwrap()
+            .starts_with("round_one: add meta.decision.round_one")
+    );
     assert!(robot_docs.contains("`model.answering`") && robot_docs.contains("`unknown`"));
     assert_eq!(d["limits"]["choice_options"], 255);
     let fill = commands.iter().find(|c| c["name"] == "fill").unwrap();

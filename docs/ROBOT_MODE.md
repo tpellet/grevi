@@ -229,7 +229,7 @@ TypeSafe defaults to `jev-1.13.0`; classifier chooses its model and rejects expl
 
 ```text
 decision{verb, backend, model{requested, answering}, threshold, gates[{best, next, none, any, fails}],
-         round_one[{windows[{ranks[{index, p}], none, any}], finalists[], n}]}
+         round_one?[{windows[{ranks[{index, p}], none, any}], finalists[], n}]}
 ```
 
 `model.requested` is the model the request names; it is null on classifier, which chooses its
@@ -247,15 +247,19 @@ read back from its gate. A score the verb does not use is null. The scores are
 the backend's own and are not a calibration; a threshold set for one backend and task says
 nothing about another.
 
-`round_one` holds one entry per tournament, in decision order: `fill` one per listing marker,
-`pick`, `why` and `route` one; a verb that runs no tournament leaves it empty. Each entry is
+`round_one` is present only under `JEVIFY_DECISION=round_one`, on a verb that ran a tournament;
+an ordinary envelope carries no such field, since the field holds every candidate of every
+window (a 1,000-line `why` scores 1,000 lines). Asked for, it holds one entry per tournament,
+in decision order: `fill` one per listing marker, `pick`, `why` and `route` one. Each entry is
 what the shortlist round computed, with no extra request: `windows` in input order, each with
 every candidate of that window by rank (`ranks[{index, p}]`), its P(NONE) and its Noul;
-`finalists`, the indices the shortlist kept for the finals (`n` per window, by rank then by
-window); and `n`. `index` is the verb's own number, 1-based: the line for `why`, the record for
-`pick`, the listing position for `pick --from` and `fill`, the inventory position for `route`.
-A candidate below NONE is still listed, so the rank of any item, and whether it reached the
-finals, reads from one run.
+`finalists`, the items the finals request held, in its order: the shortlist's picks (`n` per
+window, by rank then by window), widened by `fill` when one window of names leaves a kind with
+richer evidence undecided, joined by the panic lines `why` adds, capped at twelve by `route`;
+empty when one window decided alone; and `n`. `index` is the verb's own number, 1-based: the
+line for `why`, the record for `pick`, the listing position for `pick --from` and `fill`, the
+inventory position for `route`. A candidate below NONE is still listed, so the rank of any
+item, and whether the finals judged it, reads from one run.
 
 `meta.requests` counts attempted inference POSTs, including retries and failures, excluding
 health and prewarm GETs. `meta.telemetry` separates `inference_posts`, `health_gets`,

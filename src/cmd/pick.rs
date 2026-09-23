@@ -72,10 +72,10 @@ pub async fn run(
     };
     let ranking = if files {
         let short = shortlist(&client, intent, &items, &prompts, Finalists::Auto).await?;
-        short.record(&ctx.stats, |i| kept[i] + 1);
         let windows = short.windows.len();
-        let pool = short.finalists;
+        let pool = short.finalists.clone();
         if pool.iter().all(|candidate| candidate.p == 0.0) {
+            short.record(&ctx.stats, &[], |i| kept[i] + 1);
             Ranking {
                 candidates: vec![],
                 any: 0.0,
@@ -84,6 +84,9 @@ pub async fn run(
                 n: short.n,
             }
         } else {
+            // Every finalist reaches the finals; the excerpts stop at MAX_FINALISTS.
+            let judged: Vec<usize> = pool.iter().map(|c| c.index).collect();
+            short.record(&ctx.stats, &judged, |i| kept[i] + 1);
             let mut finalists: Vec<_> = pool
                 .iter()
                 .map(|c| records[kept[c.index]].clone())
@@ -114,8 +117,14 @@ pub async fn run(
             any: prompts.any.clone(),
         };
         let short = shortlist(&client, intent, &items, &prompts, Finalists::Auto).await?;
-        short.record(&ctx.stats, |i| kept[i] + 1);
         let windows = short.windows.len();
+        // One window decides alone; otherwise the shortlist's picks are the finals.
+        let judged: Vec<usize> = if windows == 1 {
+            vec![]
+        } else {
+            short.finalists.iter().map(|c| c.index).collect()
+        };
+        short.record(&ctx.stats, &judged, |i| kept[i] + 1);
         let single = if windows == 1 {
             short.windows.into_iter().next()
         } else {
@@ -286,13 +295,19 @@ async fn from_kind(
         let client = Client::new(ctx)?;
         let items: Vec<_> = listing.records.iter().map(|r| r.evidence.clone()).collect();
         let short = shortlist(&client, intent, &items, &prompts, Finalists::Auto).await?;
-        short.record(&ctx.stats, |i| i + 1);
         if windows == 1 {
             ranking = short.windows[0].clone();
         }
-        if windows > 1
-            || (kind.has_tier_two && !matches!(decide(&ranking, ctx.threshold), Decision::Found(_)))
-        {
+        let finals_run = windows > 1
+            || (kind.has_tier_two
+                && !matches!(decide(&ranking, ctx.threshold), Decision::Found(_)));
+        let judged: Vec<usize> = if finals_run {
+            short.finalists.iter().map(|c| c.index).collect()
+        } else {
+            vec![]
+        };
+        short.record(&ctx.stats, &judged, |i| i + 1);
+        if finals_run {
             let mut finals: Vec<_> = short
                 .finalists
                 .iter()

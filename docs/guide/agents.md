@@ -48,9 +48,13 @@ prints it on one line; `--format toon` encodes the same envelope as TOON.
 ```text
 {ok, command, version, exit_code, data,
  meta{backend, model, elapsed_ms, requests, cache_hits, input_tokens, cost_usd,
-      threshold, request_id, telemetry},
+      threshold, request_id, usage, telemetry, decision},
  error{kind, message, hint, example} | null}
 ```
+
+`meta.decision` holds the scores every decision was made with; `JEVIFY_DECISION=round_one`
+adds `round_one`, every candidate of every window and the finals as sent, which an ordinary
+envelope leaves out. ROBOT_MODE.md states both.
 
 Branch on `exit_code`, which equals the process status, then read `data`. Error kinds are stable
 identifiers. `too_many` is exit 6: narrow records with `grep` or `head`. `error.example` gives

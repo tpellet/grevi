@@ -181,8 +181,10 @@ pub struct RoundOneWindow {
     pub any: f64,
 }
 
-/// Round one of a tournament, as the shortlist computed it: the windows in input order and the
-/// finalists it kept (`n` per window, by rank then window) before the finals re-ranked them.
+/// Round one of a tournament, as the shortlist computed it: the windows in input order, and
+/// `finalists`, the items the finals request then held, in its order: the shortlist's picks
+/// (`n` per window, by rank then window), widened by `fill`, joined by `why`'s panic lines or
+/// capped by `route`; empty when round one alone decided.
 #[derive(Serialize, Debug, Clone, PartialEq)]
 pub struct RoundOne {
     pub windows: Vec<RoundOneWindow>,
@@ -191,8 +193,9 @@ pub struct RoundOne {
 }
 
 /// What every decision of the verb was made with: one structure per envelope, one gate per
-/// decision (a marker, a statement, a record, a hunk, a file, or the one pick), and one
-/// `round_one` per tournament the verb ran.
+/// decision (a marker, a statement, a record, a hunk, a file, or the one pick), and, under
+/// `JEVIFY_DECISION=round_one`, one `round_one` per tournament the verb ran. The field is
+/// absent otherwise: a 1,000-line `why` would carry every line's score.
 #[derive(Serialize, Default, Debug, Clone)]
 pub struct Decision {
     pub verb: String,
@@ -200,6 +203,7 @@ pub struct Decision {
     pub model: DecisionModel,
     pub threshold: f64,
     pub gates: Vec<Gate>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub round_one: Vec<RoundOne>,
 }
 
