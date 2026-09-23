@@ -36,6 +36,11 @@ pub const KINDS: &[&str] = &[
 ];
 pub const LISTER_TIMEOUT: Duration = Duration::from_secs(20);
 const OUTPUT_CAP: usize = 64 * 1024 * 1024;
+/// Characters of diffstat and patch one commit finalist carries. A keyless finals window
+/// budgets 30,000 characters over at most 24 finalists, 1,250 each, and a subject, a body and
+/// a path list leave most of that unspent; 1,000 fills the room without crowding a finalist
+/// out. Above 24 finalists the window's own per-item clip cuts the diff further.
+const DIFF_CHARS: usize = 1_000;
 const READER_GRACE: Duration = Duration::from_millis(200);
 /// The shipped recipes, one JSON object per line.
 const SHIPPED: &str = include_str!("kinds.jsonl");
@@ -947,11 +952,43 @@ fn commit_evidence(handle: &OsStr, env: &Env) -> Result<String, JevifyError> {
         .map(|path| String::from_utf8_lossy(path).into_owned())
         .collect();
     Ok(format!(
-        "{}\n{}\nChanged paths: {}",
+        "{}\n{}\nChanged paths: {}\nDiff:\n{}",
         handle.to_string_lossy(),
         String::from_utf8_lossy(body).trim_end(),
-        paths.join(", ")
+        paths.join(", "),
+        commit_diff(handle, env)
     ))
+}
+
+/// The diffstat and the start of the patch of one commit, clipped to `DIFF_CHARS`. A subject
+/// says what a commit claims; the patch says what it did, and the two disagree often enough
+/// that the finals round cannot decide on the claim alone. The stat comes first, so a patch
+/// too long for the budget still leaves every changed file and its line counts in view.
+/// Unreadable output is an empty diff, never an error: the rest of the evidence still stands.
+fn commit_diff(handle: &OsStr, env: &Env) -> String {
+    let bytes = run_lister_blocking(
+        &[
+            "git".into(),
+            "show".into(),
+            "--format=".into(),
+            "--no-color".into(),
+            "--no-ext-diff".into(),
+            "--no-renames".into(),
+            "--unified=0".into(),
+            "--stat=100".into(),
+            "--patch".into(),
+            "--end-of-options".into(),
+            handle.to_owned(),
+            "--".into(),
+        ],
+        env,
+        OUTPUT_CAP,
+    )
+    .unwrap_or_default();
+    crate::tournament::clip(
+        String::from_utf8_lossy(&bytes).trim_matches(['\n', ' ']),
+        DIFF_CHARS,
+    )
 }
 
 /// The directory a literal prefix names, relative to `env.cwd` (empty for none): the whole
@@ -2005,6 +2042,7 @@ printf '%s\n' "$*" >> calls
 case "$1 $2" in
 "log -n") i=0; while [ "$i" -lt 200 ]; do printf 'oid%s\000subject %s\000' "$i" "$i"; i=$((i + 1)); done;;
 "log -1") printf 'body of %s\000\000\nsrc/a.rs\000src/b.rs\000' "$9";;
+"show --format=") printf ' src/a.rs | 2 +-\n@@ -1 +1 @@ diff of %s\n' "${10}";;
 "rev-list --count") echo 200;;
 *) exit 9;;
 esac
@@ -2030,17 +2068,59 @@ esac
         for (value, name) in evidence.iter().zip(["oid7", "oid150", "oid2"]) {
             assert_eq!(
                 value,
-                &format!("{name}\nbody of {name}\nChanged paths: src/a.rs, src/b.rs")
+                &format!(
+                    "{name}\nbody of {name}\nChanged paths: src/a.rs, src/b.rs\n\
+                     Diff:\nsrc/a.rs | 2 +-\n@@ -1 +1 @@ diff of {name}"
+                )
             );
         }
+        // Two calls per finalist: the body with its paths, then the diff.
         let calls = fs::read_to_string(env.cwd.join("calls")).unwrap();
-        assert_eq!(calls.lines().count(), 5);
-        for (call, name) in calls.lines().skip(2).zip(["oid7", "oid150", "oid2"]) {
+        assert_eq!(calls.lines().count(), 8);
+        for (call, name) in calls.lines().skip(2).zip(
+            ["oid7", "oid150", "oid2"]
+                .into_iter()
+                .flat_map(|name| [name, name]),
+        ) {
             assert!(
                 call.ends_with(&format!("--end-of-options {name} --")),
                 "{call}"
             );
         }
+    }
+
+    /// A diff longer than the per-finalist budget keeps its stat and loses its tail.
+    #[tokio::test]
+    async fn commit_evidence_clips_a_long_diff() {
+        let env = fake_git(
+            r#"
+case "$1 $2" in
+"log -1") printf 'body\000\000\nsrc/a.rs\000';;
+"show --format=") printf ' src/a.rs | 9999 +\n'; i=0; while [ "$i" -lt 400 ]; do printf '+a line of patch text that is long enough to matter\n'; i=$((i + 1)); done;;
+*) exit 9;;
+esac
+"#,
+        );
+        let (evidence, _) = enrich_in("commit", Path::new(""), &["oid0".into()], &env).await;
+        let diff = evidence[0].split_once("Diff:\n").unwrap().1;
+        assert_eq!(diff.chars().count(), DIFF_CHARS);
+        assert!(diff.starts_with("src/a.rs | 9999 +"));
+        assert!(diff.ends_with('…'));
+    }
+
+    /// A git that cannot show the diff still yields the subject, body and paths.
+    #[tokio::test]
+    async fn commit_evidence_survives_a_failing_diff() {
+        let env = fake_git(
+            r#"
+case "$1 $2" in
+"log -1") printf 'body\000\000\nsrc/a.rs\000';;
+*) exit 9;;
+esac
+"#,
+        );
+        let (evidence, _) = enrich_in("commit", Path::new(""), &["oid0".into()], &env).await;
+        assert_eq!(evidence[0], "oid0\nbody\nChanged paths: src/a.rs\nDiff:\n");
     }
 
     /// A repository with hidden, ignored, untracked, secret and non-UTF-8 paths.

@@ -20,7 +20,7 @@ by `", "`. A free-backend response is service-controlled and can name a differen
 
 | Verb | Sent | Not sent |
 |:---|:---|:---|
-| `fill` | descriptions, context of `one` and `flag`, and candidates' evidence, with best-effort redaction: branch names and subjects, commit subjects and, for finalists, bodies and changed paths, file paths and, for finalists, first lines, tool names and summaries, the whole line of a recipe's listing | literal command arguments outside markers are not semantic evidence; the caller-written command executes locally; the content of a withheld file |
+| `fill` | descriptions, context of `one` and `flag`, and candidates' evidence, with best-effort redaction: branch names and subjects, commit subjects and, for finalists, bodies, changed paths, the diffstat and the first 1,000 characters of the patch, file paths and, for finalists, first lines, tool names and summaries, the whole line of a recipe's listing | literal command arguments outside markers are not semantic evidence; the caller-written command executes locally; the content of a withheld file |
 | `pick --from` | the same evidence as `fill` for the kind | no user command executes |
 | `pick` | description and distinct stdin records, clipped to 200–2,000 characters per selection item | unselected evidence beyond the clipping budget |
 | `pick --files` | description, stdin paths, masked excerpts of at most 24 finalists | withheld file contents; other files not listed on stdin |

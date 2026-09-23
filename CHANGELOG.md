@@ -2,6 +2,26 @@
 
 ## Unreleased
 
+Changed:
+
+- A `commit` finalist carries its diffstat and the first 1,000 characters of its patch, and the
+  `commit` kind no longer lets the subjects round decide alone. A subject line is a claim about a
+  change, and the commit making the claim need not be the commit holding it. On twenty adversarial
+  cases over two foreign repositories, where a docs-only commit announces a change that a dull
+  subject actually holds, the kind answered wrong at 0.82 to 1.00 on twenty of twenty; it now
+  answers all twenty right on both backends. On honest history it gains too: the
+  `evals/commit-attractor` set moves from 9 to 12 of 27 keyless and from 14 to 22 of 27 on
+  TypeSafe, with one fewer wrong answer on each. A single-window `commit` finals now also admits
+  the candidates the subjects round scored 0.00, since that score reflects the claim rather than
+  the change. The patch costs one extra request only where a single window holds the whole
+  history, nothing on a real pool, and all 24 finalists stay inside the keyless budget at an
+  average of 1,184 characters each (`evals/commit-subjects/`, `benchmarks/results.md`).
+
+- The quickstart `filter` example passes `--strict` and prints the output it produces. The
+  three-way verdict keeps a record that says nothing either way, so the old example returned
+  every line it appeared to filter. The rule is now stated on each user-facing page and in the
+  capability strings instead of only in `--help`. Default behaviour is unchanged.
+
 ## 0.10.0 - 2026-09-22
 
 Changed:

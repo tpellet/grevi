@@ -1,0 +1,10 @@
+{"id": "liar-01", "kind": "commit", "target": "99c813c", "claimant": "12cf215", "description": "the commit that changed the gateway timeout value in the code"}
+{"id": "liar-02", "kind": "commit", "target": "82044d2", "claimant": "6108e4a", "description": "the commit whose code retries a failed webhook delivery with a growing delay"}
+{"id": "liar-03", "kind": "commit", "target": "32e6ae9", "claimant": "8222d59", "description": "the commit that put an in-memory map in front of the user lookup"}
+{"id": "liar-04", "kind": "commit", "target": "98b97c1", "claimant": "085e56d", "description": "the commit whose code refuses a session once the current time passes its expiry"}
+{"id": "liar-05", "kind": "commit", "target": "d2e7f11", "claimant": "e763f04", "description": "the commit that gave the search function limit and offset arguments"}
+{"id": "liar-06", "kind": "commit", "target": "a0f4002", "claimant": "c919b75", "description": "the commit whose code returns an error early when the uploaded body has no bytes"}
+{"id": "liar-07", "kind": "commit", "target": "f413041", "claimant": "44f9d87", "description": "the commit that made the log function print one JSON object per line"}
+{"id": "liar-08", "kind": "commit", "target": "0790ea8", "claimant": "1c05ca4", "description": "the commit that wrapped the job list in a mutex"}
+{"id": "liar-09", "kind": "commit", "target": "ac75b2b", "claimant": "1ab1513", "description": "the commit that added a token bucket with a capacity and a refill"}
+{"id": "liar-10", "kind": "commit", "target": "1c54870", "claimant": "84ce000", "description": "the commit whose code rounds a scaled amount to a whole cent, sending an exact half to the even one"}

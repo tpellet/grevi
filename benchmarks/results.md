@@ -414,3 +414,53 @@ and `docs/demo/examples.sh` runs it as its nothing-fits demonstration. The phras
 before, `rewrote everything in Go`, abstains on classifier.dev but returns `041e6d1` on TypeSafe
 in four runs of four, at 0.72, 0.52, 0.71 and 0.73 against none 0.20 to 0.26: a scaffolding
 commit does create a whole program at once in one language, so the description was matchable.
+
+## The `commit` kind when the subject lies (measured 2026-09-23)
+
+jevify 0.10.0, debug builds of the commit before and after the patch this section reports,
+answering model `jev-1.13.0` on both backends, `JEVIFY_NO_CACHE=1`, `JEVIFY_DECISION=round_one`,
+every case `--dry-run`. The set, the case files, the scratch-repository builder and the runs are
+`evals/commit-subjects/`. `before` is the build where a `commit` finalist carried its subject,
+its body and its changed paths and the subjects round could decide alone; `after` is the build
+where the finalist also carries its diffstat and the first 1,000 characters of its patch, the
+subjects round never decides a `commit` alone, and a single-window `commit` finals keeps the
+candidates the subjects scored 0.00.
+
+Twenty descriptions over two repositories that are not this one. Ten are a scratch repository of
+ten pairs, each a documentation-only commit whose subject announces a change and a code commit
+whose subject says nothing and which holds it; ten are real ripgrep commits at
+`3fce3b5bb0236da2df6d99672afb8a719642eca7` whose subjects say `Update types.rs` or `style` over
+a substantive patch.
+
+| Set | Backend | Build | cases | right | wrong | abstained | requests/case | seconds/case |
+|:---|:---|:---|---:|---:|---:|---:|---:|---:|
+| scratch, 21 commits, 1 window | classifier.dev | before | 10 | 0 | 10 | 0 | 1 | 0.62 |
+| scratch, 21 commits, 1 window | classifier.dev | after | 10 | 10 | 0 | 0 | 2 | 2.40 |
+| scratch, 21 commits, 1 window | TypeSafe | before | 10 | 0 | 10 | 0 | 1 | 0.30 |
+| scratch, 21 commits, 1 window | TypeSafe | after | 10 | 10 | 0 | 0 | 2 | 1.76 |
+| ripgrep, 2,287 commits | classifier.dev | before | 10 | 6 | 1 | 3 | 25 | 4.43 |
+| ripgrep, 2,287 commits | classifier.dev | after | 10 | 6 | 1 | 3 | 25 | 5.15 |
+| ripgrep, 2,287 commits | TypeSafe | before | 10 | 7 | 0 | 3 | 13 | 1.59 |
+| ripgrep, 2,287 commits | TypeSafe | after | 10 | 8 | 1 | 1 | 13 | 2.29 |
+
+Seconds are the median of the whole `fill` run, local `git` included. On the scratch half the
+`before` build answers wrong on every case on both backends, at 0.93 to 1.00 on classifier.dev
+and 0.82 to 1.00 on TypeSafe, and the commit whose subject lies wins all twenty times. It costs
+one request there because the subjects round decides alone and the finals never run.
+
+The same 27 cases of `evals/commit-attractor/`, over this repository's own honest history, rerun
+on both builds:
+
+| Backend | Build | cases | right | wrong | abstained | requests/case |
+|:---|:---|---:|---:|---:|---:|---:|
+| classifier.dev | before | 27 | 9 | 4 | 14 | 4 |
+| classifier.dev | after | 27 | 12 | 3 | 12 | 4 |
+| TypeSafe | before | 27 | 14 | 5 | 8 | 3 |
+| TypeSafe | after | 27 | 22 | 4 | 1 | 3 |
+
+The keyless finals window budgets 30,000 characters over at most 24 finalists and clips each to
+1,250. Over the newest 24 ripgrep commits a finalist's body, paths and clipped diff average
+1,184 characters and total 28,434. Ten of the 24 exceed the per-item clip and lose the tail of
+their patch; the diffstat leads, so a clipped finalist still shows every file it touched and its
+line counts. No finalist is dropped: the clip is per item, so all 24 fit at 99 candidates per
+window and at any pool size.

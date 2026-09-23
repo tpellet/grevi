@@ -25,7 +25,7 @@ jevify fill -- gh run view --log-failed '@{ci-run:the last failed run on main}'
 |:---|:---|:---|
 | `-` | records on stdin, or `--candidates FILE` | the whole record; `--key` or `--field` names the handle inside it |
 | `branch` | local and remote refs | name, last commit subject, age; a remote ref folds into its local twin, and a branch that exists only on one remote is its short name (`ticket/TPE-791`), with the ref in its evidence. A literal prefix (`'origin/@{branch:…}'`) scopes the listing to that remote's refs; which form to write is under [Coded kinds and recipe kinds](#coded-kinds-and-recipe-kinds) |
-| `commit` | the log of the current branch | subject; finalists add body and changed paths |
+| `commit` | the log of the current branch | subject; finalists add body, changed paths and the diffstat with the start of the patch, 1,000 characters of it |
 | `file`, `dir` | tracked and untracked files that are not ignored, hidden ones included | path; `file` finalists add first lines, `dir` finalists the names of their first children |
 | `tool` | the commands on the PATH, for `route` and `pick --from tool` | name and one-line manual summary |
 | `pr`, `issue`, `ci-run`, `stash`, `process`, `container`, `pod` | a recipe: the owning tool's listing | the whole line of the listing |
@@ -37,11 +37,18 @@ answer to such a phrase can be confident and wrong: on the held-out content phra
 `evals/fill/finals/` a decisive names round with the rest of the field out of play still
 chose a file named for the concept and holding something else, once per twelve to fifteen
 such rounds on each backend (`benchmarks/results.md`), and `fill` is the verb whose choice
-reaches a command. `branch` and `commit` decide on names alone when the names round is
+reaches a command. `commit` always runs its finals for the same reason, one step further
+along: a subject line is a claim about a change, and the commit that makes the claim need not
+be the commit that holds the change. On the 20 lying-subject cases of `evals/commit-subjects/`,
+where a documentation commit announces a change a dull-sounding commit actually made, the
+subject alone answers wrong on every case at 0.82 to 1.00 on both backends; the finals, which
+read the patch, answer right on every case of the scratch half (`benchmarks/results.md`). For
+the same reason a `commit` finalist reaches the finals even when the subjects round scored it
+0.00, as far as the 24 finalists hold. `branch` decides on names alone when the names round is
 decisive and its winner holds at least twice the probability of the rest of the field, the
-other names and NONE together; when the field stays in play, their finals read the evidence.
-No held-out measurement of that rule exists for those two kinds. `--dry-run` shows the
-choice before anything runs.
+other names and NONE together; when the field stays in play, its finals read the evidence.
+No held-out measurement of that rule exists for `branch`. `--dry-run` shows the choice before
+anything runs.
 
 `branch` and `commit` are ordered: the lister prints newest first. `pr`, `issue`, `ci-run` and
 `stash` are ordered by their recipe. The others are not.

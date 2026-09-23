@@ -225,8 +225,8 @@ Under jevify is [Jev](https://docs.typesafe.ai), a small model from
 is this true, how much. Every answer comes with a probability, and Jev writes no text.
 
 Code does the listing: `git log` for commits, `git ls-files` for files, your pipe for lines.
-Each candidate comes with its evidence, such as a commit's subject and changed paths, or a file's
-first lines. Jev gets the description, the candidates and one more option, "none of them", and
+Each candidate comes with its evidence, such as a commit's subject, changed paths and the start
+of its patch, or a file's first lines. Jev gets the description, the candidates and one more option, "none of them", and
 returns a probability for each. A long list is judged in windows of 200 candidates (99 without a
 key), all at the same time, and the best of each window meet in one final comparison, so a
 selection takes at most two rounds. jevify prints the answer on stdout and the probabilities on

@@ -381,10 +381,17 @@ pub async fn run(
                 // names did not rule out reaches the finals with its excerpt, as many as the
                 // finals hold. Three names alone left the finals choosing the best of three
                 // wrong files, and a related excerpt then won at 0.94.
+                //
+                // A commit keeps its zeroes as well. Its names round reads a subject line,
+                // which is a claim about a change rather than the change; on the lying-subject
+                // cases of `evals/commit-subjects/` the subject that announces the change
+                // takes the whole mass and the commit that holds it is scored 0.00, so a
+                // filter on p alone leaves the finals one candidate and no way back.
+                let keep_zeroes = m.kind == "commit";
                 finalists = ranking
                     .candidates
                     .iter()
-                    .filter(|c| c.p > 0.0)
+                    .filter(|c| keep_zeroes || c.p > 0.0)
                     .take(MAX_FINALISTS)
                     .copied()
                     .collect();
@@ -503,12 +510,16 @@ fn runner_up_matches(ranking: &Ranking) -> bool {
 }
 
 /// The tier-two kinds whose names round may decide alone, a decisive Found with the runner-up
-/// out of play (`runner_up_matches`): `branch` and `commit`, where no held-out measurement
-/// exists. `file` and `dir` always run their finals: on the 33 held-out content phrases of
+/// out of play (`runner_up_matches`): `branch`, whose refs carry nothing but a name until the
+/// finals. `file` and `dir` always run their finals: on the 33 held-out content phrases of
 /// `evals/fill/finals/` the shortcut chose a name decoy once per twelve to fifteen fires on
 /// each backend (benchmarks/results.md), and a wrong file reaches the caller's command.
+/// `commit` always runs its finals too: a subject line is a claim about a change, and on the
+/// 20 cases of `evals/commit-subjects/`, where the claim sits on a commit that does not hold
+/// the change, the shortcut fired on every case and answered wrong at 0.82 to 1.00 on both
+/// backends. The finals read the patch, so they can tell the claim from the change.
 fn names_may_decide(kind: &str) -> bool {
-    matches!(kind, "branch" | "commit")
+    matches!(kind, "branch")
 }
 
 fn apply_ranking(state: &mut State, ranking: &Ranking, threshold: f64) {

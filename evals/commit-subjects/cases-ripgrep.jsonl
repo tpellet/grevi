@@ -1,0 +1,10 @@
+{"id": "rg-01", "kind": "commit", "target": "74e96b4", "description": "the commit that closes a missing square bracket in the man-page entry of the built-in file type glob table"}
+{"id": "rg-02", "kind": "commit", "target": "03b0d83", "description": "the commit that rewrites the long help text of the flag taking extra files of ignore patterns, saying those patterns apply after .gitignore and .ignore and pointing the reader at -g"}
+{"id": "rg-03", "kind": "commit", "target": "f0028a6", "description": "the commit that removes the padding spaces inside a set_color call argument in the printer"}
+{"id": "rg-04", "kind": "commit", "target": "0fedaa7", "description": "the commit that deletes the hand-rolled macro that wrote a formatted line to standard error"}
+{"id": "rg-05", "kind": "commit", "target": "9b39210", "description": "the commit that shortens the build-feature markers in the version banner to +AVX and +SIMD and moves them onto their own line"}
+{"id": "rg-06", "kind": "commit", "target": "79d40d0", "description": "the commit that raises the binary-sniffing prefix from 4096 to 10240 bytes and replaces the input buffer's is_binary flag with a text flag threaded down from the searcher"}
+{"id": "rg-07", "kind": "commit", "target": "28bff84", "description": "the commit that drops the dependency counting logical CPUs and derives the thread count from the standard library and the chosen subcommand instead"}
+{"id": "rg-08", "kind": "commit", "target": "96f7329", "description": "the commit that renames the counter of matching lines across the searchers and both run loops"}
+{"id": "rg-09", "kind": "commit", "target": "e7b0f89", "description": "the commit that replaces map(|s| s.clone()) with cloned() and copied() in the core search and a few library crates"}
+{"id": "rg-10", "kind": "commit", "target": "5613df3", "description": "the commit that rewrites the zsh completion script into one sorted array of options with a header comment pointing at the completion test"}
