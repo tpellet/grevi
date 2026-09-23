@@ -7,16 +7,21 @@ use crate::jev::{Question, Questions};
 use crate::manpage;
 use crate::tournament::{Finalists, Prompts, shortlist};
 
-/// Two fits closer than this are a tie: the absolute fit of a command is a Noul of its own
-/// request, so several commands that serve one task all score high, and a gap this small is
-/// noise, not an order. `route` prints and starts nothing, so a tie names every tied command
-/// instead of abstaining: the caller reads the names and writes the command.
-pub const TIE_MARGIN: f64 = 0.05;
+/// Two fits closer than this are a tie, and a tie is an abstention: the absolute fit of a
+/// command is a Noul of its own request, so several commands that serve one task all score
+/// high, and a gap this small is noise, not an order. The margin sits above the measured
+/// uncached jitter of 0.06 between identical requests on this model (docs/guide/how-it-works.md),
+/// so one jitter width cannot turn a tie into a decision. The count is large: on the frozen
+/// validation set (benchmarks/results.md) 8 of 24 route decisions fall inside it, 4 per
+/// backend, all with the runner-up 0.00 to 0.05 from the best, so the same 8 would have tied
+/// at 0.05; a PATH of 1,900 commands holds several tools for most tasks.
+pub const TIE_MARGIN: f64 = 0.10;
 
 pub struct Route {
     pub tool: Option<Tool>,
     pub fit: f64,
-    /// Commands that fit within `TIE_MARGIN` of the best one, above the threshold.
+    /// Commands above the threshold that fit within `TIE_MARGIN` of the best one. Any entry
+    /// makes the answer a tie.
     pub ties: Vec<(String, f64)>,
     pub alternatives: Vec<(String, f64)>,
 }
@@ -167,6 +172,26 @@ pub async fn run(ctx: &Config, intent: &str, machine: bool) -> Result<Outcome, J
             exec: None,
         });
     };
+    if !r.ties.is_empty() {
+        // Two commands too close to tell apart: say so and name nothing, as VISION promises.
+        let tied: Vec<(String, f64)> = std::iter::once((tool.name.clone(), r.fit))
+            .chain(r.ties.iter().cloned())
+            .collect();
+        if !machine {
+            let named: Vec<String> = tied.iter().map(|(n, p)| format!("{n} ({p:.2})")).collect();
+            eprintln!("jevify: too close to tell apart: {}", named.join(", "));
+        }
+        let ties: Vec<_> = tied
+            .iter()
+            .map(|(n, p)| serde_json::json!({ "tool": n, "fit": p }))
+            .collect();
+        return Ok(Outcome {
+            exit: Exit::Abstain,
+            data: serde_json::json!({ "tool": null, "summary": null, "synopsis": null, "fit": r.fit, "ties": ties, "alternatives": alts }),
+            human: Vec::new(),
+            exec: None,
+        });
+    }
     let name = tool.name.clone();
     let synopsis = tokio::task::spawn_blocking(move || manpage::synopsis(&name))
         .await
@@ -176,23 +201,10 @@ pub async fn run(ctx: &Config, intent: &str, machine: bool) -> Result<Outcome, J
         if let Some(text) = &synopsis {
             eprintln!("  {text}");
         }
-        if !r.ties.is_empty() {
-            let named: Vec<String> = r
-                .ties
-                .iter()
-                .map(|(n, p)| format!("{n} ({p:.2})"))
-                .collect();
-            eprintln!("  also fits: {}", named.join(", "));
-        }
     }
-    let ties: Vec<_> = r
-        .ties
-        .iter()
-        .map(|(n, p)| serde_json::json!({ "tool": n, "fit": p }))
-        .collect();
     Ok(Outcome {
         exit: Exit::Ok,
-        data: serde_json::json!({ "tool": tool.name, "summary": tool.summary, "synopsis": synopsis, "fit": r.fit, "ties": ties, "alternatives": alts }),
+        data: serde_json::json!({ "tool": tool.name, "summary": tool.summary, "synopsis": synopsis, "fit": r.fit, "ties": [], "alternatives": alts }),
         human: format!("{}\n", tool.name).into_bytes(),
         exec: None,
     })

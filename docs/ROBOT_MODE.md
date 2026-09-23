@@ -84,8 +84,9 @@ argument; unchecked substitution can turn abstention into an empty argument.
   with no inference. Exit 0 all yes, 1 any no, 3 otherwise.
 - `route <intent...>` prints a tool, summary and synopsis; starts no user command and selects
   no arguments. Data: `tool`, `summary`, `synopsis`, `fit`, `ties[{tool,fit}]`,
-  `alternatives[{tool,fit}]`. A tie is a tool above the threshold and within 0.05 of the best;
-  stdout still names the best. Exit 0 found, 3 nothing fits. Missing synopsis is null.
+  `alternatives[{tool,fit}]`. Exit 0 found, 3 nothing fits or two commands are too close to
+  tell apart (above the threshold and within 0.10 of each other): `tool` is null and `ties`
+  names them, the best first. Missing synopsis is null.
 - `add '<topic>' [--dry-run | --yes]` scores tracked unstaged hunks. Data:
   `hunks[{file,header,p,staged}]`. Exit 0 scored or staged, 3 no match, 6 empty or oversized,
   130 declined. Machine mode stages only with `--yes`; never commits.

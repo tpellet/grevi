@@ -261,14 +261,16 @@ jevify route 'keep my mac awake for an hour'
 
 `route <intent...>` searches installed commands by summaries and man-page evidence. It prints
 a tool, summary and synopsis, with fit on stderr. No user command starts and no arguments are
-selected. Exit 0 found, 3 nothing fits. Data: `tool`, `summary`, `synopsis`, `fit`, `ties[{tool,fit}]`,
-`alternatives[{tool,fit}]`; synopsis can be null without a man page.
+selected. Exit 0 found, 3 nothing fits or a near tie. Data: `tool`, `summary`, `synopsis`, `fit`,
+`ties[{tool,fit}]`, `alternatives[{tool,fit}]`; synopsis can be null without a man page.
 
 Each finalist gets an absolute fit of its own, so several commands that all serve a task all
-score high. A command that fits within 0.05 of the best and above the threshold is a tie: `route`
-names the best on stdout and the tied ones in `ties` and on stderr (`also fits: dig (0.95)`),
-and abstains on neither. Only `fill` runs a command, so a tie costs `route` a glance at the
-names, not a wrong action; the caller reads the names and writes the command.
+score high. When the runner-up is above the threshold and within 0.10 of the best, the two are
+too close to tell apart: `route` exits 3, prints nothing on stdout, sets `tool` to null and
+names them in `ties` (the best first) and on stderr (`too close to tell apart: host (0.96),
+dig (0.95)`). The margin sits above the 0.06 jitter between identical uncached requests, so
+one jitter width cannot turn a tie into a decision. The caller reads the names and writes the
+command.
 
 ## add
 

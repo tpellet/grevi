@@ -110,7 +110,7 @@ map an unsure exit 3 to 125. Do not silently retry abstention until it agrees.
 | `label` | `records[{label,text,ordinal,p,lossy?,unreadable?}]`, `labelled`, `total`, `unsure`, `complete`, `excerpts_withheld` |
 | `is`, one statement | `p`, `verdict`, `truncated`, `reason` when oversized |
 | `is`, several statements | `statements[{statement,verdict,p}]`, aggregate `verdict`, `truncated`, `reason` when oversized |
-| `route` | `tool`, `summary`, `synopsis`, `fit`, `alternatives[]` |
+| `route` | `tool`, `summary`, `synopsis`, `fit`, `ties[{tool,fit}]`, `alternatives[]` |
 | `add` | `hunks[{file,header,p,staged}]` |
 | `sort` | `moves[{from,to,p}]`, `skipped[{file,reason}]`, `undo_log`, `applied` |
 | `capabilities` | commands, flags, exit codes, environment, limits, backends and safety contract |

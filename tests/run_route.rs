@@ -74,10 +74,11 @@ async fn routes_to_the_tool() {
     assert_eq!(out.status.code(), Some(0));
 }
 
-/// Two commands that fit within the tie margin: `route` names the best on stdout and the tied
-/// one in `ties`, and abstains on neither. A command below the threshold is never a tie.
-#[tokio::test(flavor = "multi_thread")]
-async fn a_near_tie_names_both() {
+/// Two commands that fit within the tie margin are too close to tell apart: `route` exits 3,
+/// names no tool and lists both in `ties`, the best first. A gap wider than the margin is a
+/// decision, exit 0 with an empty `ties`. A command below the threshold is never a tie.
+async fn route_with_runner_up(runner_up: f64) -> (std::process::Output, std::process::Output) {
+    // The fit of `curl` reaches the fake through the request's `runner_up` field.
     let server = common::mock(FakeJev {
         choose: |_, s, o| common::option_containing(s, o, "tar"),
         noul: |i, s| {
@@ -94,7 +95,14 @@ async fn a_near_tie_names_both() {
             if described.starts_with("tar:") {
                 0.9
             } else if described.starts_with("curl:") {
-                0.88
+                s["request"]
+                    .as_str()
+                    .unwrap()
+                    .rsplit(' ')
+                    .next()
+                    .unwrap()
+                    .parse()
+                    .unwrap()
             } else {
                 0.2
             }
@@ -102,39 +110,63 @@ async fn a_near_tie_names_both() {
     })
     .await;
     let dir = tempfile::tempdir().unwrap();
+    let intent = format!("fetch an archive {runner_up}");
     let mut c = common::jevify(&server);
     c.env("JEVIFY_INVENTORY_FILE", inv(&dir));
-    let out = tokio::task::spawn_blocking(move || {
-        c.args(["--json", "route", "fetch", "an", "archive"])
-            .output()
-            .unwrap()
-    })
-    .await
-    .unwrap();
+    let i = intent.clone();
+    let json =
+        tokio::task::spawn_blocking(move || c.args(["--json", "route", &i]).output().unwrap())
+            .await
+            .unwrap();
+    let mut c = common::jevify(&server);
+    c.env("JEVIFY_INVENTORY_FILE", inv(&dir));
+    let human = tokio::task::spawn_blocking(move || c.args(["route", &intent]).output().unwrap())
+        .await
+        .unwrap();
+    (json, human)
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn a_near_tie_abstains_and_names_both() {
+    let (out, human) = route_with_runner_up(0.88).await;
     let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
-    assert_eq!(out.status.code(), Some(0), "{v}");
-    assert_eq!(v["data"]["tool"], "tar", "{v}");
-    assert_eq!(v["data"]["ties"].as_array().map(Vec::len), Some(1), "{v}");
-    assert_eq!(v["data"]["ties"][0]["tool"], "curl", "{v}");
-    assert!(v["data"]["ties"][0]["fit"].is_number());
+    assert_eq!(out.status.code(), Some(3), "{v}");
+    assert_eq!(v["exit_code"], 3, "{v}");
+    assert!(v["data"]["tool"].is_null(), "{v}");
+    assert!(v["data"]["summary"].is_null(), "{v}");
+    assert!(v["data"]["synopsis"].is_null(), "{v}");
+    assert_eq!(v["data"]["fit"], 0.9, "{v}");
+    assert_eq!(
+        v["data"]["ties"],
+        serde_json::json!([{"tool": "tar", "fit": 0.9}, {"tool": "curl", "fit": 0.88}]),
+        "{v}"
+    );
     assert_eq!(
         v["data"]["alternatives"].as_array().map(Vec::len),
         Some(2),
         "{v}"
     );
-    let mut c = common::jevify(&server);
-    c.env("JEVIFY_INVENTORY_FILE", inv(&dir));
-    let out = tokio::task::spawn_blocking(move || {
-        c.args(["route", "fetch", "an", "archive"])
-            .output()
-            .unwrap()
-    })
-    .await
-    .unwrap();
-    assert_eq!(out.status.code(), Some(0));
-    assert_eq!(out.stdout, b"tar\n");
-    let err = String::from_utf8(out.stderr).unwrap();
-    assert!(err.contains("also fits: curl (0.88)"), "{err}");
+    assert_eq!(human.status.code(), Some(3));
+    assert!(human.stdout.is_empty(), "stdout names no tool on a tie");
+    let err = String::from_utf8(human.stderr).unwrap();
+    assert!(
+        err.contains("too close to tell apart: tar (0.90), curl (0.88)"),
+        "{err}"
+    );
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn a_gap_wider_than_the_margin_decides() {
+    let (out, human) = route_with_runner_up(0.78).await;
+    let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+    assert_eq!(out.status.code(), Some(0), "{v}");
+    assert_eq!(v["data"]["tool"], "tar", "{v}");
+    assert_eq!(v["data"]["ties"], serde_json::json!([]), "{v}");
+    assert_eq!(v["data"]["alternatives"][0]["tool"], "curl", "{v}");
+    assert_eq!(human.status.code(), Some(0));
+    assert_eq!(human.stdout, b"tar\n");
+    let err = String::from_utf8(human.stderr).unwrap();
+    assert!(!err.contains("too close"), "{err}");
 }
 
 #[tokio::test(flavor = "multi_thread")]

@@ -186,6 +186,33 @@ on one case each, which is not evidence. The calibration split has no `unsure` g
 validation split have no calibration counterpart and the band stays where it is. The
 validation split is scored once and is not used to choose anything.
 
+### `route` with the tie margin (measured 2026-09-22)
+
+jevify 0.9.2 with `TIE_MARGIN` 0.10 (the working tree after commit ed37bd6), the release
+binary, `JEVIFY_NO_CACHE=1`, threshold 0.5, the 12 `route` cases of both splits on the same
+runner as above; `scripts/validation_run.py --verb route`, scored with
+`scripts/validation_gold.py score`. `jev-1.13.0` answered every case on both backends
+(TypeSafe 384 semantic questions, classifier.dev 624). A runner-up above the threshold and
+within 0.10 of the best is a tie, exit 3.
+
+The count is large: 8 of the 24 decisions are ties, 4 on each backend, the same four cases on
+both. Every tied runner-up sits 0.00 to 0.05 from the best, so the margin of 0.05 would have
+tied the same eight; the cases have several fitting tools, not one tool and noise.
+
+| Case | TypeSafe best, next, gap | classifier.dev best, next, gap | gold |
+|:---|:---|:---|:---|
+| list what is inside a zip file | zipinfo 0.94, unzip 0.91, 0.03 | zipinfo 0.96, unzip 0.95, 0.01 | any of unzip, zipinfo |
+| measure how long a request to a URL takes | curl 0.71, hyperfine 0.71, 0.00 | curl 0.95, time 0.90, 0.05 | curl |
+| look up the IP address a hostname resolves to | host 0.96, dig 0.95, 0.01 | host 1.00, nslookup 0.99, 0.01 | any of dig, host, nslookup |
+| pretty-print a JSON file | jq 0.94, python3 0.94, 0.00 | jq 1.00, json-glib-format 0.98, 0.02 | jq |
+
+Two of the four have a gold that accepts every tied tool, so a caller reading `ties` gets the
+answer either way; the other two lose a correct decision to a tool that also does the task.
+The widest gap of a decided case is 0.12 (unpack a tar.gz: tar 0.72, archiveutil 0.60 on
+TypeSafe); the next widest is 0.19. Scored per split, both backends: validation coverage 0.50,
+accuracy 0.67 on the decided cases, abstention 0.50, 1 false action (`spit` for the translation
+case, as above); calibration coverage 0.67, accuracy 1.00, abstention 0.33, 0 false actions.
+
 ### `filter` asked three ways (measured 2026-09-22)
 
 The run above asked `filter` a yes/no Noul, which reads "the record does not say" as a

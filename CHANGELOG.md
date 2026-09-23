@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+Changed:
+
+- `route` abstains on a near tie. When the runner-up is above the threshold and within 0.10 of
+  the best, `route` exits 3, prints no tool, sets `data.tool` to null and names the tied commands
+  in `data.ties[{tool,fit}]` (the best first) and on stderr (`too close to tell apart: ...`),
+  as VISION promises for two candidates that are too close. The margin was 0.05, below the
+  measured 0.06 jitter between identical uncached requests, and a tie still exited 0 with the
+  best on stdout. `data.ties` is empty on every exit 0.
+- README: the `is` example that printed a message on `||` is gone; it printed "build is fine"
+  on exit 3 (unsure) and exit 4 (backend unavailable). Every README example acts on exit 0.
+
 ## 0.9.2
 
 Fixed:

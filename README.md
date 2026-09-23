@@ -131,9 +131,6 @@ straight into `&&`, `if` and `until`.
 ```console
 $ jevify is 'asks for a refund' < docs/demo/mail.txt && echo refund
 refund
-
-$ cargo build 2>&1 | jevify is 'the build failed' || echo 'build is fine'
-build is fine
 ```
 
 ## Install and try it
