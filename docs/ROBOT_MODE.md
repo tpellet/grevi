@@ -145,8 +145,10 @@ from a repository, a user recipe cannot replace a shipped kind, and a bad file i
 `recipe_invalid` with its line number. Every lister has one 20 s deadline; a missing or
 unauthenticated tool is exit 6 `lister_failed` with its own text. `--field N` is a 1-based
 whitespace field; `--key KEY` extracts a JSON handle while retaining the record as evidence.
-The `fill` status line reads
-`candidates N[ of M[, newest first]][, omitted K], windows W[, excerpts withheld: E]`.
+The `fill` status line of a resolved marker reads
+`candidates N[ of M[, newest first]][, omitted K], windows W[, excerpts withheld: E]`; the
+`not run:` line of an abstention reads `candidates N of M, omitted K`, both parts always
+present and no window count.
 The last stderr line is `jevify fill: exec <quoted argv>` in a run, `jevify fill: would run
 <quoted argv>` under `--dry-run`, or `jevify fill: not run: <reason>` when nothing ran; only
 `exec` means the command started.

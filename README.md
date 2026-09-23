@@ -24,7 +24,8 @@ and prints the line that explains the failure, with the lines around it.
 
 ```console
 $ jevify why < docs/demo/build.log
-jevify why: 1812 lines, candidates 1212, windows 7
+jevify why: full output: ~/Library/Caches/jevify/outputs/1a419395094f905c.log
+jevify why: 1812 lines, candidates 1212, windows 13
       1 │    Compiling buildfail v0.1.0 (benchmarks/fixtures/demo/buildfail)
 >     2 │ error[E0425]: cannot find value `conifg` in this scope
       3 │    --> src/main.rs:306:20
@@ -44,15 +45,18 @@ goes. jevify lists the commits, picks the one that fits, and becomes git.
 
 ```console
 $ jevify fill -- git show --stat --format=%s '@{commit:stopped sending the free backend batches it refuses}'
-jevify fill: commit 7bcf70cd91fc3d9e306d60ea0436a02983be3d6f 0.93 (next 0.03, none 0.02) fix: keyless batches of at most 60 records, 402 named (hunch-0it); candidates 187, windows 1; model jev-1.13.0
-jevify fill: exec 'git' 'show' '--stat' '--format=%s' '7bcf70cd91fc3d9e306d60ea0436a02983be3d6f'
-fix: keyless batches of at most 60 records, 402 named (hunch-0it)
+jevify fill: commit 332191a1639f5dc784e976fe4d404ee9a564e272 0.56 (next 0.12, none 0.21) fix: pick prefers the thing to its documentation page (hunch-93l); candidates 246, windows 3; model jev-1.13.0
+jevify fill: exec 'git' 'show' '--stat' '--format=%s' '332191a1639f5dc784e976fe4d404ee9a564e272'
+fix: pick prefers the thing to its documentation page (hunch-93l)
 
- CHANGELOG.md                |  8 ++++++++
- src/jev/client.rs           | 27 +++++++++++++++++++++++----
- …
- 11 files changed, 97 insertions(+), 38 deletions(-)
+ src/cmd/pick.rs | 40 ++++++++++++++++++++++++++++++++++++++--
+ tests/pick.rs   | 49 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 87 insertions(+), 2 deletions(-)
 ```
+
+The status line is the check. This run, on the keyless backend over 246 commits on 2026-09-22,
+answers 0.56 with `none` at 0.21 and names a commit that does not match the description: a
+probability that close to the threshold is worth a `--dry-run` before a command runs on it.
 
 The marker works wherever a tool can list the candidates: `'@{branch:the auth refactor}'`,
 `'src/@{file:parses the marker}'`, `'@{pod:the payment worker}'`. A list you pipe in works the
@@ -60,7 +64,7 @@ same way, and `--dry-run` prints the command instead of running it.
 
 ```console
 $ printf 'retry_backoff\nparse_header\n' | jevify fill --dry-run -- cargo test '@{-:the retry test}'
-jevify fill: - retry_backoff 0.94 (next 0.00, none 0.06) retry_backoff; candidates 2, windows 1; model jev-1.13.0
+jevify fill: - retry_backoff 0.73 (next 0.02, none 0.25) retry_backoff; candidates 2, windows 1; model jev-1.13.0
 jevify fill: would run 'cargo' 'test' 'retry_backoff'
 'cargo' 'test' 'retry_backoff'
 ```
@@ -76,6 +80,7 @@ Ten issue titles and three buckets. `label` prints the bucket, a tab and the lin
 
 ```console
 $ jevify label bug,feature,question < docs/demo/issues.txt
+jevify label: 10 records, 10 distinct, 1 requests
 bug	#312 Crash when the config file is empty
 feature	#309 Add a dark theme to the settings page
 question	#305 How do I run this behind a corporate proxy?
@@ -89,6 +94,8 @@ bug	#281 Memory grows without bound on long sessions
 jevify label: labelled 10 of 10, 0 unsure
 
 $ jevify label bug,feature,question < docs/demo/issues.txt | cut -f1 | sort | uniq -c
+jevify label: 10 records, 10 distinct, 1 requests
+jevify label: labelled 10 of 10, 0 unsure
    4 bug
    3 feature
    3 question
@@ -98,8 +105,10 @@ $ jevify label bug,feature,question < docs/demo/issues.txt | cut -f1 | sort | un
 
 ```console
 $ jevify filter 'reports a crash' < docs/demo/issues.txt
+jevify filter: 10 records, 10 distinct, 1 requests
 #312 Crash when the config file is empty
 #290 Panic on non-UTF-8 file names
+jevify filter: kept 2 of 10, 0 unsure, full output: ~/Library/Caches/jevify/outputs/c85c7cb6f33fc1f7.log
 ```
 
 `filter` saves its whole input and prints the path, with the count of what it kept and what it
@@ -113,9 +122,11 @@ Eight files in a downloads folder. The electricity bill is there. The tax return
 
 ```console
 $ jevify pick "last month's electricity bill" < docs/demo/downloads.txt
+jevify pick: candidates 8, windows 1
 con_edison_electric_bill_august.pdf
 
 $ jevify pick 'the tax return' < docs/demo/downloads.txt
+jevify pick: candidates 8, windows 1
 $ echo $?
 3
 ```
@@ -263,7 +274,7 @@ included, until you delete it (`--no-save`).
 Without a key, one classification is one record under one question, and a day holds 20,000 of
 them per IP. That buys 20,000 records through `filter` or `label`, at most 60 per request (the
 largest batch tried; 75 was refused). It buys 830 to 10,000 `pick` calls, from 1,000 lines
-down to 99, 830 to 5,000 `why` calls, and about 380 `route` calls over a PATH of 1,900 commands.
+down to 99, 830 to 5,000 `why` calls, and about 380 `route` calls over a PATH of 1,883 commands.
 The quota, the per-request costs and the 60-record batch were measured on 2026-09-22; the calls
 a day are computed from the shape of each verb's requests, since the day's `pick`, `why` and
 `route` runs never completed ([benchmarks/results.md](benchmarks/results.md)). A verb takes

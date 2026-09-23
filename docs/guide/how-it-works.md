@@ -140,54 +140,53 @@ took about 240 ms. Cold means `JEVIFY_NO_CACHE=1`; warm means an answer-cache hi
 | `rg -c compress`, same 924 lines | 3 ms | 4 ms | 15 | 0 |
 
 The `rg` measurement is below hyperfine's 5 ms floor and illustrates the cost of literal search.
-Input-token estimates at $0.042/Mtok in these measurements: `why`, 2 requests, 1,436 tokens,
-$0.00006; `is` on a six-line mail, 1 request, 346 tokens, $0.000015; `pick` over five names,
-1 request, 487 tokens, $0.00002.
+The routing row comes from the removed `run` verb's route-only path, measured the same day on the
+same inputs; `benchmarks/bench.sh` measures `route` directly.
 
-Routing accuracy measured 2026-09-19 on TypeSafe `jev-1.13.0`, release build, empty cache,
-threshold 0.5, frozen inventory `evals/inventory.json` of 1,693 tools. BM25 ranks the same names
-and man-page summaries. The routing and root-cause evaluation requests together cost $0.43
-(routing $0.42, root cause $0.01).
+Routing accuracy measured 2026-09-19 at 0.3.0 on `jev-1.13.0`, release build, empty cache,
+threshold 0.5, frozen inventory `evals/inventory.json` of 1,693 tools, scored by
+`scripts/eval_run.py` over `evals/out/run.json` and `evals/out/nl2bash.json`. BM25 ranks the same
+names and man-page summaries. `route` abstains when the runner-up sits within 0.10 of the best;
+that tie rule postdates this run, so every figure here is from a binary that decided such cases.
 
 | Routing set | n | jevify top-1 | BM25 top-1 | abstained | errors |
 |:---|---:|---:|---:|---:|---:|
-| author-written, routable | 39 | 36 | 9 | 0 | 0 |
-| NL2Bash held-out | 120 | 36 | 4 | 66 | 0 |
+| author-written, routable | 39 | 34 | 9 | 1 | 0 |
+| NL2Bash held-out | 120 | 34 | 4 | 70 | 0 |
 
-Among ten requests labelled unanswerable by installed tools, nine abstain; translation to French
-routes to `spit`, whose man page describes LLM translation, and counts as a miss. NL2Bash mostly
-describes pipelines around `find`: 54 of 66 abstentions and 12 of 18 wrong routes name `find`
-as gold. Forty requests name a utility explicitly; 16 of the 36 hits are among those forty.
+Among ten requests labelled unanswerable by installed tools, eight abstain; translation to French
+routes to `spit`, whose man page describes LLM translation, and running a Windows `.exe` routes to
+`open` at 0.51, so both count as misses. NL2Bash mostly describes pipelines around `find`: 50 of
+70 abstentions and 11 of 15 wrong routes name `find` as gold. Forty requests name a utility
+explicitly; 14 of the 34 hits are among those forty.
 
-Reliability among 93 accepted routes only, on the two routable sets:
+Reliability among 87 accepted routes only, on the two routable sets:
 
 | Fit bin | Routes | Correct | Accuracy |
 |:---|---:|---:|---:|
-| 0.4–0.6 (observed fits at least 0.5) | 17 | 12 | 0.71 |
-| 0.6–0.8 | 34 | 23 | 0.68 |
-| 0.8–1.0 | 42 | 37 | 0.88 |
+| 0.4–0.6 (observed fits at least 0.5) | 9 | 6 | 0.67 |
+| 0.6–0.8 | 28 | 21 | 0.75 |
+| 0.8–1.0 | 50 | 41 | 0.82 |
 
 These bins do not establish calibration below the threshold, on another backend, or for another
-verb. A 0.6 threshold excludes 17 accepted routes, including 12 correct ones. Twenty of 169 routing
+verb. A 0.6 threshold excludes 9 accepted routes, including 6 correct ones. Sixteen of 169 routing
 decisions lie within 0.06 of the threshold, the measured uncached probability jitter for identical
 requests on this model. A changed model or prompt needs new evidence.
 
-Root-cause accuracy, measured 2026-09-22 at 0.8.1 on TypeSafe `jev-1.13.0`: twenty-one real CI
+Root-cause accuracy, measured 2026-09-22 at 0.9.3 on `jev-1.13.0`: twenty-one real CI
 logs, 136–300 lines each, hand-labelled cause ranges (`evals/why/corpus.jsonl`); `jevify why -n 3`.
-Eighteen cases decided, three abstained (exit 3), zero errors. Baselines use the first or last
+All twenty-one cases decided (exit 0), none abstained, zero errors. Baselines use the first or last
 line matching the same error-signal regex.
 
 | Method | hit@1 | hit@3 |
 |:---|---:|---:|
-| jevify | 19/21 | 20/21 |
+| jevify | 18/21 | 20/21 |
 | first signal match | 4/21 | 10/21 |
 | last signal match | 1/21 | 3/21 |
 
 The scorer (`scripts/eval_why.py`) counts a pointed line inside the labelled range whether the
-verb decided or abstained, so 19/21 and 20/21 are where the pointed line fell over all 21 cases,
-not the accuracy of the decided answers. Every log contains a failure, so for a caller reading
-the exit code the three abstentions are misses and at most 18 of 21 are right; the hit@1 over
-the 18 decided cases alone was not recorded in this run. `data.any` has minimum 0.17
-and median 0.77; the abstentions score 0.17, 0.43 and 0.46. Failures include a data race, an
+verb decided or abstained. Nothing abstained in this run, so 18/21 and 20/21 are both the recall
+of the pointer and what a caller reading the exit code gets. `data.any` has minimum 0.64
+and median 0.93 over the twenty-one answered cases. Failures include a data race, an
 assertion described as “still exists”, and a lint finding. A quoted failure or library frame can
 also distract selection from the cause. These counts quantify the limits of the measured task.

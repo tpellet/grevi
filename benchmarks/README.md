@@ -32,11 +32,13 @@ reading the tool inventory.
 | Toolchain | jevify 0.1.0, `cargo build --release`, rustc 1.93.1 |
 | hyperfine | 1.20.0, `--warmup 1 --runs 15 --ignore-failure` |
 | ripgrep | 15.2.0 |
-| Inputs | `pick`/`is`: `ls /usr/bin` (924 lines on this macOS); `why`: `fixtures/cargo-fail.log` (a real failing `cargo build`, 12 lines); `run`: extract a tar archive; burn a dvd from this iso |
+| Inputs | `pick`/`is`: `ls /usr/bin` (924 lines on this macOS); `why`: `fixtures/cargo-fail.log` (a real failing `cargo build`, 12 lines); routing: extract a tar archive; burn a dvd from this iso |
 
 "cold" sets `JEVIFY_NO_CACHE=1` (every answer is a live request); "warm" replays the answer cache.
-`run` numbers include the installed-tool inventory read from its cache (the warm-up run built it);
-"route-only" omits argument selection; "full" adds the argument round and the man-page renders.
+Routing numbers include the installed-tool inventory read from its cache (the warm-up run built
+it). The two `run cold` rows below come from the removed `run` verb on 2026-09-19: "route-only"
+omitted argument selection and matches what `route cold archive` and `route cold dvd` measure
+today; "full" added the argument round and the man-page renders, which `route` does not do.
 
 ## Numbers
 
@@ -49,8 +51,8 @@ mean ± σ from hyperfine's own table. All 15 runs of every row exited 0.
 | `pick warm` (cache hit) | 6 ms | 10 ms | 6.8 ± 2.0 ms |
 | `is cold` | 454 ms | 488 ms | 451.0 ± 29.4 ms |
 | `why cold` | 638 ms | 732 ms | 644.6 ± 52.7 ms |
-| `run cold route-only` | 1,823 ms | 2,007 ms | 1,849.4 ± 80.2 ms |
-| `run cold full` | 1,940 ms | 2,251 ms | 1,984.5 ± 129.4 ms |
+| `run cold route-only` (removed `run` verb, 2026-09-19) | 1,823 ms | 2,007 ms | 1,849.4 ± 80.2 ms |
+| `run cold full` (removed `run` verb, 2026-09-19) | 1,940 ms | 2,251 ms | 1,984.5 ± 129.4 ms |
 | `rg baseline` (`rg -c compress`) | 3 ms | 4 ms | 3.3 ± 0.3 ms |
 
 These measurements use jevify 0.1.0 on 2026-09-19 (connection prewarm in `run` only,

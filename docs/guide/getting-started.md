@@ -47,7 +47,7 @@ errors to stderr: `cargo build 2>&1 | jevify why`.
 ```console
 $ jevify why < docs/demo/build.log
 jevify why: full output: ~/Library/Caches/jevify/outputs/1a419395094f905c.log
-jevify why: 1812 lines, candidates 1212, windows 7
+jevify why: 1812 lines, candidates 1212, windows 13
       1 │    Compiling buildfail v0.1.0 (benchmarks/fixtures/demo/buildfail)
 >     2 │ error[E0425]: cannot find value `conifg` in this scope
       3 │    --> src/main.rs:306:20
@@ -65,6 +65,7 @@ jevify filter: 10 records, 10 distinct, 1 requests
 jevify filter: kept 2 of 10, 0 unsure, full output: ~/Library/Caches/jevify/outputs/c85c7cb6f33fc1f7.log
 
 $ jevify pick "last month's electricity bill" < docs/demo/downloads.txt
+jevify pick: candidates 8, windows 1
 con_edison_electric_bill_august.pdf
 ```
 
@@ -72,6 +73,8 @@ Put a bucket in front of each line, then count the buckets with `cut`, `sort` an
 
 ```console
 $ jevify label bug,feature,question < docs/demo/issues.txt | cut -f1 | sort | uniq -c
+jevify label: 10 records, 10 distinct, 1 requests
+jevify label: labelled 10 of 10, 0 unsure
    4 bug
    3 feature
    3 question
@@ -88,6 +91,8 @@ Find the file that does something, among the files of a repository:
 
 ```console
 $ git ls-files | jevify pick --files 'where the command-line flags are defined'
+jevify pick: candidates 319, windows 4
+jevify pick: excerpts withheld: 0
 src/cli.rs
 ```
 
@@ -95,6 +100,7 @@ When nothing fits, stdout stays empty and the exit code is 3:
 
 ```console
 $ jevify pick 'the tax return' < docs/demo/downloads.txt
+jevify pick: candidates 8, windows 1
 $ echo $?
 3
 ```
@@ -110,16 +116,18 @@ quotes so that the shell leaves it alone.
 
 ```console
 $ jevify fill -- git show --stat --format=%s '@{commit:stopped sending the free backend batches it refuses}'
-jevify fill: commit 7bcf70cd91fc3d9e306d60ea0436a02983be3d6f 0.96 (next 0.02, none 0.02) fix: keyless batches of at most 60 records, 402 named (hunch-0it); candidates 173, windows 1; model jev-1.13.0
-jevify fill: exec 'git' 'show' '--stat' '--format=%s' '7bcf70cd91fc3d9e306d60ea0436a02983be3d6f'
-fix: keyless batches of at most 60 records, 402 named (hunch-0it)
+jevify fill: commit 332191a1639f5dc784e976fe4d404ee9a564e272 0.56 (next 0.12, none 0.21) fix: pick prefers the thing to its documentation page (hunch-93l); candidates 246, windows 3; model jev-1.13.0
+jevify fill: exec 'git' 'show' '--stat' '--format=%s' '332191a1639f5dc784e976fe4d404ee9a564e272'
+fix: pick prefers the thing to its documentation page (hunch-93l)
 …
 ```
 
 The status line on stderr gives the winner, its probability, the probabilities of the next
 candidate and of "none of them", the evidence, the number of candidates and the model. Then
 `exec` names the command, and the command owns everything after that: its output, its exit
-code, your terminal.
+code, your terminal. This run, on the keyless backend over 246 commits on 2026-09-22, answers
+0.56 with `none` at 0.21 and names a commit that does not match the description: a probability
+that close to the threshold is worth a `--dry-run` before a command runs on it.
 
 `--dry-run` prints the command instead of running it. Look at it; never `eval` it.
 

@@ -1,3 +1,7 @@
+The two tables below are the `bench.sh` run of 2026-09-19. Their `run cold route-only` and
+`run cold full` rows come from the `run` verb, which no longer exists; `bench.sh` emits
+`route cold archive` and `route cold dvd` in their place.
+
 | Command | Mean [ms] | Min [ms] | Max [ms] | Relative |
 |:---|---:|---:|---:|---:|
 | `pick cold` | 741.7 ± 40.4 | 692.4 | 838.4 | 223.02 ± 25.10 |

@@ -67,8 +67,10 @@ order; `data.markers[].reason` reports every marker. Reasons are `no_match`, `am
 Read candidates N of M for no match; read the two handles for ambiguity; write or drop an unsure
 flag. Narrow oversized lists with a prefix, `grep`, `head` or a pipe; run failed listers yourself.
 `lister_failed` carries the tool's own text; `recipe_invalid` names the line of the user's
-`kinds.jsonl`. The `fill` status line reads
-`candidates N[ of M[, newest first]][, omitted K], windows W[, excerpts withheld: E]`.
+`kinds.jsonl`. The `fill` status line of a resolved marker reads
+`candidates N[ of M[, newest first]][, omitted K], windows W[, excerpts withheld: E]`; the
+`not run:` line of an abstention reads `candidates N of M, omitted K`, both parts always
+present and no window count.
 
 Every answering model must be Jev for `fill`, including a dry run: otherwise exit 4,
 `api_unavailable`, `answered by <model>, not Jev`. Missing names are `unknown` in `meta.model`.

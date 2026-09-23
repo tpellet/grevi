@@ -151,10 +151,13 @@ jevify pick: candidates 9801 of 9802, newest first; windows 99
 jevify fill: not run: arg 3 -: no_match; no record to choose from; candidates 0 of 0, omitted 0; model not requested
 ```
 
-The count part reads `candidates N[ of M[, newest first]][, omitted K], windows W[, excerpts
-withheld: E]`, as in `candidates 3267 of 3268, newest first, windows 33`: `of M` when the
-listing was cut, `newest first` when the cut kept the head of an ordered listing, `omitted K`
-when a remote twin or a symbolic ref was folded away, and `excerpts withheld: E` for finalists
-whose excerpt the path rules kept out, absent when none was. In machine output the same numbers
+On a resolved marker the count part reads `candidates N[ of M[, newest first]][, omitted K],
+windows W[, excerpts withheld: E]`, as in `candidates 3267 of 3268, newest first, windows 33`:
+`of M` when the listing was cut, `newest first` when the cut kept the head of an ordered
+listing, `omitted K` when a remote twin or a symbolic ref was folded away, and
+`excerpts withheld: E` for finalists whose excerpt the path rules kept out, absent when none
+was. The `not run:` line of an abstention reads `candidates N of M, omitted K` instead, with
+both parts always present and no window count, as in `candidates 0 of 0, omitted 0`. In machine
+output the same numbers
 are `data.markers[].candidates`, `total` and `omitted`, and for `pick --from`
 `data.candidates`, `total`, `omitted` and `windows`.

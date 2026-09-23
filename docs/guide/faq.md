@@ -117,7 +117,7 @@ A `rate_limit_day` HTTP 429 returns exit 4 with `daily quota of the free backend
 jevify does not retry it. Wait for the service quota to renew or use your TypeSafe quota.
 The free quota is 20,000 classifications a day per IP, one per record under one question:
 20,000 `is` statements, 20,000 `filter` or `label` records (at most 60 per call), 10,000 `pick`
-calls or 5,000 `why` calls under 100 lines, or about 380 `route` calls over a PATH of 1,900
+calls or 5,000 `why` calls under 100 lines, or about 380 `route` calls over a PATH of 1,883
 commands. The quota and the `is` and `filter` costs were measured on 2026-09-22; the other
 figures are computed from the shape of each verb's requests
 ([benchmarks/results.md](../../benchmarks/results.md)).
