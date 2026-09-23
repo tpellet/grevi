@@ -38,29 +38,29 @@ jevify keeps the whole log on disk and prints its path, so you can go back and r
 
 ## Run git on the commit you can only describe
 
-Write the git command you would write anyway, and put `'@{commit:what it did}'` where the hash
-goes. jevify lists the commits, picks the one that fits, and becomes git.
+Write the git command you would write anyway, and put a marker where the hash goes. Pipe the
+listing in, and `'@{-:what it did}'` chooses from it; `--field 1` says which column of each
+line holds the value to substitute.
 
 ![jevify fill turns a description of a commit into the real commit, then runs git show on it](docs/img/fill.svg)
 
 ```console
-$ jevify fill -- git show --stat --format=%s '@{commit:stopped sending the free backend batches it refuses}'
-jevify fill: commit 332191a1639f5dc784e976fe4d404ee9a564e272 0.56 (next 0.12, none 0.21) fix: pick prefers the thing to its documentation page (hunch-93l); candidates 246, windows 3; model jev-1.13.0
-jevify fill: exec 'git' 'show' '--stat' '--format=%s' '332191a1639f5dc784e976fe4d404ee9a564e272'
-fix: pick prefers the thing to its documentation page (hunch-93l)
-
- src/cmd/pick.rs | 40 ++++++++++++++++++++++++++++++++++++++--
- tests/pick.rs   | 49 +++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 87 insertions(+), 2 deletions(-)
+$ git log --oneline -30 | jevify fill --field 1 --dry-run -- git show --stat --format=%s '@{-:made route abstain when two commands are too close}'
+jevify fill: - 317cbf7 0.99 (next 0.00, none 0.01) 317cbf7 fix: route abstains when two commands are too close (hunch-1zs); candidates 30, windows 1; model jev-1.13.0
+jevify fill: would run 'git' 'show' '--stat' '--format=%s' '317cbf7'
+'git' 'show' '--stat' '--format=%s' '317cbf7'
 ```
 
-The status line is the check. This run, on the keyless backend over 246 commits on 2026-09-22,
-answers 0.56 with `none` at 0.21 and names a commit that does not match the description: a
-probability that close to the threshold is worth a `--dry-run` before a command runs on it.
+The status line is the check: the winner, the runner-up, "none of them", the evidence and the
+number of candidates. This run, on the keyless backend over 30 commits on 2026-09-22, answers
+0.99 with the runner-up at 0.00 and "none of them" at 0.01. A winner resolves by standing clear
+of both, not by passing the threshold on its own score — see
+[what the threshold decides](docs/guide/how-it-works.md#what-the-threshold-decides).
 
-The marker works wherever a tool can list the candidates: `'@{branch:the auth refactor}'`,
-`'src/@{file:parses the marker}'`, `'@{pod:the payment worker}'`. A list you pipe in works the
-same way, and `--dry-run` prints the command instead of running it.
+The marker works wherever a tool can list the candidates, and jevify runs that listing itself:
+`'@{commit:what it did}'`, `'@{branch:the auth refactor}'`, `'src/@{file:parses the marker}'`,
+`'@{pod:the payment worker}'`. A list you pipe in works the same way, and `--dry-run` prints the
+command instead of running it.
 
 ```console
 $ printf 'retry_backoff\nparse_header\n' | jevify fill --dry-run -- cargo test '@{-:the retry test}'

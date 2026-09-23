@@ -74,7 +74,7 @@ sends at most 60 records per request, the largest batch tried (75 is refused wit
 one window, so 830 calls of 1,000 lines to 10,000 of at most 99; `why` costs the same but
 always runs its final round, so 830 calls of 1,000 lines to 5,000 of at most 99; `route`
 costs two per window of 99 commands plus one per finalist, at most 12, so about 380 calls over
-a PATH of 1,900 commands. `capabilities.backends` carries the same figures.
+a PATH of 1,883 commands. `capabilities.backends` carries the same figures.
 
 ## Global flags
 

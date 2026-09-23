@@ -115,21 +115,22 @@ description goes in a marker, `@{kind:description}`, and the whole argument goes
 quotes so that the shell leaves it alone.
 
 ```console
-$ jevify fill -- git show --stat --format=%s '@{commit:stopped sending the free backend batches it refuses}'
-jevify fill: commit 332191a1639f5dc784e976fe4d404ee9a564e272 0.56 (next 0.12, none 0.21) fix: pick prefers the thing to its documentation page (hunch-93l); candidates 246, windows 3; model jev-1.13.0
-jevify fill: exec 'git' 'show' '--stat' '--format=%s' '332191a1639f5dc784e976fe4d404ee9a564e272'
-fix: pick prefers the thing to its documentation page (hunch-93l)
-…
+$ git log --oneline -30 | jevify fill --field 1 --dry-run -- git show --stat --format=%s '@{-:made route abstain when two commands are too close}'
+jevify fill: - 317cbf7 0.99 (next 0.00, none 0.01) 317cbf7 fix: route abstains when two commands are too close (hunch-1zs); candidates 30, windows 1; model jev-1.13.0
+jevify fill: would run 'git' 'show' '--stat' '--format=%s' '317cbf7'
+'git' 'show' '--stat' '--format=%s' '317cbf7'
 ```
 
 The status line on stderr gives the winner, its probability, the probabilities of the next
-candidate and of "none of them", the evidence, the number of candidates and the model. Then
-`exec` names the command, and the command owns everything after that: its output, its exit
-code, your terminal. This run, on the keyless backend over 246 commits on 2026-09-22, answers
-0.56 with `none` at 0.21 and names a commit that does not match the description: a probability
-that close to the threshold is worth a `--dry-run` before a command runs on it.
+candidate and of "none of them", the evidence, the number of candidates and the model. This
+run, on the keyless backend over 30 commits on 2026-09-22, answers 0.99 with the runner-up at
+0.00 and "none of them" at 0.01. A winner resolves by standing clear of both, not by passing
+the threshold on its own score — see
+[what the threshold decides](how-it-works.md#what-the-threshold-decides).
 
-`--dry-run` prints the command instead of running it. Look at it; never `eval` it.
+Without `--dry-run`, `exec` names the command and the command owns everything after that: its
+output, its exit code, your terminal. `--dry-run` prints the command instead of running it.
+Look at it; never `eval` it.
 
 ```sh
 jevify fill --dry-run -- git switch '@{branch:the auth refactor}'

@@ -14,7 +14,7 @@ use crate::tournament::{Finalists, Prompts, shortlist};
 /// so one jitter width cannot turn a tie into a decision. The count is large: on the frozen
 /// validation set (benchmarks/results.md) 8 of 24 route decisions fall inside it, 4 per
 /// backend, all with the runner-up 0.00 to 0.05 from the best, so the same 8 would have tied
-/// at 0.05; a PATH of 1,900 commands holds several tools for most tasks.
+/// at 0.05; a PATH of 1,883 commands holds several tools for most tasks.
 pub const TIE_MARGIN: f64 = 0.10;
 
 pub struct Route {

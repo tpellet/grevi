@@ -12,6 +12,17 @@ rank candidates relative to their options. A separate yes/no fit score gates the
 `-t` (default 0.5). TypeSafe uses Noul for yes/no; classifier translates it to binary Choice.
 Their calibration is not assumed interchangeable, and a score does not authorize an action.
 
+## What the threshold decides
+
+`-t` (default 0.5) gates one score: the yes/no fit of the pool as a whole, whether anything
+listed answers the request at all. Which candidate wins is a ratio, not a threshold: the best
+Choice probability has to beat both the runner-up and NONE, and reach twice the larger of the
+two, so a selection can resolve on a winner whose own probability sits below `-t`. A Choice
+probability is relative to the pool it was scored in and falls as the pool grows, so it carries
+no meaning across runs that judged different numbers of candidates.
+
+## Bands and verdicts
+
 `is` has an unsure band (`--band`, default 0.15): yes at or above threshold plus band, no below
 threshold minus band, unsure between. `filter` asks a three-way Choice (the record says the
 statement holds, says it does not hold, does not say) and its rule is one-sided with a fixed
@@ -59,11 +70,13 @@ TypeSafe. `pick` and `pick --from` accept min(W × W, 20,000): 9,801 and
 20,000. Ordered kinds retain the newest candidates and report coverage; unordered overflow is
 exit 6 `too_many`. `one` accepts at most W options and returns exit 2 above that count.
 
-`fill` and `pick --from` require fit at the threshold and a winning score at least twice the
-larger of the runner-up and NONE. `one` uses the same ratio; `flag` uses a fixed 0.15 unsure
-band. An unsure flag abstains, since dropping it could remove a safety option. Every marker
-resolves against one snapshot, with no execution if any fails. `branch` folds local/remote
-twins and uses recent commit subjects and changed paths as richer evidence.
+`fill` and `pick --from` require the pool's yes/no fit at the threshold and a winning score at
+least twice the larger of the runner-up and NONE; the winner's own score meets no threshold of
+its own (see [what the threshold decides](#what-the-threshold-decides)). `one` uses the same
+ratio; `flag` uses a fixed 0.15 unsure band. An unsure flag abstains, since dropping it could
+remove a safety option. Every marker resolves against one snapshot, with no execution if any
+fails. `branch` folds local/remote twins and uses recent commit subjects and changed paths
+as richer evidence.
 
 `pick --files` reads paths from stdin, selects finalists by name, then reads eligible excerpts
 for the second round. Hidden and secret-looking path components and symlink files receive no

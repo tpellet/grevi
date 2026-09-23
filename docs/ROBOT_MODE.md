@@ -235,21 +235,23 @@ decision{verb, backend, model{requested, answering}, threshold, gates[{best, nex
          round_one?[{windows[{ranks[{index, p}], none, any}], finalists[], n}]}
 ```
 
-`model.requested` is the model the request names; it is null on classifier, which chooses its
-own. `model.answering` is the model the service reported, `unknown` when it did not say; the two
-stay apart. `threshold` is the one threshold every gate is compared to. `gates` holds one entry
-per decision, in decision order: `fill` one per marker (the `flag` and `one` markers first, then
-the listing markers, each group in marker order, so a listing marker written before a `flag`
+`model.requested` is the model the request names; it is null on classifier, which chooses its own.
+`model.answering` is the model the service reported, `unknown` when it did not say; the two stay
+apart. `threshold` is the one threshold in force; inside a gate it is compared to `any` alone,
+never to `best`, and a selection resolves on the ratio between `best`, `next` and `none` (see
+[what the threshold decides](guide/how-it-works.md#what-the-threshold-decides)). `gates` holds one
+entry per decision, in decision order: `fill` one per marker (the `flag` and `one` markers first,
+then the listing markers, each group in marker order, so a listing marker written before a `flag`
 marker gets its gate after it), `is` one per statement, `filter` and `label` one per judged
-record, `add` one per hunk, `sort` one per file, `pick`, `why` and `route` one. `best` and `next` are the two top Choice probabilities, `none` is P(NONE) of that Choice,
-`any` is the Noul: the absolute score of a selection, or the whole answer of a yes/no question
-(`is`, `add`, a `flag` marker). `filter` asks a three-way Choice and fills three scores: `any`
-is P(the record says the statement holds), `fails` is P(the record says it does not hold) and
-`none` is P(the record does not say); a record is a yes at `any` ≥ threshold + 0.15, a no at
-`fails` ≥ the same mark (0.65 by default), unsure otherwise, so a dropped record's "no" can be
-read back from its gate. A score the verb does not use is null. The scores are
-the backend's own and are not a calibration; a threshold set for one backend and task says
-nothing about another.
+record, `add` one per hunk, `sort` one per file, `pick`, `why` and `route` one. `best` and `next`
+are the two top Choice probabilities, `none` is P(NONE) of that Choice, `any` is the Noul: the
+absolute score of a selection, or the whole answer of a yes/no question (`is`, `add`, a `flag`
+marker). `filter` asks a three-way Choice and fills three scores: `any` is P(the record says the
+statement holds), `fails` is P(the record says it does not hold) and `none` is P(the record does
+not say); a record is a yes at `any` ≥ threshold + 0.15, a no at `fails` ≥ the same mark (0.65 by
+default), unsure otherwise, so a dropped record's "no" can be read back from its gate. A score the
+verb does not use is null. The scores are the backend's own and are not a calibration; a threshold
+set for one backend and task says nothing about another.
 
 `round_one` is present only under `JEVIFY_DECISION=round_one`, on a verb that ran a tournament;
 an ordinary envelope carries no such field, since the field holds every candidate of every
