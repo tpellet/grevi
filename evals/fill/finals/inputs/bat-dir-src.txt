@@ -1,0 +1,11 @@
+src/assets
+src/assets/build_assets
+src/bin/bat
+src/syntax_mapping
+src/syntax_mapping/builtins
+src/syntax_mapping/builtins/bsd-family
+src/syntax_mapping/builtins/common
+src/syntax_mapping/builtins/linux
+src/syntax_mapping/builtins/macos
+src/syntax_mapping/builtins/unix-family
+src/syntax_mapping/builtins/windows

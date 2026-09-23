@@ -1,0 +1,16 @@
+.github
+.github/ISSUE_TEMPLATE
+.github/workflows
+bin
+doc
+man/man1
+plugin
+shell
+src
+src/algo
+src/protector
+src/tui
+src/util
+test
+test/lib
+test/vim
