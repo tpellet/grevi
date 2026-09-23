@@ -1,8 +1,11 @@
 use std::sync::Mutex;
 use std::sync::atomic::AtomicU32;
 
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub struct Stats {
+    /// The instant the verb started: `Config::load` builds the `Stats` before any evidence is
+    /// read, so the overall deadline counts from here, not from the first request.
+    pub started: Instant,
     pub cache_hits: AtomicU32,
     pub model: Mutex<Option<String>>,
     /// `x-typesafe-request-id` of the last response seen, success or failure (surfaced in `meta`).
@@ -29,6 +32,20 @@ impl AttemptKind {
             Self::Health => &mut t.health_gets,
             Self::Prewarm => &mut t.prewarm_gets,
             Self::Semantic => &mut t.semantic_calls,
+        }
+    }
+}
+
+impl Default for Stats {
+    fn default() -> Self {
+        Self {
+            started: Instant::now(),
+            cache_hits: AtomicU32::default(),
+            model: Mutex::default(),
+            request_id: Mutex::default(),
+            telemetry: Mutex::default(),
+            gates: Mutex::default(),
+            round_one: Mutex::default(),
         }
     }
 }
@@ -171,7 +188,8 @@ pub struct Client {
     sem: Arc<Semaphore>,
     cache: Option<DiskCache>,
     stats: Arc<Stats>,
-    /// The verb's overall deadline (`JEVIFY_DEADLINE` seconds after the client was built): a
+    /// The verb's overall deadline, `JEVIFY_DEADLINE` seconds after the verb started
+    /// (`Stats::started`): the evidence read counts, a client built past it is refused, a
     /// request queued or in flight past it is cancelled, and no retry wait reaches beyond it.
     deadline: Instant,
     /// The budget the deadline was built from, for the message that names it.
@@ -194,7 +212,7 @@ impl Client {
             .build()
             .map_err(|e| JevifyError::Unavailable(e.to_string()))?;
         let budget = crate::config::deadline()?;
-        Ok(Self {
+        let client = Self {
             http,
             backend: cfg.backend,
             base,
@@ -203,9 +221,13 @@ impl Client {
             sem: Arc::new(Semaphore::new(cfg.concurrency)),
             cache: cfg.cache_dir.clone().and_then(|d| DiskCache::new(d).ok()),
             stats: cfg.stats.clone(),
-            deadline: Instant::now() + budget,
+            deadline: cfg.stats.started + budget,
             budget,
-        })
+        };
+        // Evidence read past the budget (a blocked stdin, a slow mount) ends the verb here,
+        // before any request.
+        client.check_deadline()?;
+        Ok(client)
     }
 
     pub fn stats(&self) -> &Stats {
@@ -213,11 +235,19 @@ impl Client {
     }
 
     /// The overall budget, injected, counted from now: tests never touch the process
-    /// environment.
+    /// environment, and a sub-second budget must not pay for the TLS setup of `new`.
     pub fn with_budget(mut self, budget: Duration) -> Self {
         self.deadline = Instant::now() + budget;
         self.budget = budget;
         self
+    }
+
+    /// The deadline error once the deadline has passed.
+    fn check_deadline(&self) -> Result<(), JevifyError> {
+        if Instant::now() >= self.deadline {
+            return Err(self.deadline_error());
+        }
+        Ok(())
     }
 
     fn deadline_error(&self) -> JevifyError {
@@ -505,6 +535,9 @@ impl Client {
         bytes: Vec<u8>,
         caller: Caller,
     ) -> Result<Vec<u8>, JevifyError> {
+        // Nothing is sent past the deadline: `timeout_at` polls the request once before the
+        // timer, which would open the connection.
+        self.check_deadline()?;
         let deadline = tokio::time::Instant::from_std(self.deadline);
         match tokio::time::timeout_at(deadline, self.post_within(url, bytes, caller)).await {
             Ok(result) => result,
