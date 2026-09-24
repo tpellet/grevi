@@ -29,14 +29,14 @@
 //! unrelated edit further up the page moves no expectation.
 //!
 //! **Demos whose input is this repository.** The history grows, so `git log --oneline -30` is a
-//! different list every week and the commit it named falls out of the window. Those listings
-//! are pinned: the row's `argv` names the revision that was HEAD when the page was written, so
-//! the check judges the same 30 commits the page judged, forever. The pages keep printing the
-//! plain command, which is what a reader should type. The one input that is not pinned is
-//! `git ls-files`: `pick --files` reads the first lines of each path, and a path from a pinned
-//! commit may no longer exist in the working tree. It runs over the current checkout, and its
-//! expectation — that `src/cli.rs` is still where the flags are defined — is a claim about this
-//! repository that should fail if it ever stops being true.
+//! different list every week and the commit it named falls out of the window: an input that
+//! grows cannot carry a documented answer. The commit demo asks for a range between two release
+//! tags instead. Tags do not move, so the reader, the page and this check all judge the same
+//! thirty commits, and the row's `argv` is the page's own command rather than a pinned stand-in
+//! for it. The other listing, `git ls-files`, is deliberately not fixed: `pick --files` reads
+//! the first lines of each path, so it runs over the current checkout, and its expectation —
+//! that `src/cli.rs` is still where the flags are defined — is a claim about this repository
+//! that should fail if it ever stops being true.
 //!
 //! Live, and never part of the ordinary gate: every test here is `#[ignore]`.
 //!
@@ -77,15 +77,14 @@ enum Stdin {
     Text(&'static str),
     File(&'static str),
     /// A listing this repository produces, run in the repository root as argv, not a shell
-    /// line. Pinned to a revision where the input is a repository.
+    /// line.
     Listing(&'static [&'static str]),
 }
 
 struct Transcript {
     /// The command as the page prints it after `$`, used to find the console block.
     shown: &'static str,
-    /// What the check runs: the page's command, with a pinned revision where the page's
-    /// listing would otherwise grow, and `--json` added by the runner.
+    /// What the check runs: the page's command, with `--json` added by the runner.
     argv: &'static [&'static str],
     stdin: Stdin,
     expect: Expect,
@@ -95,11 +94,11 @@ struct Transcript {
     cites: &'static [Cite],
 }
 
-/// `d24e109` is the commit that wrote these transcripts; `git log --oneline -30` there is the
-/// listing the page printed, and stays that listing however far the branch moves on. Plain
-/// `git log --oneline -30` today lists 30 newer commits, which is the point: an input that
+/// The thirty commits between two release tags. Tags do not move, so this is the same listing
+/// for the check, for the page and for a reader who types the command, however far the branch
+/// moves on: the argv below is the page's command, not a pinned stand-in for it. An input that
 /// grows cannot be an expectation.
-const PINNED_LOG: &[&str] = &["git", "log", "--oneline", "-30", "d24e109"];
+const RELEASE_LOG: &[&str] = &["git", "log", "--oneline", "v0.8.3..v0.9.3"];
 
 fn transcripts() -> Vec<Transcript> {
     vec![
@@ -112,7 +111,7 @@ fn transcripts() -> Vec<Transcript> {
             cites: &[Cite(README, 26), Cite(GETTING_STARTED, 48)],
         },
         Transcript {
-            shown: "git log --oneline -30 | jevify fill --field 1 --dry-run -- git show --stat --format=%s '@{-:made route abstain when two commands are too close}'",
+            shown: "git log --oneline v0.8.3..v0.9.3 | jevify fill --field 1 --dry-run -- git show --stat --format=%s '@{-:made route abstain when two commands are too close}'",
             argv: &[
                 "fill",
                 "--field",
@@ -125,13 +124,13 @@ fn transcripts() -> Vec<Transcript> {
                 "--format=%s",
                 "@{-:made route abstain when two commands are too close}",
             ],
-            stdin: Stdin::Listing(PINNED_LOG),
+            stdin: Stdin::Listing(RELEASE_LOG),
             expect: Expect::Chose(&["317cbf7"]),
             on_page: &[],
-            cites: &[Cite(README, 48), Cite(GETTING_STARTED, 135)],
+            cites: &[Cite(README, 49), Cite(GETTING_STARTED, 135)],
         },
         // README's promise under the nothing-fits demo: "when no commit fits your description,
-        // no command runs". Over the same pinned listing, which holds no such commit.
+        // no command runs". Over the same release listing, which holds no such commit.
         Transcript {
             shown: "jevify fill --dry-run -- git show '@{commit:ports the user interface to Android}'",
             argv: &[
@@ -144,7 +143,7 @@ fn transcripts() -> Vec<Transcript> {
                 "show",
                 "@{-:ports the user interface to Android}",
             ],
-            stdin: Stdin::Listing(PINNED_LOG),
+            stdin: Stdin::Listing(RELEASE_LOG),
             expect: Expect::NothingFits,
             on_page: &[],
             cites: &[],
@@ -162,7 +161,7 @@ fn transcripts() -> Vec<Transcript> {
             stdin: Stdin::Text("retry_backoff\nparse_header\n"),
             expect: Expect::Chose(&["retry_backoff"]),
             on_page: &[],
-            cites: &[Cite(README, 66)],
+            cites: &[Cite(README, 68)],
         },
         Transcript {
             shown: "jevify label bug,feature,question < docs/demo/issues.txt",
@@ -173,7 +172,7 @@ fn transcripts() -> Vec<Transcript> {
                 "question", "bug",
             ]),
             on_page: &[],
-            cites: &[Cite(README, 82)],
+            cites: &[Cite(README, 84)],
         },
         // The same call through `cut | sort | uniq -c`: the counts the page prints are these
         // ten labels counted, so the labels are the expectation and the counts follow.
@@ -186,7 +185,7 @@ fn transcripts() -> Vec<Transcript> {
                 "question", "bug",
             ]),
             on_page: &[],
-            cites: &[Cite(README, 96), Cite(GETTING_STARTED, 91)],
+            cites: &[Cite(README, 98), Cite(GETTING_STARTED, 91)],
         },
         Transcript {
             shown: "jevify filter 'reports a crash' < docs/demo/issues.txt",
@@ -197,7 +196,7 @@ fn transcripts() -> Vec<Transcript> {
                 "#290 Panic on non-UTF-8 file names",
             ]),
             on_page: &[],
-            cites: &[Cite(README, 107), Cite(GETTING_STARTED, 61)],
+            cites: &[Cite(README, 109), Cite(GETTING_STARTED, 61)],
         },
         Transcript {
             shown: "printf 'build started\\nerror: connection timed out\\nbuild stopped\\n' | jevify filter --strict 'reports a network failure'",
@@ -205,7 +204,7 @@ fn transcripts() -> Vec<Transcript> {
             stdin: Stdin::Text("build started\nerror: connection timed out\nbuild stopped\n"),
             expect: Expect::Chose(&["error: connection timed out"]),
             on_page: &[],
-            cites: &[Cite(README, 120), Cite(GETTING_STARTED, 78)],
+            cites: &[Cite(README, 122), Cite(GETTING_STARTED, 78)],
         },
         Transcript {
             shown: "jevify pick \"last month's electricity bill\" < docs/demo/downloads.txt",
@@ -213,7 +212,7 @@ fn transcripts() -> Vec<Transcript> {
             stdin: Stdin::File("docs/demo/downloads.txt"),
             expect: Expect::Chose(&["con_edison_electric_bill_august.pdf"]),
             on_page: &[],
-            cites: &[Cite(README, 139), Cite(GETTING_STARTED, 67)],
+            cites: &[Cite(README, 141), Cite(GETTING_STARTED, 67)],
         },
         Transcript {
             shown: "jevify pick 'the tax return' < docs/demo/downloads.txt",
@@ -221,7 +220,7 @@ fn transcripts() -> Vec<Transcript> {
             stdin: Stdin::File("docs/demo/downloads.txt"),
             expect: Expect::NothingFits,
             on_page: &[],
-            cites: &[Cite(README, 143), Cite(GETTING_STARTED, 118)],
+            cites: &[Cite(README, 145), Cite(GETTING_STARTED, 118)],
         },
         Transcript {
             shown: "jevify is 'asks for a refund' < docs/demo/mail.txt && echo refund",
@@ -229,7 +228,7 @@ fn transcripts() -> Vec<Transcript> {
             stdin: Stdin::File("docs/demo/mail.txt"),
             expect: Expect::Chose(&["yes"]),
             on_page: &["refund"],
-            cites: &[Cite(README, 158), Cite(GETTING_STARTED, 102)],
+            cites: &[Cite(README, 160), Cite(GETTING_STARTED, 102)],
         },
         Transcript {
             shown: "printf 'A crash with no reproduction steps.\\n' | jevify fill --dry-run -- printf '%s\\n' \\",
@@ -245,7 +244,7 @@ fn transcripts() -> Vec<Transcript> {
             stdin: Stdin::Text("A crash with no reproduction steps.\n"),
             expect: Expect::Chose(&["bug", "--draft"]),
             on_page: &[],
-            cites: &[Cite(README, 209)],
+            cites: &[Cite(README, 211)],
         },
         Transcript {
             shown: "git ls-files | jevify pick --files 'where the command-line flags are defined'",
@@ -446,9 +445,9 @@ fn transcripts_still_answer_as_the_pages_show_on_typesafe() {
 #[ignore]
 fn every_expectation_matches_the_page_it_cites() {
     assert_eq!(
-        listing(&["git", "rev-parse", "d24e109"]).len(),
-        41,
-        "the pinned listing's revision is not in this history"
+        listing(RELEASE_LOG).lines().count(),
+        30,
+        "the release listing is not the thirty commits the pages print"
     );
     for case in transcripts() {
         for Cite(doc, line) in case.cites {

@@ -24,7 +24,7 @@ why() {
     show "jevify why < $DEMO/build.log"
 }
 fill() {
-    show "git log --oneline -30 | jevify fill --field 1 --dry-run -- git show --stat --format=%s '@{-:made route abstain when two commands are too close}'"
+    show "git log --oneline v0.8.3..v0.9.3 | jevify fill --field 1 --dry-run -- git show --stat --format=%s '@{-:made route abstain when two commands are too close}'"
     show "printf 'retry_backoff\nparse_header\n' | jevify fill --dry-run -- cargo test '@{-:the test that retries a failed request}'"
     show "printf 'A crash with no reproduction steps.\n' | jevify fill --dry-run -- printf '%s\n' '@{one:bug|feature|docs:what kind of report is this}' '@{flag:--draft:the report lacks steps to reproduce}'"
 }

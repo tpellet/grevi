@@ -40,21 +40,23 @@ jevify keeps the whole log on disk and prints its path, so you can go back and r
 
 Write the git command you would write anyway, and put a marker where the hash goes. Pipe the
 listing in, and `'@{-:what it did}'` chooses from it; `--field 1` says which column of each
-line holds the value to substitute.
+line holds the value to substitute. Any listing works — here, the thirty commits of one
+release of this repository.
 
 ![jevify fill turns a description of a commit into the real commit and prints the git command it resolved](docs/img/fill.svg)
 
 ```console
-$ git log --oneline -30 | jevify fill --field 1 --dry-run -- git show --stat --format=%s '@{-:made route abstain when two commands are too close}'
-jevify fill: - 317cbf7 0.99 (next 0.00, none 0.01) 317cbf7 fix: route abstains when two commands are too close (hunch-1zs); candidates 30, windows 1; model jev-1.13.0
+$ git log --oneline v0.8.3..v0.9.3 | jevify fill --field 1 --dry-run -- git show --stat --format=%s '@{-:made route abstain when two commands are too close}'
+jevify fill: - 317cbf7 0.70 (next 0.15, none 0.15) 317cbf7 fix: route abstains when two commands are too close (hunch-1zs); candidates 30, windows 1; model jev-1.13.0
 jevify fill: would run 'git' 'show' '--stat' '--format=%s' '317cbf7'
 'git' 'show' '--stat' '--format=%s' '317cbf7'
 ```
 
 The status line is the check: the winner, the runner-up, "none of them", the evidence and the
-number of candidates. This run, on the keyless backend over 30 commits on 2026-09-22, answers
-0.99 with the runner-up at 0.00 and "none of them" at 0.01. A winner resolves by standing clear
-of both, not by passing the threshold on its own score — see
+number of candidates. This run, on the keyless backend over 30 commits on 2026-09-24, answers
+0.70 with the runner-up at 0.15 and "none of them" at 0.15; the listing holds two other commits
+that also touch routing, and they are what the runner-up scores. A winner resolves by standing
+clear of both, not by passing the threshold on its own score — see
 [what the threshold decides](docs/guide/how-it-works.md#what-the-threshold-decides).
 
 The marker works wherever a tool can list the candidates, and jevify runs that listing itself:
