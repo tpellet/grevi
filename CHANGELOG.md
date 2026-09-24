@@ -2,6 +2,29 @@
 
 ## Unreleased
 
+## 0.13.0 - 2026-09-24
+
+Changed:
+
+- A drifted transcript now fails a check instead of shipping. `tests/transcripts.rs`, opt-in and
+  never in the ordinary gate, runs every transcript of the README and the getting-started guide
+  against both backends and compares the decision and the chosen item, never the probability,
+  which moves with the model. A second check needs no network and asserts that every expectation
+  still matches the page it cites, so the table and the pages cannot drift apart either. Three
+  demonstrations had already stopped being true before it existed; it caught a fourth on the day
+  it was written.
+
+- The demonstrations show what the binary does. The commit demo lists a range between two release
+  tags, so the thirty commits a reader pipes in are the ones the page was recorded against, and
+  cannot fall out of a window as the history grows. The `pick` demo asked the model to compare
+  month names against today's date, which the vision reserves for code and which made its answer
+  right only during September; it now asks about meaning and resolves at 0.97 to 1.00 on both
+  backends. The `ci-run` example in the kinds guide asked for a position an ordered lister had
+  already decided, and the empty-input error showed a question a literal `grep` would answer.
+  Both are replaced, and the figures carry the date they were recorded rather than a version
+  number that churns weekly.
+
+
 Changed:
 
 - The overall deadline's message is its own sentence: `the overall deadline of N s passed before
