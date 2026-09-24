@@ -37,11 +37,7 @@ pub async fn run(
             example: "head -n 20000 input | jevify filter 'x'",
         });
     }
-    let directory = if flags.no_save {
-        None
-    } else {
-        crate::config::save_dir(std::env::var("JEVIFY_CACHE_DIR").ok().as_deref())
-    };
+    let directory = crate::config::saved_input_dir(flags.no_save);
     let (input, saved) = tokio::task::spawn_blocking(move || {
         let saved = crate::save::save(&input, directory.as_deref());
         (input, saved)

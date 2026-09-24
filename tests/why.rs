@@ -193,6 +193,64 @@ async fn skipped_and_failed_saves_are_incomplete_and_fill_not_run_is_searchable(
     }
 }
 
+/// `why` obeys the same fleet-wide switch, and a saving run still prunes only its own store.
+#[tokio::test(flavor = "multi_thread")]
+async fn the_environment_turns_saving_off_and_a_save_prunes_only_the_store() {
+    let server = common::mock_classifier(FakeJev {
+        choose: |_, s, o| option_containing(s, o, "ROOT"),
+        noul: |_, _| 0.95,
+    })
+    .await;
+    let root = tempfile::tempdir().unwrap().keep();
+    let mut cmd = common::jevify_classifier(&server);
+    cmd.env("JEVIFY_CACHE_DIR", &root)
+        .env("JEVIFY_NO_SAVE", "1")
+        .args(["--json", "why"]);
+    let out = tokio::task::spawn_blocking(move || {
+        cmd.write_stdin("test ... FAILED\nerror ROOT\n").output()
+    })
+    .await
+    .unwrap()
+    .unwrap();
+    let value: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+    assert_eq!(value["data"]["complete"], false);
+    assert!(value["data"]["saved_input"].is_null());
+    assert!(String::from_utf8_lossy(&out.stderr).contains("full output: not saved ("));
+    assert!(!root.join("outputs").exists());
+
+    let outputs = root.join("outputs");
+    std::fs::create_dir_all(&outputs).unwrap();
+    let stale = outputs.join("0123456789abcdef.log");
+    let outside = root.join("keep.log");
+    for path in [&stale, &outside] {
+        std::fs::write(path, b"aged").unwrap();
+        let old = std::time::SystemTime::now() - std::time::Duration::from_secs(8 * 24 * 60 * 60);
+        std::fs::OpenOptions::new()
+            .write(true)
+            .open(path)
+            .unwrap()
+            .set_times(std::fs::FileTimes::new().set_modified(old))
+            .unwrap();
+    }
+    let mut cmd = common::jevify_classifier(&server);
+    cmd.env("JEVIFY_CACHE_DIR", &root).args(["--json", "why"]);
+    let out = tokio::task::spawn_blocking(move || {
+        cmd.write_stdin("test ... FAILED\nerror ROOT\n").output()
+    })
+    .await
+    .unwrap()
+    .unwrap();
+    let value: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+    assert_eq!(value["data"]["complete"], true);
+    let saved = value["data"]["saved_input"].as_str().unwrap();
+    assert_eq!(
+        std::fs::read(saved).unwrap(),
+        b"test ... FAILED\nerror ROOT\n"
+    );
+    assert!(!stale.exists(), "a saved input past retention is deleted");
+    assert_eq!(std::fs::read(&outside).unwrap(), b"aged");
+}
+
 #[test]
 fn why_rejects_nul_split_without_saving() {
     common::bin()

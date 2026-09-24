@@ -62,10 +62,12 @@ argument; unchecked substitution can turn abstention into an empty argument.
   starts no user command, and conflicts with `--files`, `--index`, `-0`, `--para`.
   Data adds `reason`, `candidates`, `total`, `omitted`, `windows`, `finalists_per_window`;
   its matches have `text`, `ordinal`, `p`, `lossy`, without `line`.
-- `why [-C N] [-n N] [--no-save]` reads stdin logs and prints numbered causes with context;
+- `why [-C N] [-n N] [--no-save]` (`JEVIFY_NO_SAVE=1` for every call) reads stdin logs and
+  prints numbered causes with context;
   it takes no split option. Data: `causes[{line,text,p,context[]}]`, `any`, `considered`, `total`,
   `hint`, `saved_input`, `complete`. Exit 0 found, 3 abstain. Pipe stderr with `2>&1`.
-- `filter '<statement>' [-v] [-c] [--strict] [-0 | --para] [--files] [--no-save]` keeps records.
+- `filter '<statement>' [-v] [-c] [--strict] [-0 | --para] [--files] [--no-save]`
+  (`JEVIFY_NO_SAVE=1` for every call) keeps records.
   `-v` inverts, `-c` counts, unsure records stay unless `--strict`. `--verbose` has no short flag.
   Each record is judged three ways: the statement holds, it does not hold, or the record does
   not say. A record that says nothing either way (`Merge branch 'pr-248'` under "is a bug fix")
@@ -116,12 +118,22 @@ its name: it is unsure (`?`, p 0) without a request, and its record carries `unr
 `pick` finalists compete on their names. Status counts both kinds as `excerpts withheld: N`. See
 [Privacy](../PRIVACY.md) for the exact checks. Excerpts are not complete file evidence.
 
-Only `why` and `filter` save raw inputs, secrets included, never pruned. The directory is
-`JEVIFY_CACHE_DIR/outputs` or the platform cache directory's `jevify/outputs`.
-`--no-save` is independent of `--no-cache`. Stderr names the saved file:
-`jevify why: full output: PATH` or `jevify filter: kept N of M, U unsure, full output: PATH`.
+Only `why` and `filter` save raw inputs, secrets included. The directory is
+`JEVIFY_CACHE_DIR/outputs` or the platform cache directory's `jevify/outputs`, and a saved input
+is kept for seven days: each save deletes the store's own files past that age, saving the same
+input again refreshes its file, and the pruning stays inside that one directory, follows no
+symlink and leaves files it did not write alone.
+`--no-save` turns saving off for one call and `JEVIFY_NO_SAVE=1` for every call in an
+environment; both are independent of `--no-cache`, which governs answers only. Stderr names the
+saved file: `jevify why: full output: PATH` or
+`jevify filter: kept N of M, U unsure, full output: PATH`.
 A failed or skipped save reports `full output: not saved (REASON)`, with `saved_input=null`
-and `complete=false`. Compare `why.considered` with `why.total` separately for selection coverage.
+and `complete=false`.
+
+`complete` is about the run's own output, never about judgments. On `label` and `filter` it is
+true when every record was emitted, and on `why` and `filter` also when the raw input reached the
+store. For judgment coverage read `unsure` against `total`, and for `why`'s selection coverage
+`considered` against `total`.
 
 ## The marker and kinds
 
@@ -380,4 +392,5 @@ instructions, so semantic judgments are not security gates.
 
 Outbound secret masking is best effort. Answer cache keys use redacted requests, expire after
 seven days and never cross backend, endpoint or decision-contract versions. Raw saved inputs
-are a separate store. Neither telemetry nor diagnostics prints credentials.
+are a separate store, bounded by the same seven days and turned off by `JEVIFY_NO_SAVE=1`.
+Neither telemetry nor diagnostics prints credentials.

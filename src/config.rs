@@ -88,6 +88,16 @@ pub fn save_dir(value: Option<&str>) -> Option<PathBuf> {
         })
 }
 
+/// Where `why` and `filter` save raw input, or `None` when they must not: the `--no-save` flag
+/// for one call, `JEVIFY_NO_SAVE` for every call of a fleet that never wants raw input on disk.
+/// The saving switch is its own, as the store is: `JEVIFY_NO_CACHE` governs answers only.
+pub fn saved_input_dir(no_save: bool) -> Option<PathBuf> {
+    if no_save || env("JEVIFY_NO_SAVE").is_some() {
+        return None;
+    }
+    save_dir(env("JEVIFY_CACHE_DIR").as_deref())
+}
+
 /// The directory of the user's own configuration (`kinds.jsonl`): the value of
 /// `JEVIFY_CONFIG_DIR` when it is set and not blank, else the platform configuration directory.
 pub fn config_dir(value: Option<&str>) -> Option<PathBuf> {

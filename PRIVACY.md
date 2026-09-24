@@ -74,12 +74,26 @@ The base directory is `JEVIFY_CACHE_DIR`, or the platform cache directory's `jev
 | Store | Contents | Retention | Disable |
 |:---|:---|:---|:---|
 | Answer cache | answers and probabilities, keyed by a hash of the redacted request | answers expire after seven days; expiry does not reclaim files | `--no-cache` or `JEVIFY_NO_CACHE=1` |
-| Saved inputs, `outputs/<blake3-16>.log` | full raw input bytes, secrets included | never pruned by jevify | `--no-save` on `why` and `filter` |
+| Saved inputs, `outputs/<blake3-16>.log` | full raw input bytes, secrets included | seven days; a save deletes the store's own files past it | `--no-save` on `why` and `filter`, or `JEVIFY_NO_SAVE=1` |
 
 Only `why` and `filter` save inputs; `label` saves nothing. They save before the first inference request, with directory
-mode 0700 and file mode 0600. Identical input has the same content-addressed path. `--no-cache`
-does not disable saving. Stderr and `data.saved_input` name the file; a failed or skipped save
-reports `full output: not saved (REASON)` and sets `data.complete=false`.
+mode 0700 and file mode 0600. Identical input has the same content-addressed path, and saving it
+again refreshes the file's retention. `--no-cache` does not disable saving; `JEVIFY_NO_SAVE=1`
+does, for every call in an environment, and so does `--no-save` for one call. Stderr and
+`data.saved_input` name the file; a failed or skipped save reports
+`full output: not saved (REASON)` and sets `data.complete=false`.
+
+Pruning runs when a verb saves, never when one reads, and only over the `outputs` directory of
+the base directory: it reads that one directory, deletes only regular files named as the store
+names its own (`<blake3-16>.log` and a stranded `<blake3-16>.tmp-…`), descends into no
+sub-directory, follows no symlink, and does nothing at all if `outputs` is itself a symlink.
+Files you put in that directory are not jevify's to delete and stay. Deleting the whole store by
+hand remains supported and is the way to reclaim a saved input before its seven days are up.
+
+`data.complete` reports the completeness of the run's own output, not of its judgments. On `why`
+it is true when the raw input reached the store. On `filter` it is true when the run emitted
+every record and the raw input reached the store. How many records got a judgment is `unsure`
+against `total`, and how many lines `why` considered is `considered` against `total`.
 
 The answer cache never crosses backend, endpoint or decision-contract versions. Tool inventory
 and `sort` recovery journals also use the cache directory. Recovery journals retain local

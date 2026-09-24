@@ -287,6 +287,73 @@ async fn saved_input_status_verbose_failure_and_no_save() {
     assert_eq!(std::fs::read(blocked).unwrap(), b"keep");
 }
 
+/// The fleet-wide switch: an operator exports it once and no call site passes `--no-save`.
+#[tokio::test]
+async fn the_environment_turns_saving_off_for_every_call() {
+    let server = common::mock_classifier(fake()).await;
+    for (value, saves) in [("1", false), ("nope", false), ("", true), (" ", true)] {
+        let root = tempfile::tempdir().unwrap().keep();
+        let out = common::jevify_classifier(&server)
+            .env("JEVIFY_CACHE_DIR", &root)
+            .env("JEVIFY_NO_SAVE", value)
+            .args(["filter", "x", "--json"])
+            .write_stdin("yes\n")
+            .output()
+            .unwrap();
+        let data = &envelope(&out, 0)["data"];
+        let stderr = String::from_utf8_lossy(&out.stderr);
+        if saves {
+            assert_eq!(data["complete"], true, "JEVIFY_NO_SAVE={value:?}");
+            assert_eq!(
+                std::fs::read(data["saved_input"].as_str().unwrap()).unwrap(),
+                b"yes\n"
+            );
+        } else {
+            assert_eq!(data["complete"], false, "JEVIFY_NO_SAVE={value:?}");
+            assert!(data["saved_input"].is_null(), "JEVIFY_NO_SAVE={value:?}");
+            assert!(stderr.contains("full output: not saved ("));
+            assert!(!root.join("outputs").exists(), "JEVIFY_NO_SAVE={value:?}");
+        }
+    }
+}
+
+/// The saved-input store is bounded: a save deletes the store's own files past seven days, and
+/// nothing else, under any name, anywhere.
+#[tokio::test]
+async fn a_save_prunes_the_store_and_leaves_every_other_file_alone() {
+    let server = common::mock_classifier(fake()).await;
+    let root = tempfile::tempdir().unwrap().keep();
+    let outputs = root.join("outputs");
+    std::fs::create_dir_all(&outputs).unwrap();
+    let stale = outputs.join("0123456789abcdef.log");
+    let bystander = outputs.join("notes.txt");
+    let outside = root.join("0123456789abcdef.log");
+    for path in [&stale, &bystander, &outside] {
+        std::fs::write(path, b"aged").unwrap();
+        let old = std::time::SystemTime::now() - Duration::from_secs(8 * 24 * 60 * 60);
+        std::fs::OpenOptions::new()
+            .write(true)
+            .open(path)
+            .unwrap()
+            .set_times(std::fs::FileTimes::new().set_modified(old))
+            .unwrap();
+    }
+    let out = common::jevify_classifier(&server)
+        .env("JEVIFY_CACHE_DIR", &root)
+        .args(["filter", "x", "--json"])
+        .write_stdin("yes\n")
+        .output()
+        .unwrap();
+    let saved = envelope(&out, 0)["data"]["saved_input"]
+        .as_str()
+        .unwrap()
+        .to_string();
+    assert_eq!(std::fs::read(&saved).unwrap(), b"yes\n");
+    assert!(!stale.exists(), "a saved input past retention is deleted");
+    assert_eq!(std::fs::read(&bystander).unwrap(), b"aged");
+    assert_eq!(std::fs::read(&outside).unwrap(), b"aged");
+}
+
 #[tokio::test]
 async fn file_excerpts_are_relative_and_secrets_are_withheld() {
     let server = common::mock_classifier(fake()).await;

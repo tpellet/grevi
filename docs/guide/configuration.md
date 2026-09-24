@@ -16,7 +16,8 @@ jevify has no config file. Every setting is a flag or an environment variable. `
 | `JEVIFY_DEADLINE` | `600` | The verb's overall budget in whole seconds. A retry wait that would end past it is not started, a request still queued or in flight at the deadline is cancelled, and the verb ends exit 4 naming the deadline. Zero is a usage error. |
 | `JEVIFY_CACHE_DIR` | platform cache dir, `jevify` sub-directory | Where answers, the tool inventory, `sort`'s recovery journals and raw saved inputs in `outputs/` live. |
 | `JEVIFY_CONFIG_DIR` | platform configuration dir, `jevify` sub-directory | Where the user's `kinds.jsonl` lives. It is read only for a marker kind that is neither coded nor shipped. See [Kinds](kinds.md). |
-| `JEVIFY_NO_CACHE` | | Set to `1` to disable the answer cache (entries expire after 7 days anyway). |
+| `JEVIFY_NO_CACHE` | | Set to `1` to disable the answer cache (entries expire after 7 days anyway). It does not disable saved inputs. |
+| `JEVIFY_NO_SAVE` | | Set to `1` so `why` and `filter` save no raw input. It is the fleet-wide form of `--no-save`: export it once and no call site has to remember the flag. |
 | `JEVIFY_PRICE_PER_MTOK` | `0.042` | Dollars per million input tokens, used for `meta.cost_usd`. Change it if your TypeSafe pricing differs. |
 | `JEVIFY_INVENTORY_FILE` | | A JSON array of `{name, summary}` that replaces the PATH inventory for `route`. Used by the tests and the evals so every machine routes over the same tools. |
 | `JEVIFY_CNF` | | Set to `1` to enable the command-not-found hook printed by `jevify init`. |
@@ -85,6 +86,7 @@ a PATH of 1,883 commands. `capabilities.backends` carries the same figures.
 | `-t, --threshold <0..1>` | `JEVIFY_THRESHOLD` | Decision threshold on backend yes/no scores |
 | `--model <id>` | `JEVIFY_MODEL` | TypeSafe model or alias |
 | `--no-cache` | `JEVIFY_NO_CACHE` | Skip the local answer cache |
+| `--no-save` (`why`, `filter`) | `JEVIFY_NO_SAVE` | Save no raw input |
 | `--verbose` | | Probabilities, request count, tokens, cost and timing on stderr; no short flag |
 | `-V, --version` | | Print the version |
 
@@ -114,7 +116,8 @@ own budgeting comes back as `api_rejected_request`, exit 6.
 
 - Base directory: `JEVIFY_CACHE_DIR`, otherwise the platform cache directory (`~/Library/Caches/jevify` on macOS, `$XDG_CACHE_HOME/jevify` or `~/.cache/jevify` on Linux).
 - Answers expire after seven days and use hashes of redacted requests; `--no-cache` disables this cache. Expiry does not reclaim old files.
-- Only `why` and `filter` save raw input, secrets included, as `outputs/<blake3-16>.log` under the base directory, never pruned. `--no-save` disables saving independently of `--no-cache`; skipped or failed saves set `data.complete=false`.
+- Only `why` and `filter` save raw input, secrets included, as `outputs/<blake3-16>.log` under the base directory. It is kept for seven days: each save deletes the store's own files past that age, and saving the same input again refreshes its file. Pruning stays inside `outputs`, follows no symlink and leaves files it did not write alone.
+- `--no-save` disables saving for one call and `JEVIFY_NO_SAVE=1` for every call, both independently of `--no-cache`; a skipped or failed save sets `data.complete=false`. `data.complete` is about the run's own output, never about how many records were judged — that is `unsure` against `total`.
 - `sort --apply` writes a unique JSONL recovery journal and prints its path (`data.undo_log`). Preserve journals needed for undo. Tool inventory also lives under the base directory.
 - Configuration directory: `JEVIFY_CONFIG_DIR`, otherwise the platform configuration directory (`~/Library/Application Support/jevify` on macOS, `$XDG_CONFIG_HOME/jevify` or `~/.config/jevify` on Linux). It holds `kinds.jsonl`, the user's own marker kinds; jevify reads no recipe from a repository.
 

@@ -161,9 +161,7 @@ pub async fn run(
         return Err(JevifyError::Usage("-n must be at least 1".into()));
     }
     let client = Client::new(ctx)?;
-    let directory = (!no_save)
-        .then(|| crate::config::save_dir(std::env::var("JEVIFY_CACHE_DIR").ok().as_deref()))
-        .flatten();
+    let directory = crate::config::saved_input_dir(no_save);
     let (lines, saved) = tokio::task::spawn_blocking(move || {
         let bytes = crate::input::read_stdin_bytes()?;
         let saved = crate::save::save(&bytes, directory.as_deref());

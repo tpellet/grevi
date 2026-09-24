@@ -4,6 +4,20 @@
 
 Changed:
 
+- Raw input saving can be turned off from the environment, and the store it writes to has a
+  bound. `why` and `filter` save their whole stdin, secrets and all, and until now the only way
+  to stop them was `--no-save` on each call: a fleet had to remember the flag at every call site,
+  and `JEVIFY_NO_CACHE`, which many operators reached for first, governs answers only. Setting
+  `JEVIFY_NO_SAVE=1` now stops the saving everywhere it applies, exactly as the flag does for one
+  call. The saved inputs are also kept for seven days instead of forever, the same retention as
+  the answer cache: a save deletes the store's own files past that age, and saving the same input
+  again refreshes its file. The pruning reads the store's `outputs` directory and nothing else —
+  no sub-directory, no symlink, and only files named the way the store names its own — so a file
+  you put there, or anywhere else, is never deleted. `data.complete` on `why` and `filter` keeps
+  its name and its meaning, the completeness of the run's own output, and is now documented as
+  such wherever it appears: judgment coverage is `unsure` against `total`, and `why`'s selection
+  coverage is `considered` against `total`.
+
 - `fill` can now report whether it started the command. Setting `JEVIFY_STATUS_FILE` to a path
   makes it write one JSON object there before the command replaces it:
   `{command, version, exit_code, ran, argv, reason, markers, error}`. `ran` is true when the
