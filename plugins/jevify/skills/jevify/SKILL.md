@@ -211,9 +211,11 @@ reported progress if a move fails.
 
 Evidence goes to the configured API with best-effort masking. Do not supply secrets.
 `why` and `filter` also save the raw input locally, secrets included, and print the saved path
-on stderr. Saved inputs are not pruned by jevify. `--no-save` disables that raw copy;
-`--no-cache` only disables the separate answer cache. A failed or disabled save is reported,
-so do not assume the full input remains available.
+on stderr. A saved input keeps for seven days, as a cached answer does; a later save deletes
+the store's own files past that age. `--no-save` disables that raw copy for one call and
+`JEVIFY_NO_SAVE=1` for every call; `--no-cache` and `JEVIFY_NO_CACHE` only disable the separate
+answer cache, never the raw copy. A failed or disabled save is reported, so do not assume the
+full input remains available.
 
 `--files` withholds excerpts of hidden paths and files that look like secrets; stderr reports
 `excerpts withheld: N`. Their names still reach the backend. Withholding an excerpt is not a

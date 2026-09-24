@@ -158,8 +158,11 @@ not claimed. `pick`, `filter` and `label` cap distinct records at 20,000. `label
 withholds hidden and secret-looking excerpts; it does not promise whole-file review.
 
 Only `why` and `filter` save raw input, including secrets. The saved path appears on stderr and
-in `data.saved_input`; a failed or skipped save sets `complete=false`. The saved-input store is
-independent of `--no-cache` and never pruned. [Privacy](../../PRIVACY.md) names its location.
+in `data.saved_input`; a failed or skipped save sets `complete=false`. `--no-save` disables
+saving for one call and `JEVIFY_NO_SAVE=1` for every call in an environment; `--no-cache` and
+`JEVIFY_NO_CACHE` do not, they govern the answer cache alone. A saved input keeps for seven
+days, the answer cache's retention; a later save deletes the store's own files past that age
+and nothing else. [Privacy](../../PRIVACY.md) names its location.
 
 ## Permissions and evidence
 

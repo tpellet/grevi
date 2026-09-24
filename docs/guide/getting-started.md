@@ -122,7 +122,8 @@ $ echo $?
 ```
 
 `why` and `filter` save their whole input, secrets included, under the cache directory's
-`outputs/` and print the path on stderr. `--no-save` skips the save.
+`outputs/` and print the path on stderr. The file keeps for seven days, like a cached answer.
+`--no-save` skips the save for one call; `JEVIFY_NO_SAVE=1` skips it for every call.
 
 ## Fill an argument
 

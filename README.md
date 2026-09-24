@@ -287,7 +287,7 @@ text. Allow `jevify fill --dry-run` freely. Allow `fill` per command prefix,
 Requests go to the backend you chose, with the description and the evidence and nothing else;
 [PRIVACY.md](PRIVACY.md) lists what each verb sends. Answers are cached for seven days
 (`--no-cache`). `why` and `filter` save their raw input under the cache directory, secrets
-included, until you delete it (`--no-save`).
+included, for the same seven days; `--no-save` skips one call and `JEVIFY_NO_SAVE=1` every call.
 
 Without a key, one classification is one record under one question, and a day holds 20,000 of
 them per IP. That buys 20,000 records through `filter` or `label`, at most 60 per request (the

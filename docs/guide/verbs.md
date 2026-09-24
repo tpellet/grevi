@@ -118,8 +118,8 @@ options. It exits 0 when a cause is found and 3 when none fits. Compare `conside
 `total` for evidence coverage.
 
 Data: `causes[{line,text,p,context[]}]`, `any`, `considered`, `total`, `hint`, `saved_input`,
-`complete`. The full raw input is saved unless `--no-save`; stderr says
-`jevify why: full output: PATH`. A skipped or failed save reports the reason and sets
+`complete`. The full raw input is saved for seven days unless `--no-save` or `JEVIFY_NO_SAVE=1`;
+stderr says `jevify why: full output: PATH`. A skipped or failed save reports the reason and sets
 `complete=false`. A no-signal abstention carries a hint about piping stderr.
 
 ## pick
@@ -193,7 +193,7 @@ is the count of records the statement never reached.
 | `-0` | NUL-separated records |
 | `--para` | paragraphs; conflicts with `-0` |
 | `--files` | stdin paths with eligible file excerpts as evidence |
-| `--no-save` | skip saving raw input |
+| `--no-save` | skip saving raw input for this call; `JEVIFY_NO_SAVE=1` skips it for every call |
 
 Exit 0 kept some, 1 kept none, 3 every record unsure. The verdict is one-sided: a record is a
 yes when P(holds) reaches the threshold plus a fixed band of 0.15, a no when P(does not hold)
@@ -209,7 +209,8 @@ under `-c`. Under `--files`, a file that cannot be read (missing, a directory, a
 sandbox denial) is never judged by its name: it is unsure with p 0, kept unless `--strict`, named
 on stderr as `excerpt unreadable: PATH: REASON` and carries `unreadable`.
 Stderr reports `jevify filter: kept N of M, U unsure, full output: PATH`, with withholding and
-non-Jev model details when relevant. A skipped or failed save sets `complete=false`.
+non-Jev model details when relevant. The saved input keeps for seven days; a skipped or failed
+save sets `complete=false`.
 Human output can be a prefix if a later batch fails; an error exits nonzero and reports progress.
 
 ## label

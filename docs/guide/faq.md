@@ -23,8 +23,10 @@ supported context; `route` sends tool names, summaries and man-page evidence. Re
 best effort. [Privacy](../../PRIVACY.md) covers every verb and the `--files` withholding rules.
 
 Only `why` and `filter` save raw input, secrets included, under the cache directory's `outputs/`.
-Those files are never pruned. `--no-save` skips them; `--no-cache` only disables the separate
-answer cache. A failed or skipped save sets `data.complete=false`.
+They keep for seven days, the answer cache's retention: a save deletes the store's own files past
+that age and touches nothing else. `--no-save` skips them for one call and `JEVIFY_NO_SAVE=1` for
+every call; `--no-cache` and `JEVIFY_NO_CACHE` only disable the separate answer cache and leave
+saving on. A failed or skipped save sets `data.complete=false`.
 
 ## Why does it exit 3?
 

@@ -109,9 +109,12 @@ The cache holds answers, not input text; expiry does not reclaim files. `--no-ca
 
 Only `why` and `filter` separately save raw input before inference. Their content-addressed files
 are `outputs/<blake3-16>.log` under `JEVIFY_CACHE_DIR` or the platform cache directory's `jevify`
-directory. They include secrets and are never pruned. `--no-save` skips saving; a failed or
-skipped save reports the reason and sets `data.complete=false`. `--no-cache` does not disable
-this store. [Privacy](../../PRIVACY.md) gives the permissions and outbound withholding rules.
+directory. They include secrets. Retention is the answer cache's seven days: a successful save
+deletes the store's own files past that age, only in `outputs/`, never descending into a
+sub-directory or through a symlink; a read prunes nothing. `--no-save` skips saving for one
+call and `JEVIFY_NO_SAVE=1` for every call; a failed or skipped save reports the reason and sets
+`data.complete=false`. `--no-cache` and `JEVIFY_NO_CACHE` do not disable this store.
+[Privacy](../../PRIVACY.md) gives the permissions and outbound withholding rules.
 
 ## Models, retries and evidence
 
