@@ -1,0 +1,119 @@
+{
+  "ok": true,
+  "command": "fill",
+  "version": "0.11.0",
+  "exit_code": 3,
+  "data": {
+    "reason": "ambiguous",
+    "markers": [
+      {
+        "arg": 2,
+        "kind": "-",
+        "reason": "ambiguous",
+        "handle": null,
+        "p": null,
+        "candidates": 3267,
+        "total": 3267,
+        "omitted": 0
+      }
+    ]
+  },
+  "meta": {
+    "backend": "classifier",
+    "model": "jev-1.13.0",
+    "elapsed_ms": 19852,
+    "requests": 34,
+    "cache_hits": 0,
+    "input_tokens": 118127,
+    "cost_usd": 0.0,
+    "threshold": 0.5,
+    "request_id": null,
+    "usage": {
+      "attempted": 34,
+      "succeeded": 34,
+      "waited": {
+        "count": 0,
+        "total_ms": 0
+      },
+      "cache_hits": 0,
+      "tokens": {
+        "input": 118127,
+        "output": 35641
+      }
+    },
+    "telemetry": {
+      "inference_posts": {
+        "attempted": 34,
+        "succeeded": 34,
+        "failed": 0,
+        "cancelled": 0,
+        "in_flight": 0
+      },
+      "health_gets": {
+        "attempted": 0,
+        "succeeded": 0,
+        "failed": 0,
+        "cancelled": 0,
+        "in_flight": 0
+      },
+      "prewarm_gets": {
+        "attempted": 0,
+        "succeeded": 0,
+        "failed": 0,
+        "cancelled": 0,
+        "in_flight": 0
+      },
+      "semantic_calls": {
+        "attempted": 34,
+        "succeeded": 34,
+        "failed": 0,
+        "cancelled": 0,
+        "in_flight": 0
+      },
+      "semantic_questions": 68,
+      "retry_sends": 0,
+      "retry_waits": 0,
+      "retry_sleep_ms": 0,
+      "usage": {
+        "input_tokens": {
+          "reported_subtotal": 118127,
+          "reported_attempts": 34,
+          "unknown_attempts": 0,
+          "complete": true
+        },
+        "output_tokens": {
+          "reported_subtotal": 35641,
+          "reported_attempts": 34,
+          "unknown_attempts": 0,
+          "complete": true
+        }
+      },
+      "logical_rounds": null,
+      "cost_estimate": {
+        "basis": "free_service",
+        "input_price_per_mtok": 0.0,
+        "reported_input_subtotal_usd": 0.0,
+        "complete": true
+      }
+    },
+    "decision": {
+      "verb": "fill",
+      "backend": "classifier",
+      "model": {
+        "requested": null,
+        "answering": "jev-1.13.0"
+      },
+      "threshold": 0.5,
+      "gates": [
+        {
+          "best": 0.19,
+          "next": 0.16,
+          "none": 0.15000000000000002,
+          "any": 0.83,
+          "fails": null
+        }
+      ]
+    }
+  },
+  "error": null
+}

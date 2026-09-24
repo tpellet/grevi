@@ -464,3 +464,124 @@ The keyless finals window budgets 30,000 characters over at most 24 finalists an
 their patch; the diffstat leads, so a clipped finalist still shows every file it touched and its
 line counts. No finalist is dropped: the clip is per item, so all 24 fit at 99 candidates per
 window and at any pool size.
+
+## The `fill` capacity both backends serve (measured 2026-09-24)
+
+jevify 0.11.0, `JEVIFY_NO_CACHE=1`, one IP, one macOS dev machine on home broadband. Each
+attempt pipes N generated candidate lines (`evals/capacity/gen.sh`, commit-subject shaped, all
+distinct) into `fill` under an `@{-:…}` marker with `--dry-run`, so the sweep measures the
+request path and nothing else. `evals/capacity/sweep.sh` records every attempt in
+`evals/capacity/sweep.jsonl`: HTTP status, wall time, requests, classifications, retries sent,
+and whether a retry then carried the verb to an answer.
+
+`fill` accepts F = W × floor(W / 3) candidates per marker, W being the backend's window: 3,267
+on classifier.dev and 13,200 on TypeSafe. That is arithmetic over the request shapes. The
+measurement asks what the endpoints answer.
+
+Three runs per point per concurrency, five at the top keyless point. Seconds are the median of
+the whole verb, the candidate list read included; requests and classifications are one run's
+counts, which are fixed by N.
+
+| Backend | Candidates | Concurrency | Runs | Requests | Classifications | Median [s] | Min [s] | Max [s] | Transport failures |
+|:---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| classifier.dev | 500 | 1 | 3 | 7 | 14 | 4.5 | 4.2 | 5.1 | 0 |
+| classifier.dev | 500 | 2 | 3 | 7 | 14 | 2.8 | 2.4 | 4.6 | 0 |
+| classifier.dev | 500 | 4 | 3 | 7 | 14 | 1.9 | 1.7 | 3.9 | 0 |
+| classifier.dev | 750 | 1 | 3 | 9 | 18 | 5.1 | 5.0 | 5.8 | 0 |
+| classifier.dev | 750 | 2 | 3 | 9 | 18 | 3.4 | 3.1 | 3.4 | 0 |
+| classifier.dev | 750 | 4 | 3 | 9 | 18 | 1.9 | 1.8 | 2.3 | 0 |
+| classifier.dev | 1,000 | 1 | 3 | 12 | 24 | 6.7 | 6.6 | 6.9 | 0 |
+| classifier.dev | 1,000 | 2 | 3 | 12 | 24 | 4.3 | 3.7 | 5.1 | 0 |
+| classifier.dev | 1,000 | 4 | 3 | 12 | 24 | 2.7 | 2.6 | 3.1 | 0 |
+| classifier.dev | 1,250 | 1 | 3 | 14 | 28 | 7.9 | 7.3 | 8.4 | 0 |
+| classifier.dev | 1,250 | 2 | 3 | 14 | 28 | 4.5 | 4.5 | 5.8 | 0 |
+| classifier.dev | 1,250 | 4 | 3 | 14 | 28 | 2.9 | 2.7 | 5.0 | 0 |
+| classifier.dev | 1,500 | 1 | 3 | 17 | 34 | 9.6 | 9.6 | 10.5 | 0 |
+| classifier.dev | 1,500 | 2 | 3 | 17 | 34 | 5.6 | 5.5 | 6.0 | 0 |
+| classifier.dev | 1,500 | 4 | 3 | 17 | 34 | 3.8 | 3.3 | 4.4 | 0 |
+| classifier.dev | 2,000 | 1 | 3 | 22 | 44 | 13.1 | 12.3 | 15.2 | 0 |
+| classifier.dev | 2,000 | 2 | 3 | 22 | 44 | 6.5 | 6.5 | 8.3 | 0 |
+| classifier.dev | 2,000 | 4 | 3 | 22 | 44 | 4.3 | 3.9 | 5.6 | 0 |
+| classifier.dev | 3,000 | 1 | 3 | 32 | 64 | 19.3 | 18.2 | 19.4 | 0 |
+| classifier.dev | 3,000 | 2 | 3 | 32 | 64 | 10.8 | 9.6 | 10.8 | 0 |
+| classifier.dev | 3,000 | 4 | 3 | 32 | 64 | 5.7 | 5.1 | 7.3 | 0 |
+| classifier.dev | 3,267 | 1 | 3 | 34 | 68 | 19.5 | 19.4 | 19.9 | 0 |
+| classifier.dev | 3,267 | 2 | 3 | 34 | 68 | 10.8 | 10.2 | 10.9 | 0 |
+| classifier.dev | 3,267 | 4 | 5 | 34 | 68 | 6.3 | 5.9 | 6.4 | 0 |
+| classifier.dev | 3,268 | 4 | 2 | 0 | 0 | 0.04 | 0.04 | 0.04 | refused, exit 6 |
+| TypeSafe | 500 | 1 | 3 | 4 | 8 | 1.6 | 1.5 | 1.6 | 0 |
+| TypeSafe | 500 | 2 | 3 | 4 | 8 | 1.3 | 1.3 | 1.5 | 0 |
+| TypeSafe | 500 | 8 | 3 | 4 | 8 | 1.1 | 1.0 | 1.1 | 0 |
+| TypeSafe | 750 | 1 | 3 | 5 | 10 | 1.9 | 1.8 | 1.9 | 0 |
+| TypeSafe | 750 | 2 | 3 | 5 | 10 | 1.3 | 1.3 | 1.5 | 0 |
+| TypeSafe | 750 | 8 | 3 | 5 | 10 | 1.3 | 1.2 | 1.5 | 0 |
+| TypeSafe | 1,000 | 1 | 3 | 6 | 12 | 2.1 | 2.1 | 2.1 | 0 |
+| TypeSafe | 1,000 | 2 | 3 | 6 | 12 | 1.6 | 1.6 | 1.7 | 0 |
+| TypeSafe | 1,000 | 8 | 3 | 6 | 12 | 1.3 | 1.2 | 1.3 | 0 |
+| TypeSafe | 1,250 | 1 | 3 | 8 | 16 | 2.6 | 2.6 | 2.8 | 0 |
+| TypeSafe | 1,250 | 2 | 3 | 8 | 16 | 1.8 | 1.8 | 1.9 | 0 |
+| TypeSafe | 1,250 | 8 | 3 | 8 | 16 | 1.5 | 1.4 | 1.6 | 0 |
+| TypeSafe | 1,500 | 1 | 3 | 9 | 18 | 3.0 | 2.9 | 3.1 | 0 |
+| TypeSafe | 1,500 | 2 | 3 | 9 | 18 | 2.0 | 2.0 | 2.1 | 0 |
+| TypeSafe | 1,500 | 8 | 3 | 9 | 18 | 1.4 | 1.4 | 1.4 | 0 |
+| TypeSafe | 2,000 | 1 | 3 | 11 | 22 | 3.4 | 3.4 | 3.5 | 0 |
+| TypeSafe | 2,000 | 2 | 3 | 11 | 22 | 2.2 | 2.2 | 2.2 | 0 |
+| TypeSafe | 2,000 | 8 | 3 | 11 | 22 | 1.5 | 1.4 | 1.6 | 0 |
+| TypeSafe | 3,000 | 1 | 3 | 16 | 32 | 4.8 | 4.7 | 5.0 | 0 |
+| TypeSafe | 3,000 | 2 | 3 | 16 | 32 | 2.9 | 2.9 | 3.0 | 0 |
+| TypeSafe | 3,000 | 8 | 3 | 16 | 32 | 1.8 | 1.7 | 1.8 | 0 |
+| TypeSafe | 5,000 | 8 | 3 | 26 | 52 | 2.0 | 2.0 | 2.3 | 0 |
+| TypeSafe | 8,000 | 8 | 3 | 41 | 82 | 2.6 | 2.5 | 2.7 | 0 |
+| TypeSafe | 13,200 | 8 | 3 | 67 | 134 | 3.5 | 3.4 | 3.5 | 0 |
+| TypeSafe | 13,201 | 8 | 1 | 0 | 0 | 0.15 | 0.15 | 0.15 | refused, exit 6 |
+
+Both backends serve their whole arithmetic limit. Over 151 attempts, 77 of them keyless, no
+attempt at or below the limit failed: the practical ceiling of a single `fill` is 3,267
+candidates per marker on classifier.dev and 13,200 on TypeSafe, and the measured limit and the
+arithmetic one are the same number. Lowering concurrency raises nothing; it only costs time. At
+3,267 candidates the keyless verb answers in 6.3 seconds at the default concurrency of 4, 10.8
+at 2 and 19.5 at 1, so the default is also the fastest setting measured.
+
+One attempt in 77 met the throttle: at 3,267 candidates and concurrency 4, one of the 35
+requests answered HTTP 429 with `retry-after-ms: 2000`, the retry went out after the wait the
+server named, and the verb answered in 6.4 seconds, a tenth of a second off the median. The
+retry policy absorbs the throttle the keyless backend applies at the top of its range.
+
+### What limits the keyless backend is the window, not the request
+
+classifier.dev meters per IP: `RateLimit-Policy: 3000;w=60, 20000;w=86400`, in classifications,
+one classification being one item under one dimension. A `fill` of 3,267 candidates spends 68 of
+them — 34 windows in the shortlist round, 2 per window, plus the finals. The per-request ceiling
+and the per-IP ceiling are different quantities:
+
+| Quantity | classifier.dev | TypeSafe |
+|:---|---:|---:|
+| Candidates in one `fill` marker | 3,267 | 13,200 |
+| Classifications that costs | 68 | 134 |
+| Full-capacity `fill`s in the 60 s window | 44 | — |
+| Full-capacity `fill`s in a day | 294 | — |
+
+A run that fails at 1,500 candidates while 3,267 succeeds is the day's or the minute's window
+closing, not the list being too long; retrying the same list later answers.
+
+### What a user meets at the ceiling
+
+Over the limit, `fill` refuses before it opens a connection: `3268 candidates exceed the fill
+capacity of 3267`, exit 6 `too_many`, with the hint `narrow with a literal path prefix, or pipe
+a narrower list into '@{-:description}'`, in 0.04 seconds keyless and 0.15 on TypeSafe. The
+limit and the next move are both named.
+
+Under the limit, against a backend that refuses (`evals/capacity/stub.py` on 127.0.0.1, 1,500
+candidates, concurrency 4):
+
+| Backend answer | Attempts | Time to exit | Exit | Message |
+|:---|---:|---:|---:|:---|
+| HTTP 429, no `retry-after` | 4 | 1.8 s | 4 | `API unavailable: HTTP 429` / `retry later, or lower JEVIFY_CONCURRENCY if rate limited` |
+| HTTP 502, no `retry-after` | 4 | 1.8 s | 4 | `API unavailable: HTTP 502` / `retry later, or lower JEVIFY_CONCURRENCY if rate limited` |
+| HTTP 429, `retry-after: 45` | 4 | 30.0 s | 4 | `API unavailable: HTTP 429` / `retry later, or lower JEVIFY_CONCURRENCY if rate limited` |
+
+The status reaches the user and the exit code is the outage code. Two gaps remain. The message
+names neither the candidate count nor the day's quota, so a user who reads it narrows nothing
+and lowers a concurrency that is not the cause. And a server that names a long wait buys
+30 seconds of silence: each wait is clipped to 10 seconds and three of them run back to back,
+with the first and only output arriving at the end.
