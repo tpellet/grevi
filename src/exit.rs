@@ -1,8 +1,8 @@
 use serde::Serialize;
 
-/// The prefix of the overall-deadline message `jev::client` builds. `kind()` reads it to tell
-/// deadline expiry from transport failure, both carried by `Unavailable`; `tests/deadline.rs`
-/// drives a real expiry and pins the pair together.
+/// The phrase the overall-deadline sentence carries, so that a reader of stderr and a reader of
+/// `error.message` meet the same words. `tests/deadline.rs` drives a real expiry and pins the
+/// sentence, the kind and this constant together.
 pub const DEADLINE_PREFIX: &str = "overall deadline of";
 
 pub const NO_MATCH: &str = "no_match";
@@ -62,6 +62,14 @@ pub enum JevifyError {
     BadKey(u16),
     #[error("API unavailable: {0}")]
     Unavailable(String),
+    /// The verb's own budget ran out, which is not an outage: the API was never asked, or was
+    /// asked and cancelled. It shares exit 4 with `Unavailable`, and its own sentence so that a
+    /// person reading stderr learns the next move the way `api_deadline` already tells a machine.
+    /// The field is the budget in seconds, formatted.
+    #[error(
+        "the overall deadline of {0} s passed before the answer was ready; JEVIFY_DEADLINE sets it"
+    )]
+    Deadline(String),
     #[error("unexpected response from the API: {0}")]
     Protocol(String),
     #[error("no input: {0}")]
@@ -170,7 +178,7 @@ impl JevifyError {
         match self {
             Self::Kinded { exit, .. } => *exit,
             Self::MissingKey | Self::BadKey(_) => Exit::Auth,
-            Self::Unavailable(_) | Self::Protocol(_) => Exit::Unavailable,
+            Self::Unavailable(_) | Self::Deadline(_) | Self::Protocol(_) => Exit::Unavailable,
             Self::EmptyInput(_)
             | Self::InputTooLarge(_)
             | Self::RejectedRequest(..)
@@ -186,7 +194,7 @@ impl JevifyError {
             Self::BadKey(_) => "bad_api_key",
             // Exit 4 covers three situations a caller answers differently: back off, raise the
             // budget, or report a bug. The kind, not the message, says which.
-            Self::Unavailable(m) if m.starts_with(DEADLINE_PREFIX) => "api_deadline",
+            Self::Deadline(_) => "api_deadline",
             Self::Unavailable(_) => "api_unavailable",
             Self::Protocol(_) => "api_protocol",
             Self::EmptyInput(_) => "empty_input",
@@ -204,7 +212,7 @@ impl JevifyError {
                 "unset JEVIFY_BACKEND to run keyless through classifier.dev, or create a key at https://console.typesafe.ai/settings/keys and export it in your shell profile; jevify never prints it"
             }
             Self::BadKey(_) => "check the key in the TypeSafe console; `jevify health` verifies it",
-            Self::Unavailable(m) if m.starts_with(DEADLINE_PREFIX) => {
+            Self::Deadline(_) => {
                 "the work was cancelled, not refused: raise JEVIFY_DEADLINE, or split the input into smaller runs"
             }
             Self::Unavailable(_) => {
@@ -239,7 +247,7 @@ impl JevifyError {
                 "jevify add \"finish the login flow\""
             }
             Self::EmptyInput(_) => "ls | jevify pick \"the invoice from March\"",
-            Self::Unavailable(m) if m.starts_with(DEADLINE_PREFIX) => {
+            Self::Deadline(_) => {
                 "JEVIFY_DEADLINE=1800 jevify filter 'reports a crash' < issues.txt"
             }
             Self::InputTooLarge(_) => "tail -n 20000 build.log | jevify why",
@@ -325,7 +333,7 @@ mod tests {
             JevifyError::MissingKey,
             JevifyError::BadKey(401),
             JevifyError::Unavailable("connection refused".into()),
-            JevifyError::Unavailable(format!("{DEADLINE_PREFIX} 600 s passed (JEVIFY_DEADLINE)")),
+            JevifyError::Deadline("600".into()),
             JevifyError::Protocol(String::new()),
             JevifyError::EmptyInput(""),
             JevifyError::InputTooLarge(String::new()),
@@ -371,6 +379,7 @@ mod tests {
                 | JevifyError::MissingKey
                 | JevifyError::BadKey(_)
                 | JevifyError::Unavailable(_)
+                | JevifyError::Deadline(_)
                 | JevifyError::Protocol(_)
                 | JevifyError::EmptyInput(_)
                 | JevifyError::InputTooLarge(_)
@@ -395,8 +404,7 @@ mod tests {
     }
     #[test]
     fn a_deadline_is_not_a_transport_failure_and_says_what_to_do() {
-        let deadline =
-            JevifyError::Unavailable(format!("{DEADLINE_PREFIX} 600 s passed (JEVIFY_DEADLINE)"));
+        let deadline = JevifyError::Deadline("600".into());
         let transport = JevifyError::Unavailable("error sending request: connection reset".into());
         assert_eq!(deadline.exit(), transport.exit());
         assert_eq!(deadline.kind(), "api_deadline");
@@ -404,6 +412,17 @@ mod tests {
         assert!(deadline.hint().contains("JEVIFY_DEADLINE"));
         assert!(transport.hint().contains("retry"));
         assert_ne!(deadline.hint(), transport.hint());
+        // The sentence a person reads says the same thing as the kind a machine reads: jevify's
+        // own budget ran out. It never blames the API for it.
+        let sentence = deadline.to_string();
+        assert!(
+            sentence.contains(DEADLINE_PREFIX)
+                && sentence.contains("600 s")
+                && sentence.contains("JEVIFY_DEADLINE"),
+            "{sentence}"
+        );
+        assert!(!sentence.contains("API unavailable"), "{sentence}");
+        assert!(transport.to_string().starts_with("API unavailable:"));
     }
     #[test]
     fn a_rejected_request_claims_a_size_limit_only_when_the_service_named_one() {

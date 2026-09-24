@@ -297,3 +297,45 @@ async fn missing_empty_and_oversized_contexts_make_no_requests() {
     assert!(out.stdout.is_empty());
     assert!(server.received_requests().await.unwrap().is_empty());
 }
+
+/// `ok` is not the field to branch on: it says that jevify itself reached the end without an
+/// error of its own, so it stays true on a no (exit 1) and on an abstention (exit 3), where the
+/// `data` a caller expects is absent. A harness that reads `.ok` as "the call worked" would take
+/// both for success. `exit_code` is the branch, and it equals the process status.
+#[tokio::test(flavor = "multi_thread")]
+async fn ok_stays_true_on_a_no_and_on_an_abstention_while_exit_code_tells_them_apart() {
+    let server = common::mock(FakeJev {
+        choose: |_, _, o| o[0].clone(),
+        noul: |_, s| {
+            if s.to_string().contains("refund") {
+                0.9
+            } else if s.to_string().contains("maybe") {
+                0.5
+            } else {
+                0.1
+            }
+        },
+    })
+    .await;
+    for (input, code) in [
+        ("I want a refund", 0),
+        ("hello there", 1),
+        ("maybe something", 3),
+    ] {
+        let mut c = common::jevify(&server);
+        let stdin = input.to_string();
+        let out = tokio::task::spawn_blocking(move || {
+            c.args(["--json", "is", "asks for a refund"])
+                .write_stdin(stdin)
+                .output()
+                .unwrap()
+        })
+        .await
+        .unwrap();
+        let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+        assert_eq!(out.status.code(), Some(code), "{v}");
+        assert_eq!(v["exit_code"], code, "{v}");
+        assert_eq!(v["ok"], true, "{input}: {v}");
+        assert!(v["error"].is_null(), "{input}: {v}");
+    }
+}

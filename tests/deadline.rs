@@ -27,6 +27,15 @@ fn fake() -> FakeJev {
 /// Runs the verb with a one-second budget while stdin stays open for `hold`: the evidence
 /// read blocks that long before the first request could be built.
 async fn blocked_read(verb: &[&str], hold: Duration) -> (std::process::Output, usize) {
+    blocked_read_in(verb, hold, &["--json"]).await
+}
+
+/// The same run in a chosen output format, for the sentence a person reads on stderr.
+async fn blocked_read_in(
+    verb: &[&str],
+    hold: Duration,
+    format: &[&str],
+) -> (std::process::Output, usize) {
     let server = common::mock_classifier(fake()).await;
     let mut cmd = std::process::Command::cargo_bin("jevify").unwrap();
     for var in [
@@ -45,7 +54,7 @@ async fn blocked_read(verb: &[&str], hold: Duration) -> (std::process::Output, u
         .env("JEVIFY_NO_CACHE", "1")
         .env("JEVIFY_DEADLINE", "1")
         .args(verb)
-        .arg("--json")
+        .args(format)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
@@ -106,6 +115,12 @@ async fn a_blocked_evidence_read_past_the_budget_ends_at_exit_4_without_a_reques
             message.contains(jevify::exit::DEADLINE_PREFIX),
             "the deadline message and exit.rs's prefix drifted apart: {message}"
         );
+        // The deadline has its own sentence. It is jevify's own budget that ran out, not the
+        // API that went missing, and the sentence names the variable that sets the budget.
+        assert!(
+            !message.contains("API unavailable"),
+            "{verb:?}: the deadline still reads as an outage: {message}"
+        );
         let hint = value["error"]["hint"].as_str().unwrap_or_default();
         assert!(hint.contains("JEVIFY_DEADLINE"), "{verb:?}: {value}");
         assert_eq!(posts, 0, "{verb:?}: a request was sent after the deadline");
@@ -128,4 +143,24 @@ async fn a_read_inside_the_budget_is_judged() {
     let value = envelope(&out);
     assert_eq!(out.status.code(), Some(0), "{value}");
     assert_eq!(posts, 1, "{value}");
+}
+
+/// The sentence a person reads on stderr is the deadline's own, not the shared unavailable one.
+#[tokio::test]
+async fn the_human_sentence_names_the_deadline_and_the_variable() {
+    let (out, posts) = blocked_read_in(
+        &["filter", "--files", "--no-save", "x"],
+        Duration::from_millis(1500),
+        &[],
+    )
+    .await;
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert_eq!(out.status.code(), Some(4), "{stderr}");
+    assert_eq!(posts, 0, "{stderr}");
+    assert!(
+        stderr.contains("the overall deadline of 1 s passed before the answer was ready; JEVIFY_DEADLINE sets it"),
+        "{stderr}"
+    );
+    assert!(!stderr.contains("API unavailable"), "{stderr}");
+    assert!(stderr.contains("raise JEVIFY_DEADLINE"), "{stderr}");
 }

@@ -281,6 +281,25 @@ fn capabilities_lists_verbs_exit_codes_env() {
             .unwrap()
             .contains("request_id,usage,telemetry,decision}")
     }));
+    // Where a machine meets `ok`, the machine interface says what it means and names the field
+    // to branch on instead, and the two documents a person reads say the same.
+    let ok = d["envelope"]["ok"].as_str().unwrap();
+    assert!(
+        ok.starts_with("not the field to branch on")
+            && ok.contains("exit 1")
+            && ok.contains("exit 3"),
+        "{ok}"
+    );
+    assert_eq!(
+        d["envelope"]["branch_on"],
+        "exit_code, which equals the process exit code; then read data"
+    );
+    for page in [
+        include_str!("../docs/ROBOT_MODE.md"),
+        include_str!("../docs/guide/agents.md"),
+    ] {
+        assert!(page.contains("`ok` is not the field to branch on."));
+    }
     // The decision structure is stated the same way in capabilities and in ROBOT_MODE.md.
     let decision = d["envelope"]["decision"]["fields"].as_str().unwrap();
     assert_eq!(

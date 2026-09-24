@@ -280,7 +280,10 @@ JSON switch for pipes. `--format jsonl` prints one line; `--format toon` encodes
       threshold, request_id, usage, telemetry, decision}, error{kind, message, hint, example} | null}
 ```
 
-Branch on `exit_code`, which equals the process exit code, then read `data`. Error kinds are
+`ok` is not the field to branch on. It says only that jevify itself reached the end without an
+error of its own, so it is true on exit 0, true on exit 1 where `is` answers no, and true on
+exit 3 where a verb abstains and the `data` a caller expects is absent. Branch on `exit_code`,
+which equals the process exit code, then read `data`. Error kinds are
 stable identifiers. `meta.model` is a string, several answering models joined with `", "`.
 TypeSafe defaults to `jev-1.13.0`; classifier chooses its model and rejects explicit overrides.
 `meta.request_id` names the last TypeSafe inference request when reported; `health` records none.

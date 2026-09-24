@@ -56,6 +56,9 @@ prints it on one line; `--format toon` encodes the same envelope as TOON.
 adds `round_one`, every candidate of every window and the finals as sent, which an ordinary
 envelope leaves out. ROBOT_MODE.md states both.
 
+`ok` is not the field to branch on. It says only that jevify itself reached the end without an
+error of its own, so it is true on exit 0, true on exit 1 where `is` answers no, and true on
+exit 3 where a verb abstains and the `data` a caller expects is absent.
 Branch on `exit_code`, which equals the process status, then read `data`. Error kinds are stable
 identifiers. `too_many` is exit 6: narrow records with `grep` or `head`. `error.example` gives
 a corrected command. Human output is not a machine protocol.

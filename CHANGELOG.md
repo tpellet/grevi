@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+Changed:
+
+- The overall deadline's message is its own sentence: `the overall deadline of N s passed before
+  the answer was ready; JEVIFY_DEADLINE sets it`. It no longer reads as an outage of the API. The
+  exit code stays 4 and the error kind stays `api_deadline`.
+
+- The envelope's `ok` keeps its meaning, "jevify reached the end without an error of its own",
+  which is true on a no and on an abstention; `capabilities.envelope` now says so and names
+  `exit_code` as the field to branch on. A harness trial branched on `ok`, read an abstention as
+  success and then failed on a `data` key that was not there.
+
 ## 0.12.0 - 2026-09-24
 
 Measured:

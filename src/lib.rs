@@ -261,6 +261,12 @@ async fn run_cli(cli: Cli) -> i32 {
                 }
             } else {
                 let env = Envelope {
+                    // `ok` means "jevify itself reached the end without an error of its own",
+                    // so it is true here for every verb outcome: a yes, an `is` that answers no
+                    // (exit 1), and an abstention (exit 3), where `data` carries a reason and
+                    // not a result. It is not the field to branch on, and `capabilities`,
+                    // ROBOT_MODE.md and the agents guide all say so where a reader meets it.
+                    // `exit_code` is the branch.
                     ok: true,
                     command: name,
                     version: env!("CARGO_PKG_VERSION"),

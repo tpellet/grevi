@@ -256,9 +256,7 @@ impl Client {
         } else {
             format!("{:.1}", self.budget.as_secs_f64())
         };
-        JevifyError::Unavailable(format!(
-            "overall deadline of {seconds} s passed (JEVIFY_DEADLINE)"
-        ))
+        JevifyError::Deadline(seconds)
     }
 
     /// Opens the TLS connection while local work runs; the pooled connection is reused by `ask`.
