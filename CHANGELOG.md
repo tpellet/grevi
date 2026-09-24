@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+## 0.12.0 - 2026-09-24
+
+Measured:
+
+- Both backends serve the whole `fill` capacity they advertise. A sweep of 151 attempts at seven
+  candidate counts and three concurrency settings answered every request at or below the limit:
+  3,267 candidates keyless in 6.3 seconds and 13,200 on TypeSafe in 3.5. The limit a keyless
+  caller meets first is the per-IP allowance, 3,000 classifications a minute and 20,000 a day, of
+  which one full marker spends 68; the documents now name it, and the hint on an unavailable API
+  no longer blames concurrency (`evals/capacity/`).
+
+- How much an answer varies is measured and written down. Five cold reruns of identical bytes
+  move 1.6 percent of answers; eight orders of the same candidates move 5.0 percent, and one
+  question in four does not survive all eight. Of the degradations, 86 percent become
+  abstentions, which a caller can retry or escalate; the rest choose a different handle at
+  unchanged confidence, identically on both backends for the same shuffle. The gate scores bound
+  none of it and the seven-day answer cache hides it (`evals/variance/`).
+
 Changed:
 
 - Raw input saving can be turned off from the environment, and the store it writes to has a
