@@ -204,3 +204,37 @@ of the pointer and what a caller reading the exit code gets. `data.any` has mini
 and median 0.93 over the twenty-one answered cases. Failures include a data race, an
 assertion described as “still exists”, and a lint finding. A quoted failure or library frame can
 also distract selection from the cause. These counts quantify the limits of the measured task.
+
+Variation between runs and between candidate orders, measured 2026-09-24 at 0.11.0 on
+`jev-1.13.0`, release build, threshold 0.5, `JEVIFY_NO_CACHE=1` on every call, over a fixed
+subset of the source-held-out set, scored by `evals/variance/variance_score.py`. Both backends
+answer the same questions: 43 per backend asked five times, and 29 per backend asked under eight
+candidate orders — the order the input file has and seven seeded shuffles.
+
+| Arm | Questions | Answers | Questions that move | Answers off the settled one |
+|:---|---:|---:|---:|---:|
+| five cold reruns of identical bytes | 86 | 430 | 5 | 1.6% |
+| eight orders of the same candidates | 58 | 464 | 15 | 5.0% |
+
+Under eight orders, `filter` moves on 4 of 20 records on classifier and 7 of 20 on TypeSafe,
+`pick` on 1 of 4 questions on each backend, `route` on 1 of 3 on each, and `fill` reading a
+frozen candidate file on neither of its 2. Under five cold reruns, `filter` moves on 1 of 20
+records on classifier and 2 of 20 on TypeSafe, `route` on 1 of 6 on TypeSafe, `why` on 1 of 6 on
+classifier, and `pick` and `fill` on none.
+
+The direction of a change matters more than its rate. Five of the six changes a cold rerun
+produces are abstentions; the sixth points at another line inside the same labelled root-cause
+block. Of the 14 changes a reshuffle makes to an answer that was the gold's, 12 are abstentions
+and 2 choose a different record at full confidence — one `pick` question under one shuffle, the
+same question and the same shuffle on both backends, so a caller cannot route around order
+sensitivity by changing backend. Nine further changes move off an answer that was not the
+gold's, and a reshuffle recovers a right answer about as often as it loses one.
+
+Five identical cold `filter` runs over ten records keep 4, 4, 3, 4 and 3 on classifier and 3, 3,
+4, 4 and 4 on TypeSafe: union 4, intersection 3 on both. The one record between the union and the
+intersection enters and leaves through `unsure`, never through `drop`. A second ten-record run
+keeps the same five records in all ten runs.
+
+The seven-day answer cache hides this spread by replaying the first answer, so it appears only
+cold, when two callers race the same query. The gate scores do not bound it: the answer that
+changed under a reshuffle carried the same probability as the answer that did not.
