@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 400" width="960" height="400" role="img" aria-labelledby="t d">
   <title id="t">jevify pick names the streaming receipt among eight downloads, then declines a tax return that is not in the folder</title>
-  <desc id="d">Two runs of jevify pick over the same eight file names. First, "what I paid a streaming service": spotify_receipt.pdf wins with probability 0.98, a name that shares no word with the question, it is printed, and the exit code is 0. Second, "the tax return": no file fits, "none of them" scores 0.99, stdout stays empty, and the exit code is 3. Output of jevify 0.12.0 on Jev 1.13.0.</desc>
+  <desc id="d">Two runs of jevify pick over the same eight file names. First, "what I paid a streaming service": spotify_receipt.pdf wins with probability 0.98, a name that shares no word with the question, it is printed, and the exit code is 0. Second, "the tax return": no file fits, "none of them" scores 0.99, stdout stays empty, and the exit code is 3. Recorded 2026-09-24 on Jev 1.13.0.</desc>
   <style>
     text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size: 15px; fill: #e6edf3; }
     .dim { fill: #7d8590; }

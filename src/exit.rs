@@ -246,7 +246,7 @@ impl JevifyError {
             Self::EmptyInput(msg) if msg.starts_with("no unstaged changes") => {
                 "jevify add \"finish the login flow\""
             }
-            Self::EmptyInput(_) => "ls | jevify pick \"the invoice from March\"",
+            Self::EmptyInput(_) => "ls | jevify pick \"what I paid a streaming service\"",
             Self::Deadline(_) => {
                 "JEVIFY_DEADLINE=1800 jevify filter 'reports a crash' < issues.txt"
             }

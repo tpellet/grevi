@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 430" width="960" height="430" role="img" aria-labelledby="t d">
   <title id="t">jevify sort reads the files in a Downloads folder and proposes a folder for each</title>
-  <desc id="d">Five files with unhelpful names. jevify reads each one. document(3).txt holds a 1099 tax form and goes to Taxes/2025 at 0.69. BP_UA1523.txt is a boarding pass and goes to Boarding passes at 0.99. 1706.03762v7.txt is a research paper and goes to Papers at 0.89. A utility statement and a note fit no folder and stay where they are. It is a dry run: nothing moves until --apply, and --undo moves everything back. Output of jevify 0.3.0 on 2026-09-19.</desc>
+  <desc id="d">Five files with unhelpful names. jevify reads each one. document(3).txt holds a 1099 tax form and goes to Taxes/2025 at 0.69. BP_UA1523.txt is a boarding pass and goes to Boarding passes at 0.99. 1706.03762v7.txt is a research paper and goes to Papers at 0.89. A utility statement and a note fit no folder and stay where they are. It is a dry run: nothing moves until --apply, and --undo moves everything back. Recorded 2026-09-19.</desc>
   <style>
     text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size: 15px; fill: #e6edf3; }
     .dim { fill: #7d8590; }

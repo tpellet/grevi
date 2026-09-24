@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 420" width="960" height="420" role="img" aria-labelledby="t d">
   <title id="t">jevify label tags ten issue titles as bug, feature or question, and a pipe counts them</title>
-  <desc id="d">The command jevify label bug,feature,question with issues.txt on stdin, piped into cut -f1, sort and uniq -c, is typed. Ten issue titles appear. A label appears in front of each one, in input order, from one request: bug for the crash on an empty config file, feature for the dark theme, question for the corporate proxy, and so on. The pipe then prints the histogram: 4 bug, 3 feature, 3 question. Output of jevify 0.8.0 on Jev 1.13.0.</desc>
+  <desc id="d">The command jevify label bug,feature,question with issues.txt on stdin, piped into cut -f1, sort and uniq -c, is typed. Ten issue titles appear. A label appears in front of each one, in input order, from one request: bug for the crash on an empty config file, feature for the dark theme, question for the corporate proxy, and so on. The pipe then prints the histogram: 4 bug, 3 feature, 3 question. Recorded 2026-09-22 on Jev 1.13.0.</desc>
   <style>
     text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size: 15px; fill: #e6edf3; }
     .dim { fill: #7d8590; }

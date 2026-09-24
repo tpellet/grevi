@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 430" width="960" height="430" role="img" aria-labelledby="t d">
   <title id="t">jevify why finds the one error in 1,812 lines of cargo output</title>
-  <desc id="d">The command jevify why with build.log on stdin is typed. 1,812 lines of compiler output scroll by, 300 warnings among them. jevify keeps 1,212 distinct lines, judges them in 7 windows, compares the finalists once, and prints line 2 with its context: error[E0425]: cannot find value conifg in this scope, probability 0.90. Exit 0. Output of jevify 0.8.0 on Jev 1.13.0.</desc>
+  <desc id="d">The command jevify why with build.log on stdin is typed. 1,812 lines of compiler output scroll by, 300 warnings among them. jevify keeps 1,212 distinct lines, judges them in 7 windows, compares the finalists once, and prints line 2 with its context: error[E0425]: cannot find value conifg in this scope, probability 0.90. Exit 0. Recorded 2026-09-22 on Jev 1.13.0.</desc>
   <style>
     text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size: 15px; fill: #e6edf3; }
     .dim { fill: #7d8590; }

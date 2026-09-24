@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 400" width="960" height="400" role="img" aria-labelledby="t d">
   <title id="t">jevify route picks caffeinate for "keep my mac awake for an hour"</title>
-  <desc id="d">A request is typed. The 2,212 commands on the PATH scroll by. Five candidates appear with the summary line of their man page and a score: caffeinate 0.87, sleep 0.10, pmset 0.07, taskpolicy 0.07, tmux 0.05. caffeinate wins, and jevify prints its name without running it. Scores measured with jevify 0.3.0 on 2026-09-19.</desc>
+  <desc id="d">A request is typed. The 2,212 commands on the PATH scroll by. Five candidates appear with the summary line of their man page and a score: caffeinate 0.87, sleep 0.10, pmset 0.07, taskpolicy 0.07, tmux 0.05. caffeinate wins, and jevify prints its name without running it. Recorded 2026-09-19.</desc>
   <style>
     text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size: 15px; fill: #e6edf3; }
     .dim { fill: #7d8590; }

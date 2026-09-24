@@ -16,7 +16,7 @@ jevify pick --from commit 'made folder moves atomic'
 ```text
 jevify fill -- kubectl logs '@{pod:the payment worker}'
 jevify fill -- gh pr view '@{pr:the Windows path fix}'
-jevify fill -- gh run view --log-failed '@{ci-run:the last failed run on main}'
+jevify fill -- gh run view --log-failed '@{ci-run:the failed run for the commit that bumped the checkout action}'
 ```
 
 ## The table
@@ -51,7 +51,10 @@ No held-out measurement of that rule exists for `branch`. `--dry-run` shows the 
 anything runs.
 
 `branch` and `commit` are ordered: the lister prints newest first. `pr`, `issue`, `ci-run` and
-`stash` are ordered by their recipe. The others are not.
+`stash` are ordered by their recipe. The others are not. That order belongs to the lister, not
+to the marker: a description is judged on what a candidate is, never on where it sits in the
+list, so "the last failed run" is a question for code (`gh run list --status failure --limit 1`)
+and "the failed run for the checkout bump" is a question for the marker.
 
 ## Coded kinds and recipe kinds
 
