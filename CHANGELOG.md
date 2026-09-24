@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.11.0 - 2026-09-24
+
 Changed:
 
 - A `commit` finalist carries its diffstat and the first 1,000 characters of its patch, and the
