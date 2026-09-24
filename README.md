@@ -297,7 +297,10 @@ The quota, the per-request costs and the 60-record batch were measured on 2026-0
 a day are computed from the shape of each verb's requests, since the day's `pick`, `why` and
 `route` runs never completed ([benchmarks/results.md](benchmarks/results.md)). A verb takes
 20,000 distinct records at most.
-`fill` takes 3,267 candidates per marker without a key, and 13,200 with one. A probability is
+`fill` takes 3,267 candidates per marker without a key, and 13,200 with one, and both backends
+answer that whole count: 6.3 seconds keyless and 3.5 on TypeSafe, measured 2026-09-24
+([benchmarks/results.md](benchmarks/results.md)). One keyless marker at capacity spends 68 of the
+day's 20,000 classifications, about 294 of them. A probability is
 the backend's score on this task; the [measurements](docs/guide/how-it-works.md#numbers) say
 where it was checked.
 

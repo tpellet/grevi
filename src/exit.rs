@@ -207,7 +207,9 @@ impl JevifyError {
             Self::Unavailable(m) if m.starts_with(DEADLINE_PREFIX) => {
                 "the work was cancelled, not refused: raise JEVIFY_DEADLINE, or split the input into smaller runs"
             }
-            Self::Unavailable(_) => "retry later, or lower JEVIFY_CONCURRENCY if rate limited",
+            Self::Unavailable(_) => {
+                "retry later; classifier.dev allows 20,000 classifications a day per IP, and a narrower list costs fewer"
+            }
             Self::Protocol(_) => {
                 "the API may have changed, or JEVIFY_BASE_URL points at the wrong server; run `jevify health` and report the issue with `jevify --version`"
             }

@@ -137,7 +137,8 @@ File inputs leave stdin for the command; consumed stdin becomes empty for it.
 - Several markers resolve together against one snapshot. Any abstention means nothing runs.
   Free text stays literal: write titles, messages and new names yourself.
 
-`fill` accepts 3,267 candidates per marker keyless, 13,200 on TypeSafe; `pick` and `pick --from`
+`fill` accepts 3,267 candidates per marker keyless, 13,200 on TypeSafe, and both backends serve
+that whole count; `pick` and `pick --from`
 accept 9,801 and 20,000. Ordered kinds keep the newest candidates and report coverage; unordered
 overflow is `too_many`. `one` accepts 99 options keyless, 200 on TypeSafe. No call needs more
 than two rounds of model requests.

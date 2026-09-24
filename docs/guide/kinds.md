@@ -129,7 +129,8 @@ printf '%s\n' '{"kind":"vm","list":["multipass","list","--format","csv"],"field"
   the named lister yourself.
 - A listing counts only after the lister exited 0 and both of its streams reached end of file.
   A partial listing never reaches the model or the command.
-- A list above the limit (3,267 candidates per marker on classifier.dev, 13,200 on TypeSafe;
+- A list above the limit (3,267 candidates per marker on classifier.dev and 13,200 on TypeSafe,
+  both served in full, measured 2026-09-24;
   9,801 and 20,000 for `pick --from`): an ordered kind keeps its newest part and the status
   line says `candidates N of M, newest first`; any other kind is `too_many`, exit 6, with the
   two ways to narrow it: a literal prefix, or a piped list.

@@ -66,7 +66,8 @@ when 2 × windows fits W, otherwise one. All finalists enter the final compariso
 marker always runs its finals, and a branch or commit marker runs them when the names leave it
 undecided or the runner-up stays in play; in the finals every name with p > 0 competes with its
 evidence, up to 24. It accepts F = W × floor(W / 3): 3,267 candidates keyless and 13,200 on
-TypeSafe. `pick` and `pick --from` accept min(W × W, 20,000): 9,801 and
+TypeSafe, and both backends serve that whole count, 6.3 seconds keyless and 3.5 on TypeSafe,
+measured 2026-09-24 (`benchmarks/results.md`). `pick` and `pick --from` accept min(W × W, 20,000): 9,801 and
 20,000. Ordered kinds retain the newest candidates and report coverage; unordered overflow is
 exit 6 `too_many`. `one` accepts at most W options and returns exit 2 above that count.
 

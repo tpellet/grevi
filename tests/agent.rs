@@ -227,6 +227,40 @@ fn capabilities_lists_verbs_exit_codes_env() {
             .unwrap()
             .contains("outputs")
     );
+    // The store is bounded and an operator can turn it off without touching the call sites.
+    assert!(
+        d["saved_inputs"]["retention"]
+            .as_str()
+            .unwrap()
+            .contains("7 days")
+    );
+    assert!(
+        d["saved_inputs"]["disable"]
+            .as_str()
+            .unwrap()
+            .contains("JEVIFY_NO_SAVE=1")
+    );
+    assert!(
+        d["env"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|e| e["name"] == "JEVIFY_NO_SAVE")
+    );
+    // `complete` says where it stops, next to the fields that do mean coverage.
+    for (verb, coverage) in [("why", "considered against total"), ("filter", "unsure")] {
+        let data = d["commands"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|c| c["name"] == verb)
+            .unwrap()["data"]
+            .as_str()
+            .unwrap()
+            .to_string();
+        assert!(data.contains("complete ("), "{verb}: {data}");
+        assert!(data.contains(coverage), "{verb}: {data}");
+    }
     assert_eq!(d["exit_codes"].as_array().unwrap().len(), 9);
     assert!(
         d["env"]

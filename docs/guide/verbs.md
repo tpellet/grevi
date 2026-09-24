@@ -77,7 +77,8 @@ stdin supplies either candidates for `-` or context for `one`/`flag`; never both
 other role with a file. If consumed, the command receives empty stdin; otherwise it inherits
 stdin and the terminal. Environment and working directory pass through unchanged.
 
-Each marker accepts 3,267 candidates keyless or 13,200 on TypeSafe, keeping three names per
+Each marker accepts 3,267 candidates keyless or 13,200 on TypeSafe, a count both backends serve
+in full (measured 2026-09-24), keeping three names per
 window in the shortlist round. With one window, a `file` or `dir` marker always runs its finals,
 and a `branch` or `commit` marker runs them when the names leave it undecided or the runner-up
 stays in play; every name not ruled out reaches the finals with its evidence, up to 24. Ordered
