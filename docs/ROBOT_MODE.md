@@ -181,7 +181,8 @@ or `--context FILE` for the other role; file inputs preserve the command's stdin
 resolve against one snapshot; any abstention prevents the entire execution.
 
 Let W be the backend window: 99 on classifier.dev, 200 on TypeSafe. `fill` keeps three names
-per window in the shortlist round and accepts F = W × floor(W / 3): 3,267 or 13,200 candidates;
+per window in the shortlist round and accepts F = W × floor(W / 3): 3,267 or 13,200 candidates,
+the whole of which each backend answers, measured 2026-09-24;
 with one window, a `file` or `dir` marker always runs its finals, and a `branch` or `commit`
 marker runs them when the names leave it undecided or the runner-up stays in play; every name
 not ruled out reaches the finals with its evidence, up to 24. `pick` and `pick --from`
@@ -307,7 +308,9 @@ statement holds), `fails` is P(the record says it does not hold) and `none` is P
 not say); a record is a yes at `any` ≥ threshold + 0.15, a no at `fails` ≥ the same mark (0.65 by
 default), unsure otherwise, so a dropped record's "no" can be read back from its gate. A score the
 verb does not use is null. The scores are the backend's own and are not a calibration; a threshold
-set for one backend and task says nothing about another.
+set for one backend and task says nothing about another. They bound no spread between runs
+either: the same question asked twice cold can answer differently at the same score, which
+[how it works](guide/how-it-works.md#numbers) measures.
 
 `round_one` is present only under `JEVIFY_DECISION=round_one`, on a verb that ran a tournament;
 an ordinary envelope carries no such field, since the field holds every candidate of every
@@ -389,6 +392,19 @@ staging. A higher threshold cannot validate missing evidence or grant permission
 `p` is a backend score. Calibration needs task- and backend-specific evidence; ranks past the
 third are candidates without a reliability claim. Text can influence the model with embedded
 instructions, so semantic judgments are not security gates.
+
+Two runs of one question can disagree. Measured 2026-09-24 at 0.11.0 over a fixed subset of the
+source-held-out set with the cache off, five identical reruns change 1.6 percent of answers and
+disagree on 5 of 86 questions; eight orders of the same candidates change 5.0 percent and
+disagree on 15 of 58. A ten-record `filter` kept set differs by one record between its union and
+its intersection over five cold runs, always through `unsure` and never through `drop`. Most of
+that movement is a decision becoming an abstention — exit 3, `unsure` or `none` — which a caller
+can retry, widen or hand to a person; the rest is a different handle at the same confidence,
+with nothing in the envelope marking it, so confirm a handle against the world before acting on
+it wherever a wrong one costs something. Candidate order is part of the question: `git branch`,
+`ls` and a find each impose one, and both backends move on the same shuffle. The seven-day
+answer cache hides the spread by replaying the first answer, so it surfaces when two callers
+race the same query cold.
 
 Outbound secret masking is best effort. Answer cache keys use redacted requests, expire after
 seven days and never cross backend, endpoint or decision-contract versions. Raw saved inputs

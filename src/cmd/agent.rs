@@ -179,6 +179,7 @@ pub fn capabilities() -> Outcome {
             "typesafe": { "window": 200, "fill": 13200, "pick": 20000, "one_options": 200 },
             "classifier": { "window": 99, "fill": 3267, "pick": 9801, "one_options": 99 },
             "finalists_per_window": "fill: 3 names per window in the shortlist round; with one window, a commit, file or dir marker always runs its finals, and a branch marker runs them when the names leave it undecided or the runner-up stays in play; for branch, commit, file or dir every name with p > 0 reaches the finals with its evidence, up to 24, and a commit takes the names at p 0.00 as well, since a subject that scores 0.00 may still be the commit holding the change; pick and pick --from: 3 if 3 * windows <= W, else 2 if 2 * windows <= W, else 1; by rank, never cross-request probability",
+            "measured": "2026-09-24: classifier.dev answers a fill of 3267 candidates in 6.3 s median at JEVIFY_CONCURRENCY=4 and TypeSafe one of 13200 in 3.5 s at 8; every sweep point from 500 up answered on both backends, benchmarks/results.md",
             "overflow": "ordered kinds retain newest candidates and report coverage; unordered lists return too_many; one above W options is exit 2"
         },
         "env": [
