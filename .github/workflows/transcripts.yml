@@ -1,0 +1,28 @@
+name: transcripts
+# Runs every documented transcript against the live keyless backend and fails when the answer a
+# page shows is no longer the answer the binary gives. It never runs on push: a third-party
+# service must not decide whether a change merges, and a scheduled failure is a docs bug to fix,
+# not a broken build. The TypeSafe half of the check prints SKIPPED here and runs locally with a
+# key.
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  transcripts:
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # the pinned listings read this repository's history
+      - uses: dtolnay/rust-toolchain@1.93.1
+      - uses: Swatinem/rust-cache@v2
+      - name: Every expectation still matches the page it cites
+        run: cargo test --locked --test transcripts -- --ignored --test-threads=1 --nocapture every_expectation
+      - name: Every transcript still answers as the pages show
+        run: cargo test --locked --test transcripts -- --ignored --test-threads=1 --nocapture on_classifier

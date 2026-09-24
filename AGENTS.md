@@ -57,6 +57,20 @@ TYPESAFE_API_KEY_FILE=$HOME/.ssh/typesafe-ai-key cargo test --test live -- --ign
 Without a key they print `SKIPPED: set TYPESAFE_API_KEY_FILE=...` and return; a hand-off lists
 them as NOT RUN, never as passed.
 
+The transcripts of `README.md` and `docs/guide/getting-started.md` have their own live check
+(`tests/transcripts.rs`, all `#[ignore]`), which runs every documented command and compares the
+decision and the chosen item, never the probability:
+
+```bash
+TYPESAFE_API_KEY_FILE=$HOME/.ssh/typesafe-ai-key \
+    cargo test --test transcripts -- --ignored --test-threads=1
+```
+
+Run it after editing a transcript and after changing what a verb selects; a full run spends
+about 31 keyless classifications and 22 on TypeSafe. The expectations are the table in that
+file, each row citing the page and line it came from, so a page and its check move together.
+The scheduled `transcripts` workflow runs the keyless half weekly.
+
 ---
 
 ## Testing
