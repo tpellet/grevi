@@ -34,7 +34,7 @@ label() {
     show "jevify filter 'reports a crash' < $DEMO/issues.txt"
 }
 nothing_fits() {
-    show "jevify pick \"last month's electricity bill\" < $DEMO/downloads.txt"
+    show "jevify pick 'what I paid a streaming service' < $DEMO/downloads.txt"
     show "jevify pick 'the tax return' < $DEMO/downloads.txt"
     show "jevify fill --dry-run -- git show '@{commit:ports the user interface to Android}'"
 }

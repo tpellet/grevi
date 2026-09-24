@@ -207,12 +207,12 @@ fn transcripts() -> Vec<Transcript> {
             cites: &[Cite(README, 122), Cite(GETTING_STARTED, 78)],
         },
         Transcript {
-            shown: "jevify pick \"last month's electricity bill\" < docs/demo/downloads.txt",
-            argv: &["pick", "last month's electricity bill"],
+            shown: "jevify pick 'what I paid a streaming service' < docs/demo/downloads.txt",
+            argv: &["pick", "what I paid a streaming service"],
             stdin: Stdin::File("docs/demo/downloads.txt"),
-            expect: Expect::Chose(&["con_edison_electric_bill_august.pdf"]),
+            expect: Expect::Chose(&["spotify_receipt.pdf"]),
             on_page: &[],
-            cites: &[Cite(README, 141), Cite(GETTING_STARTED, 67)],
+            cites: &[Cite(README, 142), Cite(GETTING_STARTED, 67)],
         },
         Transcript {
             shown: "jevify pick 'the tax return' < docs/demo/downloads.txt",
@@ -220,7 +220,7 @@ fn transcripts() -> Vec<Transcript> {
             stdin: Stdin::File("docs/demo/downloads.txt"),
             expect: Expect::NothingFits,
             on_page: &[],
-            cites: &[Cite(README, 145), Cite(GETTING_STARTED, 118)],
+            cites: &[Cite(README, 146), Cite(GETTING_STARTED, 118)],
         },
         Transcript {
             shown: "jevify is 'asks for a refund' < docs/demo/mail.txt && echo refund",
@@ -228,7 +228,7 @@ fn transcripts() -> Vec<Transcript> {
             stdin: Stdin::File("docs/demo/mail.txt"),
             expect: Expect::Chose(&["yes"]),
             on_page: &["refund"],
-            cites: &[Cite(README, 160), Cite(GETTING_STARTED, 102)],
+            cites: &[Cite(README, 161), Cite(GETTING_STARTED, 102)],
         },
         Transcript {
             shown: "printf 'A crash with no reproduction steps.\\n' | jevify fill --dry-run -- printf '%s\\n' \\",
@@ -244,7 +244,7 @@ fn transcripts() -> Vec<Transcript> {
             stdin: Stdin::Text("A crash with no reproduction steps.\n"),
             expect: Expect::Chose(&["bug", "--draft"]),
             on_page: &[],
-            cites: &[Cite(README, 211)],
+            cites: &[Cite(README, 212)],
         },
         Transcript {
             shown: "git ls-files | jevify pick --files 'where the command-line flags are defined'",

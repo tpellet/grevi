@@ -133,14 +133,15 @@ was unsure about, so you can check what it dropped.
 
 ## It says when nothing fits
 
-Eight files in a downloads folder. The electricity bill is there. The tax return is not.
+Eight files in a downloads folder. The streaming receipt is there, under a name that shares no
+word with the question. The tax return is not there at all.
 
 ![jevify pick finds the electricity bill among eight downloads, then refuses to guess a tax return that is not there](docs/img/nothing-fits.svg)
 
 ```console
-$ jevify pick "last month's electricity bill" < docs/demo/downloads.txt
+$ jevify pick 'what I paid a streaming service' < docs/demo/downloads.txt
 jevify pick: candidates 8, windows 1
-con_edison_electric_bill_august.pdf
+spotify_receipt.pdf
 
 $ jevify pick 'the tax return' < docs/demo/downloads.txt
 jevify pick: candidates 8, windows 1

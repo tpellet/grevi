@@ -64,9 +64,9 @@ jevify filter: 10 records, 10 distinct, 1 requests
 #290 Panic on non-UTF-8 file names
 jevify filter: kept 2 of 10, 0 unsure, full output: ~/Library/Caches/jevify/outputs/c85c7cb6f33fc1f7.log
 
-$ jevify pick "last month's electricity bill" < docs/demo/downloads.txt
+$ jevify pick 'what I paid a streaming service' < docs/demo/downloads.txt
 jevify pick: candidates 8, windows 1
-con_edison_electric_bill_august.pdf
+spotify_receipt.pdf
 ```
 
 Each record gets one of three answers, not two: the statement holds, it does not hold, or the
