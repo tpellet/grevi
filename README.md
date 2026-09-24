@@ -136,7 +136,7 @@ was unsure about, so you can check what it dropped.
 Eight files in a downloads folder. The streaming receipt is there, under a name that shares no
 word with the question. The tax return is not there at all.
 
-![jevify pick finds the electricity bill among eight downloads, then refuses to guess a tax return that is not there](docs/img/nothing-fits.svg)
+![Two runs of jevify pick over the same eight downloads: "what I paid a streaming service" names spotify_receipt.pdf at 0.98 and exits 0; "the tax return" finds nothing, scores "none of them" 0.99, leaves stdout empty and exits 3](docs/img/nothing-fits.svg)
 
 ```console
 $ jevify pick 'what I paid a streaming service' < docs/demo/downloads.txt

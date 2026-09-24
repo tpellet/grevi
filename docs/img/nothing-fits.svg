@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 400" width="960" height="400" role="img" aria-labelledby="t d">
-  <title id="t">jevify pick finds the electricity bill among eight downloads, then refuses to guess a tax return that is not there</title>
-  <desc id="d">Two runs of jevify pick over the same eight file names. First, "last month's electricity bill": con_edison_electric_bill_august.pdf wins with probability 0.56 over the July bill, is printed, and the exit code is 0. Second, "the tax return": no file fits, "none of them" scores 0.95, nothing is printed, and the exit code is 3. Output of jevify 0.8.0 on Jev 1.13.0.</desc>
+  <title id="t">jevify pick names the streaming receipt among eight downloads, then declines a tax return that is not in the folder</title>
+  <desc id="d">Two runs of jevify pick over the same eight file names. First, "what I paid a streaming service": spotify_receipt.pdf wins with probability 0.98, a name that shares no word with the question, it is printed, and the exit code is 0. Second, "the tax return": no file fits, "none of them" scores 0.99, stdout stays empty, and the exit code is 3. Output of jevify 0.12.0 on Jev 1.13.0.</desc>
   <style>
     text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size: 15px; fill: #e6edf3; }
     .dim { fill: #7d8590; }
@@ -9,12 +9,12 @@
     .win { fill: #3fb950; font-weight: 700; }
     .no { fill: #f85149; font-weight: 700; }
     .a { animation-duration: 18s; animation-iteration-count: infinite; animation-timing-function: ease-out; }
-    #cover1 { animation: type1 18s steps(56) infinite; }
-    #cover2 { animation: type2 18s steps(46) infinite; }
+    #cover1 { animation: type1 18s steps(61) infinite; }
+    #cover2 { animation: type2 18s steps(44) infinite; }
     #files { animation-name: files; } #hl1 { animation-name: hl1; } #out1 { animation-name: out1; } #dim1 { animation-name: dim1; }
     #cmd2 { animation-name: cmd2; } #hl2 { animation-name: hl2; } #out2 { animation-name: out2; } #foot { animation-name: foot; } #all { animation-name: all; }
-    @keyframes type1 { 0% { transform: translateX(0); } 8%, 100% { transform: translateX(600px); } }
-    @keyframes type2 { 0%, 50% { transform: translateX(0); } 57%, 100% { transform: translateX(500px); } }
+    @keyframes type1 { 0% { transform: translateX(0); } 8%, 100% { transform: translateX(555px); } }
+    @keyframes type2 { 0%, 50% { transform: translateX(0); } 57%, 100% { transform: translateX(400px); } }
     @keyframes files { 0%, 8% { opacity: 0; } 11%, 100% { opacity: 1; } }
     @keyframes hl1 { 0%, 20% { opacity: 0; } 24%, 100% { opacity: 1; } }
     @keyframes out1 { 0%, 26% { opacity: 0; } 30%, 100% { opacity: 1; } }
@@ -30,44 +30,47 @@
   <rect width="960" height="400" rx="10" fill="#0d1117"/>
   <g id="all" class="a">
     <g id="files" class="a">
-      <text x="24" y="80" class="label">8 FILE NAMES ON STDIN</text>
-      <text x="24" y="106" class="dim small">con_edison_electric_bill_august.pdf</text>
-      <text x="24" y="126" class="dim small">con_edison_electric_bill_july.pdf</text>
-      <text x="24" y="146" class="dim small">invoice_acme_corp_march.pdf</text>
-      <text x="24" y="166" class="dim small">quarterly_report_draft.docx</text>
-      <text x="24" y="186" class="dim small">spotify_receipt.pdf</text>
-      <text x="24" y="206" class="dim small">vacation_photos_2026.zip</text>
-      <text x="24" y="226" class="dim small">vacation.iso</text>
-      <text x="24" y="246" class="dim small">warranty_card_laptop.pdf</text>
+      <text x="24" y="64" class="label">8 FILE NAMES ON STDIN</text>
+      <text x="24" y="92" class="dim small">con_edison_electric_bill_august.pdf</text>
+      <text x="24" y="112" class="dim small">con_edison_electric_bill_july.pdf</text>
+      <text x="24" y="132" class="dim small">invoice_acme_corp_march.pdf</text>
+      <text x="24" y="152" class="dim small">quarterly_report_draft.docx</text>
+      <text x="24" y="172" class="dim small">spotify_receipt.pdf</text>
+      <text x="24" y="192" class="dim small">vacation_photos_2026.zip</text>
+      <text x="24" y="212" class="dim small">vacation.iso</text>
+      <text x="24" y="232" class="dim small">warranty_card_laptop.pdf</text>
     </g>
 
     <g id="dim1" class="a">
-      <text x="24" y="40"><tspan class="dim">$ </tspan>jevify pick "last month's electricity bill" &lt; downloads.txt</text>
-      <rect id="cover1" x="42" y="22" width="620" height="26" fill="#0d1117"/>
-      <rect id="hl1" class="a" x="360" y="90" width="576" height="24" rx="5" fill="#3fb950" fill-opacity=".13" stroke="#3fb950" stroke-opacity=".55"/>
+      <text x="352" y="44"><tspan class="dim">$ </tspan>jevify pick 'what I paid a streaming service' &lt; downloads.txt</text>
+      <rect id="cover1" x="370" y="26" width="580" height="26" fill="#0d1117"/>
+      <rect id="hl1" class="a" x="18" y="156" width="306" height="22" rx="5" fill="#3fb950" fill-opacity=".13" stroke="#3fb950" stroke-opacity=".55"/>
       <g id="out1" class="a">
-        <text x="370" y="107" class="win">con_edison_electric_bill_august.pdf</text>
-        <text x="760" y="107" class="win">0.56</text>
-        <text x="370" y="132" class="dim small">the July bill is the rival; "last month" points at August</text>
-        <text x="370" y="156" class="dim">exit 0</text>
+        <text x="352" y="70" class="dim small">jevify pick: candidates 8, windows 1</text>
+        <rect x="344" y="82" width="592" height="24" rx="5" fill="#3fb950" fill-opacity=".13" stroke="#3fb950" stroke-opacity=".55"/>
+        <text x="354" y="99" class="win">spotify_receipt.pdf</text>
+        <text x="880" y="99" class="win">0.98</text>
+        <text x="354" y="123" class="dim small">the name shares no word with the question</text>
+        <text x="354" y="147" class="dim">exit 0</text>
       </g>
     </g>
 
     <g id="cmd2" class="a">
-      <text x="24" y="296"><tspan class="dim">$ </tspan>jevify pick 'the tax return' &lt; downloads.txt</text>
-      <rect id="cover2" x="42" y="278" width="520" height="26" fill="#0d1117"/>
+      <text x="352" y="195"><tspan class="dim">$ </tspan>jevify pick 'the tax return' &lt; downloads.txt</text>
+      <rect id="cover2" x="370" y="177" width="420" height="26" fill="#0d1117"/>
     </g>
-    <rect id="hl2" class="a" x="360" y="200" width="576" height="24" rx="5" fill="#f85149" fill-opacity=".10" stroke="#f85149" stroke-opacity=".5"/>
+    <rect id="hl2" class="a" x="344" y="233" width="592" height="24" rx="5" fill="#f85149" fill-opacity=".10" stroke="#f85149" stroke-opacity=".5"/>
     <g id="out2" class="a">
-      <text x="370" y="217" class="no">none of them</text>
-      <text x="760" y="217" class="no">0.95</text>
-      <text x="370" y="242" class="dim small">stdout is empty; nothing reaches the next command by mistake</text>
-      <text x="370" y="266" class="no">exit 3</text>
+      <text x="352" y="221" class="dim small">jevify pick: candidates 8, windows 1</text>
+      <text x="354" y="250" class="no">none of them</text>
+      <text x="880" y="250" class="no">0.99</text>
+      <text x="354" y="274" class="dim small">no return is in the folder, so no file is the best of a bad list</text>
+      <text x="354" y="298" class="no">exit 3</text>
     </g>
 
     <g id="foot" class="a">
       <line x1="24" y1="330" x2="936" y2="330" stroke="#21262d"/>
-      <text x="24" y="358" class="dim">"none of them" is always one of the options, so the best of a bad list does not win by default</text>
+      <text x="24" y="358" class="dim">stdout stays empty on an abstention, so nothing reaches the next command by mistake</text>
       <text x="24" y="382" class="dim small">&amp;&amp; and if act on exit 0 only; a 3 stops the chain</text>
     </g>
   </g>
