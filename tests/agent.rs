@@ -435,14 +435,21 @@ fn capabilities_lists_verbs_exit_codes_env() {
             .starts_with("reserved, never returned"),
         "{seven}"
     );
+    // Every exit-6 kind, not the five that `fill` alone raises: a caller enumerates its
+    // branches from the machine interface.
     assert_eq!(
         d["input_errors"]["kinds"],
         serde_json::json!([
+            "empty_input",
+            "input_too_large",
+            "api_rejected_request",
+            "input",
+            "too_many",
             "stdin_is_tty",
             "lister_failed",
-            "too_many",
             "cannot_run",
-            "recipe_invalid"
+            "recipe_invalid",
+            "status_file_unwritable"
         ])
     );
     assert_eq!(d["input_errors"]["field"], "error.kind");
@@ -679,4 +686,149 @@ fn capabilities_work_with_an_unreadable_key_file() {
         .args(["capabilities", "--json"])
         .assert()
         .success();
+}
+
+/// `error.kind` is enumerated in the machine interface, and the enumeration is the one table in
+/// `src/exit.rs`. The three checks below close the three ways the two could drift: a kind the
+/// table forgets (the library test `the_published_kind_table_is_exactly_what_the_errors_produce`
+/// catches it), a kind written as a literal at a `Kinded` site and never added to the table
+/// (the source scan here catches it), and a table `capabilities` does not publish (the equality
+/// here catches it).
+#[test]
+fn capabilities_enumerates_every_error_kind_and_cannot_drift_from_exit_rs() {
+    let out = common::bin()
+        .args(["capabilities", "--json"])
+        .output()
+        .unwrap();
+    let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+    let published: Vec<(String, i64)> = v["data"]["error_kinds"]
+        .as_array()
+        .expect("capabilities enumerates error.kind")
+        .iter()
+        .map(|e| {
+            (
+                e["kind"].as_str().unwrap().to_string(),
+                e["exit"].as_i64().unwrap(),
+            )
+        })
+        .collect();
+    let table: Vec<(String, i64)> = jevify::exit::JevifyError::KINDS
+        .iter()
+        .map(|(kind, exit)| (kind.to_string(), i64::from(exit.code())))
+        .collect();
+    assert_eq!(published, table, "capabilities publishes exit.rs's table");
+    assert!(
+        published
+            .iter()
+            .any(|(k, e)| k == "api_deadline" && *e == 4)
+    );
+    assert!(
+        published
+            .iter()
+            .any(|(k, e)| k == "status_file_unwritable" && *e == 6)
+    );
+
+    // Every `kind: "..."` literal anywhere in the sources is one a caller can receive.
+    let names: std::collections::BTreeSet<&str> =
+        table.iter().map(|(kind, _)| kind.as_str()).collect();
+    let mut scanned = 0;
+    let mut stack = vec![std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("src")];
+    while let Some(dir) = stack.pop() {
+        for entry in std::fs::read_dir(&dir).unwrap() {
+            let path = entry.unwrap().path();
+            if path.is_dir() {
+                stack.push(path);
+                continue;
+            }
+            if path.extension().is_none_or(|e| e != "rs") {
+                continue;
+            }
+            let source = std::fs::read_to_string(&path).unwrap();
+            for (number, line) in source.lines().enumerate() {
+                let Some(rest) = line.trim_start().strip_prefix("kind: \"") else {
+                    continue;
+                };
+                let literal = rest.split('"').next().unwrap();
+                scanned += 1;
+                assert!(
+                    names.contains(literal),
+                    "{}:{}: kind {literal:?} is not in JevifyError::KINDS",
+                    path.display(),
+                    number + 1
+                );
+            }
+        }
+    }
+    assert!(
+        scanned >= 6,
+        "the source scan found {scanned} kind literals"
+    );
+
+    // Every exit code lists the kinds that carry it, and the three readings of exit 4 are apart.
+    let four = v["data"]["exit_codes"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|e| e["code"] == 4)
+        .unwrap();
+    assert_eq!(
+        four["kinds"],
+        serde_json::json!(["api_unavailable", "api_deadline", "api_protocol"])
+    );
+}
+
+/// The per-request read timeout is part of what a caller waits for, so it is published.
+#[test]
+fn capabilities_state_the_per_request_timeouts_the_client_uses() {
+    let out = common::bin()
+        .args(["capabilities", "--json"])
+        .output()
+        .unwrap();
+    let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+    assert_eq!(v["data"]["limits"]["request_read_timeout_s"], 60);
+    assert_eq!(v["data"]["limits"]["connect_timeout_s"], 5);
+    // The published numbers are the client's own.
+    let client = include_str!("../src/jev/client.rs");
+    assert!(
+        client.contains(".timeout(Duration::from_secs(60))"),
+        "the read timeout moved: update capabilities.limits and docs/ROBOT_MODE.md"
+    );
+    assert!(
+        client.contains(".connect_timeout(Duration::from_secs(5))"),
+        "the connect timeout moved: update capabilities.limits and docs/ROBOT_MODE.md"
+    );
+}
+
+/// The exec-mode signal is described where a machine reads it.
+#[test]
+fn capabilities_describe_the_exec_status_file() {
+    let out = common::bin()
+        .args(["capabilities", "--json"])
+        .output()
+        .unwrap();
+    let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+    let status = &v["data"]["exec_status"];
+    assert_eq!(status["env"], "JEVIFY_STATUS_FILE");
+    assert_eq!(status["verb"], "fill");
+    assert_eq!(
+        status["fields"],
+        serde_json::json!([
+            "command",
+            "version",
+            "exit_code",
+            "ran",
+            "argv",
+            "reason",
+            "markers",
+            "error"
+        ])
+    );
+    assert!(status["rule"].as_str().unwrap().contains("ran true"));
+    assert!(
+        v["data"]["env"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|e| e["name"] == "JEVIFY_STATUS_FILE")
+    );
 }

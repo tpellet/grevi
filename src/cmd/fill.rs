@@ -36,7 +36,72 @@ pub struct FillFlags {
     pub split: Split,
 }
 
+/// The environment variable that names the exec-mode status file.
+pub const STATUS_FILE_ENV: &str = "JEVIFY_STATUS_FILE";
+
+/// The path the caller asked the status to be written to, if any.
+fn status_path() -> Option<PathBuf> {
+    std::env::var_os(STATUS_FILE_ENV)
+        .filter(|value| !value.is_empty())
+        .map(PathBuf::from)
+}
+
+/// One JSON object saying whether the command started. `ran` is the whole point: after `exec`
+/// jevify is gone and its exit code is the command's, so the answer has to be written down
+/// before the hand-off. It is written for every outcome `fill` decides, and never afterwards,
+/// so an absent file means nothing ran either.
+fn write_status(
+    path: &Path,
+    exit: Exit,
+    ran: bool,
+    data: &serde_json::Value,
+    error: Option<&JevifyError>,
+) -> std::io::Result<()> {
+    let field = |name: &str| data.get(name).cloned().unwrap_or(serde_json::Value::Null);
+    let body = json!({
+        "command": "fill",
+        "version": env!("CARGO_PKG_VERSION"),
+        "exit_code": exit.code(),
+        "ran": ran,
+        "argv": field("argv"),
+        "reason": field("reason"),
+        "markers": field("markers"),
+        "error": error.map(|e| json!({
+            "kind": e.kind(), "message": e.to_string(), "hint": e.hint(), "example": e.example(),
+        })),
+    });
+    std::fs::write(path, format!("{body}\n"))
+}
+
 pub async fn run(
+    ctx: &Config,
+    flags: FillFlags,
+    cmd: &[OsString],
+    machine: bool,
+) -> Result<Outcome, JevifyError> {
+    let outcome = resolve(ctx, flags, cmd, machine).await;
+    let Some(path) = status_path() else {
+        return outcome;
+    };
+    match &outcome {
+        Ok(out) => {
+            // A command jevify cannot report having started is a command jevify does not start.
+            if let Err(e) = write_status(&path, out.exit, out.exec.is_some(), &out.data, None) {
+                return Err(JevifyError::status_file_unwritable(format!(
+                    "{}: {e}",
+                    path.display()
+                )));
+            }
+        }
+        Err(e) => {
+            // The original error is the answer; a failed status write cannot replace it.
+            let _ = write_status(&path, e.exit(), false, &serde_json::Value::Null, Some(e));
+        }
+    }
+    outcome
+}
+
+async fn resolve(
     ctx: &Config,
     flags: FillFlags,
     cmd: &[OsString],

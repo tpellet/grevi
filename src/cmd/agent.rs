@@ -75,12 +75,30 @@ pub fn capabilities() -> Outcome {
         .map(|(e, d)| {
             let meaning = match e {
                 Exit::No => "is: at least one no; filter: kept none",
-                Exit::Unavailable => "backend unavailable or quota exhausted",
+                Exit::Unavailable => {
+                    "backend unavailable, deadline passed or quota exhausted: error.kind says which"
+                }
                 Exit::Interrupted => "declined at add confirmation",
                 _ => d,
             };
-            serde_json::json!({ "code": e.code(), "name": e, "meaning": meaning })
+            serde_json::json!({
+                "code": e.code(),
+                "name": e,
+                "meaning": meaning,
+                "kinds": JevifyError::KINDS.iter().filter(|(_, x)| x == e).map(|(k, _)| *k).collect::<Vec<_>>(),
+            })
         })
+        .collect();
+    // The complete enumeration, from the one table in src/exit.rs that `kind()` is tested
+    // against: a caller reads its branches off the machine interface instead of the source.
+    let error_kinds: Vec<_> = JevifyError::KINDS
+        .iter()
+        .map(|(kind, exit)| serde_json::json!({ "kind": kind, "exit": exit.code() }))
+        .collect();
+    let input_error_kinds: Vec<_> = JevifyError::KINDS
+        .iter()
+        .filter(|(_, exit)| *exit == Exit::Input)
+        .map(|(kind, _)| *kind)
         .collect();
     // The keyless quota per verb: one classification is one record under one question, 20,000
     // a day per IP. The quota and the `is` and `filter` costs were measured (benchmarks/
@@ -109,7 +127,7 @@ pub fn capabilities() -> Outcome {
         "global_flags": ["--json (alias --robot)", "--format human|json|jsonl|toon", "-t/--threshold <0..1>", "--model <id>", "--no-cache", "--verbose"],
         "output": "human stdout is plain text made for pipes: pick and filter preserve input records; label prints LABEL<TAB>RECORD; why prints numbered context; is prints nothing for one statement and VERDICT<TAB>STATEMENT lines for several. Pass --json for the envelope; non-UTF-8 records have text, lossy: true, ordinal",
         "commands": [
-            { "name": "fill", "usage": "jevify fill [--dry-run] [-q] [--candidates FILE] [--context FILE] [--field N | --key KEY] [-0 | --para] -- COMMAND ARGS...", "stdin": true, "exit": [0, 2, 3, 4, 5, 6], "exit_meaning": "2–6 nothing ran; otherwise the command's own exit code; --dry-run exits 0 on resolution. After exec the command can also exit 2–6.", "data": "argv under --dry-run on success, markers[{arg,kind,reason,handle,p,candidates,total,omitted}], reason", "when": "about to list branches, commits, files, PRs or CI runs only to choose one: write the description inside the command and let one call resolve and run it", "example": "jevify fill -- git switch '@{branch:the auth refactor}'", "note": "all-or-nothing; machine output requires --dry-run; quote the whole marker argument with single quotes; preview, never eval; stdin has one role and is empty for the command when consumed; every kind of capabilities.kinds is a marker kind; status line of a resolved marker: candidates N[ of M[, newest first]][, omitted K], windows W[, excerpts withheld: E]; the not run: line of an abstention: candidates N of M, omitted K, always both and no windows" },
+            { "name": "fill", "usage": "jevify fill [--dry-run] [-q] [--candidates FILE] [--context FILE] [--field N | --key KEY] [-0 | --para] -- COMMAND ARGS...", "stdin": true, "exit": [0, 2, 3, 4, 5, 6], "exit_meaning": "2–6 nothing ran; otherwise the command's own exit code; --dry-run exits 0 on resolution. After exec the command can also exit 2–6, so set JEVIFY_STATUS_FILE and read its ran field to tell the two apart (see exec_status).", "data": "argv under --dry-run on success, markers[{arg,kind,reason,handle,p,candidates,total,omitted}], reason", "when": "about to list branches, commits, files, PRs or CI runs only to choose one: write the description inside the command and let one call resolve and run it", "example": "jevify fill -- git switch '@{branch:the auth refactor}'", "note": "all-or-nothing; machine output requires --dry-run; quote the whole marker argument with single quotes; preview, never eval; stdin has one role and is empty for the command when consumed; every kind of capabilities.kinds is a marker kind; status line of a resolved marker: candidates N[ of M[, newest first]][, omitted K], windows W[, excerpts withheld: E]; the not run: line of an abstention: candidates N of M, omitted K, always both and no windows" },
             { "name": "pick", "usage": "<stdin> | jevify pick '<intent>' [-n N] [--index | --files] [-0 | --para]; jevify pick --from KIND '<intent>' [-n N]", "stdin": true, "exit": [0, 3], "data": "matches[{line?,text,ordinal,p,lossy?}], any, source; --from adds reason, candidates, total, omitted, windows, finalists_per_window", "when": "one record or file out of a listing, by content; or a handle alone, without a run", "example": "git ls-files | jevify pick --files 'where man pages are parsed'; jevify pick --from commit 'made folder moves atomic'", "note": "--from accepts every kind of capabilities.kinds except one and flag; stdin is the default source and --from - is exit 2; --from conflicts with --files, --index, -0 and --para; hidden or secret-looking paths and symlink files receive no excerpt; selected stdin records retain their bytes and input order; input is not saved" },
             { "name": "why", "usage": "<cmd> 2>&1 | jevify why [-C N] [-n N] [--no-save]", "stdin": true, "exit": [0, 3], "data": "causes[{line,text,p,context[]}], any, considered, total, hint, saved_input, complete", "when": "a failed build, test or CI log longer than about 50 lines, or grep found only the symptom: read the cause it prints, not the whole log", "example": "gh run view --log-failed | jevify why --json", "note": "prints numbered lines with context; no split options; past 1,500 distinct lines keeps error neighbourhoods within 4,000 lines: compare considered with total" },
             { "name": "route", "usage": "jevify route <intent...>", "stdin": false, "exit": [0, 3], "data": "tool, summary, synopsis, fit, ties[{tool,fit}], alternatives[]", "when": "which installed tool does a task, before guessing names with which or --help", "example": "jevify route 'keep my mac awake for an hour'", "note": "prints a tool, summary and synopsis; starts no command; when a command above the threshold fits within 0.10 of the best, the two are too close to tell apart: exit 3, tool null, and every tied command in ties" },
@@ -141,7 +159,19 @@ pub fn capabilities() -> Outcome {
             ]
         },
         "withheld": { "patterns": WITHHELD_PATTERNS, "rule": "a path with a component matching one pattern is listed and its excerpt withheld; symlink files receive no excerpt; a file that cannot be read (missing, a directory, a permission or sandbox denial) is named on stderr as excerpt unreadable: PATH: REASON, and filter and label leave it unsure without asking, with unreadable: REASON on its record; the status line counts both as excerpts withheld: N" },
-        "input_errors": { "exit": 6, "field": "error.kind", "kinds": ["stdin_is_tty", "lister_failed", "too_many", "cannot_run", "recipe_invalid"] },
+        "error_kinds": error_kinds,
+        "input_errors": { "exit": 6, "field": "error.kind", "kinds": input_error_kinds },
+        "exec_status": {
+            "env": crate::cmd::fill::STATUS_FILE_ENV,
+            "verb": "fill",
+            "written": "one JSON object, before the exec, for every outcome fill decides: a resolution, an abstention and an error alike",
+            "fields": ["command", "version", "exit_code", "ran", "argv", "reason", "markers", "error"],
+            "rule": "ran true means fill handed the process to the command, so the exit code the caller observes is the command's own; ran false, or no file at all, means nothing ran and the exit code is jevify's. Read it instead of the stderr prefix; exec mode has no envelope",
+            "dry_run": "a successful dry run is exit_code 0 with ran false: the argv was resolved and nothing was started",
+            "unwritable": "exit 6, error.kind status_file_unwritable, and nothing runs: jevify never starts a command it cannot report having started",
+            "inheritance": "the command inherits the variable; unset it in a wrapper when the command itself runs jevify fill",
+            "handoff": "the one case a status file cannot cover is execvp itself failing after the write: exit 6, error.kind cannot_run, on the jevify fill: stderr line"
+        },
         "fill_abstention": { "exit": 3, "error": null, "field": "data.reason", "marker_field": "data.markers[].reason", "order": "first failed marker in argv order", "reasons": ["no_match", "ambiguous", "unsure_flag", "insufficient_evidence"] },
         "fill_model_guard": { "exit": 4, "kind": "api_unavailable", "message": "answered by <model>, not Jev", "missing_model": "unknown", "rule": "every answering model must be Jev, including under --dry-run" },
         "selection_limits": {
@@ -159,7 +189,8 @@ pub fn capabilities() -> Outcome {
             { "name": "JEVIFY_MODEL", "default": "jev-1.13.0", "meaning": "Default applies to TypeSafe model selection; jev-latest moves with each release. Explicit overrides are rejected on classifier.dev, which controls its model" },
             { "name": "JEVIFY_THRESHOLD", "default": 0.5 },
             { "name": "JEVIFY_CONCURRENCY", "default": "8 on typesafe, 4 on classifier" },
-            { "name": "JEVIFY_DEADLINE", "default": 600 },
+            { "name": "JEVIFY_DEADLINE", "default": 600, "meaning": "seconds for the whole verb; expiry is exit 4, error.kind api_deadline, apart from the transport failure api_unavailable" },
+            { "name": "JEVIFY_STATUS_FILE", "meaning": "path fill writes its exec status to before starting a command: see exec_status. Unset by default, and nothing is written then" },
             { "name": "JEVIFY_CACHE_DIR", "default": "platform cache dir/jevify" },
             { "name": "JEVIFY_CONFIG_DIR", "default": "platform config dir/jevify", "meaning": "where the user's kinds.jsonl lives; read only for a kind that is neither coded nor shipped" },
             { "name": "JEVIFY_NO_CACHE", "meaning": "disable the answer cache (entries expire after 7 days anyway)" },
@@ -168,7 +199,7 @@ pub fn capabilities() -> Outcome {
             { "name": "JEVIFY_INVENTORY_FILE", "meaning": "JSON array of {name, summary} replacing the PATH inventory (tests, evals)" },
             { "name": "JEVIFY_CNF", "meaning": "enable the command-not-found hook from `jevify init`" }
         ],
-        "limits": { "choice_options": 255, "window": crate::tournament::WINDOW, "state_tokens": 32000, "request_tokens": 64000, "requests_per_minute": 1200, "tokens_per_second": 250000, "stdin_bytes": crate::input::MAX_BYTES, "pick_lines": crate::cmd::pick::MAX_LINES, "distinct_records": 20000, "records_per_request": { "classifier": crate::jev::classifier::KEYLESS_DECISIONS, "typesafe": 20 }, "too_many": "exit 6, error.kind too_many: narrow distinct records with grep or head" },
+        "limits": { "choice_options": 255, "window": crate::tournament::WINDOW, "state_tokens": 32000, "request_tokens": 64000, "requests_per_minute": 1200, "tokens_per_second": 250000, "stdin_bytes": crate::input::MAX_BYTES, "pick_lines": crate::cmd::pick::MAX_LINES, "distinct_records": 20000, "records_per_request": { "classifier": crate::jev::classifier::KEYLESS_DECISIONS, "typesafe": 20 }, "too_many": "exit 6, error.kind too_many: narrow distinct records with grep or head", "connect_timeout_s": 5, "request_read_timeout_s": 60, "timeouts": "one request waits 5 s for the connection and 60 s for the response, then counts as a transport failure and is retried within the JEVIFY_DEADLINE budget; a truncated response costs the full 60 s" },
         "saved_inputs": { "verbs": ["why", "filter"], "directory": "JEVIFY_CACHE_DIR/outputs, or the platform cache directory/jevify/outputs", "filename": "<blake3-16>.log", "contents": "raw input bytes, secrets included", "retention": "never pruned", "disable": "--no-save (independent of --no-cache)", "permissions": "directory 0700, file 0600", "incomplete": "failed or skipped save: saved_input null, complete false" },
         "backends": [
             { "name": "typesafe", "key": "required", "model": "Jev", "window": Backend::Typesafe.window(), "choice_options": 255, "state_chars": "32k tokens", "requests_per_minute": 1200, "meta": "input_tokens is null unless every inference attempt reports usage; cost_usd estimates input-token cost at the configured price and is null when that basis is incomplete" },
@@ -203,9 +234,12 @@ pub fn capabilities() -> Outcome {
             { "goal": "branch in a script", "command": "jevify is \"<condition>\" < file; case $? in 0) ...;; 1) ...;; 3) ...;; esac" },
             { "goal": "triage many files without reading them", "command": "fd -0 -e txt | jevify filter -0 --files '<statement>'" },
             { "goal": "count records by meaning", "command": "gh issue list | jevify label bug,feature,question | cut -f1 | sort | uniq -c" },
-            { "goal": "stage one topic out of a mixed working tree", "command": "jevify add --json --dry-run \"<topic>\"   # then --yes, when the user asked you to stage" }
+            { "goal": "stage one topic out of a mixed working tree", "command": "jevify add --json --dry-run \"<topic>\"   # then --yes, when the user asked you to stage" },
+            { "goal": "run a resolved command unattended and still know whether it started", "command": "S=$(mktemp); JEVIFY_STATUS_FILE=$S jevify fill -- CMD '@{branch:<description>}'; code=$?; jq -e .ran \"$S\" >/dev/null && echo \"the command exited $code\" || echo \"nothing ran, jevify exited $code\"" }
         ],
         "safety": [
+            "exec mode has no envelope: JEVIFY_STATUS_FILE is the only machine-readable way to tell an abstention from the command's own exit code, and the stderr prefix is not a protocol",
+            "error.kind is enumerated in error_kinds with the exit code each kind carries; branch on the kind, never on the message text",
             "allow fill --dry-run freely; authorize fill per command prefix, exactly as the underlying command; jevify is not a permission system",
             "meta.requests counts attempted inference POSTs, including retries and failures, excluding prewarm and health GETs",
             "route, why, pick, filter, label and is start no user command; route prints a tool and the caller writes its arguments; a near-tie (fit within 0.10 of the best) is exit 3 with tool null and the tied commands in data.ties, so read ties before writing the command",

@@ -252,7 +252,10 @@ Write the condition so that yes means act; `&&` acts on 0 only.
 | 7 | reserved: no verb reports a child command's failure |
 | 130 | declined at the `add` confirmation |
 
-`fill` exits 2 to 6 when nothing ran; once the command runs, its exit code is the command's.
+`fill` exits 2 to 6 when nothing ran; once the command runs, its exit code is the command's. A
+script that has to tell the two apart sets `JEVIFY_STATUS_FILE=PATH`: `fill` writes
+`{command, version, exit_code, ran, argv, reason, markers, error}` there before it starts
+anything, and `ran` says whether the exit code belongs to the command or to jevify.
 
 ## For agents
 

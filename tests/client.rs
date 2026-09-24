@@ -1282,3 +1282,54 @@ async fn usage_counts_a_cache_hit_as_a_hit_and_measured_tokens_as_numbers() {
     assert!(meta["usage"]["tokens"]["output"].is_u64(), "{meta}");
     assert_eq!(meta["usage"]["tokens"]["input"], meta["input_tokens"]);
 }
+
+/// A rejected request body has two readings, and only the service's own text chooses between
+/// them. An eleven-byte input that the API refuses without naming a size limit is a malformed
+/// request, so the hint must not send the caller off to filter an input that is already tiny.
+#[tokio::test]
+async fn a_rejected_request_hints_at_the_budget_only_when_the_service_named_one() {
+    let sized = MockServer::start().await;
+    Mock::given(method("POST"))
+        .respond_with(ResponseTemplate::new(422).set_body_json(
+            serde_json::json!({"detail":[{"loc":["body","state"],"msg":"too many tokens","type":"value_error"}]}),
+        ))
+        .mount(&sized)
+        .await;
+    let over_budget = Client::new(&common::config(&sized))
+        .unwrap()
+        .ask(&serde_json::json!("x"), &one_noul())
+        .await
+        .unwrap_err();
+    assert_eq!(over_budget.kind(), "api_rejected_request");
+    assert!(
+        over_budget.hint().contains("over the API's budget"),
+        "{}",
+        over_budget.hint()
+    );
+
+    let unnamed = MockServer::start().await;
+    Mock::given(method("POST"))
+        .respond_with(ResponseTemplate::new(422).set_body_json(
+            serde_json::json!({"detail":[{"loc":["body","decisions"],"msg":"field required","type":"value_error"}]}),
+        ))
+        .mount(&unnamed)
+        .await;
+    let malformed = Client::new(&common::config(&unnamed))
+        .unwrap()
+        .ask(&serde_json::json!("hello world"), &one_noul())
+        .await
+        .unwrap_err();
+    assert_eq!(malformed.exit().code(), 6);
+    assert_eq!(malformed.kind(), "api_rejected_request");
+    assert!(
+        !malformed.hint().contains("over the API's budget"),
+        "an eleven-byte input is not over a token budget: {}",
+        malformed.hint()
+    );
+    assert!(
+        malformed.hint().contains("malformed"),
+        "{}",
+        malformed.hint()
+    );
+    assert!(malformed.example().contains("--version"));
+}

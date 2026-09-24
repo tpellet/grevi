@@ -2,6 +2,31 @@
 
 ## Unreleased
 
+Changed:
+
+- `fill` can now report whether it started the command. Setting `JEVIFY_STATUS_FILE` to a path
+  makes it write one JSON object there before the command replaces it:
+  `{command, version, exit_code, ran, argv, reason, markers, error}`. `ran` is true when the
+  command started, so the exit code the caller sees is the command's own, and false, or absent,
+  when nothing ran. Before this, an abstention and a command that exited 3 were the same exit
+  code with nothing but a stderr prefix to tell them apart, which is why a careful integrator
+  turned exec mode off and ran `--dry-run --json` instead. The command's exit code is unchanged,
+  and so is every other exit code; without the variable nothing is written. A status file that
+  cannot be written is exit 6 with the kind `status_file_unwritable`, and the command does not
+  start.
+
+- Every `error.kind` is now enumerated in `capabilities`, under `error_kinds` and per exit code,
+  so the branches a machine needs are readable from the machine interface. One table in
+  `src/exit.rs` feeds all three lists, a library test proves it is exactly what `kind()`
+  produces, and a contract test scans the sources for `kind:` literals outside it.
+
+- The overall deadline passing is its own kind, `api_deadline`, apart from the transport failure
+  `api_unavailable` on the same exit code 4; a caller that recognized a deadline by its message
+  now reads the kind. A request the API rejects points at the token budget only when the
+  service's message names a size limit, and otherwise says the request is malformed. The
+  per-request connect and read timeouts, 5 and 60 seconds, are published alongside the other
+  limits.
+
 ## 0.11.0 - 2026-09-24
 
 Changed:

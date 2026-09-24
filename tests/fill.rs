@@ -2223,3 +2223,173 @@ async fn tool_marker_in_argv0_is_refused_with_pick_and_a_split_command_keeps_its
     );
     assert!(posts(&server).await.is_empty());
 }
+
+/// The collision the exec-mode contract had to close: `sh -c 'exit 3'` behind a resolved marker
+/// and an abstention both leave the caller looking at exit 3, with no envelope to read. The
+/// status file separates them, with no stderr parsing and without moving either exit code.
+#[tokio::test(flavor = "multi_thread")]
+async fn a_child_exit_and_an_abstention_share_an_exit_code_and_are_told_apart_by_the_status_file() {
+    let dir = tempfile::tempdir().unwrap().keep();
+    let status = dir.join("status.json");
+    let read = |path: &std::path::Path| -> Value {
+        serde_json::from_slice(&std::fs::read(path).unwrap()).unwrap()
+    };
+
+    // The command runs and chooses its own exit code 3.
+    let server = common::mock(fake()).await;
+    let ran = common::jevify(&server)
+        .env("JEVIFY_STATUS_FILE", &status)
+        .args(["fill", "-q", "--", "sh", "-c", "exit 3", "@{-:the record}"])
+        .write_stdin("three\n")
+        .output()
+        .unwrap();
+    assert_eq!(ran.status.code(), Some(3));
+    let ran_status = read(&status);
+    assert_eq!(ran_status["ran"], true);
+    assert_eq!(ran_status["exit_code"], 0);
+    assert_eq!(ran_status["command"], "fill");
+    assert_eq!(
+        ran_status["argv"],
+        serde_json::json!(["sh", "-c", "exit 3", "three"])
+    );
+    assert!(ran_status["error"].is_null());
+    assert!(ran_status["reason"].is_null());
+
+    // Nothing runs: every candidate is refused, so the marker abstains with the same exit code.
+    let none = common::mock(FakeJev {
+        choose: |_, _, _| "NONE".into(),
+        noul: |_, _| 0.01,
+    })
+    .await;
+    let abstained = common::jevify(&none)
+        .env("JEVIFY_STATUS_FILE", &status)
+        .args(["fill", "-q", "--", "sh", "-c", "exit 3", "@{-:the record}"])
+        .write_stdin("three\n")
+        .output()
+        .unwrap();
+    assert_eq!(abstained.status.code(), Some(3));
+    let abstained_status = read(&status);
+    assert_eq!(abstained_status["ran"], false);
+    assert_eq!(abstained_status["exit_code"], 3);
+    assert_eq!(abstained_status["reason"], "no_match");
+    assert!(abstained_status["argv"].is_null());
+    assert_eq!(abstained_status["markers"][0]["reason"], "no_match");
+
+    // The exit code a caller observes is the same; only `ran` tells them apart.
+    assert_eq!(ran.status.code(), abstained.status.code());
+    assert_ne!(ran_status["ran"], abstained_status["ran"]);
+}
+
+/// Every other outcome fill decides writes the same object, and a dry run is not a run.
+#[tokio::test(flavor = "multi_thread")]
+async fn the_status_file_reports_dry_runs_errors_and_successful_commands() {
+    let dir = tempfile::tempdir().unwrap().keep();
+    let status = dir.join("status.json");
+    let read = || -> Value { serde_json::from_slice(&std::fs::read(&status).unwrap()).unwrap() };
+    let server = common::mock(fake()).await;
+
+    // A resolved dry run: exit 0, argv present, and nothing started.
+    let dry = common::jevify(&server)
+        .env("JEVIFY_STATUS_FILE", &status)
+        .args(["fill", "-q", "--dry-run", "--", "true", "@{-:the record}"])
+        .write_stdin("three\n")
+        .output()
+        .unwrap();
+    assert_eq!(dry.status.code(), Some(0));
+    let dry_status = read();
+    assert_eq!(dry_status["ran"], false);
+    assert_eq!(dry_status["exit_code"], 0);
+    assert_eq!(dry_status["argv"], serde_json::json!(["true", "three"]));
+
+    // A command that succeeds: exit 0 from the child, `ran` true, `exit_code` jevify's own 0.
+    let ok = common::jevify(&server)
+        .env("JEVIFY_STATUS_FILE", &status)
+        .args(["fill", "-q", "--", "true", "@{-:the record}"])
+        .write_stdin("three\n")
+        .output()
+        .unwrap();
+    assert_eq!(ok.status.code(), Some(0));
+    assert_eq!(read()["ran"], true);
+
+    // A usage error, decided before any listing: the error body travels with the status.
+    let usage = common::jevify(&server)
+        .env("JEVIFY_STATUS_FILE", &status)
+        .args(["fill", "-q", "--", "true", "@{nosuchkind:x}"])
+        .write_stdin("three\n")
+        .output()
+        .unwrap();
+    assert_eq!(usage.status.code(), Some(2));
+    let usage_status = read();
+    assert_eq!(usage_status["ran"], false);
+    assert_eq!(usage_status["exit_code"], 2);
+    assert_eq!(usage_status["error"]["kind"], "usage");
+    assert!(!usage_status["error"]["hint"].as_str().unwrap().is_empty());
+
+    // An input error raised while reading the input: still exit 6, still nothing ran.
+    let input = common::jevify(&server)
+        .env("JEVIFY_STATUS_FILE", &status)
+        .args([
+            "fill",
+            "-q",
+            "--",
+            "/nonexistent/program",
+            "@{-:the record}",
+        ])
+        .write_stdin("three\n")
+        .output()
+        .unwrap();
+    assert_eq!(input.status.code(), Some(6));
+    let input_status = read();
+    assert_eq!(input_status["ran"], false);
+    assert_eq!(input_status["exit_code"], 6);
+    assert_eq!(input_status["error"]["kind"], "cannot_run");
+}
+
+/// Without the variable nothing is written, and a status file that cannot be written stops the
+/// run: jevify never starts a command it cannot report having started.
+#[tokio::test(flavor = "multi_thread")]
+async fn no_variable_writes_nothing_and_an_unwritable_status_file_stops_the_run() {
+    let server = common::mock(fake()).await;
+    let dir = tempfile::tempdir().unwrap().keep();
+    let sentinel = dir.join("sentinel");
+    let script = sentinel_script(&dir);
+
+    // No variable: today's behaviour, byte for byte.
+    let plain = common::jevify(&server)
+        .args([
+            "fill",
+            "-q",
+            "--",
+            "sh",
+            script.to_str().unwrap(),
+            sentinel.to_str().unwrap(),
+            "@{-:the record}",
+        ])
+        .write_stdin("three\n")
+        .output()
+        .unwrap();
+    assert_eq!(plain.status.code(), Some(0));
+    assert_eq!(std::fs::read(&sentinel).unwrap(), b"ran");
+
+    // An unwritable path: exit 6, a named kind, and the command never started.
+    let blocked = dir.join("no-such-directory").join("status.json");
+    let untouched = dir.join("untouched");
+    let refused = common::jevify(&server)
+        .env("JEVIFY_STATUS_FILE", &blocked)
+        .args([
+            "fill",
+            "--",
+            "sh",
+            script.to_str().unwrap(),
+            untouched.to_str().unwrap(),
+            "@{-:the record}",
+        ])
+        .write_stdin("three\n")
+        .output()
+        .unwrap();
+    assert_eq!(refused.status.code(), Some(6));
+    assert!(!untouched.exists(), "nothing runs without a status file");
+    let stderr = String::from_utf8_lossy(&refused.stderr);
+    assert!(stderr.contains("status_file_unwritable"), "{stderr}");
+    assert!(!blocked.exists());
+}

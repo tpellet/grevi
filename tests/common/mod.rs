@@ -306,6 +306,7 @@ pub fn bin() -> assert_cmd::Command {
         "JEVIFY_NO_CACHE",
         "JEVIFY_PRICE_PER_MTOK",
         "JEVIFY_INVENTORY_FILE",
+        "JEVIFY_STATUS_FILE",
     ] {
         c.env_remove(var);
     }

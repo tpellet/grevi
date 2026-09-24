@@ -63,7 +63,10 @@ a corrected command. Human output is not a machine protocol.
 `fill` abstention is exit 3 with `error: null`. `data.reason` is the first failed marker in argv
 order; `data.markers[].reason` reports every marker. Reasons are `no_match`, `ambiguous`,
 `unsure_flag`, `insufficient_evidence`. They are separate from the exit-6 error kinds
-`stdin_is_tty`, `lister_failed`, `too_many`, `cannot_run`, `recipe_invalid`.
+`empty_input`, `input_too_large`, `api_rejected_request`, `input`, `too_many`, `stdin_is_tty`,
+`lister_failed`, `cannot_run`, `recipe_invalid` and `status_file_unwritable`.
+`capabilities.error_kinds` enumerates every kind with its exit code, so branches come from the
+machine interface rather than from the sources.
 Read candidates N of M for no match; read the two handles for ambiguity; write or drop an unsure
 flag. Narrow oversized lists with a prefix, `grep`, `head` or a pipe; run failed listers yourself.
 `lister_failed` carries the tool's own text; `recipe_invalid` names the line of the user's
@@ -102,7 +105,17 @@ Write the condition so that yes means act. `&&` stops on every nonzero code; use
 branches when no, abstention and errors require different handling. Under `git bisect run`,
 map an unsure exit 3 to 125. Do not silently retry abstention until it agrees.
 `fill` exits 2–6 before execution; after execution the command owns its exit code, including
-2–6. Read the `jevify fill:` execution status too. Successful dry runs exit 0.
+2–6. Successful dry runs exit 0. Exit 4 splits three ways by `error.kind`: `api_unavailable`
+is a transport failure to back off from, `api_deadline` is the `JEVIFY_DEADLINE` budget passing,
+so raise it or split the input, and `api_protocol` is a response jevify could not read.
+
+Set `JEVIFY_STATUS_FILE=PATH` to tell an abstention from the command's own exit code without
+reading stderr. `fill` writes `{command, version, exit_code, ran, argv, reason, markers, error}`
+to PATH before it starts anything. `ran` true means the command started and the observed exit
+code is the command's; `ran` false, or no file, means nothing ran and the code is jevify's. A
+successful dry run is `exit_code` 0 with `ran` false. An unwritable path is exit 6
+`status_file_unwritable`, and nothing runs. The command inherits the variable; unset it in a
+wrapper when the command itself runs `jevify fill`.
 
 ## Data per verb
 

@@ -1,5 +1,10 @@
 use serde::Serialize;
 
+/// The prefix of the overall-deadline message `jev::client` builds. `kind()` reads it to tell
+/// deadline expiry from transport failure, both carried by `Unavailable`; `tests/deadline.rs`
+/// drives a real expiry and pins the pair together.
+pub const DEADLINE_PREFIX: &str = "overall deadline of";
+
 pub const NO_MATCH: &str = "no_match";
 pub const AMBIGUOUS: &str = "ambiguous";
 pub const UNSURE_FLAG: &str = "unsure_flag";
@@ -76,6 +81,30 @@ pub enum JevifyError {
 }
 
 impl JevifyError {
+    /// Every `error.kind` a caller can receive, with the exit code it carries: the enumeration
+    /// `capabilities` publishes, built from this one table. `kind()` is the only producer, and
+    /// the tests below prove the two agree in both directions, so a kind cannot reach a caller
+    /// without appearing here, and nothing here is unreachable.
+    pub const KINDS: [(&'static str, Exit); 17] = [
+        ("usage", Exit::Usage),
+        ("api_unavailable", Exit::Unavailable),
+        ("api_deadline", Exit::Unavailable),
+        ("api_protocol", Exit::Unavailable),
+        ("missing_api_key", Exit::Auth),
+        ("bad_api_key", Exit::Auth),
+        ("empty_input", Exit::Input),
+        ("input_too_large", Exit::Input),
+        ("api_rejected_request", Exit::Input),
+        ("input", Exit::Input),
+        ("too_many", Exit::Input),
+        ("stdin_is_tty", Exit::Input),
+        ("lister_failed", Exit::Input),
+        ("cannot_run", Exit::Input),
+        ("recipe_invalid", Exit::Input),
+        ("status_file_unwritable", Exit::Input),
+        ("declined", Exit::Interrupted),
+    ];
+
     pub fn stdin_is_tty(message: String) -> Self {
         Self::Kinded {
             kind: "stdin_is_tty",
@@ -112,6 +141,31 @@ impl JevifyError {
             example: "jevify capabilities --json",
         }
     }
+    /// `fill` could not write the status file `JEVIFY_STATUS_FILE` names. Nothing runs: jevify
+    /// never starts a command while unable to record that it started one.
+    pub fn status_file_unwritable(message: String) -> Self {
+        Self::Kinded {
+            kind: "status_file_unwritable",
+            exit: Exit::Input,
+            message,
+            hint: "JEVIFY_STATUS_FILE must name a writable path inside an existing directory; nothing ran",
+            example: "JEVIFY_STATUS_FILE=$(mktemp) jevify fill -- git switch '@{branch:the auth refactor}'",
+        }
+    }
+    /// Whether a rejected request body named a size limit. The two readings of a 413, 422 or
+    /// classifier 400 need different answers, and only the service's own text tells them apart.
+    fn names_a_size_limit(message: &str) -> bool {
+        [
+            "too_long",
+            "too_many",
+            "too large",
+            "token",
+            "length",
+            "size",
+        ]
+        .iter()
+        .any(|needle| message.contains(needle))
+    }
     pub fn exit(&self) -> Exit {
         match self {
             Self::Kinded { exit, .. } => *exit,
@@ -130,6 +184,9 @@ impl JevifyError {
             Self::Kinded { kind, .. } => kind,
             Self::MissingKey => "missing_api_key",
             Self::BadKey(_) => "bad_api_key",
+            // Exit 4 covers three situations a caller answers differently: back off, raise the
+            // budget, or report a bug. The kind, not the message, says which.
+            Self::Unavailable(m) if m.starts_with(DEADLINE_PREFIX) => "api_deadline",
             Self::Unavailable(_) => "api_unavailable",
             Self::Protocol(_) => "api_protocol",
             Self::EmptyInput(_) => "empty_input",
@@ -147,6 +204,9 @@ impl JevifyError {
                 "unset JEVIFY_BACKEND to run keyless through classifier.dev, or create a key at https://console.typesafe.ai/settings/keys and export it in your shell profile; jevify never prints it"
             }
             Self::BadKey(_) => "check the key in the TypeSafe console; `jevify health` verifies it",
+            Self::Unavailable(m) if m.starts_with(DEADLINE_PREFIX) => {
+                "the work was cancelled, not refused: raise JEVIFY_DEADLINE, or split the input into smaller runs"
+            }
             Self::Unavailable(_) => "retry later, or lower JEVIFY_CONCURRENCY if rate limited",
             Self::Protocol(_) => {
                 "the API may have changed, or JEVIFY_BASE_URL points at the wrong server; run `jevify health` and report the issue with `jevify --version`"
@@ -156,8 +216,13 @@ impl JevifyError {
             }
             Self::EmptyInput(_) => "pipe text into jevify",
             Self::InputTooLarge(_) => "filter the input first, e.g. with rg or tail",
+            // The service names a size limit or it does not; jevify says which reading its
+            // text supports and never guesses "too large" for an input of a few bytes.
+            Self::RejectedRequest(_, m) if Self::names_a_size_limit(m) => {
+                "the input is over the API's budget, as the message says: filter it first, e.g. with rg or tail"
+            }
             Self::RejectedRequest(..) => {
-                "the input is probably over the API's token budget: filter it first, e.g. with rg or tail; if it is small, this is a jevify bug — report it with `jevify --version`"
+                "the API rejected the request body without naming a size limit; filter a large input first with rg or tail, and report a small one with `jevify --version`, since the request is then malformed"
             }
             Self::Input(_) => "check the input path and encoding",
             Self::Usage(_) => "see `jevify --help` or `jevify capabilities --json`",
@@ -172,9 +237,14 @@ impl JevifyError {
                 "jevify add \"finish the login flow\""
             }
             Self::EmptyInput(_) => "ls | jevify pick \"the invoice from March\"",
-            Self::InputTooLarge(_) | Self::RejectedRequest(..) => {
+            Self::Unavailable(m) if m.starts_with(DEADLINE_PREFIX) => {
+                "JEVIFY_DEADLINE=1800 jevify filter 'reports a crash' < issues.txt"
+            }
+            Self::InputTooLarge(_) => "tail -n 20000 build.log | jevify why",
+            Self::RejectedRequest(_, m) if Self::names_a_size_limit(m) => {
                 "tail -n 20000 build.log | jevify why"
             }
+            Self::RejectedRequest(..) => "jevify --version",
             _ => "jevify capabilities --json",
         }
     }
@@ -233,32 +303,49 @@ mod tests {
                 .all(|(_, text)| !text.contains("executed") && !text.contains("`run`"))
         );
     }
-    #[test]
-    fn every_error_maps_to_a_stable_kind_and_exit() {
-        let errors = [
-            JevifyError::Kinded {
-                kind: "too_many",
-                exit: Exit::Input,
-                message: "too many records".into(),
-                hint: "narrow the input",
-                example: "head -n 100 input | jevify pick 'q'",
-            },
+    /// One error per reachable kind, including every kind string a `Kinded` site in `src/`
+    /// writes. `tests/agent.rs` scans the sources so a new literal cannot stay out of this list.
+    fn representatives() -> Vec<JevifyError> {
+        let kinded = |kind| JevifyError::Kinded {
+            kind,
+            exit: Exit::Input,
+            message: "representative".into(),
+            hint: "narrow the input",
+            example: "head -n 100 input | jevify pick 'q'",
+        };
+        vec![
+            kinded("too_many"),
+            JevifyError::stdin_is_tty("terminal".into()),
+            JevifyError::lister_failed("failed".into()),
+            JevifyError::cannot_run("missing".into()),
+            JevifyError::recipe_invalid("invalid".into()),
+            JevifyError::status_file_unwritable("read-only".into()),
             JevifyError::MissingKey,
             JevifyError::BadKey(401),
-            JevifyError::Unavailable(String::new()),
+            JevifyError::Unavailable("connection refused".into()),
+            JevifyError::Unavailable(format!("{DEADLINE_PREFIX} 600 s passed (JEVIFY_DEADLINE)")),
             JevifyError::Protocol(String::new()),
             JevifyError::EmptyInput(""),
             JevifyError::InputTooLarge(String::new()),
-            JevifyError::RejectedRequest(422, String::new()),
+            JevifyError::RejectedRequest(422, "state: input_too_long".into()),
             JevifyError::Input(String::new()),
             JevifyError::Usage(String::new()),
             JevifyError::Declined,
-        ];
+        ]
+    }
+    #[test]
+    fn every_error_maps_to_a_stable_kind_and_exit() {
         let expected = [
             ("too_many", 6),
+            ("stdin_is_tty", 6),
+            ("lister_failed", 6),
+            ("cannot_run", 6),
+            ("recipe_invalid", 6),
+            ("status_file_unwritable", 6),
             ("missing_api_key", 5),
             ("bad_api_key", 5),
             ("api_unavailable", 4),
+            ("api_deadline", 4),
             ("api_protocol", 4),
             ("empty_input", 6),
             ("input_too_large", 6),
@@ -267,9 +354,63 @@ mod tests {
             ("usage", 2),
             ("declined", 130),
         ];
-        for (e, (kind, code)) in errors.iter().zip(expected) {
+        for (e, (kind, code)) in representatives().iter().zip(expected) {
             assert_eq!((e.kind(), e.exit().code()), (kind, code), "{e}");
             assert!(!e.hint().is_empty() && e.example().contains("jevify"));
         }
+    }
+    #[test]
+    fn the_published_kind_table_is_exactly_what_the_errors_produce() {
+        // Adding a variant makes this match non-exhaustive, so a new error cannot be written
+        // without visiting `representatives` and `KINDS`.
+        for e in representatives() {
+            match e {
+                JevifyError::Kinded { .. }
+                | JevifyError::MissingKey
+                | JevifyError::BadKey(_)
+                | JevifyError::Unavailable(_)
+                | JevifyError::Protocol(_)
+                | JevifyError::EmptyInput(_)
+                | JevifyError::InputTooLarge(_)
+                | JevifyError::RejectedRequest(..)
+                | JevifyError::Input(_)
+                | JevifyError::Usage(_)
+                | JevifyError::Declined => {}
+            }
+        }
+        let mut produced: Vec<_> = representatives()
+            .iter()
+            .map(|e| (e.kind(), e.exit().code()))
+            .collect();
+        produced.sort_unstable();
+        produced.dedup();
+        let mut published: Vec<_> = JevifyError::KINDS
+            .iter()
+            .map(|(kind, exit)| (*kind, exit.code()))
+            .collect();
+        published.sort_unstable();
+        assert_eq!(produced, published);
+    }
+    #[test]
+    fn a_deadline_is_not_a_transport_failure_and_says_what_to_do() {
+        let deadline =
+            JevifyError::Unavailable(format!("{DEADLINE_PREFIX} 600 s passed (JEVIFY_DEADLINE)"));
+        let transport = JevifyError::Unavailable("error sending request: connection reset".into());
+        assert_eq!(deadline.exit(), transport.exit());
+        assert_eq!(deadline.kind(), "api_deadline");
+        assert_eq!(transport.kind(), "api_unavailable");
+        assert!(deadline.hint().contains("JEVIFY_DEADLINE"));
+        assert!(transport.hint().contains("retry"));
+        assert_ne!(deadline.hint(), transport.hint());
+    }
+    #[test]
+    fn a_rejected_request_claims_a_size_limit_only_when_the_service_named_one() {
+        let sized = JevifyError::RejectedRequest(422, "state: input_too_long".into());
+        let unnamed = JevifyError::RejectedRequest(400, "code: invalid_request".into());
+        assert_eq!(sized.kind(), unnamed.kind());
+        assert!(sized.hint().contains("over the API's budget"));
+        assert!(!unnamed.hint().contains("over the API's budget"));
+        assert!(unnamed.hint().contains("malformed"));
+        assert!(unnamed.example().contains("--version"));
     }
 }

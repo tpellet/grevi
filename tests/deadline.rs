@@ -98,6 +98,16 @@ async fn a_blocked_evidence_read_past_the_budget_ends_at_exit_4_without_a_reques
             message.contains("deadline of 1 s") && message.contains("JEVIFY_DEADLINE"),
             "{verb:?}: {value}"
         );
+        // Exit 4 carries three situations a caller answers differently. Deadline expiry says
+        // raise the budget or shard; it is not the transport failure `api_unavailable`, and
+        // the caller reads which from the kind, never from the message.
+        assert_eq!(value["error"]["kind"], "api_deadline", "{verb:?}: {value}");
+        assert!(
+            message.contains(jevify::exit::DEADLINE_PREFIX),
+            "the deadline message and exit.rs's prefix drifted apart: {message}"
+        );
+        let hint = value["error"]["hint"].as_str().unwrap_or_default();
+        assert!(hint.contains("JEVIFY_DEADLINE"), "{verb:?}: {value}");
         assert_eq!(posts, 0, "{verb:?}: a request was sent after the deadline");
         assert!(
             start.elapsed() < Duration::from_secs(4),

@@ -51,6 +51,7 @@ argument; unchecked substitution can turn abstention into an empty argument.
   `argv` on successful dry run, `markers[{arg,kind,reason,handle,p,candidates,total,omitted}]`,
   `reason`. Machine formats require `--dry-run`. The command inherits the environment and
   directory, and owns output, signals and exit code. Consumed stdin becomes empty for it.
+  `JEVIFY_STATUS_FILE` records whether the command started; see [The exec status](#the-exec-status).
 - `pick '<intent>' [-n N] [--index | --files] [-0 | --para]` reads stdin records.
   Data: `matches[{line,text,ordinal,p,lossy?}]`, `any`, `source`. Exit 0 found, 3 nothing fits.
   `--files` is boolean: `git ls-files | jevify pick --files 'where man pages are parsed'`.
@@ -195,13 +196,54 @@ no, unsure and errors. Under `git bisect run`, map unsure exit 3 to 125.
 | 130 | declined at `add` confirmation |
 
 `rate_limit_day` HTTP 429 is exit 4, `daily quota of the free backend reached`, without retry.
+Exit 4 carries three situations that need different answers, and `error.kind` says which:
+`api_unavailable` is a transport failure, so back off and retry; `api_deadline` is the overall
+`JEVIFY_DEADLINE` budget passing, so raise the budget or split the input, since the work was
+cancelled and not refused; `api_protocol` is a response jevify could not read, which is a bug to
+report. Branch on the kind, never on the message.
+
 For `fill`, exits 2–6 mean nothing ran; after `exec`, the command owns its exit code, including
 2–6. A successful dry run exits 0. Stderr lines start with `jevify fill:`; `-q` keeps only
-`not run:` lines. Read the execution status as well as the exit code.
+`not run:` lines. Stderr is for a person: read the exec status from a status file.
 
-Input errors use `error.kind`, exit 6: `stdin_is_tty`, `lister_failed`, `too_many`, `cannot_run`,
-`recipe_invalid`. Run the named lister yourself for `lister_failed`; narrow with a prefix,
-`grep`, `head` or a narrower pipe for `too_many`.
+`capabilities.error_kinds` enumerates every `error.kind` with the exit code it carries, and
+`capabilities.exit_codes[].kinds` lists the kinds of each code. Input errors are exit 6:
+`empty_input`, `input_too_large`, `api_rejected_request`, `input`, `too_many`, `stdin_is_tty`,
+`lister_failed`, `cannot_run`, `recipe_invalid`, `status_file_unwritable`. Run the named lister
+yourself for `lister_failed`; narrow with a prefix, `grep`, `head` or a narrower pipe for
+`too_many`. `api_rejected_request` is the API refusing the request body: its hint points at the
+token budget only when the service's own message names a size limit, and otherwise says the
+request is malformed, which is a bug to report.
+
+## The exec status
+
+`fill` replaces itself with the command, so after the hand-off the exit code belongs to the
+command, and exit codes 2 to 6 mean one thing before the hand-off and another after it. Exec
+mode prints no envelope. `JEVIFY_STATUS_FILE=PATH` closes that gap: `fill` writes one JSON
+object to PATH before it starts anything, for every outcome it decides.
+
+```text
+{command, version, exit_code, ran, argv, reason, markers, error{kind,message,hint,example} | null}
+```
+
+`ran` is the answer. `true` means `fill` handed the process to the command, so the exit code the
+caller observes is the command's own. `false`, or no file at all, means nothing ran and the exit
+code is jevify's, with `reason` for an abstention and `error` for an error. A successful dry run
+is `exit_code` 0 with `ran` false: an argv was resolved and nothing started. `exit_code` is
+jevify's own decision, never the command's, which jevify cannot know.
+
+```text
+S=$(mktemp)
+JEVIFY_STATUS_FILE=$S jevify fill -q -- make test '@{branch:the auth refactor}'
+code=$?
+jq -e .ran "$S" >/dev/null && echo "the command exited $code" || echo "nothing ran, jevify exited $code"
+```
+
+A status file that cannot be written is exit 6 `status_file_unwritable` and nothing runs: jevify
+never starts a command it cannot report having started. The command inherits the variable, so a
+command that itself runs `jevify fill` overwrites the file; unset it in a wrapper. The one case
+the file cannot cover is the `execvp` call failing after the write, which is exit 6 `cannot_run`
+on the `jevify fill:` stderr line. Without the variable nothing is written and nothing changes.
 
 Abstention is separate: exit 3, `error: null`, `data.reason` for the first failed marker in
 argv order, and `data.markers[].reason` for every marker. `no_match`: read candidates N of M;
@@ -296,9 +338,14 @@ request) and `tokens{input, output}`, the service-reported counts, each `null` w
 left it unknown. An unknown count is never a measured zero: a verb that made no request reports
 `0`, one whose backend reports no usage reports `null`.
 
+One request waits 5 seconds for its connection and 60 seconds for the response
+(`limits.connect_timeout_s`, `limits.request_read_timeout_s`). Past either it counts as a
+transport failure and is retried inside the overall budget, so a response that stalls or arrives
+truncated costs the full 60 seconds before jevify gives up on it.
+
 Every verb runs under one overall deadline, `JEVIFY_DEADLINE` seconds (600 by default). A retry
 wait that would end past it is not started, the request queued for a permit or in flight at the
-deadline is cancelled (`inference_posts.cancelled`), and the verb ends exit 4 `api_unavailable`
+deadline is cancelled (`inference_posts.cancelled`), and the verb ends exit 4 `api_deadline`
 with a message that names the deadline. No request is sent before a server's `Retry-After` ends.
 
 `usage.input_tokens` and `usage.output_tokens` each contain `reported_subtotal`,
